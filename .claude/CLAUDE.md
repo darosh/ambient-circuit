@@ -1,43 +1,47 @@
 # Ambient Circuit
 
-> Non-linear physical sequencer combining physics with audio synthesis and visual feedback
+> Non-linear sequencer combining audio synthesis and visual feedback
 
 ## Project Vision
 
 Create a "marble-machine-inspired" music sequencer where:
-- Physical marbles trigger or carry musical notes through 3D space
-- Collisions with zones produce sound and visual effects (lightning, glows)
-- Hybrid audio engine combining Tone.js and RMBO for high-quality ambient audio processing (reverb, saturation, compression)
-- Satisfying physics-driven generative music with beautiful graphics, neon glowing aesthetics, complex circuit structure, Tron inspired
-- There should be few layouts/songs where the circuit will fill sphere/cylinder/cube, each with own color scheme
+- Marbles travel on rails and trigger instruments as they pass through zones
+- Zones produce sound and visual effects (lightning, glows)
+- **Tone.js** for synthesis, **RNBO** for high-quality effects (reverb, saturation, compression, shimmer)
+- Satisfying generative music with beautiful graphics, neon glowing aesthetics, complex circuit structure, Tron inspired
+- Predefined layouts/songs where the circuit fills sphere/cylinder/cube, each with own color scheme (procedural generation as future exploration)
 
 ## Concepts
 
+- `Beat`
+  - zero-based index representing a position in time
+  - bars derived from global tempo and time signature
+  - each point on a rail maps to a specific beat
+  - marble speed compensated to arrive at beat positions in sync with tempo
 - `Marbles`
-  - objects moving on `Rails`
-  - triggering `Instruments`
-  - carry note or are in vanilla mode
-  - note can be represented by color
-  - note could be changed by `Modifier`
+  - objects moving on `Rails`, triggering `Instruments`
+  - **note mode:** carries a note (represented by color), can be changed by `Modifiers`
+  - **vanilla mode:** noteless trigger, used for drums or tuned percussive elements; can acquire a note later via `Modifier`
 - `Rails`
-   - sequencer lines, like connections in printed circuit board
-   - single line
-   - the `Marbles` travel on the lines
-   - lines can have straight and curved parts
-   - lines can `Split` or `Merge` into multiple lines
-   - each rail is a sequencer
-   - `Marbles` travel in loop or in open-ended case they reverse or start from beginning
-   - the definition of the `Rails` should be simple, just points in space and connection metadata, the curves should be computed automatically where required
-   - the definition should be able to produce: straight lines, rounded corners, circles spirals, coils shapes
-   - points should define which `BarBeat` beat they belong to
-   - the movement speed of `Marbles` should be compensated to match the `BarBeat`
-   - we should support linear and eased movement between the `BarBeats`
-- `Split` points should have "weight" options, something like [2,4] pick first twice, then second four times 
+   - sequencer lines, like connections in a printed circuit board
+   - `Marbles` travel on the lines in a loop (or reverse/restart on open-ended rails)
+   - defined as points in 3D space + connection metadata; curves computed automatically
+   - connections between points are either **straight** or **rounded** (smooth continuation from previous segment to next)
+   - capable of producing: straight lines, rounded corners, circles, spirals, coils
+   - each point maps to a `Beat`
+   - support **linear** and **eased** (bounce-in for snappy feel) movement between beats
+- `Split` / `Merge`
+   - rail forks/joins — like a fork in the road
+   - split has weighted routing, e.g. `[2,4]` = first 2 marbles go left, next 4 go right, repeating
+- `Modifiers`
+   - zones on a rail that modify the marble's note as it passes through
+   - examples: pitch shift, scale quantization
 - `Instruments`
-   - could look like a portals around `Rails`, like rounded lens in a way of laser beam
-   - instruments should be positioned at `BarBeat` units
-- `AudioPaths`, `FX` would be elaborated later, they would serve as visualization of the audio events and processing  
-- Physics should be used only is specific areas for note bouncing or granular FX
+   - like MIDI instruments in a DAW (e.g. pluck, kick)
+   - visually: portals/rounded lenses around rails, like a lens in a laser beam's path
+   - positioned at `Beat` positions
+- `AudioPaths`, `FX` — to be elaborated later; will serve as visualization of audio events and processing
+- Physics: minimal at start, may be introduced later for specific areas (note bouncing, granular FX)
 
 ---
 
@@ -68,14 +72,14 @@ Create a "marble-machine-inspired" music sequencer where:
 
 ### Core Technologies
 - **Threlte** (Three.js + Svelte) - 3D rendering and scene management
-- **Rapier** - Physics engine for marble simulation
-- **Tone.js**
+- **Tone.js** - Audio synthesis (instruments)
 - **RNBO** - High-quality audio effects (reverb, saturation, compression, shimmer)
 - **Svelte** - UI framework and build system
+- **Rapier** - Physics engine, reserved for future use in specific zones
 
-### Physics Integration
-- Frame-independent physics using delta time or fixed framerate
-- Collision detection via Rapier contact pairs
+### Timing
+- Frame-independent movement using delta time
+- Marble speed synced to tempo via beat-mapped rail points
 
 ---
 
@@ -117,8 +121,9 @@ Create a "marble-machine-inspired" music sequencer where:
 
 ## Notes
 
-- Physics framerate independence is CRITICAL (use delta time always)
+- Frame independence is CRITICAL (use delta time always)
 - Audio timing precision matters for musical applications
-- Visual feedback loop (collision → sound → light) is core to UX
+- Visual feedback loop (trigger → sound → light) is core to UX
 - Keep zone system modular for easy experimentation
 - RNBO patches should be edited in Max, then exported to JSON
+- Layouts defined as TypeScript data structures (for autocomplete), JSON-compatible
