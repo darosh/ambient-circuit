@@ -9,6 +9,6 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler",
-		"lib": ["ES2015", "DOM"]
+		"lib": ["es2022", "DOM"]
 	}
 }

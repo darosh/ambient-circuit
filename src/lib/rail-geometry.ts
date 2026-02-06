@@ -7,7 +7,7 @@ const CURVE_SEGMENTS = 12
 /** Tangent handle scale — 0.39 is near-optimal for quarter-circle arcs */
 const TANGENT_SCALE = 0.39
 
-function toV3(p: Vec3): Vector3 {
+export function toV3(p: Vec3): Vector3 {
 	return new Vector3(p[0], p[1], p[2])
 }
 
@@ -68,16 +68,30 @@ function tangentAt(points: ResolvedPoint[], i: number): Vector3 {
 }
 
 /**
+ * Build the CubicBezierCurve3 for segment i→i+1, or null if straight.
+ */
+export function buildSegmentCurve(
+	points: ResolvedPoint[],
+	i: number,
+): CubicBezierCurve3 | null {
+	if (!isSegmentCurved(points, i)) return null
+
+	const p0 = toV3(points[i].p)
+	const p3 = toV3(points[i + 1].p)
+	const chord = p0.distanceTo(p3)
+	const handleLen = chord * TANGENT_SCALE
+
+	const t0 = tangentAt(points, i).multiplyScalar(handleLen)
+	const t1 = tangentAt(points, i + 1).multiplyScalar(handleLen)
+
+	const cp1 = p0.clone().add(t0)
+	const cp2 = p3.clone().sub(t1)
+
+	return new CubicBezierCurve3(p0, cp1, cp2, p3)
+}
+
+/**
  * Build a polyline from resolved rail points using cubic Bezier curves.
- *
- * Rounding modes per point:
- *  - 'to':   incoming segment is curved
- *  - 'from': outgoing segment is curved
- *  - 'both': both adjacent segments are curved
- *  - null:   sharp corner
- *
- * Each curved segment uses CubicBezierCurve3 with tangent-derived
- * control points, giving near-perfect circular arcs from 4 points.
  */
 export function buildRailCurve(points: ResolvedPoint[]): Vector3[] {
 	if (points.length === 0) return []
@@ -87,27 +101,65 @@ export function buildRailCurve(points: ResolvedPoint[]): Vector3[] {
 	const result: Vector3[] = [toV3(points[0].p)]
 
 	for (let i = 0; i < n - 1; i++) {
-		const p0 = toV3(points[i].p)
-		const p3 = toV3(points[i + 1].p)
-
-		if (!isSegmentCurved(points, i)) {
-			result.push(p3)
+		const bezier = buildSegmentCurve(points, i)
+		if (!bezier) {
+			result.push(toV3(points[i + 1].p))
 		} else {
-			const chord = p0.distanceTo(p3)
-			const handleLen = chord * TANGENT_SCALE
-
-			const t0 = tangentAt(points, i).multiplyScalar(handleLen)
-			const t1 = tangentAt(points, i + 1).multiplyScalar(handleLen)
-
-			const cp1 = p0.clone().add(t0)
-			const cp2 = p3.clone().sub(t1)
-
-			const bezier = new CubicBezierCurve3(p0, cp1, cp2, p3)
 			const pts = bezier.getPoints(CURVE_SEGMENTS)
-
 			for (let j = 1; j < pts.length; j++) {
 				result.push(pts[j])
 			}
+		}
+	}
+
+	return result
+}
+
+// ── Beat positions ──────────────────────────────────────────
+
+export type BeatPosition = {
+	beat: number
+	position: Vector3
+}
+
+/**
+ * Compute world positions for every integer beat along a resolved point
+ * sequence. Points may have fractional beats (geometric-only control points);
+ * only integer beats are emitted, arc-length-interpolated on curved segments.
+ */
+export function computeBeatPositions(points: ResolvedPoint[]): BeatPosition[] {
+	if (points.length === 0) return []
+	if (points.length === 1) {
+		return Number.isInteger(points[0].beat)
+			? [{ beat: points[0].beat, position: toV3(points[0].p) }]
+			: []
+	}
+
+	const result: BeatPosition[] = []
+
+	// Emit first point's beat if integer
+	if (Number.isInteger(points[0].beat)) {
+		result.push({ beat: points[0].beat, position: toV3(points[0].p) })
+	}
+
+	for (let i = 0; i < points.length - 1; i++) {
+		const beatA = points[i].beat
+		const beatB = points[i + 1].beat
+		if (beatB <= beatA) continue
+
+		// Integer beats in half-open interval (beatA, beatB]
+		const first = Number.isInteger(beatA) ? beatA + 1 : Math.ceil(beatA)
+		const last = Math.floor(beatB)
+		if (first > last) continue
+
+		const bezier = buildSegmentCurve(points, i)
+
+		for (let b = first; b <= last; b++) {
+			const u = (b - beatA) / (beatB - beatA)
+			const pos = bezier
+				? bezier.getPointAt(u)
+				: toV3(points[i].p).lerp(toV3(points[i + 1].p), u)
+			result.push({ beat: b, position: pos })
 		}
 	}
 

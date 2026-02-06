@@ -4,14 +4,20 @@ import { Grid, OrbitControls } from '@threlte/extras'
 import { circle, roundedRect, coil, spiral } from '../lib/rail-primitives'
 import RailView from './RailView.svelte'
 
-let { showPoints = false }: { showPoints?: boolean } = $props()
+let { showPoints = false, showBeats = false }: { showPoints?: boolean; showBeats?: boolean } = $props()
 
 const rails = [
 	{ rail: circle(), color: '#00ffff' },
 	{ rail: roundedRect({ pos: { x: 3.5 } }), color: '#ff00ff' },
 	{ rail: coil({ pos: { x: -3 }, lead: 1 }), color: '#ffff00' },
 	{ rail: spiral({ pos: { x: 0 }, lead: 1 }), color: '#ff0000' },
+	{ rail: circle({ pos: { x: 0, y: 2 }}), color: '#ffffff' },
 ]
+	
+// @ts-expect-error temporary
+rails.at(-1).rail.nodes[0].beat = 0
+// @ts-expect-error temporary
+rails.at(-1).rail.nodes.at(-1).beat = 3
 </script>
 
 <T.PerspectiveCamera makeDefault position={[4, 6, 8]} fov={30}>
@@ -30,6 +36,6 @@ const rails = [
 	cellSize={1}
 />
 
-{#each rails as { rail, color }}
-	<RailView {rail} {color} width={0.08} {showPoints} />
+{#each rails as { rail, color }, railIndex (railIndex)}
+	<RailView {rail} {color} width={0.08} {showPoints} {showBeats} />
 {/each}

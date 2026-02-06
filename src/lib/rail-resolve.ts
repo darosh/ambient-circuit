@@ -9,18 +9,34 @@ import type {
 import { isVec3, isSplit, isPointFull } from './rail'
 
 function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { endBeat: number } {
+	// If any RailPointFull has an explicit beat, treat RailPointFull without
+	// beat as geometric-only (no auto-increment, beat interpolated later).
+	const hasExplicitBeats = nodes.some((n) => isPointFull(n) && n.beat !== undefined)
+
 	const points: ResolvedPoint[] = []
+	const anchors: number[] = []
 	const splits: ResolvedSplit[] = []
 	let beat = startBeat
 
 	for (const node of nodes) {
 		if (isVec3(node)) {
 			points.push({ p: node, beat, round: null })
+			anchors.push(points.length - 1)
 			beat++
 		} else if (isPointFull(node)) {
-			if (node.beat !== undefined) beat = node.beat
-			points.push({ p: node.p, beat, round: node.round ?? null })
-			beat++
+			if (node.beat !== undefined) {
+				beat = node.beat
+				points.push({ p: node.p, beat, round: node.round ?? null })
+				anchors.push(points.length - 1)
+				beat++
+			} else if (hasExplicitBeats) {
+				// Geometric-only: placeholder, will be interpolated
+				points.push({ p: node.p, beat: NaN, round: node.round ?? null })
+			} else {
+				points.push({ p: node.p, beat, round: node.round ?? null })
+				anchors.push(points.length - 1)
+				beat++
+			}
 		} else if (isSplit(node)) {
 			const lastPoint = points[points.length - 1]
 			if (!lastPoint) throw new Error('Split cannot be first element in rail')
@@ -40,6 +56,29 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 				weights: node.split.weights,
 				branches: resolvedBranches,
 			})
+		}
+	}
+
+	// Interpolate beats for geometric-only points
+	if (hasExplicitBeats && anchors.length > 0) {
+		// Before first anchor: same beat
+		for (let i = 0; i < anchors[0]; i++) {
+			points[i].beat = points[anchors[0]].beat
+		}
+		// Between consecutive anchors: linear interpolation
+		for (let a = 0; a < anchors.length - 1; a++) {
+			const si = anchors[a]
+			const ei = anchors[a + 1]
+			const sb = points[si].beat
+			const eb = points[ei].beat
+			for (let i = si + 1; i < ei; i++) {
+				points[i].beat = sb + ((eb - sb) * (i - si)) / (ei - si)
+			}
+		}
+		// After last anchor: same beat
+		const last = anchors[anchors.length - 1]
+		for (let i = last + 1; i < points.length; i++) {
+			points[i].beat = points[last].beat
 		}
 	}
 

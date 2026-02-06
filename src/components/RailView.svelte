@@ -1,24 +1,41 @@
 <script lang="ts">
 	import { T } from '@threlte/core'
-	import { MeshLineGeometry, MeshLineMaterial } from '@threlte/extras'
+	import { Billboard, MeshLineGeometry, MeshLineMaterial, Text } from '@threlte/extras'
 	import type { Rail } from '../lib/rail'
 	import { resolveRail } from '../lib/rail-resolve'
-	import { buildRailCurve } from '../lib/rail-geometry'
+	import { buildRailCurve, computeBeatPositions } from '../lib/rail-geometry'
 
 	type Props = {
 		rail: Rail
 		color?: string
 		width?: number
 		showPoints?: boolean
+		showBeats?: boolean
 	}
 
-	let { rail, color = '#00ffff', width = 0.1, showPoints = false }: Props = $props()
+	let { rail, color = '#00ffff', width = 0.1, showPoints = false, showBeats = false }: Props = $props()
 
 	const resolved = $derived(resolveRail(rail))
 	const mainPoints = $derived(buildRailCurve(resolved.points))
-	const branchCurves = $derived(
-		resolved.splits.flatMap((s) => s.branches.map((b) => buildRailCurve(b.points)))
-	)
+	const branchCurves = $derived.by(() => {
+		const result: import('three').Vector3[][] = []
+		for (const s of resolved.splits) {
+			for (const b of s.branches) {
+				result.push(buildRailCurve(b.points))
+			}
+		}
+		return result
+	})
+	const beatPositions = $derived.by(() => {
+		if (!showBeats) return []
+		const result = computeBeatPositions(resolved.points)
+		for (const s of resolved.splits) {
+			for (const b of s.branches) {
+				result.push(...computeBeatPositions(b.points))
+			}
+		}
+		return result
+	})
 </script>
 
 {#if mainPoints.length >= 2}
@@ -53,5 +70,20 @@
 				</T.Mesh>
 			{/each}
 		{/each}
+	{/each}
+{/if}
+
+{#if showBeats}
+	{#each beatPositions as bp}
+		{@const isDownbeat = bp.beat === (resolved.beatOffset)}
+		<Billboard position={[bp.position.x, bp.position.y + 0.12, bp.position.z]}>
+			<Text
+				text={String(bp.beat)}
+				fontSize={isDownbeat ? 0.15 : 0.1}
+				color={isDownbeat ? '#ffffff' : color}
+				anchorX="center"
+				anchorY="middle"
+			/>
+		</Billboard>
 	{/each}
 {/if}
