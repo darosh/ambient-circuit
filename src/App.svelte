@@ -7,7 +7,7 @@
 </script>
 
 <Pane title="Debug" position="fixed">
-	<Checkbox label="show points" bind:value={showPoints} />
+	<Checkbox label="points" bind:value={showPoints} />
 </Pane>
 
 <Canvas>
