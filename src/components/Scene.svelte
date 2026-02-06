@@ -45,7 +45,7 @@ const coilPoints: RailPointFull[] = Array.from({ length: coilLength }, (_, i) =>
 	const t = (i / coilDensity) * 2 * Math.PI
 
 	return {
-		p: [Math.cos(t) - 4, i / (coilLength - 1) * coilHeight, Math.sin(t)] as [number, number, number],
+		p: [Math.cos(t) - 3, i / (coilLength - 1) * coilHeight, Math.sin(t)] as [number, number, number],
 		round: i === 0 ? 'from' as const : i === coilLength - 1 ? 'to' as const : 'both' as const
 	}
 })
@@ -53,9 +53,28 @@ const coilPoints: RailPointFull[] = Array.from({ length: coilLength }, (_, i) =>
 const coil: Rail = {
 	id: 'coil',
 	nodes: [
-		[-3, 0, -1],
+		[-2, 0, -1],
 		...coilPoints,
-		[-3, 1, 1]
+		[-2, 1, 1]
+	]
+}
+
+const spiralPoints: RailPointFull[] = Array.from({ length: coilLength }, (_, i) => {
+	const t = (i / coilDensity) * 2 * Math.PI
+	const r = Math.ceil((1 + i) / coilDensity) * .5
+
+	return {
+		p: [Math.cos(t) * r - 5.5, i / (coilLength - 1) * coilHeight, Math.sin(t) * r] as [number, number, number],
+		round: i === 0 ? 'from' as const : i === coilLength - 1 ? 'to' as const : 'both' as const
+	}
+})
+
+const spiral: Rail = {
+	id: 'coil',
+	nodes: [
+		[-5, 0, -1],
+		...spiralPoints,
+		[-4, 1, 1]
 	]
 }
 </script>
@@ -79,3 +98,4 @@ const coil: Rail = {
 <RailView rail={circle} color="#00ffff" width={0.08} {showPoints} />
 <RailView rail={roundedRect} color="#ff00ff" width={0.08} {showPoints} />
 <RailView rail={coil} color="#ffff00" width={0.08} {showPoints} />
+<RailView rail={spiral} color="#ff0000" width={0.08} {showPoints} />
