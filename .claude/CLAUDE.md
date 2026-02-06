@@ -59,7 +59,7 @@ Create a "marble-machine-inspired" music sequencer where:
 - [x] Rounding modes: `to`, `from`, `both` with tangent-aware control points
 - [x] Split/merge data structures with weighted routing
 - [x] Debug UI (svelte-tweakpane-ui) with show-points toggle
-- [ ] Beat index visualization on rails
+- [x] Beat index visualization on rails
 - [ ] `Marbles` on rails, tempo-synced movement
 - [ ] `Instruments`, audio trigger system
 - [ ] Visual feedback (lightning effects on collision)
