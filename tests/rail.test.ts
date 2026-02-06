@@ -19,7 +19,7 @@ describe('resolveRail', () => {
 		expect(r.reverse).toBe(false)
 		expect(r.points).toHaveLength(4)
 		expect(r.points.map((p) => p.beat)).toEqual([0, 1, 2, 3])
-		expect(r.points.every((p) => p.conn === 'straight')).toBe(true)
+		expect(r.points.every((p) => p.round === null)).toBe(true)
 	})
 
 	it('beatOffset shifts all beats', () => {
@@ -45,15 +45,23 @@ describe('resolveRail', () => {
 		expect(resolveRail(rail).reverse).toBe(true)
 	})
 
-	it('rounded corner preserved', () => {
+	it('rounding preserved', () => {
 		const rail: Rail = {
 			id: 'mel',
-			nodes: [[0, 0, 0], [2, 0, 0], { p: [4, 0, 0], conn: 'rounded' }, [4, 2, 0]],
+			nodes: [
+				[0, 0, 0],
+				{ p: [1, 0, 0], round: 'to' },
+				{ p: [2, 0, 0], round: 'from' },
+				{ p: [3, 0, 0], round: 'both' },
+				[4, 0, 0],
+			],
 		}
 		const r = resolveRail(rail)
-		expect(r.points[2].conn).toBe('rounded')
-		expect(r.points[2].p).toEqual([4, 0, 0])
-		expect(r.points[0].conn).toBe('straight')
+		expect(r.points[0].round).toBe(null)
+		expect(r.points[1].round).toBe('to')
+		expect(r.points[2].round).toBe('from')
+		expect(r.points[3].round).toBe('both')
+		expect(r.points[4].round).toBe(null)
 	})
 
 	it('explicit beat override', () => {
@@ -95,18 +103,15 @@ describe('resolveRail', () => {
 		}
 		const r = resolveRail(rail)
 
-		// main points: before split + after split
 		expect(r.points).toHaveLength(3)
 		expect(r.points.map((p) => p.beat)).toEqual([0, 1, 2])
 
-		// split
 		expect(r.splits).toHaveLength(1)
 		const s = r.splits[0]
 		expect(s.beat).toBe(1)
 		expect(s.weights).toEqual([2, 4])
 		expect(s.branches).toHaveLength(2)
 
-		// branch beats start at splitBeat + 1 = 2
 		expect(s.branches[0].points.map((p) => p.beat)).toEqual([2, 3])
 		expect(s.branches[1].points.map((p) => p.beat)).toEqual([2, 3])
 	})
@@ -166,7 +171,7 @@ describe('resolveRail', () => {
 			id: 'pos',
 			nodes: [
 				[1.5, -2.3, 0.7],
-				{ p: [3.14, 0, -1], conn: 'rounded' },
+				{ p: [3.14, 0, -1], round: 'both' },
 			],
 		}
 		const r = resolveRail(rail)

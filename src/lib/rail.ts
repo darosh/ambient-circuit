@@ -1,8 +1,8 @@
 /** 3D position */
 export type Vec3 = [x: number, y: number, z: number]
 
-/** Connection style to the next point */
-export type Connection = 'straight' | 'rounded'
+/** Rounding behavior at a point */
+export type Rounding = 'to' | 'from' | 'both'
 
 // ── Authored types (human-editable) ─────────────────────────
 
@@ -11,8 +11,8 @@ export type RailPointFull = {
 	p: Vec3
 	/** Beat index override. Default: previous + 1 */
 	beat?: number
-	/** Connection to next point. Default: 'straight' */
-	conn?: Connection
+	/** Rounding at this point: 'to' (incoming curved), 'from' (outgoing curved), 'both'. Default: none */
+	round?: Rounding
 }
 
 /** Fork in the road */
@@ -46,7 +46,7 @@ export type Rail = {
 export type ResolvedPoint = {
 	p: Vec3
 	beat: number
-	conn: Connection
+	round: Rounding | null
 }
 
 export type ResolvedSplit = {

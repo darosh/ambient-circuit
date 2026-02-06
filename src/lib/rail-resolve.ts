@@ -1,20 +1,12 @@
 import type {
 	Rail,
 	RailDef,
-	RailNode,
 	ResolvedPoint,
 	ResolvedRail,
 	ResolvedSegment,
 	ResolvedSplit,
-	Vec3,
 } from './rail'
 import { isVec3, isSplit, isPointFull } from './rail'
-
-function getPosition(node: RailNode): Vec3 | undefined {
-	if (isVec3(node)) return node
-	if (isPointFull(node)) return node.p
-	return undefined
-}
 
 function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { endBeat: number } {
 	const points: ResolvedPoint[] = []
@@ -23,11 +15,11 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 
 	for (const node of nodes) {
 		if (isVec3(node)) {
-			points.push({ p: node, beat, conn: 'straight' })
+			points.push({ p: node, beat, round: null })
 			beat++
 		} else if (isPointFull(node)) {
 			if (node.beat !== undefined) beat = node.beat
-			points.push({ p: node.p, beat, conn: node.conn ?? 'straight' })
+			points.push({ p: node.p, beat, round: node.round ?? null })
 			beat++
 		} else if (isSplit(node)) {
 			const lastPoint = points[points.length - 1]

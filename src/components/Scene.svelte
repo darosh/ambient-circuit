@@ -1,43 +1,81 @@
 <script lang="ts">
-	import { T } from '@threlte/core'
-	import { ContactShadows, Float, Grid, OrbitControls } from '@threlte/extras'
+import { T } from '@threlte/core'
+import { Grid, OrbitControls } from '@threlte/extras'
+import type { Rail, RailPointFull } from '../lib/rail'
+import RailView from './RailView.svelte'
+
+let { showPoints = false }: { showPoints?: boolean } = $props()
+
+// circle from 4 points — all 'both'
+const circle: Rail = {
+	id: 'circle',
+	nodes: [
+		{ p: [1, 0, 0], round: 'both' },
+		{ p: [0, 0, 1], round: 'both' },
+		{ p: [-1, 0, 0], round: 'both' },
+		{ p: [0, 0, -1], round: 'both' },
+		{ p: [1, 0, 0], round: 'both' }
+	]
+}
+
+// rounded rectangle from 8 points — 4 corners with 'to'
+const roundedRect: Rail = {
+	id: 'rounded-rect',
+	nodes: [
+		{ p: [3, 0, -2] },
+		{ p: [4, 0, -2], round: 'from' },
+		{ p: [5, 0, -1] },
+		{ p: [5, 0, 0], round: 'from' },
+		{ p: [4, 0, 1] },
+		{ p: [3, 0, 1], round: 'from' },
+		{ p: [2, 0, 0] },
+		{ p: [2, 0, -1], round: 'from' },
+		{ p: [3, 0, -2], }
+	]
+}
+
+// vertical coil with smooth entry/exit
+
+const coilHeight = 1
+const coilRounds = 2
+const coilDensity = 4
+const coilLength = coilRounds * coilDensity + 1
+
+const coilPoints: RailPointFull[] = Array.from({ length: coilLength }, (_, i) => {
+	const t = (i / coilDensity) * 2 * Math.PI
+
+	return {
+		p: [Math.cos(t) - 4, i / (coilLength - 1) * coilHeight, Math.sin(t)] as [number, number, number],
+		round: i === 0 ? 'from' as const : i === coilLength - 1 ? 'to' as const : 'both' as const
+	}
+})
+
+const coil: Rail = {
+	id: 'coil',
+	nodes: [
+		[-3, 0, -1],
+		...coilPoints,
+		[-3, 1, 1]
+	]
+}
 </script>
 
-<T.PerspectiveCamera makeDefault position={[-10, 10, 10]} fov={15}>
-	<OrbitControls autoRotate enableZoom={false} enableDamping autoRotateSpeed={0.5} target.y={1.5} />
+<T.PerspectiveCamera makeDefault position={[4, 6, 8]} fov={30}>
+	<OrbitControls enableDamping target={[0, 1, 0]} />
 </T.PerspectiveCamera>
 
 <T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />
-<T.AmbientLight intensity={0.2} />
+<T.AmbientLight intensity={0.4} />
 
 <Grid
-	position.y={-0.001}
-	cellColor="#ffffff"
-	sectionColor="#ffffff"
+	position.y={-0.01}
+	cellColor="#999999"
+	sectionColor="#555555"
 	sectionThickness={0}
 	fadeDistance={25}
-	cellSize={2}
+	cellSize={1}
 />
 
-<ContactShadows scale={10} blur={2} far={2.5} opacity={0.5} />
-
-<Float floatIntensity={1} floatingRange={[0, 1]}>
-	<T.Mesh position.y={1.2} position.z={-0.75}>
-		<T.BoxGeometry />
-		<T.MeshStandardMaterial color="#0059BA" />
-	</T.Mesh>
-</Float>
-
-<Float floatIntensity={1} floatingRange={[0, 1]}>
-	<T.Mesh position={[1.2, 1.5, 0.75]} rotation.x={5} rotation.y={71}>
-		<T.TorusKnotGeometry args={[0.5, 0.15, 100, 12, 2, 3]} />
-		<T.MeshStandardMaterial color="#F85122" />
-	</T.Mesh>
-</Float>
-
-<Float floatIntensity={1} floatingRange={[0, 1]}>
-	<T.Mesh position={[-1.4, 1.5, 0.75]} rotation={[-5, 128, 10]}>
-		<T.IcosahedronGeometry />
-		<T.MeshStandardMaterial color="#F8EBCE" />
-	</T.Mesh>
-</Float>
+<RailView rail={circle} color="#00ffff" width={0.08} {showPoints} />
+<RailView rail={roundedRect} color="#ff00ff" width={0.08} {showPoints} />
+<RailView rail={coil} color="#ffff00" width={0.08} {showPoints} />

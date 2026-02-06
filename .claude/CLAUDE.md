@@ -26,7 +26,8 @@ Create a "marble-machine-inspired" music sequencer where:
    - sequencer lines, like connections in a printed circuit board
    - `Marbles` travel on the lines in a loop (or reverse/restart on open-ended rails)
    - defined as points in 3D space + connection metadata; curves computed automatically
-   - connections between points are either **straight** or **rounded** (smooth continuation from previous segment to next)
+   - rounding per point: `'to'` (incoming curved), `'from'` (outgoing curved), `'both'` (smooth pass-through)
+   - cubic Bezier interpolation with tangent-aware control points; near-perfect circles from 4 points
    - capable of producing: straight lines, rounded corners, circles, spirals, coils
    - each point maps to a `Beat`
    - support **linear** and **eased** (bounce-in for snappy feel) movement between beats
@@ -47,21 +48,30 @@ Create a "marble-machine-inspired" music sequencer where:
 
 ## Current Status
 
-**Phase:** Early prototyping / architecture exploration
+**Phase:** Rails & sequencing foundation
 
-**Last Updated:** 2026-02-05
+**Last Updated:** 2026-02-06
 
 **What Works:**
 - [x] Basic Threlte project template
-- [ ] `Rails` definition architecture and rendering
+- [x] `Rails` two-layer type system (authored → resolved)
+- [x] `Rails` rendering with cubic Bezier curves (circles, rounded rects, coils)
+- [x] Rounding modes: `to`, `from`, `both` with tangent-aware control points
+- [x] Split/merge data structures with weighted routing
+- [x] Debug UI (svelte-tweakpane-ui) with show-points toggle
+- [ ] Beat index visualization on rails
+- [ ] `Marbles` on rails, tempo-synced movement
 - [ ] `Instruments`, audio trigger system
 - [ ] Visual feedback (lightning effects on collision)
 - [ ] `FX`, audio processing
 - [ ] RNBO `FX` audio processing
 
-**In Progress:**
-- Deciding on `Rails` architecture
-- Designing zone types and behaviors
+**Next Steps:**
+1. Beat index visualization — show beat markers on rails (debug toggle)
+2. Global tempo/time signature — BPM, beats per bar
+3. Marble system — spawn on rail, interpolate position between beats at tempo
+4. Eased movement — bounce-in between beat positions for snappy feel
+5. Instrument triggers — marble crossing a beat fires an instrument
 
 **Blocked/Questions:**
 - None currently
@@ -86,10 +96,12 @@ Create a "marble-machine-inspired" music sequencer where:
 ## Code Organization
 
 ```
-/src - source
-/src/lib - library functions
-/src/components - svelte components
-/tests - vitest tests
+/src/lib/rail.ts          - Rail types (authored + resolved) and type guards
+/src/lib/rail-resolve.ts  - resolveRail(): authored → engine-internal form
+/src/lib/rail-geometry.ts - buildRailCurve(): resolved points → Vector3 polyline
+/src/components/Scene.svelte   - 3D scene with sample rails
+/src/components/RailView.svelte - renders Rail as MeshLine + debug points
+/tests                    - vitest tests (not colocated)
 ```
 
 ---
