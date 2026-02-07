@@ -35,14 +35,14 @@
 	<Folder title="Marbles">
 		<List label="easing" bind:value={easing} options={easingNames} />
 	</Folder>
-	<Folder title="Rails">
-		{#each rails as { rail }, i (rail.id)}
-			<Checkbox label={rail.id} bind:value={railVisibility[i]} />
-		{/each}
-	</Folder>
 	<Folder title="Debug">
 		<Checkbox label="points" bind:value={showPoints} />
 		<Checkbox label="beats" bind:value={showBeats} />
+	</Folder>
+	<Folder title="Rails" expanded={false}>
+		{#each rails as { rail }, i (rail.id)}
+			<Checkbox label={rail.id} bind:value={railVisibility[i]} />
+		{/each}
 	</Folder>
 </Pane>
 

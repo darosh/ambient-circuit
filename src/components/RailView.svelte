@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { T } from '@threlte/core'
-	import { Billboard, Text } from '@threlte/extras'
+	import { Text3DGeometry } from '@threlte/extras'
 	import type { Rail } from '../lib/rail'
 	import type { Instrument } from '../lib/instrument'
 	import { resolveRail } from '../lib/rail-resolve'
 	import { buildRailCurve, computeBeatPositions } from '../lib/rail-geometry'
-	import { CatmullRomCurve3, Color, TubeGeometry, Vector3, type Group, type Mesh } from 'three'
+	import { CatmullRomCurve3, TubeGeometry, Vector3 } from 'three'
 	import InstrumentView from './InstrumentView.svelte'
 
 	type Props = {
@@ -21,7 +21,6 @@
 
 	const resolved = $derived(resolveRail(rail))
 	const mainPoints = $derived(buildRailCurve(resolved.points))
-	const colorValue = $derived(new Color(color).getHex())
 	const branchCurves = $derived.by(() => {
 		const result: import('three').Vector3[][] = []
 		for (const s of resolved.splits) {
@@ -62,7 +61,6 @@
 		const result = computeBeatPositions(resolved.points)
 		for (const s of resolved.splits) {
 			for (const b of s.branches) {
-				// Branch beat positions (split point already in main rail)
 				const branchBeats = computeBeatPositions(b.points)
 				result.push(...branchBeats)
 			}
@@ -73,9 +71,16 @@
 	// Create tube mesh for main rail
 	const mainMeshes = $derived.by(() => {
 		if (mainPoints.length < 2) return []
-		const curve = new CatmullRomCurve3(mainPoints)
-		const geometry = new TubeGeometry(curve, mainPoints.length * 4, width / 2, 8, false)
-		return [{ geometry, opacity: 0.9 }]
+		try {
+			const curve = new CatmullRomCurve3(mainPoints)
+			const segments = Math.min(Math.max(mainPoints.length * 4, 8), 256)
+			const radius = Math.max(width / 2, 0.001)
+			const geometry = new TubeGeometry(curve, segments, radius, 8, false)
+			return [{ geometry, opacity: 0.9 }]
+		} catch (e) {
+			console.warn('Failed to create main rail tube:', e)
+			return []
+		}
 	})
 
 	// Create tube meshes for branches
@@ -83,9 +88,15 @@
 		const meshes: Array<{ geometry: TubeGeometry; opacity: number }> = []
 		for (const points of branchCurves) {
 			if (points.length < 2) continue
-			const curve = new CatmullRomCurve3(points)
-			const geometry = new TubeGeometry(curve, points.length * 4, width / 2, 8, false)
-			meshes.push({ geometry, opacity: 0.7 })
+			try {
+				const curve = new CatmullRomCurve3(points)
+				const segments = Math.min(Math.max(points.length * 4, 8), 256)
+				const radius = Math.max(width / 2, 0.001)
+				const geometry = new TubeGeometry(curve, segments, radius, 8, false)
+				meshes.push({ geometry, opacity: 0.7 })
+			} catch (e) {
+				console.warn('Failed to create branch tube:', e)
+			}
 		}
 		return meshes
 	})
@@ -122,16 +133,15 @@
 {#if showBeats}
 	{#each beatPositions as bp, bpIndex (bpIndex)}
 		{@const isDownbeat = bp.beat === (resolved.beatOffset)}
-		<Billboard position={[bp.position.x, bp.position.y + 0.12 * (isDownbeat ? -1 : 1), bp.position.z]}>
-			<Text
+		<T.Mesh position={[bp.position.x + .1, bp.position.y + (isDownbeat ? -.25 : .05), bp.position.z]}>
+			<Text3DGeometry
 				text={String(bp.beat)}
-				font="./Outfit-Medium.ttf"
-				fontSize={isDownbeat ? 0.15 : 0.1}
-				color={isDownbeat ? '#ffffff' : color}
-				anchorX="center"
-				anchorY="middle"
+				size={isDownbeat ? 0.2 : 0.2}
+				depth={0.01}
+				bevelEnabled={false}
 			/>
-		</Billboard>
+			<T.MeshBasicMaterial color={isDownbeat ? '#ffffff' : color} />
+		</T.Mesh>
 	{/each}
 {/if}
 

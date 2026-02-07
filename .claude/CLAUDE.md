@@ -144,6 +144,7 @@ Create a "marble-machine-inspired" music sequencer where:
 - Line2/LineMaterial from `three/examples/jsm/lines` (uses ShaderMaterial)
 - MeshLine from `@threelte/extras` (uses ShaderMaterial)
 - Grid from `@threelte/extras` (uses ShaderMaterial internally)
+- Text/Billboard from `@threlte/extras` (troika-three-text causes infinite values in drawIndexed)
 
 **Rails Rendering:**
 - Use `TubeGeometry` along CatmullRomCurve3 for thick lines
