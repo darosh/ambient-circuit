@@ -6,12 +6,14 @@ import { createTempoState, updateTempo, type TempoState } from '../lib/tempo'
 import { createMarble } from '../lib/marble'
 import { updateMarbles } from '../lib/marble-system'
 import { resolveRail } from '../lib/rail-resolve'
-import { rails } from '../lib/rail-data'
+import { createRails } from '../lib/rail-data'
+import type { MidiState } from '../lib/midi'
 
 let {
 	showPoints = false,
 	showBeats = false,
 	showStats = true,
+	midiState = null,
 	tempo = $bindable(),
 	easing = $bindable(),
 	railVisibility = $bindable(),
@@ -20,6 +22,7 @@ let {
 	showPoints?: boolean
 	showBeats?: boolean
 	showStats?: boolean
+	midiState?: MidiState | null
 	tempo?: TempoState
 	easing?: string
 	railVisibility?: boolean[]
@@ -33,7 +36,9 @@ if (!railVisibility) railVisibility = rails.map(() => true)
 if (!tempo) tempo = createTempoState()
 
 // Create marbles (1 per rail, beat 0, looping, forward)
-let marbles = $state(rails.map(({ rail, direction, mode }) =>
+// Use static rails initially, then update with MIDI-enabled rails
+const staticRails = createRails(null, [])
+let marbles = $state(staticRails.map(({ rail, direction, mode }) =>
 	createMarble({
 		resolvedRail: resolveRail(rail),
 		startBeat: 0,
@@ -42,6 +47,9 @@ let marbles = $state(rails.map(({ rail, direction, mode }) =>
 		easing: easing || 'linear'
 	})
 ))
+
+// Create MIDI-enabled rails (reactive to midiState changes)
+let rails = $derived(createRails(midiState, marbles))
 
 // FPS tracking
 if (fps === undefined) fps = 0

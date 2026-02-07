@@ -27,6 +27,14 @@ export type Instrument = {
 	sides: number
 	/** Color of the instrument */
 	color: string
+	/** MIDI channel (1-16), default 1 */
+	midiChannel?: number
+	/** MIDI note (0-127), default 60 (C4) */
+	midiNote?: number
+	/** Note length in ms, default 200 */
+	midiLength?: number
+	/** MIDI velocity (0-127), default 100 */
+	midiVelocity?: number
 	/** Callback fired when marble crosses this beat */
 	onTrigger: (context: InstrumentTriggerContext) => void
 }

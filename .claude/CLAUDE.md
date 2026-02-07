@@ -74,14 +74,18 @@ Create a "marble-machine-inspired" music sequencer where:
 - [x] Rail data module with RailData type (direction, mode per rail)
 - [x] Primitives return nodes only (IDs assigned at data layer)
 - [x] `Instruments` on `Rails`
+- [x] Web MIDI output
+  - [x] Port selection with localStorage persistence
+  - [x] Instrument MIDI properties (channel, note, length, velocity)
+  - [x] Marble note override support
+  - [x] Lazy initialization (only when enabled)
 - [ ] Visual polishing, WebGPU, TSL
   - [ ] rails 
   - [ ] marbles 
   - [ ] instruments 
   - [ ] feedback (lightning effects on collision)
   - [ ] complex circuit
-- [ ] Web MIDI output
-- [ ] Audio instruments triggering
+- [ ] Audio instruments triggering (Tone.js)
 - [ ] `FX`, audio processing
 - [ ] RNBO `FX` audio processing
 
@@ -120,6 +124,9 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/marble.ts         - Marble types (config, state, direction, easing)
 /src/lib/marble-system.ts  - Marble movement logic (arc-length + curve following)
 /src/lib/easing.ts         - Easing functions (maath + custom)
+/src/lib/midi.ts           - Web MIDI API wrapper (init, port selection, sendNote)
+/src/lib/rail-data.ts      - Rail definitions with MIDI-enabled onTrigger handlers
+/src/lib/instrument.ts     - Instrument type with MIDI properties
 /src/components/Scene.svelte    - 3D scene with rails, marbles, tempo integration
 /src/components/RailView.svelte - renders Rail as TubeGeometry + debug points/beats
 /tests                     - vitest tests (not colocated)
@@ -150,6 +157,21 @@ Create a "marble-machine-inspired" music sequencer where:
 - Use `TubeGeometry` along CatmullRomCurve3 for thick lines
 - Standard `MeshStandardMaterial` via `<T>` automatically uses NodeMaterial version
 - Provides proper lighting/shadows support
+
+### MIDI System
+
+**Architecture:**
+- Web MIDI API via `midi.ts` (init, port selection, sendNote)
+- Instrument MIDI properties: channel (default 1), note (default C4/60), length (default 200ms), velocity (default 100)
+- Marble note override: `marble.config.note` takes precedence over instrument default
+- Port selection saved to localStorage (`ambient-circuit-midi-port`)
+- Lazy initialization: MIDI only initialized when checkbox enabled
+
+**onTrigger Handlers:**
+- Defined in `rail-data.ts` with `createMidiTrigger()` helper
+- Handlers close over `midiState` and `marbles` for runtime access
+- `createRails(midiState, marbles)` generates rails with MIDI-enabled handlers
+- marble-system.ts triggers handlers, no MIDI logic in core system
 
 ### For Claude Code
 

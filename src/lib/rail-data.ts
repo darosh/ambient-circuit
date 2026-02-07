@@ -1,7 +1,9 @@
 import { circle, roundedRect, coil, spiral } from './rail-primitives'
 import type { Rail, Vec3 } from './rail'
-import type { MarbleDirection, MarbleSequenceMode } from './marble'
-import type { Instrument } from './instrument'
+import type { MarbleDirection, MarbleSequenceMode, Marble } from './marble'
+import type { Instrument, InstrumentTriggerContext } from './instrument'
+import type { MidiState } from './midi'
+import { sendMidiNote } from './midi'
 
 export type RailData = {
 	rail: Rail
@@ -11,7 +13,31 @@ export type RailData = {
 	instruments?: Instrument[]
 }
 
-export const rails: RailData[] = [
+// Helper to create MIDI-enabled onTrigger handler
+function createMidiTrigger(
+	midiState: MidiState | null,
+	marbles: Marble[],
+	instrument: Instrument
+) {
+	return (ctx: InstrumentTriggerContext) => {
+		console.debug('🎵 Instrument triggered', ctx)
+
+		if (midiState && midiState.enabled) {
+			const marble = marbles[ctx.marbleIndex]
+			const channel = instrument.midiChannel ?? 1
+			const note = marble?.config.note ?? instrument.midiNote ?? 60
+			const velocity = instrument.midiVelocity ?? 100
+			const length = instrument.midiLength ?? 200
+			sendMidiNote(midiState, channel, note, velocity, length)
+		}
+	}
+}
+
+export function createRails(midiState: MidiState | null, marbles: Marble[]): RailData[] {
+	const inst1 = { beat: 1.5, sides: 3, color: '#ff0000', midiChannel: 1 } as Instrument
+	inst1.onTrigger = createMidiTrigger(midiState, marbles, inst1)
+
+	return [
 	{
 		rail: {
 			id: 'line',
@@ -19,14 +45,7 @@ export const rails: RailData[] = [
 			nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3, [0, 2, 0] as Vec3, [0, 3, 0] as Vec3]
 		},
 		color: '#ffff88',
-		instruments: [
-			{
-				beat: 1.5,
-				sides: 3,
-				color: '#ff0000',
-				onTrigger: (ctx) => console.debug('🎵 Instrument triggered', ctx)
-			}
-		]
+		instruments: [inst1]
 	},
 	{
 		rail: {
@@ -52,7 +71,10 @@ export const rails: RailData[] = [
 	},
 	{ rail: { id: 'rect1', nodes: roundedRect({ pos: { x: 3.5 } }) }, color: '#ff00ff' },
 	{ rail: { id: 'coil1', nodes: coil({ pos: { x: -3 }, lead: 1 }) }, color: '#ffff00' },
-	{ rail: { id: 'spiral1', nodes: spiral({ pos: { x: 0 }, lead: 1, tangent: .5 }) }, color: '#ff0000' },
+	{
+		rail: { id: 'spiral1', nodes: spiral({ pos: { x: 0 }, lead: 1, tangent: 0.5 }) },
+		color: '#ff0000'
+	},
 	{
 		rail: {
 			id: 'circle2',
@@ -64,20 +86,13 @@ export const rails: RailData[] = [
 				return n
 			})
 		},
-		instruments: [
-			{
-				beat: 1.5,
-				sides: 7,
-				color: '#ff0000',
-				onTrigger: (ctx) => console.debug('🎵 Instrument triggered', ctx)
-			},
-			{
-				beat: 2.5,
-				sides: 7,
-				color: '#ffffff',
-				onTrigger: (ctx) => console.debug('🎵 Instrument triggered', ctx)
-			}
-		],
+		instruments: (() => {
+			const inst2 = { beat: 1.5, sides: 7, color: '#ff0000', midiChannel: 2 } as Instrument
+			inst2.onTrigger = createMidiTrigger(midiState, marbles, inst2)
+			const inst3 = { beat: 2.5, sides: 7, color: '#ffffff', midiChannel: 2 } as Instrument
+			inst3.onTrigger = createMidiTrigger(midiState, marbles, inst3)
+			return [inst2, inst3]
+		})(),
 		color: '#ffffff'
 	},
 	// Fork example: main path a-b-c with split at b
@@ -162,22 +177,17 @@ export const rails: RailData[] = [
 			]
 		} satisfies Rail,
 		mode: 'ping-pong',
-		instruments: [
-			{
-				beat: 2.5,
-				path: [0],
-				sides: 7,
-				color: '#ffffff',
-				onTrigger: (ctx) => console.debug('🎵 Instrument triggered', ctx)
-			},
-			{
-				beat: 2.5,
-				path: [1],
-				sides: 7,
-				color: '#ff00ff',
-				onTrigger: (ctx) => console.debug('🎵 Instrument triggered', ctx)
-			}
-		],
+		instruments: (() => {
+			const inst4 = { beat: 2.5, path: [0], sides: 7, color: '#ffffff', midiChannel: 3 } as Instrument
+			inst4.onTrigger = createMidiTrigger(midiState, marbles, inst4)
+			const inst5 = { beat: 2.5, path: [1], sides: 7, color: '#ff00ff', midiChannel: 1 } as Instrument
+			inst5.onTrigger = createMidiTrigger(midiState, marbles, inst5)
+			return [inst4, inst5]
+		})(),
 		color: '#8800ff'
 	}
-]
+	]
+}
+
+// Default rails (for initial render before marbles exist)
+export const rails = createRails(null, [])
