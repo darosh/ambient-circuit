@@ -1,10 +1,24 @@
 <script lang="ts">
-import { T } from '@threlte/core'
+import { T, useTask } from '@threlte/core'
 import { Grid, OrbitControls } from '@threlte/extras'
 import { circle, roundedRect, coil, spiral } from '../lib/rail-primitives'
 import RailView from './RailView.svelte'
+import { createTempoState, updateTempo, type TempoState } from '../lib/tempo'
+import { createMarble } from '../lib/marble'
+import { updateMarbles } from '../lib/marble-system'
+import { resolveRail } from '../lib/rail-resolve'
 
-let { showPoints = false, showBeats = false }: { showPoints?: boolean; showBeats?: boolean } = $props()
+let {
+	showPoints = false,
+	showBeats = false,
+	tempo = $bindable(),
+	easing = $bindable()
+}: {
+	showPoints?: boolean
+	showBeats?: boolean
+	tempo?: TempoState
+	easing?: string
+} = $props()
 
 const rails = [
 	{ rail: circle({pos: {y: -0.5}}), color: '#00ffff' },
@@ -13,11 +27,37 @@ const rails = [
 	{ rail: spiral({ pos: { x: 0 }, lead: 1 }), color: '#ff0000' },
 	{ rail: circle({ pos: { x: 0, y: 1.5 }}), color: '#ffffff' },
 ]
-	
+
 // @ts-expect-error temporary
 rails.at(-1).rail.nodes[0].beat = 0
 // @ts-expect-error temporary
 rails.at(-1).rail.nodes.at(-1).beat = 3
+
+// Init tempo state
+if (!tempo) tempo = createTempoState()
+
+// Create marbles (1 per rail, beat 0, looping, forward)
+let marbles = $state(rails.map(({ rail }) =>
+	createMarble({
+		resolvedRail: resolveRail(rail),
+		startBeat: 0,
+		direction: 'forward',
+		sequenceMode: 'looping',
+		easing: easing || 'linear'
+	})
+))
+
+// Update loop
+useTask((delta) => {
+	updateTempo(tempo, delta * 1000)
+
+	// Update easing based on prop
+	for (const marble of marbles) {
+		marble.config.easing = easing || 'linear'
+	}
+
+	updateMarbles(marbles, tempo)
+})
 </script>
 
 <T.PerspectiveCamera makeDefault position={[4, 6, 8]} fov={30}>
@@ -38,4 +78,11 @@ rails.at(-1).rail.nodes.at(-1).beat = 3
 
 {#each rails as { rail, color }, railIndex (railIndex)}
 	<RailView {rail} {color} width={0.08} {showPoints} {showBeats} />
+{/each}
+
+{#each marbles as marble, idx (idx)}
+	<T.Mesh position={[marble.position.x, marble.position.y, marble.position.z]}>
+		<T.SphereGeometry args={[0.15, 16, 16]} />
+		<T.MeshStandardMaterial metalness={.8} roughness={.6} color={rails[idx].color} emissive={rails[idx].color} emissiveIntensity={0.1} />
+	</T.Mesh>
 {/each}
