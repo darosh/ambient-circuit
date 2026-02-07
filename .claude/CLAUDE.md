@@ -60,27 +60,28 @@ Create a "marble-machine-inspired" music sequencer where:
 - [x] Split/merge data structures with weighted routing
 - [x] Debug UI (svelte-tweakpane-ui) with show-points, show-beats toggles
 - [x] Beat index visualization on rails (arc-length based)
-- [x] Global tempo system (BPM, play/pause, beat counter)
+- [x] Global tempo system (BPM, play/pause, beat counter, spacebar toggle)
 - [x] `Marbles` on rails, tempo-synced movement
 - [x] Arc-length-based beat positioning (marbles hit beats accurately)
+- [x] Marble movement matches visualization exactly (arc-length interpolation on rail polyline)
 - [x] Easing system (31 functions via maath + custom: quad, elastic, bounce, back)
-- [x] Sequence modes: looping, ping-pong
-- [x] Direction tracking: forward/backward
+- [x] Sequence modes: looping (forward/backward), ping-pong (smooth bouncing)
+- [x] Direction tracking: forward/backward with proper wrapping
 - [x] Rail branching — marble routing at splits (weighted round-robin, delta-based positioning)
+- [x] Branch tangent computation (includes previous point before split for correct curves)
+- [x] Ping-pong mode with branches (branches reset and alternate on each pass)
+- [x] Curved branches with rounding modes (visualization matches marble path)
+- [x] Rail data module with RailData type (direction, mode per rail)
+- [x] Primitives return nodes only (IDs assigned at data layer)
 - [ ] `Instruments`, audio trigger system
 - [ ] Visual feedback (lightning effects on collision)
 - [ ] `FX`, audio processing
 - [ ] RNBO `FX` audio processing
 
 **Next Steps:**
-1. **Explore edge cases for branching/looping/curving**
-   - Test curved branches (with rounding modes)
-   - Multiple splits on same rail
-   - Nested splits (branches with splits)
-   - Ping-pong mode with branches
-   - Multiple marbles on same rail with routing
-2. Instrument triggers — marble crossing a beat fires an instrument
-3. Audio synthesis integration (Tone.js)
+1. Instrument triggers — marble crossing a beat fires an instrument
+2. Audio synthesis integration (Tone.js)
+3. Visual feedback system (lightning, glows on trigger)
 
 **Blocked/Questions:**
 - None currently
