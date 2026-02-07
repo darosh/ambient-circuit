@@ -88,7 +88,9 @@ export function updateMarble(marble: Marble, tempo: TempoState): void {
 
 	// Apply easing
 	const easingFn = easingFunctions[easing] || easingFunctions.linear
-	const easedT = easingFn(t)
+	let easedT = easingFn(t)
+	// Clamp to [0,1] - some easings (back, elastic) can overshoot
+	easedT = Math.max(0, Math.min(1, easedT))
 
 	// Build rail polyline and find segment between beat positions
 	const railPolyline = buildRailCurve(points)

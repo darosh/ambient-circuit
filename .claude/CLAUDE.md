@@ -48,9 +48,9 @@ Create a "marble-machine-inspired" music sequencer where:
 
 ## Current Status
 
-**Phase:** Rails & sequencing foundation
+**Phase:** Marbles & sequencing
 
-**Last Updated:** 2026-02-06
+**Last Updated:** 2026-02-07
 
 **What Works:**
 - [x] Basic Threlte project template
@@ -58,20 +58,28 @@ Create a "marble-machine-inspired" music sequencer where:
 - [x] `Rails` rendering with cubic Bezier curves (circles, rounded rects, coils)
 - [x] Rounding modes: `to`, `from`, `both` with tangent-aware control points
 - [x] Split/merge data structures with weighted routing
-- [x] Debug UI (svelte-tweakpane-ui) with show-points toggle
-- [x] Beat index visualization on rails
-- [ ] `Marbles` on rails, tempo-synced movement
+- [x] Debug UI (svelte-tweakpane-ui) with show-points, show-beats toggles
+- [x] Beat index visualization on rails (arc-length based)
+- [x] Global tempo system (BPM, play/pause, beat counter)
+- [x] `Marbles` on rails, tempo-synced movement
+- [x] Arc-length-based beat positioning (marbles hit beats accurately)
+- [x] Easing system (31 functions via maath + custom: quad, elastic, bounce, back)
+- [x] Sequence modes: looping, ping-pong
+- [x] Direction tracking: forward/backward
+- [ ] Rail branching — marble routing at splits
 - [ ] `Instruments`, audio trigger system
 - [ ] Visual feedback (lightning effects on collision)
 - [ ] `FX`, audio processing
 - [ ] RNBO `FX` audio processing
 
 **Next Steps:**
-1. Beat index visualization — show beat markers on rails (debug toggle)
-2. Global tempo/time signature — BPM, beats per bar
-3. Marble system — spawn on rail, interpolate position between beats at tempo
-4. Eased movement — bounce-in between beat positions for snappy feel
-5. Instrument triggers — marble crossing a beat fires an instrument
+1. **Rail branching system**
+   - Marble routing logic at split points
+   - Weighted branch selection (e.g. `[2,4]` pattern)
+   - Visual representation of active branch paths
+   - Merge point handling
+2. Instrument triggers — marble crossing a beat fires an instrument
+3. Audio synthesis integration (Tone.js)
 
 **Blocked/Questions:**
 - None currently
@@ -96,12 +104,17 @@ Create a "marble-machine-inspired" music sequencer where:
 ## Code Organization
 
 ```
-/src/lib/rail.ts          - Rail types (authored + resolved) and type guards
-/src/lib/rail-resolve.ts  - resolveRail(): authored → engine-internal form
-/src/lib/rail-geometry.ts - buildRailCurve(): resolved points → Vector3 polyline
-/src/components/Scene.svelte   - 3D scene with sample rails
-/src/components/RailView.svelte - renders Rail as MeshLine + debug points
-/tests                    - vitest tests (not colocated)
+/src/lib/rail.ts           - Rail types (authored + resolved) and type guards
+/src/lib/rail-resolve.ts   - resolveRail(): authored → engine-internal form
+/src/lib/rail-geometry.ts  - buildRailCurve(): resolved points → Vector3 polyline
+/src/lib/rail-primitives.ts - circle(), roundedRect(), coil(), spiral() helpers
+/src/lib/tempo.ts          - Global tempo/beat system (BPM, play/pause)
+/src/lib/marble.ts         - Marble types (config, state, direction, easing)
+/src/lib/marble-system.ts  - Marble movement logic (arc-length + curve following)
+/src/lib/easing.ts         - Easing functions (maath + custom)
+/src/components/Scene.svelte    - 3D scene with rails, marbles, tempo integration
+/src/components/RailView.svelte - renders Rail as MeshLine + debug points/beats
+/tests                     - vitest tests (not colocated)
 ```
 
 ---
