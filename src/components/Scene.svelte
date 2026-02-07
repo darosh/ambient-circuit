@@ -10,9 +10,9 @@ import { createRails } from '../lib/rail-data'
 import type { MidiState } from '../lib/midi'
 
 let {
+	showGrid = false,
 	showPoints = false,
 	showBeats = false,
-	showStats = true,
 	midiState = null,
 	tempo = $bindable(),
 	easing = $bindable(),
@@ -87,14 +87,16 @@ useTask((delta) => {
 <T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />
 <T.AmbientLight intensity={0.4} />
 
-<T.GridHelper
-	position.y={-0.01}
-	cellColor="#999999"
-	sectionColor="#555555"
-	sectionThickness={0}
-	fadeDistance={25}
-	cellSize={1}
-/>
+{#if showGrid}
+	<T.GridHelper
+		position.y={-0.01}
+		cellColor="#999999"
+		sectionColor="#555555"
+		sectionThickness={0}
+		fadeDistance={25}
+		cellSize={1}
+	/>
+{/if}
 
 {#each rails as { rail, color, instruments }, railIndex (railIndex)}
 	{#if railVisibility[railIndex]}

@@ -11,6 +11,7 @@
 
 	extend(THREE)
 	
+	let showGrid = $state(true)
 	let showPoints = $state(false)
 	let showBeats = $state(false)
 	let showStats = $state(true)
@@ -68,6 +69,7 @@
 	</Folder>
 	<Folder title="Debug">
 		<Checkbox label="Stats" bind:value={showStats} />
+		<Checkbox label="Grid" bind:value={showGrid} />
 		<Checkbox label="Points" bind:value={showPoints} />
 		<Checkbox label="Beats" bind:value={showBeats} />
 		<Checkbox label="MIDI" bind:value={midiEnabled} />
@@ -89,7 +91,7 @@
       forceWebGL: false
     })
   }}>
-	<Scene {showPoints} {showBeats} {showStats} {midiState} bind:tempo bind:easing bind:railVisibility bind:fps />
+	<Scene {showGrid} {showPoints} {showBeats} {showStats} {midiState} bind:tempo bind:easing bind:railVisibility bind:fps />
 </Canvas>
 
 {#if showStats}
