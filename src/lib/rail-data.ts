@@ -64,6 +64,20 @@ export const rails: RailData[] = [
 				return n
 			})
 		},
+		instruments: [
+			{
+				beat: 1.5,
+				sides: 7,
+				color: '#ff0000',
+				onTrigger: (ctx) => console.debug('🎵 Instrument triggered', ctx)
+			},
+			{
+				beat: 2.5,
+				sides: 7,
+				color: '#ffffff',
+				onTrigger: (ctx) => console.debug('🎵 Instrument triggered', ctx)
+			}
+		],
 		color: '#ffffff'
 	},
 	// Fork example: main path a-b-c with split at b

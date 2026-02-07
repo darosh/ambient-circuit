@@ -153,6 +153,18 @@ function calculateMarblePosition(marble: Marble, rawBeat: number, beatPositions:
 }
 
 /**
+ * Check if two paths match (marble path matches instrument path).
+ */
+function pathsMatch(marblePath: number[], instrumentPath?: number[]): boolean {
+	const instPath = instrumentPath || []
+	if (marblePath.length !== instPath.length) return false
+	for (let i = 0; i < marblePath.length; i++) {
+		if (marblePath[i] !== instPath[i]) return false
+	}
+	return true
+}
+
+/**
  * Check if marble crossed any instruments and fire triggers.
  */
 function checkInstrumentTriggers(
@@ -172,8 +184,14 @@ function checkInstrumentTriggers(
 	// Allow up to 1 beat of movement per frame (generous for high BPM)
 	if (Math.abs(beatDelta) > 1) return
 
+	// Determine marble's current path
+	const marblePath: number[] = marble.branchIndex !== null ? [marble.branchIndex] : []
+
 	// Check direction-aware crossing
 	for (const instrument of instruments) {
+		// Only check instruments on the marble's current path
+		if (!pathsMatch(marblePath, instrument.path)) continue
+
 		let triggered = false
 
 		if (marble.direction === 'forward') {

@@ -16,6 +16,13 @@ export type InstrumentTriggerContext = {
 export type Instrument = {
 	/** Beat position on rail (can be fractional, e.g. 1.5) */
 	beat: number
+	/**
+	 * Path through splits to reach this instrument.
+	 * undefined or [] = main rail
+	 * [0] = first split, branch 0
+	 * [1, 0] = first split branch 1, second split branch 0
+	 */
+	path?: number[]
 	/** Number of polygon sides (3=triangle, 4=square, 5=pentagon, etc.) */
 	sides: number
 	/** Color of the instrument */

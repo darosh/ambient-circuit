@@ -1,5 +1,5 @@
 import { Vector3, CubicBezierCurve3 } from 'three'
-import type { ResolvedPoint, Vec3 } from './rail'
+import type { ResolvedPoint, ResolvedRail, Vec3 } from './rail'
 
 /** Interpolated points per curved segment */
 const CURVE_SEGMENTS = 12
@@ -113,6 +113,53 @@ export function buildRailCurve(points: ResolvedPoint[]): Vector3[] {
 	}
 
 	return result
+}
+
+// ── Path resolution ────────────────────────────────────────
+
+/**
+ * Get resolved points for a path through splits.
+ * path = [] or undefined → main rail
+ * path = [0] → first split, branch 0
+ * path = [1, 0] → first split branch 1, second split branch 0
+ */
+export function getPointsForPath(rail: ResolvedRail, path?: number[]): ResolvedPoint[] {
+	if (!path || path.length === 0) {
+		return rail.points
+	}
+
+	// Start with main rail points up to first split
+	if (rail.splits.length === 0) {
+		return rail.points
+	}
+
+	const firstSplit = rail.splits[0]
+	const splitIdx = rail.points.findIndex(p => p.beat === firstSplit.beat)
+
+	// Include point before split for proper tangent computation
+	const startIdx = Math.max(0, splitIdx - 1)
+	let points = rail.points.slice(startIdx, splitIdx + 1)
+
+	// Navigate through the path
+	let currentBranches = firstSplit.branches
+
+	for (let i = 0; i < path.length; i++) {
+		const branchIdx = path[i]
+		if (branchIdx >= currentBranches.length) {
+			// Invalid path, return what we have
+			return points
+		}
+
+		const branch = currentBranches[branchIdx]
+		points = [...points, ...branch.points]
+
+		// Check if this branch has more splits
+		if (i < path.length - 1 && branch.splits && branch.splits.length > 0) {
+			currentBranches = branch.splits[0].branches
+		}
+	}
+
+	return points
 }
 
 // ── Interpolation at fractional beat ───────────────────────

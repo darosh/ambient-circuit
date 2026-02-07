@@ -122,5 +122,5 @@
 {/if}
 
 {#each instruments as instrument, idx (idx)}
-	<InstrumentView {instrument} points={resolved.points} />
+	<InstrumentView {instrument} rail={resolved} />
 {/each}

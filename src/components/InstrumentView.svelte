@@ -1,17 +1,20 @@
 <script lang="ts">
 	import { T } from '@threlte/core'
 	import type { Instrument } from '../lib/instrument'
-	import type { ResolvedPoint } from '../lib/rail'
-	import { getBeatTransform } from '../lib/rail-geometry'
+	import type { ResolvedRail } from '../lib/rail'
+	import { getBeatTransform, getPointsForPath } from '../lib/rail-geometry'
 	import { Shape, ShapeGeometry, Vector2, Quaternion, Vector3, Euler, Matrix4 } from 'three'
 
 	type Props = {
 		instrument: Instrument
-		points: ResolvedPoint[]
+		rail: ResolvedRail
 		size?: number
 	}
 
-	let { instrument, points, size = 1 }: Props = $props()
+	let { instrument, rail, size = 1 }: Props = $props()
+
+	// Get points for the instrument's path
+	const points = $derived(getPointsForPath(rail, instrument.path))
 
 	// Get position and tangent at instrument beat
 	const transform = $derived(getBeatTransform(points, instrument.beat))
