@@ -109,5 +109,32 @@ export const rails: RailData[] = [
 			]
 		} satisfies Rail,
 		color: '#8800ff'
+	},
+	{
+		rail: {
+			id: 'fork-ping',
+			offset: [-3, 0, 3] as Vec3,
+			nodes: [
+				[-1, 0, 0] as Vec3, // a - beat 0
+				{
+					split: {
+						p: [0, 0, 0] as Vec3, // b - beat 1 (split point)
+						weights: [1, 1], // alternate between branches
+						branches: [
+							[
+								{ p: [1, 1, 0] as Vec3, beat: 2, round: 'to' as const },
+								{ p: [1, 2, 0] as Vec3, beat: 3 }
+							],
+							[
+								{ p: [1, -1, 0] as Vec3, beat: 2, round: 'to' as const },
+								{ p: [1, -2, 0] as Vec3, beat: 3 }
+							]
+						]
+					}
+				}
+			]
+		} satisfies Rail,
+		mode: 'ping-pong',
+		color: '#8800ff'
 	}
 ]

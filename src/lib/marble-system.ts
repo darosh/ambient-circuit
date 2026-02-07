@@ -192,6 +192,14 @@ export function updateMarble(marble: Marble, tempo: TempoState): void {
 		return
 	}
 
+	// Reset branch when crossing split point backward
+	if (marble.branchIndex !== null &&
+		resolvedRail.splits.length > 0 &&
+		marble.direction === 'backward' &&
+		rawBeat < resolvedRail.splits[0].beat) {
+		marble.branchIndex = null
+	}
+
 	// Check if should assign branch (use unwrapped beat)
 	const shouldAssignBranch = marble.branchIndex === null &&
 		resolvedRail.splits.length > 0 &&
