@@ -24,7 +24,7 @@ export const rails: RailData[] = [
 				beat: 1.5,
 				sides: 3,
 				color: '#ff0000',
-				onTrigger: () => console.debug('🎵 Instrument triggered at beat 0.5')
+				onTrigger: (ctx) => console.debug('🎵 Instrument triggered', ctx)
 			}
 		]
 	},

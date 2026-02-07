@@ -1,6 +1,6 @@
 import type { Marble } from './marble'
 import type { TempoState } from './tempo'
-import type { Instrument } from './instrument'
+import type { Instrument, InstrumentTriggerContext } from './instrument'
 import { buildRailCurve, computeBeatPositions } from './rail-geometry'
 import { easingFunctions } from './easing'
 import { Vector3 } from 'three'
@@ -155,7 +155,15 @@ function calculateMarblePosition(marble: Marble, rawBeat: number, beatPositions:
 /**
  * Check if marble crossed any instruments and fire triggers.
  */
-function checkInstrumentTriggers(marble: Marble, previousBeat: number, currentBeat: number, instruments: Instrument[]): void {
+function checkInstrumentTriggers(
+	marble: Marble,
+	previousBeat: number,
+	currentBeat: number,
+	instruments: Instrument[],
+	railId: string,
+	marbleIndex: number,
+	globalBeat: number
+): void {
 	if (instruments.length === 0) return
 
 	const beatDelta = currentBeat - previousBeat
@@ -166,16 +174,29 @@ function checkInstrumentTriggers(marble: Marble, previousBeat: number, currentBe
 
 	// Check direction-aware crossing
 	for (const instrument of instruments) {
+		let triggered = false
+
 		if (marble.direction === 'forward') {
 			// Forward: trigger if instrument is between previous and current
 			if (instrument.beat > previousBeat && instrument.beat <= currentBeat) {
-				instrument.onTrigger()
+				triggered = true
 			}
 		} else {
 			// Backward: trigger if instrument is between current and previous
 			if (instrument.beat < previousBeat && instrument.beat >= currentBeat) {
-				instrument.onTrigger()
+				triggered = true
 			}
+		}
+
+		if (triggered) {
+			const context: InstrumentTriggerContext = {
+				railId,
+				marbleIndex,
+				beat: instrument.beat,
+				globalBeat,
+				direction: marble.direction
+			}
+			instrument.onTrigger(context)
 		}
 	}
 }
@@ -184,7 +205,13 @@ function checkInstrumentTriggers(marble: Marble, previousBeat: number, currentBe
  * Update marble position based on current global beat.
  * Uses arc-length beat positions + rail curve for smooth motion.
  */
-export function updateMarble(marble: Marble, tempo: TempoState, instruments: Instrument[] = []): void {
+export function updateMarble(
+	marble: Marble,
+	tempo: TempoState,
+	instruments: Instrument[] = [],
+	railId: string = '',
+	marbleIndex: number = 0
+): void {
 	const { resolvedRail, sequenceMode, easing, startBeat } = marble.config
 
 	// Calculate delta from last update
@@ -337,7 +364,7 @@ export function updateMarble(marble: Marble, tempo: TempoState, instruments: Ins
 	}
 
 	// Check for instrument triggers before updating beat
-	checkInstrumentTriggers(marble, marble.currentBeat, rawBeat, instruments)
+	checkInstrumentTriggers(marble, marble.currentBeat, rawBeat, instruments, railId, marbleIndex, globalBeat)
 
 	marble.previousBeat = marble.currentBeat
 	marble.currentBeat = rawBeat
@@ -348,9 +375,15 @@ export function updateMarble(marble: Marble, tempo: TempoState, instruments: Ins
 	calculateMarblePosition(marble, rawBeat, beatPositions, points, easing)
 }
 
-export function updateMarbles(marbles: Marble[], tempo: TempoState, instrumentsPerRail: Instrument[][] = []): void {
+export function updateMarbles(
+	marbles: Marble[],
+	tempo: TempoState,
+	instrumentsPerRail: Instrument[][] = [],
+	railIds: string[] = []
+): void {
 	for (let i = 0; i < marbles.length; i++) {
 		const instruments = instrumentsPerRail[i] || []
-		updateMarble(marbles[i], tempo, instruments)
+		const railId = railIds[i] || ''
+		updateMarble(marbles[i], tempo, instruments, railId, i)
 	}
 }

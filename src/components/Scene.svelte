@@ -49,7 +49,8 @@ useTask((delta) => {
 	}
 
 	const instrumentsPerRail = rails.map(r => r.instruments || [])
-	updateMarbles(marbles, tempo, instrumentsPerRail)
+	const railIds = rails.map(r => r.rail.id)
+	updateMarbles(marbles, tempo, instrumentsPerRail, railIds)
 })
 </script>
 
