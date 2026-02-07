@@ -11,10 +11,9 @@
 		width?: number
 		showPoints?: boolean
 		showBeats?: boolean
-		offset?: readonly [number, number, number]
 	}
 
-	let { rail, color = '#00ffff', width = 0.1, showPoints = false, showBeats = false, offset = [0, 0, 0] }: Props = $props()
+	let { rail, color = '#00ffff', width = 0.1, showPoints = false, showBeats = false }: Props = $props()
 
 	const resolved = $derived(resolveRail(rail))
 	const mainPoints = $derived(buildRailCurve(resolved.points))
@@ -46,55 +45,53 @@
 	})
 </script>
 
-<T.Group position={[offset[0], offset[1], offset[2]]}>
-	{#if mainPoints.length >= 2}
+{#if mainPoints.length >= 2}
+	<T.Mesh>
+		<MeshLineGeometry points={mainPoints} />
+		<MeshLineMaterial {width} {color} opacity={0.9} />
+	</T.Mesh>
+{/if}
+
+{#each branchCurves as points, pointsIndex (pointsIndex)}
+	{#if points.length >= 2}
 		<T.Mesh>
-			<MeshLineGeometry points={mainPoints} />
-			<MeshLineMaterial {width} {color} opacity={0.9} />
+			<MeshLineGeometry {points} />
+			<MeshLineMaterial {width} {color} opacity={0.7} />
 		</T.Mesh>
 	{/if}
+{/each}
 
-	{#each branchCurves as points, pointsIndex (pointsIndex)}
-		{#if points.length >= 2}
-			<T.Mesh>
-				<MeshLineGeometry {points} />
-				<MeshLineMaterial {width} {color} opacity={0.7} />
-			</T.Mesh>
-		{/if}
+{#if showPoints}
+	{#each resolved.points as pt, ptIndex (ptIndex)}
+		<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
+			<T.SphereGeometry args={[0.04, 8, 8]} />
+			<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
+		</T.Mesh>
 	{/each}
-
-	{#if showPoints}
-		{#each resolved.points as pt, ptIndex (ptIndex)}
-			<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
-				<T.SphereGeometry args={[0.04, 8, 8]} />
-				<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
-			</T.Mesh>
-		{/each}
-		{#each resolved.splits as split, splitIndex (splitIndex)}
-			{#each split.branches as branch, branchIndex (branchIndex)}
-				{#each branch.points as pt, ptIndex (ptIndex)}
-					<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
-						<T.SphereGeometry args={[0.04, 8, 8]} />
-						<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
-					</T.Mesh>
-				{/each}
+	{#each resolved.splits as split, splitIndex (splitIndex)}
+		{#each split.branches as branch, branchIndex (branchIndex)}
+			{#each branch.points as pt, ptIndex (ptIndex)}
+				<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
+					<T.SphereGeometry args={[0.04, 8, 8]} />
+					<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
+				</T.Mesh>
 			{/each}
 		{/each}
-	{/if}
+	{/each}
+{/if}
 
-	{#if showBeats}
-		{#each beatPositions as bp, bpIndex (bpIndex)}
-			{@const isDownbeat = bp.beat === (resolved.beatOffset)}
-			<Billboard position={[bp.position.x, bp.position.y + 0.12 * (isDownbeat ? -1 : 1), bp.position.z]}>
-				<Text
-					text={String(bp.beat)}
-					font="./Outfit-Medium.ttf"
-					fontSize={isDownbeat ? 0.15 : 0.1}
-					color={isDownbeat ? '#ffffff' : color}
-					anchorX="center"
-					anchorY="middle"
-				/>
-			</Billboard>
-		{/each}
-	{/if}
-</T.Group>
+{#if showBeats}
+	{#each beatPositions as bp, bpIndex (bpIndex)}
+		{@const isDownbeat = bp.beat === (resolved.beatOffset)}
+		<Billboard position={[bp.position.x, bp.position.y + 0.12 * (isDownbeat ? -1 : 1), bp.position.z]}>
+			<Text
+				text={String(bp.beat)}
+				font="./Outfit-Medium.ttf"
+				fontSize={isDownbeat ? 0.15 : 0.1}
+				color={isDownbeat ? '#ffffff' : color}
+				anchorX="center"
+				anchorY="middle"
+			/>
+		</Billboard>
+	{/each}
+{/if}

@@ -42,6 +42,8 @@ export type Rail = {
 	beatOffset?: number
 	/** Reverse at end instead of looping. Default: false */
 	reverse?: boolean
+	/** 3D offset applied to all points. Default: [0,0,0] */
+	offset?: Vec3
 	nodes: RailDef
 }
 

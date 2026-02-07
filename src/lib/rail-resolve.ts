@@ -5,6 +5,7 @@ import type {
 	ResolvedRail,
 	ResolvedSegment,
 	ResolvedSplit,
+	Vec3,
 } from './rail'
 import { isVec3, isSplit, isPointFull } from './rail'
 
@@ -91,13 +92,33 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 
 export function resolveRail(rail: Rail): ResolvedRail {
 	const beatOffset = rail.beatOffset ?? 0
+	const offset = rail.offset ?? [0, 0, 0]
 	const { points, splits } = resolveNodes(rail.nodes, beatOffset)
+
+	// Apply offset to all points
+	const offsetPoints = points.map((pt) => ({
+		...pt,
+		p: [pt.p[0] + offset[0], pt.p[1] + offset[1], pt.p[2] + offset[2]] as Vec3,
+	}))
+
+	// Apply offset to split points and branch points
+	const offsetSplits = splits.map((split) => ({
+		...split,
+		p: [split.p[0] + offset[0], split.p[1] + offset[1], split.p[2] + offset[2]] as Vec3,
+		branches: split.branches.map((branch) => ({
+			...branch,
+			points: branch.points.map((pt) => ({
+				...pt,
+				p: [pt.p[0] + offset[0], pt.p[1] + offset[1], pt.p[2] + offset[2]] as Vec3,
+			})),
+		})),
+	}))
 
 	return {
 		id: rail.id,
 		beatOffset,
 		reverse: rail.reverse ?? false,
-		points,
-		splits,
+		points: offsetPoints,
+		splits: offsetSplits,
 	}
 }

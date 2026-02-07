@@ -24,15 +24,16 @@ let {
 } = $props()
 
 const rails = [
-	{ rail: circle({ pos: { y: -0.5 } }), color: '#00ffff', offset: [0, 0, 0] as const },
-	{ rail: roundedRect({ pos: { x: 3.5 } }), color: '#ff00ff', offset: [0, 0, 0] as const },
-	{ rail: coil({ pos: { x: -3 }, lead: 1 }), color: '#ffff00', offset: [0, 0, 0] as const },
-	{ rail: spiral({ pos: { x: 0 }, lead: 1 }), color: '#ff0000', offset: [0, 0, 0] as const },
-	{ rail: circle({ pos: { x: 0, y: 1.5 } }), color: '#ffffff', offset: [0, 0, 0] as const },
+	{ rail: circle({ pos: { y: -0.5 } }), color: '#00ffff' },
+	{ rail: roundedRect({ pos: { x: 3.5 } }), color: '#ff00ff' },
+	{ rail: coil({ pos: { x: -3 }, lead: 1 }), color: '#ffff00' },
+	{ rail: spiral({ pos: { x: 0 }, lead: 1 }), color: '#ff0000' },
+	{ rail: circle({ pos: { x: 0, y: 1.5 } }), color: '#ffffff' },
 	// Fork example: main path a-b-c with split at b
 	{
 		rail: {
 			id: 'fork-demo',
+			offset: [0, 0, 2],
 			nodes: [
 				[-1, 0, 0], // a - beat 0
 				{
@@ -51,18 +52,43 @@ const rails = [
 				}
 			]
 		} satisfies Rail,
-		color: '#00ff00',
-		offset: [0, 0, 0] as const
+		color: '#00ff00'
+	},
+	{
+		rail: {
+			id: 'fork-demo2',
+			offset: [-3, 0, 2],
+			nodes: [
+				[-1, 0, 0], // a - beat 0
+				{
+					split: {
+						p: [0, 0, 0],  // b - beat 1 (split point)
+						weights: [1, 1], // alternate between branches
+						branches: [
+							[
+								{ p: [1, 1, 0], beat: 2 }
+							],
+							[
+								{ p: [1, -1, 0], beat: 2 }
+							]
+						]
+					}
+				}
+			]
+		} satisfies Rail,
+		color: '#00ff00'
 	}
 ]
 
 // Init rail visibility if not provided
 if (!railVisibility) railVisibility = rails.map(() => true)
 
+rails[0].rail.offset = [0,0,-3]
+
 // @ts-expect-error temporary
-rails.at(-2).rail.nodes[0].beat = 0
+rails[4].rail.nodes[0].beat = 0
 // @ts-expect-error temporary
-rails.at(-2).rail.nodes.at(-1).beat = 3
+rails[4].rail.nodes.at(-1).beat = 3
 
 // Init tempo state
 if (!tempo) tempo = createTempoState()
@@ -107,16 +133,15 @@ useTask((delta) => {
 	cellSize={1}
 />
 
-{#each rails as { rail, color, offset }, railIndex (railIndex)}
+{#each rails as { rail, color }, railIndex (railIndex)}
 	{#if railVisibility[railIndex]}
-		<RailView {rail} {color} {offset} width={0.08} {showPoints} {showBeats} />
+		<RailView {rail} {color} width={0.08} {showPoints} {showBeats} />
 	{/if}
 {/each}
 
 {#each marbles as marble, idx (idx)}
 	{#if railVisibility[idx]}
-		{@const offset = rails[idx].offset}
-		<T.Mesh position={[marble.position.x + offset[0], marble.position.y + offset[1], marble.position.z + offset[2]]}>
+		<T.Mesh position={[marble.position.x, marble.position.y, marble.position.z]}>
 			<T.SphereGeometry args={[0.15, 16, 16]} />
 			<T.MeshStandardMaterial metalness={.8} roughness={.6} color={rails[idx].color} emissive={rails[idx].color}
 															emissiveIntensity={0.1} />
