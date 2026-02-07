@@ -162,6 +162,22 @@ export const rails: RailData[] = [
 			]
 		} satisfies Rail,
 		mode: 'ping-pong',
+		instruments: [
+			{
+				beat: 2.5,
+				path: [0],
+				sides: 7,
+				color: '#ffffff',
+				onTrigger: (ctx) => console.debug('🎵 Instrument triggered', ctx)
+			},
+			{
+				beat: 2.5,
+				path: [1],
+				sides: 7,
+				color: '#ff00ff',
+				onTrigger: (ctx) => console.debug('🎵 Instrument triggered', ctx)
+			}
+		],
 		color: '#8800ff'
 	}
 ]
