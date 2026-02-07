@@ -11,7 +11,7 @@ const rails = [
 	{ rail: roundedRect({ pos: { x: 3.5 } }), color: '#ff00ff' },
 	{ rail: coil({ pos: { x: -3 }, lead: 1 }), color: '#ffff00' },
 	{ rail: spiral({ pos: { x: 0 }, lead: 1 }), color: '#ff0000' },
-	{ rail: circle({ pos: { x: 0, y: 2 }}), color: '#ffffff' },
+	{ rail: circle({ pos: { x: 0, y: 1.5 }}), color: '#ffffff' },
 ]
 	
 // @ts-expect-error temporary
