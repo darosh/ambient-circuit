@@ -45,7 +45,7 @@
 	</T.Mesh>
 {/if}
 
-{#each branchCurves as points}
+{#each branchCurves as points, pointsIndex (pointsIndex)}
 	{#if points.length >= 2}
 		<T.Mesh>
 			<MeshLineGeometry {points} />
@@ -55,15 +55,15 @@
 {/each}
 
 {#if showPoints}
-	{#each resolved.points as pt}
+	{#each resolved.points as pt, ptIndex (ptIndex)}
 		<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
 			<T.SphereGeometry args={[0.04, 8, 8]} />
 			<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
 		</T.Mesh>
 	{/each}
-	{#each resolved.splits as split}
-		{#each split.branches as branch}
-			{#each branch.points as pt}
+	{#each resolved.splits as split, splitIndex (splitIndex)}
+		{#each split.branches as branch, branchIndex (branchIndex)}
+			{#each branch.points as pt, ptIndex (ptIndex)}
 				<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
 					<T.SphereGeometry args={[0.04, 8, 8]} />
 					<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
@@ -74,11 +74,12 @@
 {/if}
 
 {#if showBeats}
-	{#each beatPositions as bp}
+	{#each beatPositions as bp, bpIndex (bpIndex)}
 		{@const isDownbeat = bp.beat === (resolved.beatOffset)}
 		<Billboard position={[bp.position.x, bp.position.y + 0.12, bp.position.z]}>
 			<Text
 				text={String(bp.beat)}
+				font="./Outfit-Medium.ttf"
 				fontSize={isDownbeat ? 0.15 : 0.1}
 				color={isDownbeat ? '#ffffff' : color}
 				anchorX="center"
