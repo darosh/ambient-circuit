@@ -3,8 +3,8 @@ import { circle, roundedRect, coil, spiral } from '../src/lib/rail-primitives'
 import type { RailPointFull, Vec3 } from '../src/lib/rail'
 import { isPointFull, isVec3 } from '../src/lib/rail'
 
-function getPositions(nodes: (Vec3 | RailPointFull | any)[]): Vec3[] {
-	return nodes.map((n: any) => (Array.isArray(n) ? n : n.p))
+function getPositions(nodes: (Vec3 | RailPointFull)[]): Vec3[] {
+	return nodes.map((n: Vec3 | RailPointFull) => (Array.isArray(n) ? n : n.p))
 }
 
 describe('circle', () => {
@@ -12,7 +12,7 @@ describe('circle', () => {
 		const nodes = circle()
 		expect(nodes).toHaveLength(5) // 4 + close
 		for (const n of nodes) {
-			expect(isPointFull(n as any)).toBe(true)
+			expect(isPointFull(n)).toBe(true)
 			expect((n as RailPointFull).round).toBe('both')
 		}
 	})
@@ -84,9 +84,9 @@ describe('roundedRect', () => {
 		for (let i = 0; i < 8; i++) {
 			const n = nodes[i]
 			if (i % 2 === 0) {
-				expect(isVec3(n as any)).toBe(true)
+				expect(isVec3(n)).toBe(true)
 			} else {
-				expect(isPointFull(n as any)).toBe(true)
+				expect(isPointFull(n)).toBe(true)
 				expect((n as RailPointFull).round).toBe('from')
 			}
 		}
@@ -135,8 +135,8 @@ describe('coil', () => {
 
 	it('first and last nodes are plain Vec3 (leads)', () => {
 		const nodes = coil()
-		expect(isVec3(nodes[0] as any)).toBe(true)
-		expect(isVec3(nodes[nodes.length - 1] as any)).toBe(true)
+		expect(isVec3(nodes[0])).toBe(true)
+		expect(isVec3(nodes[nodes.length - 1])).toBe(true)
 	})
 
 	it('inner points have correct rounding', () => {

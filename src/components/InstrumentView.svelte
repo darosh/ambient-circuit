@@ -3,7 +3,7 @@
 	import type { Instrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-geometry'
-	import { Shape, ShapeGeometry, Vector2, Quaternion, Vector3, Euler, Matrix4 } from 'three'
+	import { Shape, ShapeGeometry, Vector3, Euler, Matrix4 } from 'three'
 
 	type Props = {
 		instrument: Instrument

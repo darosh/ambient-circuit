@@ -3,7 +3,6 @@ import { createMarble } from '../src/lib/marble'
 import { updateMarble } from '../src/lib/marble-system'
 import { createTempoState } from '../src/lib/tempo'
 import type { ResolvedRail } from '../src/lib/rail'
-import { Vector3 } from 'three'
 
 describe('marble-system', () => {
 	const testRail: ResolvedRail = {

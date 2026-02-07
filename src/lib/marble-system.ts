@@ -1,9 +1,10 @@
 import type { Marble } from './marble'
 import type { TempoState } from './tempo'
 import type { Instrument, InstrumentTriggerContext } from './instrument'
-import { buildRailCurve, computeBeatPositions } from './rail-geometry'
+import { BeatPosition, buildRailCurve, computeBeatPositions } from './rail-geometry'
 import { easingFunctions } from './easing'
 import { Vector3 } from 'three'
+import { ResolvedPoint, ResolvedSplit } from './rail'
 
 /**
  * Find closest point index on polyline to a target position.
@@ -24,7 +25,7 @@ function findClosestPointIndex(polyline: Vector3[], target: Vector3): number {
 /**
  * Select branch for marble at split using weighted round-robin.
  */
-function selectBranch(marble: Marble, split: any): number {
+function selectBranch(marble: Marble, split: ResolvedSplit): number {
 	const weights = split.weights
 	const totalWeight = weights.reduce((sum: number, w: number) => sum + w, 0)
 	const position = marble.routingCounter % totalWeight
@@ -42,7 +43,7 @@ function selectBranch(marble: Marble, split: any): number {
 /**
  * Get current path points based on marble's branch state.
  */
-function getCurrentPathPoints(marble: Marble): any[] {
+function getCurrentPathPoints(marble: Marble): ResolvedPoint[] {
 	const rail = marble.config.resolvedRail
 
 	// If on a branch, return: main points up to split + split point + branch points
@@ -51,7 +52,7 @@ function getCurrentPathPoints(marble: Marble): any[] {
 		const branch = split.branches[marble.branchIndex]
 
 		// Find split point in main rail
-		const splitIdx = rail.points.findIndex((p: any) => p.beat === split.beat)
+		const splitIdx = rail.points.findIndex((p: ResolvedPoint) => p.beat === split.beat)
 
 		// Include point before split for proper tangent computation
 		const startIdx = Math.max(0, splitIdx - 1)
@@ -66,7 +67,7 @@ function getCurrentPathPoints(marble: Marble): any[] {
 /**
  * Calculate marble position from beat and points.
  */
-function calculateMarblePosition(marble: Marble, rawBeat: number, beatPositions: any[], points: any[], easing: string): void {
+function calculateMarblePosition(marble: Marble, rawBeat: number, beatPositions: BeatPosition[], points: ResolvedPoint[], easing: string): void {
 	if (beatPositions.length === 0) {
 		marble.position = points[0] ? new Vector3(...points[0].p) : new Vector3()
 		return
@@ -310,8 +311,6 @@ export function updateMarble(
 
 	// Wrap/ping-pong
 	if (sequenceMode === 'looping') {
-		const beforeWrap = rawBeat
-
 		// Wrap forward: if PAST maxBeat
 		if (rawBeat > maxBeat) {
 			const excess = rawBeat - maxBeat

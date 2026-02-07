@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { ResolvedPoint } from '../src/lib/rail'
-import { computeBeatPositions, toV3 } from '../src/lib/rail-geometry'
+import { computeBeatPositions } from '../src/lib/rail-geometry'
 
 function pt(p: [number, number, number], beat: number, round: 'to' | 'from' | 'both' | null = null): ResolvedPoint {
 	return { p, beat, round }
