@@ -73,15 +73,21 @@ Create a "marble-machine-inspired" music sequencer where:
 - [x] Curved branches with rounding modes (visualization matches marble path)
 - [x] Rail data module with RailData type (direction, mode per rail)
 - [x] Primitives return nodes only (IDs assigned at data layer)
-- [ ] `Instruments`, audio trigger system
-- [ ] Visual feedback (lightning effects on collision)
+- [x] `Instruments` on `Rails`
+- [ ] Visual polishing, WebGPU, TSL
+  - [ ] rails 
+  - [ ] marbles 
+  - [ ] instruments 
+  - [ ] feedback (lightning effects on collision)
+  - [ ] complex circuit
+- [ ] Web MIDI output
+- [ ] Audio instruments triggering
 - [ ] `FX`, audio processing
 - [ ] RNBO `FX` audio processing
 
 **Next Steps:**
-1. Instrument triggers — marble crossing a beat fires an instrument
-2. Audio synthesis integration (Tone.js)
-3. Visual feedback system (lightning, glows on trigger)
+1. Visual polishing
+2. Complex circuit definition
 
 **Blocked/Questions:**
 - None currently
