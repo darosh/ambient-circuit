@@ -1,17 +1,27 @@
 import { circle, roundedRect, coil, spiral } from './rail-primitives'
-import type { Rail } from './rail'
+import type { Rail, Vec3 } from './rail'
 
 export const rails = [
-	{ rail: circle({ id: 'circle1', pos: { y: -0.5 } }), color: '#00ffff' },
-	{ rail: roundedRect({ id: 'rect1', pos: { x: 3.5 } }), color: '#ff00ff' },
-	{ rail: coil({ id: 'coil1', pos: { x: -3 }, lead: 1 }), color: '#ffff00' },
-	{ rail: spiral({ id: 'spiral1', pos: { x: 0 }, lead: 1 }), color: '#ff0000' },
-	{ rail: circle({ id: 'circle2', pos: { x: 0, y: 1.5 } }), color: '#ffffff' },
+	{ rail: { id: 'circle1', offset: [0, 0, -3] as Vec3, nodes: circle({ pos: { y: -0.5 } }) }, color: '#00ffff' },
+	{ rail: { id: 'rect1', nodes: roundedRect({ pos: { x: 3.5 } }) }, color: '#ff00ff' },
+	{ rail: { id: 'coil1', nodes: coil({ pos: { x: -3 }, lead: 1 }) }, color: '#ffff00' },
+	{ rail: { id: 'spiral1', nodes: spiral({ pos: { x: 0 }, lead: 1 }) }, color: '#ff0000' },
+	{
+		rail: {
+			id: 'circle2',
+			nodes: circle({ pos: { x: 0, y: 1.5 } }).map((n, i, arr) => {
+				if (i === 0) return { ...(typeof n === 'object' && 'p' in n ? n : { p: n }), beat: 0 }
+				if (i === arr.length - 1) return { ...(typeof n === 'object' && 'p' in n ? n : { p: n }), beat: 3 }
+				return n
+			})
+		},
+		color: '#ffffff'
+	},
 	// Fork example: main path a-b-c with split at b
 	{
 		rail: {
 			id: 'fork-demo',
-			offset: [0, 0, 2],
+			offset: [0, 0, 2] as Vec3,
 			nodes: [
 				[-1, 0, 0], // a - beat 0
 				{
@@ -35,7 +45,7 @@ export const rails = [
 	{
 		rail: {
 			id: 'fork-demo2',
-			offset: [-3, 0, 2],
+			offset: [-3, 0, 2] as Vec3,
 			nodes: [
 				[-1, 0, 0], // a - beat 0
 				{
@@ -56,4 +66,4 @@ export const rails = [
 		} satisfies Rail,
 		color: '#00ff00'
 	}
-] as const
+]

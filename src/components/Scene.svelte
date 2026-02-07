@@ -25,13 +25,6 @@ let {
 // Init rail visibility if not provided
 if (!railVisibility) railVisibility = rails.map(() => true)
 
-rails[0].rail.offset = [0,0,-3]
-
-// @ts-expect-error temporary
-rails[4].rail.nodes[0].beat = 0
-// @ts-expect-error temporary
-rails[4].rail.nodes.at(-1).beat = 3
-
 // Init tempo state
 if (!tempo) tempo = createTempoState()
 

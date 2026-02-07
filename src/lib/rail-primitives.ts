@@ -1,4 +1,4 @@
-import type { Rail, RailPointFull, Vec3 } from './rail'
+import type { RailPointFull, Vec3 } from './rail'
 
 type Pos = { x?: number; y?: number; z?: number }
 
@@ -9,30 +9,27 @@ function offset(p: Vec3, pos: Pos): Vec3 {
 // ── Circle ──────────────────────────────────────────────────
 
 export type CircleOpts = {
-	id?: string
 	pos?: Pos
 	radius?: number
 	/** Points around the circle (min 3). Default: 4 */
 	points?: number
 }
 
-export function circle(opts: CircleOpts = {}): Rail {
-	const { id = 'circle', pos = {}, radius = 1, points = 4 } = opts
+export function circle(opts: CircleOpts = {}): (Vec3 | RailPointFull)[] {
+	const { pos = {}, radius = 1, points = 4 } = opts
 	const n = Math.max(3, points)
-	const nodes: RailPointFull[] = Array.from({ length: n + 1 }, (_, i) => {
+	return Array.from({ length: n + 1 }, (_, i) => {
 		const t = (i % n) / n * 2 * Math.PI
 		return {
 			p: offset([Math.cos(t) * radius, 0, Math.sin(t) * radius], pos),
 			round: 'both' as const,
 		}
 	})
-	return { id, nodes }
 }
 
 // ── Rounded Rectangle ───────────────────────────────────────
 
 export type RoundedRectOpts = {
-	id?: string
 	pos?: Pos
 	width?: number
 	height?: number
@@ -40,14 +37,14 @@ export type RoundedRectOpts = {
 	cornerRadius?: number
 }
 
-export function roundedRect(opts: RoundedRectOpts = {}): Rail {
-	const { id = 'rounded-rect', pos = {}, width = 3, height = 3, cornerRadius = 1 } = opts
+export function roundedRect(opts: RoundedRectOpts = {}): (Vec3 | RailPointFull)[] {
+	const { pos = {}, width = 3, height = 3, cornerRadius = 1 } = opts
 	const hw = width / 2
 	const hh = height / 2
 	const cr = Math.min(cornerRadius, hw, hh)
 
 	// Clockwise from after TL corner. Per corner: approach (from) → exit (plain).
-	const nodes: (Vec3 | RailPointFull)[] = [
+	return [
 		offset([-hw + cr, 0, -hh], pos),                          // TL exit (start)
 		{ p: offset([hw - cr, 0, -hh], pos), round: 'from' },    // TR approach
 		offset([hw, 0, -hh + cr], pos),                           // TR exit
@@ -58,14 +55,11 @@ export function roundedRect(opts: RoundedRectOpts = {}): Rail {
 		{ p: offset([-hw, 0, -hh + cr], pos), round: 'from' },   // TL approach
 		offset([-hw + cr, 0, -hh], pos),                          // close
 	]
-
-	return { id, nodes }
 }
 
 // ── Coil ────────────────────────────────────────────────────
 
 export type CoilOpts = {
-	id?: string
 	pos?: Pos
 	radius?: number
 	height?: number
@@ -76,9 +70,9 @@ export type CoilOpts = {
 	lead?: number
 }
 
-export function coil(opts: CoilOpts = {}): Rail {
+export function coil(opts: CoilOpts = {}): (Vec3 | RailPointFull)[] {
 	const {
-		id = 'coil', pos = {}, radius = 1, height = 1,
+		pos = {}, radius = 1, height = 1,
 		rounds = 2, density = 4, lead = 1,
 	} = opts
 	const len = rounds * density + 1
@@ -98,13 +92,12 @@ export function coil(opts: CoilOpts = {}): Rail {
 	const last = coilPoints[len - 1].p
 	const leadOut: Vec3 = [last[0], last[1], last[2] + lead]
 
-	return { id, nodes: [leadIn, ...coilPoints, leadOut] }
+	return [leadIn, ...coilPoints, leadOut]
 }
 
 // ── Spiral ──────────────────────────────────────────────────
 
 export type SpiralOpts = {
-	id?: string
 	pos?: Pos
 	height?: number
 	rounds?: number
@@ -118,9 +111,9 @@ export type SpiralOpts = {
 	lead?: number
 }
 
-export function spiral(opts: SpiralOpts = {}): Rail {
+export function spiral(opts: SpiralOpts = {}): (Vec3 | RailPointFull)[] {
 	const {
-		id = 'spiral', pos = {}, height = 1, rounds = 2, density = 4,
+		pos = {}, height = 1, rounds = 2, density = 4,
 		startRadius = 0.5, radiusStep = 0.5, lead = 1,
 	} = opts
 	const len = rounds * density + 1
@@ -139,5 +132,5 @@ export function spiral(opts: SpiralOpts = {}): Rail {
 	const last = spiralPoints[len - 1].p
 	const leadOut: Vec3 = [last[0], last[1], last[2] + lead]
 
-	return { id, nodes: [leadIn, ...spiralPoints, leadOut] }
+	return [leadIn, ...spiralPoints, leadOut]
 }
