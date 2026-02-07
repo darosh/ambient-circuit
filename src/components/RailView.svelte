@@ -76,7 +76,7 @@
 {#if showBeats}
 	{#each beatPositions as bp, bpIndex (bpIndex)}
 		{@const isDownbeat = bp.beat === (resolved.beatOffset)}
-		<Billboard position={[bp.position.x, bp.position.y + 0.12, bp.position.z]}>
+		<Billboard position={[bp.position.x, bp.position.y + 0.12 * (isDownbeat ? -1 : 1), bp.position.z]}>
 			<Text
 				text={String(bp.beat)}
 				font="./Outfit-Medium.ttf"
