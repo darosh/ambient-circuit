@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { T } from '@threlte/core'
-	import { Billboard, MeshLineGeometry, MeshLineMaterial, Text } from '@threlte/extras'
+	import { Billboard, Text } from '@threlte/extras'
 	import type { Rail } from '../lib/rail'
 	import type { Instrument } from '../lib/instrument'
 	import { resolveRail } from '../lib/rail-resolve'
 	import { buildRailCurve, computeBeatPositions } from '../lib/rail-geometry'
-	import { Vector3 } from 'three'
+	import { CatmullRomCurve3, Color, TubeGeometry, Vector3, type Group, type Mesh } from 'three'
 	import InstrumentView from './InstrumentView.svelte'
 
 	type Props = {
@@ -21,6 +21,7 @@
 
 	const resolved = $derived(resolveRail(rail))
 	const mainPoints = $derived(buildRailCurve(resolved.points))
+	const colorValue = $derived(new Color(color).getHex())
 	const branchCurves = $derived.by(() => {
 		const result: import('three').Vector3[][] = []
 		for (const s of resolved.splits) {
@@ -68,22 +69,35 @@
 		}
 		return result
 	})
+
+	// Create tube mesh for main rail
+	const mainMeshes = $derived.by(() => {
+		if (mainPoints.length < 2) return []
+		const curve = new CatmullRomCurve3(mainPoints)
+		const geometry = new TubeGeometry(curve, mainPoints.length * 4, width / 2, 8, false)
+		return [{ geometry, opacity: 0.9 }]
+	})
+
+	// Create tube meshes for branches
+	const branchMeshes = $derived.by(() => {
+		const meshes: Array<{ geometry: TubeGeometry; opacity: number }> = []
+		for (const points of branchCurves) {
+			if (points.length < 2) continue
+			const curve = new CatmullRomCurve3(points)
+			const geometry = new TubeGeometry(curve, points.length * 4, width / 2, 8, false)
+			meshes.push({ geometry, opacity: 0.7 })
+		}
+		return meshes
+	})
+
+	// All meshes combined
+	const allMeshes = $derived([...mainMeshes, ...branchMeshes])
 </script>
 
-{#if mainPoints.length >= 2}
-	<T.Mesh>
-		<MeshLineGeometry points={mainPoints} />
-		<MeshLineMaterial {width} {color} opacity={0.9} />
+{#each allMeshes as { geometry, opacity }, idx (idx)}
+	<T.Mesh {geometry}>
+		<T.MeshStandardMaterial {color} transparent={true} {opacity} />
 	</T.Mesh>
-{/if}
-
-{#each branchCurves as points, pointsIndex (pointsIndex)}
-	{#if points.length >= 2}
-		<T.Mesh>
-			<MeshLineGeometry {points} />
-			<MeshLineMaterial {width} {color} opacity={0.7} />
-		</T.Mesh>
-	{/if}
 {/each}
 
 {#if showPoints}

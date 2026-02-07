@@ -121,13 +121,34 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/marble-system.ts  - Marble movement logic (arc-length + curve following)
 /src/lib/easing.ts         - Easing functions (maath + custom)
 /src/components/Scene.svelte    - 3D scene with rails, marbles, tempo integration
-/src/components/RailView.svelte - renders Rail as MeshLine + debug points/beats
+/src/components/RailView.svelte - renders Rail as TubeGeometry + debug points/beats
 /tests                     - vitest tests (not colocated)
 ```
 
 ---
 
 ## Development Guidelines
+
+### WebGPU Rendering
+
+**Context:**
+- Using `WebGPURenderer` from `three/webgpu` (extended via `extend(THREE)` in App.svelte)
+- WebGPU requires NodeMaterial-based materials; ShaderMaterial not compatible
+
+**Compatible:**
+- Standard materials via `<T>` catalogue: `<T.MeshStandardMaterial />`, `<T.MeshBasicMaterial />`
+- Geometries from `three/webgpu`: `<T.TubeGeometry />`, `<T.SphereGeometry />`
+- Three.js primitives: `<T.GridHelper />`, `<T.DirectionalLight />`
+
+**NOT Compatible:**
+- Line2/LineMaterial from `three/examples/jsm/lines` (uses ShaderMaterial)
+- MeshLine from `@threelte/extras` (uses ShaderMaterial)
+- Grid from `@threelte/extras` (uses ShaderMaterial internally)
+
+**Rails Rendering:**
+- Use `TubeGeometry` along CatmullRomCurve3 for thick lines
+- Standard `MeshStandardMaterial` via `<T>` automatically uses NodeMaterial version
+- Provides proper lighting/shadows support
 
 ### For Claude Code
 
@@ -139,6 +160,7 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **DON'T:**
 - Read files in `/archive` (obsolete experiments)
+- Use Line2/MeshLine/examples/jsm materials with WebGPU renderer
 
 ---
 

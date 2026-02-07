@@ -61,7 +61,7 @@ useTask((delta) => {
 <T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />
 <T.AmbientLight intensity={0.4} />
 
-<Grid
+<T.GridHelper
 	position.y={-0.01}
 	cellColor="#999999"
 	sectionColor="#555555"

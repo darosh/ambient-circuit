@@ -1,11 +1,15 @@
 <script lang="ts">
-	import { Canvas } from '@threlte/core'
+	import { Canvas, extend } from '@threlte/core'
 	import { Pane, Checkbox, Slider, Folder, Monitor, List } from 'svelte-tweakpane-ui'
 	import Scene from './components/Scene.svelte'
 	import { createTempoState } from './lib/tempo'
 	import { easingNames } from './lib/easing'
 	import { rails } from './lib/rail-data'
-
+	import { WebGPURenderer } from 'three/webgpu'
+	import * as THREE from 'three/webgpu'
+	
+	extend(THREE)
+	
 	let showPoints = $state(false)
 	let showBeats = $state(false)
 	let tempo = $state(createTempoState())
@@ -42,6 +46,12 @@
 	</Folder>
 </Pane>
 
-<Canvas>
+<Canvas createRenderer={(canvas) => {
+    return new WebGPURenderer({
+      canvas,
+      antialias: true,
+      forceWebGL: false
+    })
+  }}>
 	<Scene {showPoints} {showBeats} bind:tempo bind:easing bind:railVisibility />
 </Canvas>
