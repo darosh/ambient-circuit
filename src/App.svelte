@@ -59,17 +59,17 @@
 
 <Pane title="Debug" position="fixed">
 	<Folder title="Tempo">
-		<Checkbox label="play" bind:value={tempo.isPlaying} />
+		<Checkbox label="Play" bind:value={tempo.isPlaying} />
 		<Slider label="BPM" bind:value={tempo.config.bpm} min={30} max={300} />
-		<Monitor label="beat" value={Math.floor(tempo.currentBeat)} />
+		<Monitor label="Beat" value={Math.floor(tempo.currentBeat)} />
 	</Folder>
 	<Folder title="Marbles">
-		<List label="easing" bind:value={easing} options={easingNames} />
+		<List label="Easing" bind:value={easing} options={easingNames} />
 	</Folder>
 	<Folder title="Debug">
-		<Checkbox label="stats" bind:value={showStats} />
-		<Checkbox label="points" bind:value={showPoints} />
-		<Checkbox label="beats" bind:value={showBeats} />
+		<Checkbox label="Stats" bind:value={showStats} />
+		<Checkbox label="Points" bind:value={showPoints} />
+		<Checkbox label="Beats" bind:value={showBeats} />
 		<Checkbox label="MIDI" bind:value={midiEnabled} />
 		{#if midiEnabled && midiState && midiState.outputs.length > 0}
 			<List label="Port" bind:value={selectedMidiPort} options={midiPortOptions} />
