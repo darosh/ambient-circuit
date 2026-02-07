@@ -11,7 +11,16 @@
 	let tempo = $state(createTempoState())
 	let easing = $state('linear')
 	let railVisibility = $state(rails.map(() => true))
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.code === 'Space' && e.target === document.body) {
+			e.preventDefault()
+			tempo.isPlaying = !tempo.isPlaying
+		}
+	}
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <Pane title="Debug" position="fixed">
 	<Folder title="Tempo">

@@ -4,6 +4,7 @@
 	import type { Rail } from '../lib/rail'
 	import { resolveRail } from '../lib/rail-resolve'
 	import { buildRailCurve, computeBeatPositions } from '../lib/rail-geometry'
+	import { Vector3 } from 'three'
 
 	type Props = {
 		rail: Rail
@@ -20,13 +21,34 @@
 	const branchCurves = $derived.by(() => {
 		const result: import('three').Vector3[][] = []
 		for (const s of resolved.splits) {
+			// Find the point before the split in main rail for proper tangent computation
+			const splitIdx = resolved.points.findIndex(p => p.beat === s.beat)
+			const prevPoint = splitIdx > 0 ? resolved.points[splitIdx - 1] : null
+
 			for (const b of s.branches) {
-				// Prepend split point to connect branch to split
-				const pointsWithSplit = [
-					{ p: s.p, beat: s.beat, round: null },
-					...b.points
-				]
-				result.push(buildRailCurve(pointsWithSplit))
+				// Prepend prev point and split point to branch for correct tangent computation
+				const pointsForCurve = prevPoint
+					? [prevPoint, { p: s.p, beat: s.beat, round: null }, ...b.points]
+					: [{ p: s.p, beat: s.beat, round: null }, ...b.points]
+
+				const curve = buildRailCurve(pointsForCurve)
+
+				// If prev point exists, find the split point in curve and slice from there
+				if (prevPoint && curve.length > 1) {
+					const splitV3 = new Vector3(s.p[0], s.p[1], s.p[2])
+					let splitCurveIdx = 0
+					let minDist = Infinity
+					for (let i = 0; i < curve.length; i++) {
+						const dist = curve[i].distanceToSquared(splitV3)
+						if (dist < minDist) {
+							minDist = dist
+							splitCurveIdx = i
+						}
+					}
+					result.push(curve.slice(splitCurveIdx))
+				} else {
+					result.push(curve)
+				}
 			}
 		}
 		return result

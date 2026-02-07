@@ -2,7 +2,7 @@ import type { Marble } from './marble'
 import type { TempoState } from './tempo'
 import { buildRailCurve, computeBeatPositions } from './rail-geometry'
 import { easingFunctions } from './easing'
-import { CatmullRomCurve3, Vector3 } from 'three'
+import { Vector3 } from 'three'
 
 /**
  * Find closest point index on polyline to a target position.
@@ -51,7 +51,10 @@ function getCurrentPathPoints(marble: Marble): any[] {
 
 		// Find split point in main rail
 		const splitIdx = rail.points.findIndex((p: any) => p.beat === split.beat)
-		const mainUpToSplit = rail.points.slice(0, splitIdx + 1)
+
+		// Include point before split for proper tangent computation
+		const startIdx = Math.max(0, splitIdx - 1)
+		const mainUpToSplit = rail.points.slice(startIdx, splitIdx + 1)
 
 		return [...mainUpToSplit, ...branch.points]
 	}
@@ -110,15 +113,42 @@ function calculateMarblePosition(marble: Marble, rawBeat: number, beatPositions:
 		}
 	}
 
-	// Interpolate along segment curve
+	// Interpolate along segment polyline (arc-length based)
 	if (segmentPoints.length < 2) {
 		marble.position = bp0.position.clone()
-	} else if (segmentPoints.length === 2) {
-		marble.position = new Vector3().lerpVectors(segmentPoints[0], segmentPoints[1], easedT)
-	} else {
-		const curve = new CatmullRomCurve3(segmentPoints, false, 'centripetal')
-		marble.position = curve.getPointAt(easedT)
+		return
 	}
+
+	// Calculate total arc length
+	let totalLength = 0
+	const segmentLengths: number[] = []
+	for (let i = 0; i < segmentPoints.length - 1; i++) {
+		const len = segmentPoints[i].distanceTo(segmentPoints[i + 1])
+		segmentLengths.push(len)
+		totalLength += len
+	}
+
+	if (totalLength === 0) {
+		marble.position = segmentPoints[0].clone()
+		return
+	}
+
+	// Find position at easedT along arc length
+	const targetDist = easedT * totalLength
+	let accumulatedDist = 0
+
+	for (let i = 0; i < segmentLengths.length; i++) {
+		const segLen = segmentLengths[i]
+		if (accumulatedDist + segLen >= targetDist) {
+			const localT = (targetDist - accumulatedDist) / segLen
+			marble.position = new Vector3().lerpVectors(segmentPoints[i], segmentPoints[i + 1], localT)
+			return
+		}
+		accumulatedDist += segLen
+	}
+
+	// Fallback to last point
+	marble.position = segmentPoints[segmentPoints.length - 1].clone()
 }
 
 /**
