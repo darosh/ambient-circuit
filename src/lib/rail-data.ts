@@ -14,21 +14,24 @@ export const rails: RailData[] = [
 		rail: {
 			id: 'line',
 			offset: [-3, 0, -3] as Vec3,
-			nodes: [
-				[0, 0, 0] as Vec3,
-				[0, 1, 0] as Vec3
-			]
+			nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
 		},
+		color: '#ffff88'
+	},
+	{
+		rail: {
+			id: 'line-back',
+			offset: [-4, 0, -3] as Vec3,
+			nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
+		},
+		direction: 'backward',
 		color: '#ffff88'
 	},
 	{
 		rail: {
 			id: 'line-ping',
 			offset: [3, 0, -3] as Vec3,
-			nodes: [
-				[0, 0, 0] as Vec3,
-				[0, 1, 0] as Vec3
-			]
+			nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
 		},
 		mode: 'ping-pong' as MarbleSequenceMode,
 		color: '#ffff88'

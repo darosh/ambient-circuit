@@ -238,7 +238,7 @@ export function updateMarble(marble: Marble, tempo: TempoState): void {
 	if (sequenceMode === 'looping') {
 		const beforeWrap = rawBeat
 
-		// Only wrap if PAST maxBeat (allow reaching maxBeat)
+		// Wrap forward: if PAST maxBeat
 		if (rawBeat > maxBeat) {
 			const excess = rawBeat - maxBeat
 			rawBeat = minBeat + (excess % beatRange)
@@ -258,6 +258,29 @@ export function updateMarble(marble: Marble, tempo: TempoState): void {
 					const mainExcess = rawBeat - mainMax
 					rawBeat = mainMin + (mainExcess % mainRange)
 					if (rawBeat < mainMin) rawBeat += mainRange
+				}
+			}
+		}
+		// Wrap backward: if BEFORE minBeat
+		else if (rawBeat < minBeat) {
+			const deficit = minBeat - rawBeat
+			rawBeat = maxBeat - (deficit % beatRange)
+			if (rawBeat > maxBeat) rawBeat -= beatRange
+
+			// Reset branch when looping back
+			marble.branchIndex = null
+
+			// Re-wrap with main rail range after reset
+			const mainPoints = getCurrentPathPoints(marble)
+			const mainBeatPos = computeBeatPositions(mainPoints)
+			if (mainBeatPos.length > 0) {
+				const mainMin = mainBeatPos[0].beat
+				const mainMax = mainBeatPos[mainBeatPos.length - 1].beat
+				const mainRange = mainMax - mainMin
+				if (mainRange > 0 && rawBeat < mainMin) {
+					const mainDeficit = mainMin - rawBeat
+					rawBeat = mainMax - (mainDeficit % mainRange)
+					if (rawBeat > mainMax) rawBeat -= mainRange
 				}
 			}
 		}
