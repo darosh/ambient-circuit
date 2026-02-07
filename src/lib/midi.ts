@@ -16,7 +16,7 @@ export async function initMidi(): Promise<MidiState> {
 	try {
 		const access = await navigator.requestMIDIAccess()
 		const outputs: MidiPort[] = []
-		for (const output of access.outputs.values()) {
+		for (const output of (<Map<string,MIDIOutput>><unknown>access.outputs).values()) {
 			outputs.push({ id: output.id, name: output.name || 'Unnamed' })
 		}
 
@@ -61,7 +61,7 @@ export function sendMidiNote(
 ) {
 	if (!state.access || !state.selectedPortId) return
 
-	const output = state.access.outputs.get(state.selectedPortId)
+	const output = (<Map<string, MIDIOutput>><unknown>state.access.outputs).get(state.selectedPortId)
 	if (!output) return
 
 	const ch = Math.max(0, Math.min(15, channel - 1)) // 1-16 → 0-15
