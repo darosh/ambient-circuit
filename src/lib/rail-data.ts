@@ -52,7 +52,7 @@ export const rails: RailData[] = [
 	},
 	{ rail: { id: 'rect1', nodes: roundedRect({ pos: { x: 3.5 } }) }, color: '#ff00ff' },
 	{ rail: { id: 'coil1', nodes: coil({ pos: { x: -3 }, lead: 1 }) }, color: '#ffff00' },
-	{ rail: { id: 'spiral1', nodes: spiral({ pos: { x: 0 }, lead: 1 }) }, color: '#ff0000' },
+	{ rail: { id: 'spiral1', nodes: spiral({ pos: { x: 0 }, lead: 1, tangent: .5 }) }, color: '#ff0000' },
 	{
 		rail: {
 			id: 'circle2',

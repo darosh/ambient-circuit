@@ -31,8 +31,8 @@
 			for (const b of s.branches) {
 				// Prepend prev point and split point to branch for correct tangent computation
 				const pointsForCurve = prevPoint
-					? [prevPoint, { p: s.p, beat: s.beat, round: null }, ...b.points]
-					: [{ p: s.p, beat: s.beat, round: null }, ...b.points]
+					? [prevPoint, { p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
+					: [{ p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
 
 				const curve = buildRailCurve(pointsForCurve)
 

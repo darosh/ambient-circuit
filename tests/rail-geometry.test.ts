@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest'
+import { Vector3 } from 'three'
 import type { ResolvedPoint } from '../src/lib/rail'
-import { computeBeatPositions } from '../src/lib/rail-geometry'
+import { computeBeatPositions, buildSegmentCurve } from '../src/lib/rail-geometry'
 
-function pt(p: [number, number, number], beat: number, round: 'to' | 'from' | 'both' | null = null): ResolvedPoint {
-	return { p, beat, round }
+function pt(p: [number, number, number], beat: number, round: 'to' | 'from' | 'both' | null = null, tangent: number = 0.39): ResolvedPoint {
+	return { p, beat, round, tangent }
 }
 
 describe('computeBeatPositions', () => {
@@ -107,5 +108,62 @@ describe('computeBeatPositions', () => {
 		expect(r.map((b) => b.beat)).toEqual([0, 1, 2])
 		// beat 1 should be at (-1,0,0) — the control point at fractional beat 1.0
 		expect(r[1].position.x).toBeCloseTo(-1)
+	})
+})
+
+describe('tangent scale', () => {
+	it('default tangent=0.39: matches legacy behavior', () => {
+		const points = [
+			pt([1, 0, 0], 0, 'both', 0.39),
+			pt([0, 0, 1], 1, 'both', 0.39),
+		]
+		const curve = buildSegmentCurve(points, 0)
+		expect(curve).not.toBeNull()
+		// Verify control points use correct tangent scale
+		const cp1 = curve!.v1
+		const p0 = new Vector3(1, 0, 0)
+		const chord = Math.sqrt(2)
+		const expectedHandleLen = chord * 0.39
+		expect(cp1.distanceTo(p0)).toBeCloseTo(expectedHandleLen)
+	})
+
+	it('tangent=0: degenerate curve (control points collapse)', () => {
+		const points = [
+			pt([0, 0, 0], 0, 'both', 0),
+			pt([1, 0, 0], 1, 'both', 0),
+		]
+		const curve = buildSegmentCurve(points, 0)
+		expect(curve).not.toBeNull()
+		// Control points collapse to endpoints
+		expect(curve!.v1.x).toBeCloseTo(0)
+		expect(curve!.v2.x).toBeCloseTo(1)
+	})
+
+	it('tangent=1.0: extreme curve', () => {
+		const points = [
+			pt([0, 0, 0], 0, 'both', 1.0),
+			pt([1, 0, 0], 1, 'both', 1.0),
+		]
+		const curve = buildSegmentCurve(points, 0)
+		expect(curve).not.toBeNull()
+		const chord = 1
+		const handleLen = chord * 1.0
+		expect(curve!.v1.distanceTo(new Vector3(0, 0, 0))).toBeCloseTo(handleLen)
+	})
+
+	it('asymmetric tangents: tight entry, loose exit', () => {
+		const points = [
+			pt([0, 0, 0], 0, 'both', 0.1),
+			pt([1, 0, 0], 1, 'both', 0.8),
+		]
+		const curve = buildSegmentCurve(points, 0)
+		expect(curve).not.toBeNull()
+		const chord = 1
+		const handle0 = chord * 0.1
+		const handle1 = chord * 0.8
+		// cp1 uses tangent from point 0
+		expect(curve!.v1.distanceTo(new Vector3(0, 0, 0))).toBeCloseTo(handle0)
+		// cp2 uses tangent from point 1
+		expect(curve!.v2.distanceTo(new Vector3(1, 0, 0))).toBeCloseTo(handle1)
 	})
 })

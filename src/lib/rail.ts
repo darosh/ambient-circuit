@@ -13,6 +13,8 @@ export type RailPointFull = {
 	beat?: number
 	/** Rounding at this point: 'to' (incoming curved), 'from' (outgoing curved), 'both'. Default: none */
 	round?: Rounding
+	/** Tangent handle scale for Bezier control points. Default: 0.39 */
+	tangent?: number
 }
 
 /** Fork in the road */
@@ -53,6 +55,7 @@ export type ResolvedPoint = {
 	p: Vec3
 	beat: number
 	round: Rounding | null
+	tangent: number
 }
 
 export type ResolvedSplit = {

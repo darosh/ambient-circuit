@@ -109,12 +109,19 @@ export type SpiralOpts = {
 	radiusStep?: number
 	/** Straight lead-in/out length. Default: 1 */
 	lead?: number
+	tangent?: number
 }
 
 export function spiral(opts: SpiralOpts = {}): (Vec3 | RailPointFull)[] {
 	const {
-		pos = {}, height = 1, rounds = 2, density = 4,
-		startRadius = 0.5, radiusStep = 0.5, lead = 1,
+		pos = {},
+		height = 1,
+		rounds = 2,
+		density = 4,
+		startRadius = 0.5,
+		radiusStep = 0.5,
+		lead = 1,
+		tangent
 	} = opts
 	const len = rounds * density + 1
 	const spiralPoints: RailPointFull[] = Array.from({ length: len }, (_, i) => {
@@ -124,6 +131,7 @@ export function spiral(opts: SpiralOpts = {}): (Vec3 | RailPointFull)[] {
 		return {
 			p: offset([Math.cos(t) * r, y, Math.sin(t) * r], pos),
 			round: i === 0 ? 'from' as const : i === len - 1 ? 'to' as const : 'both' as const,
+			tangent
 		}
 	})
 

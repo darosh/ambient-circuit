@@ -21,20 +21,20 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 
 	for (const node of nodes) {
 		if (isVec3(node)) {
-			points.push({ p: node, beat, round: null })
+			points.push({ p: node, beat, round: null, tangent: 0.39 })
 			anchors.push(points.length - 1)
 			beat++
 		} else if (isPointFull(node)) {
 			if (node.beat !== undefined) {
 				beat = node.beat
-				points.push({ p: node.p, beat, round: node.round ?? null })
+				points.push({ p: node.p, beat, round: node.round ?? null, tangent: node.tangent ?? 0.39 })
 				anchors.push(points.length - 1)
 				beat++
 			} else if (hasExplicitBeats) {
 				// Geometric-only: placeholder, will be interpolated
-				points.push({ p: node.p, beat: NaN, round: node.round ?? null })
+				points.push({ p: node.p, beat: NaN, round: node.round ?? null, tangent: node.tangent ?? 0.39 })
 			} else {
-				points.push({ p: node.p, beat, round: node.round ?? null })
+				points.push({ p: node.p, beat, round: node.round ?? null, tangent: node.tangent ?? 0.39 })
 				anchors.push(points.length - 1)
 				beat++
 			}
@@ -44,7 +44,7 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 			const branchStartBeat = splitBeat + 1
 
 			// Add split point to main rail
-			points.push({ p: node.split.p, beat: splitBeat, round: null })
+			points.push({ p: node.split.p, beat: splitBeat, round: null, tangent: 0.39 })
 			anchors.push(points.length - 1)
 
 			const resolvedBranches: ResolvedSegment[] = []

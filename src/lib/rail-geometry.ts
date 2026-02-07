@@ -4,7 +4,7 @@ import type { ResolvedPoint, ResolvedRail, Vec3 } from './rail'
 /** Interpolated points per curved segment */
 const CURVE_SEGMENTS = 12
 
-/** Tangent handle scale — 0.39 is near-optimal for quarter-circle arcs */
+/** @deprecated Use ResolvedPoint.tangent instead — 0.39 is near-optimal for quarter-circle arcs */
 const TANGENT_SCALE = 0.39
 
 export function toV3(p: Vec3): Vector3 {
@@ -79,10 +79,13 @@ export function buildSegmentCurve(
 	const p0 = toV3(points[i].p)
 	const p3 = toV3(points[i + 1].p)
 	const chord = p0.distanceTo(p3)
-	const handleLen = chord * TANGENT_SCALE
 
-	const t0 = tangentAt(points, i).multiplyScalar(handleLen)
-	const t1 = tangentAt(points, i + 1).multiplyScalar(handleLen)
+	// Use per-point tangent scales
+	const handleLen0 = chord * points[i].tangent
+	const handleLen1 = chord * points[i + 1].tangent
+
+	const t0 = tangentAt(points, i).multiplyScalar(handleLen0)
+	const t1 = tangentAt(points, i + 1).multiplyScalar(handleLen1)
 
 	const cp1 = p0.clone().add(t0)
 	const cp2 = p3.clone().sub(t1)
