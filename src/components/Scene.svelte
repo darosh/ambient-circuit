@@ -1,6 +1,6 @@
 <script lang="ts">
 import { T, useTask } from '@threlte/core'
-import { Grid, OrbitControls } from '@threlte/extras'
+import { OrbitControls } from '@threlte/extras'
 import RailView from './RailView.svelte'
 import { createTempoState, updateTempo, type TempoState } from '../lib/tempo'
 import { createMarble } from '../lib/marble'
