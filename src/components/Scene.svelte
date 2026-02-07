@@ -7,25 +7,28 @@ import { createTempoState, updateTempo, type TempoState } from '../lib/tempo'
 import { createMarble } from '../lib/marble'
 import { updateMarbles } from '../lib/marble-system'
 import { resolveRail } from '../lib/rail-resolve'
+import type { Rail } from '../lib/rail'
 
 let {
 	showPoints = false,
 	showBeats = false,
 	tempo = $bindable(),
-	easing = $bindable()
+	easing = $bindable(),
+	railVisibility = $bindable()
 }: {
 	showPoints?: boolean
 	showBeats?: boolean
 	tempo?: TempoState
 	easing?: string
+	railVisibility?: boolean[]
 } = $props()
 
 const rails = [
-	{ rail: circle({ pos: { y: -0.5 } }), color: '#00ffff' },
-	{ rail: roundedRect({ pos: { x: 3.5 } }), color: '#ff00ff' },
-	{ rail: coil({ pos: { x: -3 }, lead: 1 }), color: '#ffff00' },
-	{ rail: spiral({ pos: { x: 0 }, lead: 1 }), color: '#ff0000' },
-	{ rail: circle({ pos: { x: 0, y: 1.5 } }), color: '#ffffff' },
+	{ rail: circle({ pos: { y: -0.5 } }), color: '#00ffff', offset: [0, 0, 0] as const },
+	{ rail: roundedRect({ pos: { x: 3.5 } }), color: '#ff00ff', offset: [0, 0, 0] as const },
+	{ rail: coil({ pos: { x: -3 }, lead: 1 }), color: '#ffff00', offset: [0, 0, 0] as const },
+	{ rail: spiral({ pos: { x: 0 }, lead: 1 }), color: '#ff0000', offset: [0, 0, 0] as const },
+	{ rail: circle({ pos: { x: 0, y: 1.5 } }), color: '#ffffff', offset: [0, 0, 0] as const },
 	// Fork example: main path a-b-c with split at b
 	{
 		rail: {
@@ -47,10 +50,14 @@ const rails = [
 					}
 				}
 			]
-		},
-		color: '#00ff00'
+		} satisfies Rail,
+		color: '#00ff00',
+		offset: [0, 0, 0] as const
 	}
 ]
+
+// Init rail visibility if not provided
+if (!railVisibility) railVisibility = rails.map(() => true)
 
 // @ts-expect-error temporary
 rails.at(-2).rail.nodes[0].beat = 0
@@ -100,14 +107,19 @@ useTask((delta) => {
 	cellSize={1}
 />
 
-{#each rails as { rail, color }, railIndex (railIndex)}
-	<RailView {rail} {color} width={0.08} {showPoints} {showBeats} />
+{#each rails as { rail, color, offset }, railIndex (railIndex)}
+	{#if railVisibility[railIndex]}
+		<RailView {rail} {color} {offset} width={0.08} {showPoints} {showBeats} />
+	{/if}
 {/each}
 
 {#each marbles as marble, idx (idx)}
-	<T.Mesh position={[marble.position.x, marble.position.y, marble.position.z]}>
-		<T.SphereGeometry args={[0.15, 16, 16]} />
-		<T.MeshStandardMaterial metalness={.8} roughness={.6} color={rails[idx].color} emissive={rails[idx].color}
-														emissiveIntensity={0.1} />
-	</T.Mesh>
+	{#if railVisibility[idx]}
+		{@const offset = rails[idx].offset}
+		<T.Mesh position={[marble.position.x + offset[0], marble.position.y + offset[1], marble.position.z + offset[2]]}>
+			<T.SphereGeometry args={[0.15, 16, 16]} />
+			<T.MeshStandardMaterial metalness={.8} roughness={.6} color={rails[idx].color} emissive={rails[idx].color}
+															emissiveIntensity={0.1} />
+		</T.Mesh>
+	{/if}
 {/each}

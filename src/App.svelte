@@ -9,6 +9,7 @@
 	let showBeats = $state(false)
 	let tempo = $state(createTempoState())
 	let easing = $state('linear')
+	let railVisibility = $state([true, true, true, true, true, true]) // 6 rails
 </script>
 
 <Pane title="Debug" position="fixed">
@@ -20,6 +21,14 @@
 	<Folder title="Marbles">
 		<List label="easing" bind:value={easing} options={easingNames} />
 	</Folder>
+	<Folder title="Rails">
+		<Checkbox label="rail1" bind:value={railVisibility[0]} />
+		<Checkbox label="rail2" bind:value={railVisibility[1]} />
+		<Checkbox label="rail3" bind:value={railVisibility[2]} />
+		<Checkbox label="rail4" bind:value={railVisibility[3]} />
+		<Checkbox label="rail5" bind:value={railVisibility[4]} />
+		<Checkbox label="fork-demo" bind:value={railVisibility[5]} />
+	</Folder>
 	<Folder title="Debug">
 		<Checkbox label="points" bind:value={showPoints} />
 		<Checkbox label="beats" bind:value={showBeats} />
@@ -27,5 +36,5 @@
 </Pane>
 
 <Canvas>
-	<Scene {showPoints} {showBeats} bind:tempo bind:easing />
+	<Scene {showPoints} {showBeats} bind:tempo bind:easing bind:railVisibility />
 </Canvas>

@@ -66,18 +66,19 @@ Create a "marble-machine-inspired" music sequencer where:
 - [x] Easing system (31 functions via maath + custom: quad, elastic, bounce, back)
 - [x] Sequence modes: looping, ping-pong
 - [x] Direction tracking: forward/backward
-- [ ] Rail branching — marble routing at splits
+- [x] Rail branching — marble routing at splits (weighted round-robin, delta-based positioning)
 - [ ] `Instruments`, audio trigger system
 - [ ] Visual feedback (lightning effects on collision)
 - [ ] `FX`, audio processing
 - [ ] RNBO `FX` audio processing
 
 **Next Steps:**
-1. **Rail branching system**
-   - Marble routing logic at split points
-   - Weighted branch selection (e.g. `[2,4]` pattern)
-   - Visual representation of active branch paths
-   - Merge point handling
+1. **Explore edge cases for branching/looping/curving**
+   - Test curved branches (with rounding modes)
+   - Multiple splits on same rail
+   - Nested splits (branches with splits)
+   - Ping-pong mode with branches
+   - Multiple marbles on same rail with routing
 2. Instrument triggers — marble crossing a beat fires an instrument
 3. Audio synthesis integration (Tone.js)
 
