@@ -12,6 +12,8 @@
 	
 	let showPoints = $state(false)
 	let showBeats = $state(false)
+	let showStats = $state(true)
+	let fps = $state(0)
 	let tempo = $state(createTempoState())
 	let easing = $state('linear')
 	let railVisibility = $state(rails.map(() => true))
@@ -36,6 +38,7 @@
 		<List label="easing" bind:value={easing} options={easingNames} />
 	</Folder>
 	<Folder title="Debug">
+		<Checkbox label="stats" bind:value={showStats} />
 		<Checkbox label="points" bind:value={showPoints} />
 		<Checkbox label="beats" bind:value={showBeats} />
 	</Folder>
@@ -53,5 +56,23 @@
       forceWebGL: false
     })
   }}>
-	<Scene {showPoints} {showBeats} bind:tempo bind:easing bind:railVisibility />
+	<Scene {showPoints} {showBeats} {showStats} bind:tempo bind:easing bind:railVisibility bind:fps />
 </Canvas>
+
+{#if showStats}
+	<div class="fps">{fps}</div>
+{/if}
+
+<style>
+	.fps {
+		position: fixed;
+		bottom: 8px;
+		left: 8px;
+		color: white;
+		opacity: .5;
+		font-size: 32px;
+		pointer-events: none;
+		text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
+		z-index: 1000;
+	}
+</style>

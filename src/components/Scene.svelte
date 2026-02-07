@@ -11,15 +11,19 @@ import { rails } from '../lib/rail-data'
 let {
 	showPoints = false,
 	showBeats = false,
+	showStats = true,
 	tempo = $bindable(),
 	easing = $bindable(),
-	railVisibility = $bindable()
+	railVisibility = $bindable(),
+	fps = $bindable()
 }: {
 	showPoints?: boolean
 	showBeats?: boolean
+	showStats?: boolean
 	tempo?: TempoState
 	easing?: string
 	railVisibility?: boolean[]
+	fps?: number
 } = $props()
 
 // Init rail visibility if not provided
@@ -39,8 +43,22 @@ let marbles = $state(rails.map(({ rail, direction, mode }) =>
 	})
 ))
 
+// FPS tracking
+if (fps === undefined) fps = 0
+let frames = 0
+let lastTime = performance.now()
+
 // Update loop
 useTask((delta) => {
+	// Calculate FPS
+	frames++
+	const now = performance.now()
+	if (now >= lastTime + 1000) {
+		fps = Math.round((frames * 1000) / (now - lastTime))
+		frames = 0
+		lastTime = now
+	}
+
 	updateTempo(tempo, delta * 1000)
 
 	// Update easing based on prop
