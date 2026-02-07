@@ -7,7 +7,7 @@ import RailView from './RailView.svelte'
 let { showPoints = false, showBeats = false }: { showPoints?: boolean; showBeats?: boolean } = $props()
 
 const rails = [
-	{ rail: circle(), color: '#00ffff' },
+	{ rail: circle({pos: {y: -0.5}}), color: '#00ffff' },
 	{ rail: roundedRect({ pos: { x: 3.5 } }), color: '#ff00ff' },
 	{ rail: coil({ pos: { x: -3 }, lead: 1 }), color: '#ffff00' },
 	{ rail: spiral({ pos: { x: 0 }, lead: 1 }), color: '#ff0000' },
