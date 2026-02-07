@@ -21,7 +21,12 @@
 		const result: import('three').Vector3[][] = []
 		for (const s of resolved.splits) {
 			for (const b of s.branches) {
-				result.push(buildRailCurve(b.points))
+				// Prepend split point to connect branch to split
+				const pointsWithSplit = [
+					{ p: s.p, beat: s.beat, round: null },
+					...b.points
+				]
+				result.push(buildRailCurve(pointsWithSplit))
 			}
 		}
 		return result
@@ -31,7 +36,9 @@
 		const result = computeBeatPositions(resolved.points)
 		for (const s of resolved.splits) {
 			for (const b of s.branches) {
-				result.push(...computeBeatPositions(b.points))
+				// Branch beat positions (split point already in main rail)
+				const branchBeats = computeBeatPositions(b.points)
+				result.push(...branchBeats)
 			}
 		}
 		return result

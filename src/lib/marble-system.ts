@@ -21,54 +21,52 @@ function findClosestPointIndex(polyline: Vector3[], target: Vector3): number {
 }
 
 /**
- * Update marble position based on current global beat.
- * Uses arc-length beat positions + rail curve for smooth motion.
+ * Select branch for marble at split using weighted round-robin.
  */
-export function updateMarble(marble: Marble, tempo: TempoState): void {
-	const { resolvedRail, sequenceMode, easing, startBeat } = marble.config
-	const points = resolvedRail.points
+function selectBranch(marble: Marble, split: any): number {
+	const weights = split.weights
+	const totalWeight = weights.reduce((sum: number, w: number) => sum + w, 0)
+	const position = marble.routingCounter % totalWeight
 
-	if (points.length === 0) return
+	let cumulative = 0
+	for (let i = 0; i < weights.length; i++) {
+		cumulative += weights[i]
+		if (position < cumulative) {
+			return i
+		}
+	}
+	return 0
+}
 
-	// Get arc-length-based beat positions
-	const beatPositions = computeBeatPositions(points)
+/**
+ * Get current path points based on marble's branch state.
+ */
+function getCurrentPathPoints(marble: Marble): any[] {
+	const rail = marble.config.resolvedRail
+
+	// If on a branch, return: main points up to split + split point + branch points
+	if (marble.branchIndex !== null && rail.splits.length > 0) {
+		const split = rail.splits[0]  // TODO: handle multiple splits
+		const branch = split.branches[marble.branchIndex]
+
+		// Find split point in main rail
+		const splitIdx = rail.points.findIndex((p: any) => p.beat === split.beat)
+		const mainUpToSplit = rail.points.slice(0, splitIdx + 1)
+
+		return [...mainUpToSplit, ...branch.points]
+	}
+
+	return rail.points
+}
+
+/**
+ * Calculate marble position from beat and points.
+ */
+function calculateMarblePosition(marble: Marble, rawBeat: number, beatPositions: any[], points: any[], easing: string): void {
 	if (beatPositions.length === 0) {
 		marble.position = points[0] ? new Vector3(...points[0].p) : new Vector3()
 		return
 	}
-
-	const minBeat = beatPositions[0].beat
-	const maxBeat = beatPositions[beatPositions.length - 1].beat
-	const beatRange = maxBeat - minBeat
-
-	if (beatRange === 0) {
-		marble.position = beatPositions[0].position.clone()
-		return
-	}
-
-	// Global beat position (includes fractional progress)
-	const globalBeat = tempo.currentBeat + tempo.beatProgress
-
-	// Compute raw beat position (startBeat + elapsed time)
-	let rawBeat = startBeat + (marble.direction === 'forward' ? globalBeat : -globalBeat)
-
-	// Wrap/ping-pong
-	if (sequenceMode === 'looping') {
-		rawBeat = minBeat + ((rawBeat - minBeat) % beatRange)
-		if (rawBeat < minBeat) rawBeat += beatRange
-	} else {
-		const cycles = Math.floor((rawBeat - minBeat) / beatRange)
-		const offset = (rawBeat - minBeat) % beatRange
-		if (cycles % 2 === 0) {
-			rawBeat = minBeat + offset
-			marble.direction = 'forward'
-		} else {
-			rawBeat = maxBeat - offset
-			marble.direction = 'backward'
-		}
-	}
-
-	marble.currentBeat = rawBeat
 
 	// Find integer beat segment
 	let beatIndex = 0
@@ -89,7 +87,6 @@ export function updateMarble(marble: Marble, tempo: TempoState): void {
 	// Apply easing
 	const easingFn = easingFunctions[easing] || easingFunctions.linear
 	let easedT = easingFn(t)
-	// Clamp to [0,1] - some easings (back, elastic) can overshoot
 	easedT = Math.max(0, Math.min(1, easedT))
 
 	// Build rail polyline and find segment between beat positions
@@ -122,6 +119,128 @@ export function updateMarble(marble: Marble, tempo: TempoState): void {
 		const curve = new CatmullRomCurve3(segmentPoints, false, 'centripetal')
 		marble.position = curve.getPointAt(easedT)
 	}
+}
+
+/**
+ * Update marble position based on current global beat.
+ * Uses arc-length beat positions + rail curve for smooth motion.
+ */
+export function updateMarble(marble: Marble, tempo: TempoState): void {
+	const { resolvedRail, sequenceMode, easing, startBeat } = marble.config
+
+	// Calculate delta from last update
+	const globalBeat = tempo.currentBeat + tempo.beatProgress
+	const isFirstUpdate = marble.lastGlobalBeat < 0
+	const deltaBeat = isFirstUpdate ? 0 : globalBeat - marble.lastGlobalBeat
+	marble.lastGlobalBeat = globalBeat
+
+	// Update position based on delta, not absolute recalculation
+	let rawBeat: number
+	if (isFirstUpdate) {
+		// First update: use startBeat + globalBeat
+		rawBeat = startBeat + (marble.direction === 'forward' ? globalBeat : -globalBeat)
+	} else {
+		// Subsequent updates: increment from current position
+		rawBeat = marble.currentBeat + (marble.direction === 'forward' ? deltaBeat : -deltaBeat)
+	}
+
+	// Temporary points to get beat range
+	const tempPoints = getCurrentPathPoints(marble)
+	if (tempPoints.length === 0) return
+	const tempBeatPositions = computeBeatPositions(tempPoints)
+	if (tempBeatPositions.length === 0) {
+		marble.position = tempPoints[0] ? new Vector3(...tempPoints[0].p) : new Vector3()
+		return
+	}
+
+	const minBeat = tempBeatPositions[0].beat
+	const maxBeat = tempBeatPositions[tempBeatPositions.length - 1].beat
+	const beatRange = maxBeat - minBeat
+
+	if (beatRange === 0) {
+		marble.position = tempBeatPositions[0].position.clone()
+		return
+	}
+
+	// Check if should assign branch (use unwrapped beat)
+	const shouldAssignBranch = marble.branchIndex === null &&
+		resolvedRail.splits.length > 0 &&
+		rawBeat >= resolvedRail.splits[0].beat
+
+	if (shouldAssignBranch) {
+		marble.branchIndex = selectBranch(marble, resolvedRail.splits[0])
+		marble.routingCounter++
+
+		// Recalculate beat range with branch
+		const branchPoints = getCurrentPathPoints(marble)
+		const branchBeatPos = computeBeatPositions(branchPoints)
+		if (branchBeatPos.length > 0) {
+			const newMinBeat = branchBeatPos[0].beat
+			const newMaxBeat = branchBeatPos[branchBeatPos.length - 1].beat
+			const newBeatRange = newMaxBeat - newMinBeat
+
+			// Only wrap if PAST newMaxBeat
+			if (sequenceMode === 'looping' && rawBeat > newMaxBeat) {
+				const excess = rawBeat - newMaxBeat
+				rawBeat = newMinBeat + (excess % newBeatRange)
+				if (rawBeat < newMinBeat) rawBeat += newBeatRange
+			}
+
+			marble.currentBeat = rawBeat
+
+			// Get final points and calculate position
+			const points = getCurrentPathPoints(marble)
+			const beatPositions = computeBeatPositions(points)
+			calculateMarblePosition(marble, rawBeat, beatPositions, points, easing)
+			return
+		}
+	}
+
+	// Wrap/ping-pong
+	if (sequenceMode === 'looping') {
+		const beforeWrap = rawBeat
+
+		// Only wrap if PAST maxBeat (allow reaching maxBeat)
+		if (rawBeat > maxBeat) {
+			const excess = rawBeat - maxBeat
+			rawBeat = minBeat + (excess % beatRange)
+			if (rawBeat < minBeat) rawBeat += beatRange
+
+			// Reset branch when looping back
+			marble.branchIndex = null
+
+			// Re-wrap with main rail range after reset
+			const mainPoints = getCurrentPathPoints(marble)
+			const mainBeatPos = computeBeatPositions(mainPoints)
+			if (mainBeatPos.length > 0) {
+				const mainMin = mainBeatPos[0].beat
+				const mainMax = mainBeatPos[mainBeatPos.length - 1].beat
+				const mainRange = mainMax - mainMin
+				if (mainRange > 0 && rawBeat > mainMax) {
+					const mainExcess = rawBeat - mainMax
+					rawBeat = mainMin + (mainExcess % mainRange)
+					if (rawBeat < mainMin) rawBeat += mainRange
+				}
+			}
+		}
+	} else {
+		const cycles = Math.floor((rawBeat - minBeat) / beatRange)
+		const offset = (rawBeat - minBeat) % beatRange
+		if (cycles % 2 === 0) {
+			rawBeat = minBeat + offset
+			marble.direction = 'forward'
+		} else {
+			rawBeat = maxBeat - offset
+			marble.direction = 'backward'
+		}
+	}
+
+	marble.currentBeat = rawBeat
+
+	// Get final points with correct branch state
+	const points = getCurrentPathPoints(marble)
+	const beatPositions = computeBeatPositions(points)
+	calculateMarblePosition(marble, rawBeat, beatPositions, points, easing)
 }
 
 export function updateMarbles(marbles: Marble[], tempo: TempoState): void {

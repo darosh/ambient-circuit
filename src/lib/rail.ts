@@ -18,6 +18,10 @@ export type RailPointFull = {
 /** Fork in the road */
 export type RailSplit = {
 	split: {
+		/** Position where split occurs */
+		p: Vec3
+		/** Beat index override. Default: previous + 1 */
+		beat?: number
 		/** Round-robin weights, e.g. [2,4] = 2 left then 4 right */
 		weights: number[]
 		/** Each branch is a sequence of nodes */

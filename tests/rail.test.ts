@@ -82,9 +82,9 @@ describe('resolveRail', () => {
 			id: 'fork',
 			nodes: [
 				[0, 0, 0],
-				[1, 0, 0],
 				{
 					split: {
+						p: [1, 0, 0],
 						weights: [2, 4],
 						branches: [
 							[
@@ -116,19 +116,22 @@ describe('resolveRail', () => {
 		expect(s.branches[1].points.map((p) => p.beat)).toEqual([2, 3])
 	})
 
-	it('split: throws if first element', () => {
+	it('split: can be first element now', () => {
 		const rail: Rail = {
-			id: 'bad',
+			id: 'split-first',
 			nodes: [
 				{
 					split: {
+						p: [0, 0, 0],
 						weights: [1, 1],
-						branches: [[[0, 0, 0]], [[1, 0, 0]]],
+						branches: [[[1, 0, 0]], [[1, 1, 0]]],
 					},
 				},
 			],
 		}
-		expect(() => resolveRail(rail)).toThrow('Split cannot be first element')
+		const r = resolveRail(rail)
+		expect(r.points).toHaveLength(1)
+		expect(r.splits).toHaveLength(1)
 	})
 
 	it('nested splits', () => {
@@ -138,12 +141,14 @@ describe('resolveRail', () => {
 				[0, 0, 0],
 				{
 					split: {
+						p: [1, 0, 0],
 						weights: [1, 1],
 						branches: [
 							[
-								[1, 1, 0],
+								{ p: [1, 1, 0], beat: 2 },
 								{
 									split: {
+										p: [2, 1, 0],
 										weights: [1, 2],
 										branches: [[[2, 2, 0]], [[2, 0, 0]]],
 									},

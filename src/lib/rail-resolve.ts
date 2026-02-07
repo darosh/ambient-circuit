@@ -38,11 +38,13 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 				beat++
 			}
 		} else if (isSplit(node)) {
-			const lastPoint = points[points.length - 1]
-			if (!lastPoint) throw new Error('Split cannot be first element in rail')
-
-			const splitBeat = lastPoint.beat
+			// Split now contains its own position and optional beat
+			const splitBeat = node.split.beat !== undefined ? node.split.beat : beat
 			const branchStartBeat = splitBeat + 1
+
+			// Add split point to main rail
+			points.push({ p: node.split.p, beat: splitBeat, round: null })
+			anchors.push(points.length - 1)
 
 			const resolvedBranches: ResolvedSegment[] = []
 			for (const branch of node.split.branches) {
@@ -52,10 +54,12 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 
 			splits.push({
 				beat: splitBeat,
-				p: lastPoint.p,
+				p: node.split.p,
 				weights: node.split.weights,
 				branches: resolvedBranches,
 			})
+
+			beat = splitBeat + 1
 		}
 	}
 
