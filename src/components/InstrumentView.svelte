@@ -3,15 +3,16 @@
 	import type { Instrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-geometry'
-	import { Shape, ShapeGeometry, Vector3, Euler, Matrix4 } from 'three'
+	import { Shape, ExtrudeGeometry, Vector3, Euler, Matrix4 } from 'three'
 
 	type Props = {
 		instrument: Instrument
 		rail: ResolvedRail
 		size?: number
+		depth?: number
 	}
 
-	let { instrument, rail, size = 1 }: Props = $props()
+	let { instrument, rail, size = 1, depth = 0.07 }: Props = $props()
 
 	// Get points for the instrument's path
 	const points = $derived(getPointsForPath(rail, instrument.path))
@@ -19,8 +20,8 @@
 	// Get position and tangent at instrument beat
 	const transform = $derived(getBeatTransform(points, instrument.beat))
 
-	// Create polygon shape
-	const shape = $derived.by(() => {
+	// Create extruded polygon geometry
+	const geometry = $derived.by(() => {
 		const s = new Shape()
 		const n = instrument.sides
 		const radius = size / 2
@@ -36,7 +37,15 @@
 			}
 		}
 
-		return new ShapeGeometry(s)
+		const geom = new ExtrudeGeometry(s, {
+			depth: depth,
+			bevelEnabled: false
+		})
+
+		// Center along extrusion axis (Z)
+		geom.translate(0, 0, -depth / 2)
+
+		return geom
 	})
 
 	// Compute rotation to align normal with tangent
@@ -67,8 +76,8 @@
 	<T.Mesh
 		position={[transform.position.x, transform.position.y, transform.position.z]}
 		rotation={rotation}
-		geometry={shape}
+		geometry={geometry}
 	>
-		<T.MeshStandardMaterial color={instrument.color} side={2} />
+		<T.MeshStandardMaterial color={instrument.color} />
 	</T.Mesh>
 {/if}
