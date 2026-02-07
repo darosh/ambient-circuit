@@ -4,12 +4,13 @@
 	import Scene from './components/Scene.svelte'
 	import { createTempoState } from './lib/tempo'
 	import { easingNames } from './lib/easing'
+	import { rails } from './lib/rail-data'
 
 	let showPoints = $state(false)
 	let showBeats = $state(false)
 	let tempo = $state(createTempoState())
 	let easing = $state('linear')
-	let railVisibility = $state([true, true, true, true, true, true]) // 6 rails
+	let railVisibility = $state(rails.map(() => true))
 </script>
 
 <Pane title="Debug" position="fixed">
@@ -22,12 +23,9 @@
 		<List label="easing" bind:value={easing} options={easingNames} />
 	</Folder>
 	<Folder title="Rails">
-		<Checkbox label="rail1" bind:value={railVisibility[0]} />
-		<Checkbox label="rail2" bind:value={railVisibility[1]} />
-		<Checkbox label="rail3" bind:value={railVisibility[2]} />
-		<Checkbox label="rail4" bind:value={railVisibility[3]} />
-		<Checkbox label="rail5" bind:value={railVisibility[4]} />
-		<Checkbox label="fork-demo" bind:value={railVisibility[5]} />
+		{#each rails as { rail }, i (rail.id)}
+			<Checkbox label={rail.id} bind:value={railVisibility[i]} />
+		{/each}
 	</Folder>
 	<Folder title="Debug">
 		<Checkbox label="points" bind:value={showPoints} />
