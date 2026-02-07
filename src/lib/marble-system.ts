@@ -254,14 +254,25 @@ export function updateMarble(marble: Marble, tempo: TempoState): void {
 			}
 		}
 	} else {
-		const cycles = Math.floor((rawBeat - minBeat) / beatRange)
-		const offset = (rawBeat - minBeat) % beatRange
-		if (cycles % 2 === 0) {
-			rawBeat = minBeat + offset
-			marble.direction = 'forward'
+		// Ping-pong: respect current direction and flip only at boundaries
+		if (marble.direction === 'forward') {
+			if (rawBeat > maxBeat) {
+				// Hit upper bound, reverse
+				const excess = rawBeat - maxBeat
+				rawBeat = maxBeat - excess
+				marble.direction = 'backward'
+				// Clamp to range
+				if (rawBeat < minBeat) rawBeat = minBeat
+			}
 		} else {
-			rawBeat = maxBeat - offset
-			marble.direction = 'backward'
+			if (rawBeat < minBeat) {
+				// Hit lower bound, reverse
+				const excess = minBeat - rawBeat
+				rawBeat = minBeat + excess
+				marble.direction = 'forward'
+				// Clamp to range
+				if (rawBeat > maxBeat) rawBeat = maxBeat
+			}
 		}
 	}
 

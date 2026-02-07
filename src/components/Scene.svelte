@@ -29,12 +29,12 @@ if (!railVisibility) railVisibility = rails.map(() => true)
 if (!tempo) tempo = createTempoState()
 
 // Create marbles (1 per rail, beat 0, looping, forward)
-let marbles = $state(rails.map(({ rail }) =>
+let marbles = $state(rails.map(({ rail, direction, mode }) =>
 	createMarble({
 		resolvedRail: resolveRail(rail),
 		startBeat: 0,
-		direction: 'forward',
-		sequenceMode: 'looping',
+		direction: direction || 'forward',
+		sequenceMode: mode || 'looping',
 		easing: easing || 'linear'
 	})
 ))

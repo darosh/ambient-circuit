@@ -1,7 +1,38 @@
 import { circle, roundedRect, coil, spiral } from './rail-primitives'
 import type { Rail, Vec3 } from './rail'
+import type { MarbleDirection, MarbleSequenceMode } from './marble'
 
-export const rails = [
+export type RailData = {
+	rail: Rail
+	color: string
+	mode?: MarbleSequenceMode
+	direction?: MarbleDirection
+}
+
+export const rails: RailData[] = [
+	{
+		rail: {
+			id: 'line',
+			offset: [-3, 0, -3] as Vec3,
+			nodes: [
+				[0, 0, 0] as Vec3,
+				[0, 1, 0] as Vec3
+			]
+		},
+		color: '#ffff88'
+	},
+	{
+		rail: {
+			id: 'line-ping',
+			offset: [3, 0, -3] as Vec3,
+			nodes: [
+				[0, 0, 0] as Vec3,
+				[0, 1, 0] as Vec3
+			]
+		},
+		mode: 'ping-pong' as MarbleSequenceMode,
+		color: '#ffff88'
+	},
 	{
 		rail: { id: 'circle1', offset: [0, 0, -3] as Vec3, nodes: circle({ pos: { y: -0.5 } }) },
 		color: '#00ffff'
@@ -13,7 +44,8 @@ export const rails = [
 		rail: {
 			id: 'circle2',
 			nodes: circle({ pos: { x: 0, y: 1.5 } }).map((n, i, arr) => {
-				if (i === 0) return { ...(typeof n === 'object' && 'p' in n ? n : { p: n as Vec3 }), beat: 0 }
+				if (i === 0)
+					return { ...(typeof n === 'object' && 'p' in n ? n : { p: n as Vec3 }), beat: 0 }
 				if (i === arr.length - 1)
 					return { ...(typeof n === 'object' && 'p' in n ? n : { p: n as Vec3 }), beat: 3 }
 				return n
@@ -43,7 +75,12 @@ export const rails = [
 		rail: {
 			id: 'round-test',
 			offset: [3, 0, 2] as Vec3,
-			nodes: [[-1, 0, 0] as Vec3, [0, 0, 0] as Vec3, { p: [1, 1, 0] as Vec3, beat: 2, round: 'to' as const }, [1, 2, 0] as Vec3]
+			nodes: [
+				[-1, 0, 0] as Vec3,
+				[0, 0, 0] as Vec3,
+				{ p: [1, 1, 0] as Vec3, beat: 2, round: 'to' as const },
+				[1, 2, 0] as Vec3
+			]
 		},
 		color: '#ff8888'
 	},
