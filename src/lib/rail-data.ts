@@ -1,12 +1,14 @@
 import { circle, roundedRect, coil, spiral } from './rail-primitives'
 import type { Rail, Vec3 } from './rail'
 import type { MarbleDirection, MarbleSequenceMode } from './marble'
+import type { Instrument } from './instrument'
 
 export type RailData = {
 	rail: Rail
 	color: string
 	mode?: MarbleSequenceMode
 	direction?: MarbleDirection
+	instruments?: Instrument[]
 }
 
 export const rails: RailData[] = [
@@ -14,9 +16,17 @@ export const rails: RailData[] = [
 		rail: {
 			id: 'line',
 			offset: [-3, 0, -3] as Vec3,
-			nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
+			nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3, [0, 2, 0] as Vec3, [0, 3, 0] as Vec3]
 		},
-		color: '#ffff88'
+		color: '#ffff88',
+		instruments: [
+			{
+				beat: 1.5,
+				sides: 3,
+				color: '#ff0000',
+				onTrigger: () => console.debug('🎵 Instrument triggered at beat 0.5')
+			}
+		]
 	},
 	{
 		rail: {

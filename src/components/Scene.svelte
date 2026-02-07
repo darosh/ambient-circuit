@@ -48,7 +48,8 @@ useTask((delta) => {
 		marble.config.easing = easing || 'linear'
 	}
 
-	updateMarbles(marbles, tempo)
+	const instrumentsPerRail = rails.map(r => r.instruments || [])
+	updateMarbles(marbles, tempo, instrumentsPerRail)
 })
 </script>
 
@@ -68,9 +69,9 @@ useTask((delta) => {
 	cellSize={1}
 />
 
-{#each rails as { rail, color }, railIndex (railIndex)}
+{#each rails as { rail, color, instruments }, railIndex (railIndex)}
 	{#if railVisibility[railIndex]}
-		<RailView {rail} {color} width={0.08} {showPoints} {showBeats} />
+		<RailView {rail} {color} width={0.08} {showPoints} {showBeats} {instruments} />
 	{/if}
 {/each}
 

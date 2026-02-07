@@ -17,6 +17,7 @@ export interface MarbleConfig {
 export interface Marble {
 	config: MarbleConfig
 	currentBeat: number // float for sub-beat positioning
+	previousBeat: number // previous beat to detect crossings
 	direction: MarbleDirection
 	position: Vector3 // computed 3D position
 	branchIndex: number | null  // null = main rail, number = branch index
@@ -28,6 +29,7 @@ export function createMarble(config: MarbleConfig): Marble {
 	return {
 		config,
 		currentBeat: config.startBeat,
+		previousBeat: config.startBeat,
 		direction: config.direction,
 		position: { x: 0, y: 0, z: 0 } as Vector3,
 		branchIndex: null,  // starts on main rail

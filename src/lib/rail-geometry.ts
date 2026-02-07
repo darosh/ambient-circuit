@@ -115,6 +115,64 @@ export function buildRailCurve(points: ResolvedPoint[]): Vector3[] {
 	return result
 }
 
+// ── Interpolation at fractional beat ───────────────────────
+
+export type BeatTransform = {
+	position: Vector3
+	tangent: Vector3
+}
+
+/**
+ * Get position and tangent at a fractional beat along resolved points.
+ * Interpolates along the rail curve using arc-length.
+ */
+export function getBeatTransform(points: ResolvedPoint[], beat: number): BeatTransform | null {
+	if (points.length === 0) return null
+	if (points.length === 1) {
+		return {
+			position: toV3(points[0].p),
+			tangent: new Vector3(1, 0, 0)
+		}
+	}
+
+	// Find segment containing this beat
+	let segmentStart = 0
+	for (let i = 0; i < points.length - 1; i++) {
+		if (beat >= points[i].beat && beat <= points[i + 1].beat) {
+			segmentStart = i
+			break
+		}
+	}
+
+	const p0 = points[segmentStart]
+	const p1 = points[segmentStart + 1]
+	const beatRange = p1.beat - p0.beat
+
+	if (beatRange === 0) {
+		return {
+			position: toV3(p0.p),
+			tangent: new Vector3(1, 0, 0)
+		}
+	}
+
+	const t = (beat - p0.beat) / beatRange
+	const bezier = buildSegmentCurve(points, segmentStart)
+
+	if (bezier) {
+		// Interpolate along bezier curve
+		const position = bezier.getPointAt(t)
+		const tangent = bezier.getTangentAt(t).normalize()
+		return { position, tangent }
+	} else {
+		// Linear interpolation for straight segment
+		const pos0 = toV3(p0.p)
+		const pos1 = toV3(p1.p)
+		const position = new Vector3().lerpVectors(pos0, pos1, t)
+		const tangent = new Vector3().subVectors(pos1, pos0).normalize()
+		return { position, tangent }
+	}
+}
+
 // ── Beat positions ──────────────────────────────────────────
 
 export type BeatPosition = {

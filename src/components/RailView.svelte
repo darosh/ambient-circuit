@@ -2,9 +2,11 @@
 	import { T } from '@threlte/core'
 	import { Billboard, MeshLineGeometry, MeshLineMaterial, Text } from '@threlte/extras'
 	import type { Rail } from '../lib/rail'
+	import type { Instrument } from '../lib/instrument'
 	import { resolveRail } from '../lib/rail-resolve'
 	import { buildRailCurve, computeBeatPositions } from '../lib/rail-geometry'
 	import { Vector3 } from 'three'
+	import InstrumentView from './InstrumentView.svelte'
 
 	type Props = {
 		rail: Rail
@@ -12,9 +14,10 @@
 		width?: number
 		showPoints?: boolean
 		showBeats?: boolean
+		instruments?: Instrument[]
 	}
 
-	let { rail, color = '#00ffff', width = 0.1, showPoints = false, showBeats = false }: Props = $props()
+	let { rail, color = '#00ffff', width = 0.1, showPoints = false, showBeats = false, instruments = [] }: Props = $props()
 
 	const resolved = $derived(resolveRail(rail))
 	const mainPoints = $derived(buildRailCurve(resolved.points))
@@ -117,3 +120,7 @@
 		</Billboard>
 	{/each}
 {/if}
+
+{#each instruments as instrument, idx (idx)}
+	<InstrumentView {instrument} points={resolved.points} />
+{/each}
