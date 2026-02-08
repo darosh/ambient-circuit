@@ -49,7 +49,7 @@ export function createRailMaterial(hexColor: string, initialIntensity = 1.2) {
 		const outerFade = min(uv().y.smoothstep(0, 0.1), uv().y.oneMinus().smoothstep(0, 0.4))
 
 		// effect
-		const effect = noise1.mul(noise2).mul(outerFade)
+		const effect = noise1.mul(noise2).mul(outerFade).mul(impactIntensity.add(initialIntensity * .8))
 
 		const emissiveColorLuminance = luminance(emissiveColor)
 

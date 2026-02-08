@@ -178,7 +178,7 @@
 				? marbleFxMaterials[marbleRailIndices[idx]]
 				: marblePlainMaterials[marbleRailIndices[idx]]}
 		>
-			<T.SphereGeometry args={[0.15, 16, 16]} />
+			<T.SphereGeometry args={[0.09, 16, 16]} />
 		</T.Mesh>
 	{/if}
 {/each}
