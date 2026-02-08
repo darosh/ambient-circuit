@@ -121,7 +121,7 @@
 </script>
 
 {#if fxPost}
-	<Bloom strength={.5} radius={.2} threshold={0.5} />
+	<Bloom strength={0.5} radius={0.2} threshold={0.5} />
 {/if}
 
 <T.PerspectiveCamera makeDefault position={[4, 6, 8]} fov={30}>
@@ -158,10 +158,10 @@
 	{/if}
 {/each}
 
-{#each marbles as marble, idx (idx)}
+{#each marbles as _m, idx (idx)}
 	{#if railVisibility[marbleRailIndices[idx]]}
 		<MarbleView
-			{marble}
+			bind:marble={marbles[idx]}
 			color={rails[marbleRailIndices[idx]].color || '#ffffff'}
 			{wireframe}
 			{fxMarbles}

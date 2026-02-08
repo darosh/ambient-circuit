@@ -12,7 +12,7 @@
 		fxMarbles?: boolean
 	}
 
-	let { marble, color, wireframe = false, fxMarbles = true }: Props = $props()
+	let { marble = $bindable(), color, wireframe = false, fxMarbles = true }: Props = $props()
 
 	const fx = $derived(makeMarbleMaterial(color))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color }))

@@ -32,7 +32,11 @@
 
 	let sceneId = $state(window.location.hash.slice(1) || scenes[0].id)
 	let activeScene = $derived(scenes.find((s) => s.id === sceneId) ?? scenes[0])
-	let railVisibility = $derived(activeScene.rails.map(() => true))
+	// eslint-disable-next-line svelte/prefer-writable-derived
+	let railVisibility = $state<boolean[]>([])
+	$effect(() => {
+		railVisibility = activeScene.rails.map(() => true)
+	})
 
 	$effect(() => {
 		window.location.hash = sceneId

@@ -66,7 +66,10 @@ export function buildTubeGeometry(
 	// --- 2. Initial normal perpendicular to first tangent ---
 	const t0 = frames[0].t
 	const perp = Math.abs(t0.x) <= 0.9 ? new Vector3(1, 0, 0) : new Vector3(0, 1, 0)
-	frames[0].n = perp.clone().sub(t0.clone().multiplyScalar(perp.dot(t0))).normalize()
+	frames[0].n = perp
+		.clone()
+		.sub(t0.clone().multiplyScalar(perp.dot(t0)))
+		.normalize()
 	frames[0].b = new Vector3().crossVectors(frames[0].t, frames[0].n)
 
 	// --- 3. Propagate via rotation minimizing transport ---
