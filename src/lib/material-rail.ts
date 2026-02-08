@@ -1,6 +1,6 @@
 // based on https://github.com/mrdoob/three.js/blob/master/examples/webgpu_tsl_vfx_tornado.html
 
-import * as THREE from 'three/webgpu'
+import { TextureLoader, MeshBasicNodeMaterial, RepeatWrapping, DoubleSide } from 'three/webgpu'
 import {
 	luminance,
 	min,
@@ -15,10 +15,10 @@ import {
 	positionWorld
 } from 'three/tsl'
 
-const textureLoader = new THREE.TextureLoader()
+const textureLoader = new TextureLoader()
 const perlinTexture = textureLoader.load('./rgb-256x256.png')
-perlinTexture.wrapS = THREE.RepeatWrapping
-perlinTexture.wrapT = THREE.RepeatWrapping
+perlinTexture.wrapS = RepeatWrapping
+perlinTexture.wrapT = RepeatWrapping
 
 const timeScale = uniform(0.2)
 
@@ -35,9 +35,9 @@ export function createRailMaterial(hexColor: string, initialIntensity = 0.7) {
 	const emissiveColor = uniform(color(hexColor))
 	const impactIntensity = uniform(0.0)
 
-	const mat = new THREE.MeshBasicNodeMaterial({
+	const mat = new MeshBasicNodeMaterial({
 		transparent: true,
-		side: THREE.DoubleSide
+		side: DoubleSide
 	})
 
 	mat.outputNode = Fn(() => {

@@ -1,6 +1,6 @@
 // based on https://github.com/mrdoob/three.js/blob/master/examples/webgpu_tsl_vfx_tornado.html
 
-import * as THREE from 'three/webgpu'
+import { TextureLoader, MeshBasicNodeMaterial, RepeatWrapping, DoubleSide } from 'three/webgpu'
 import {
 	luminance,
 	cos,
@@ -19,10 +19,10 @@ import {
 	vec4
 } from 'three/tsl'
 
-const textureLoader = new THREE.TextureLoader()
+const textureLoader = new TextureLoader()
 const perlinTexture = textureLoader.load('./rgb-256x256.png')
-perlinTexture.wrapS = THREE.RepeatWrapping
-perlinTexture.wrapT = THREE.RepeatWrapping
+perlinTexture.wrapS = RepeatWrapping
+perlinTexture.wrapT = RepeatWrapping
 
 const emissiveColor = uniform(color('#ff8b4d'))
 const timeScale = uniform(0.2)
@@ -57,9 +57,9 @@ const twistedCylinder = Fn(
 ) as (...args: any[]) => any
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-export const emissiveMaterial = new THREE.MeshBasicNodeMaterial({
+export const emissiveMaterial = new MeshBasicNodeMaterial({
 	transparent: true,
-	side: THREE.DoubleSide,
+	side: DoubleSide,
 	wireframe: false
 })
 

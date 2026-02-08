@@ -7,9 +7,9 @@
 	import { scenes } from './data/index'
 	import { initMidi, setMidiPort, type MidiState } from './lib/midi'
 	import { WebGPURenderer } from 'three/webgpu'
-	import * as THREE from 'three/webgpu'
+	// import * as THREE from 'three/webgpu'
 
-	extend(THREE)
+	// extend(THREE)
 
 	let showGrid = $state(true)
 	let showPoints = $state(false)

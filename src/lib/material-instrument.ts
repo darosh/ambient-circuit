@@ -1,4 +1,4 @@
-import * as THREE from 'three/webgpu'
+import { MeshBasicNodeMaterial } from 'three/webgpu'
 import { color, time, sin, uniform, vec4, luminance } from 'three/tsl'
 
 /**
@@ -11,7 +11,7 @@ export function createInstrumentMaterial(hexColor: string) {
 	const pulseAmount = uniform(0.2)
 	const impactIntensity = uniform(0.0)
 
-	const mat = new THREE.MeshBasicNodeMaterial({
+	const mat = new MeshBasicNodeMaterial({
 		transparent: true
 	})
 

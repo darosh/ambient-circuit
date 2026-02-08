@@ -14,6 +14,11 @@ export default defineConfig({
 	optimizeDeps: {
 		esbuildOptions: {
 			target: 'esnext'
-		}
+		},
+		// include: ['three', 'three/webgpu', 'three/tsl']
+		// exclude: ['@threlte/core', '@threlte/extras', '@threlte/rapier']
+	},
+	resolve: {
+		// dedupe: ['three']
 	}
 })
