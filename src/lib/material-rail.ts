@@ -28,7 +28,7 @@ export function createRailMaterial(hexColor: string) {
 	})
 
 	mat.outputNode = Fn(() => {
-		const scaledTime = time.mul(timeScale)
+		const scaledTime = time.mul(timeScale).negate()
 
 		// noise 1
 		const noise1Uv = uv().add(vec2(scaledTime, scaledTime.negate())).toVar()

@@ -128,7 +128,7 @@
 		<RailView
 			{rail}
 			{color}
-			width={0.08}
+			width={0.06}
 			{showPoints}
 			{showBeats}
 			{instruments}
