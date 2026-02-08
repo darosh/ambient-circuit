@@ -51,7 +51,7 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Phase:** Marbles & sequencing
 
-**Last Updated:** 2026-02-07
+**Last Updated:** 2026-02-08
 
 **What Works:**
 
@@ -81,6 +81,11 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Instrument MIDI properties (channel, note, length, velocity)
   - [x] Marble note override support
   - [x] Lazy initialization (only when enabled)
+- [x] String path shorthand for `RailNode` — `"r u l3 ib"` syntax
+  - direction chars: `r/l/u/d/i/o`, rounding chars: `t/f/b`
+  - repeated chars collapse: `lll` = one point at -3
+  - numeric multiplier: `l3` = one point at -3
+  - full words supported: `right`, `up`, `left3`, etc.
 - [ ] Visual polishing, WebGPU, TSL
   - [ ] rails
   - [ ] marbles
@@ -123,7 +128,8 @@ Create a "marble-machine-inspired" music sequencer where:
 
 ```
 /src/lib/rail.ts           - Rail types (authored + resolved) and type guards
-/src/lib/rail-resolve.ts   - resolveRail(): authored → engine-internal form
+/src/lib/rail-path.ts      - expandPathString(): string path shorthand → Vec3/RailPointFull[]
+/src/lib/rail-resolve.ts   - resolveRail(): authored → engine-internal form (flattens path strings)
 /src/lib/rail-geometry.ts  - buildRailCurve(): resolved points → Vector3 polyline
 /src/lib/rail-primitives.ts - circle(), roundedRect(), coil(), spiral() helpers
 /src/lib/tempo.ts          - Global tempo/beat system (BPM, play/pause)
@@ -198,6 +204,7 @@ Create a "marble-machine-inspired" music sequencer where:
 
 - Read files in `/archive` (obsolete experiments)
 - Use Line2/MeshLine/examples/jsm materials with WebGPU renderer
+- Use `any` without `eslint-disable` — TSL `Fn()` param types require it, wrap with block comments
 
 ---
 
