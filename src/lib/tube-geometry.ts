@@ -34,14 +34,24 @@ export function buildTubeGeometry(
 
 			let t: Vector3
 			if (i === 0 && ci > 0) {
-				// Junction: blend end of previous + start of this
+				// Interior junction: blend end of previous + start of this
 				const t0 = curves[ci - 1].getTangentAt(1).normalize()
 				const t1 = curve.getTangentAt(0).normalize()
 				t = t0.add(t1).normalize()
+			} else if (i === 0 && ci === 0 && closed) {
+				// Closing junction (start): blend end of last curve + start of first
+				const t0 = curves[lastCi].getTangentAt(1).normalize()
+				const t1 = curve.getTangentAt(0).normalize()
+				t = t0.add(t1).normalize()
 			} else if (i === n && ci < lastCi) {
-				// Junction: blend end of this + start of next
+				// Interior junction: blend end of this + start of next
 				const t0 = curve.getTangentAt(1).normalize()
 				const t1 = curves[ci + 1].getTangentAt(0).normalize()
+				t = t0.add(t1).normalize()
+			} else if (i === iMax && ci === lastCi && closed) {
+				// Closing junction (end): blend end of last curve + start of first
+				const t0 = curve.getTangentAt(1).normalize()
+				const t1 = curves[0].getTangentAt(0).normalize()
 				t = t0.add(t1).normalize()
 			} else {
 				t = curve.getTangentAt(u).normalize()
