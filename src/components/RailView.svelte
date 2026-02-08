@@ -5,9 +5,10 @@
 	import type { Instrument } from '../lib/instrument'
 	import { resolveRail } from '../lib/rail-resolve'
 	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/rail-geometry'
-	import { CurvePath, LineCurve3, MeshStandardMaterial, TubeGeometry, Vector3 } from 'three'
+	import { type BufferGeometry, CurvePath, LineCurve3, MeshStandardMaterial, Vector3 } from 'three'
 	import InstrumentView from './InstrumentView.svelte'
 	import { makeRailMaterial } from '../lib/config'
+	import { buildTubeGeometry } from '../lib/tube-geometry'
 
 	type Props = {
 		rail: Rail
@@ -70,12 +71,11 @@
 		curvePath: CurvePath<Vector3> | null,
 		opacity: number,
 		closed = false
-	): { geometry: TubeGeometry; opacity: number } | null {
+	): { geometry: BufferGeometry; opacity: number } | null {
 		if (!curvePath) return null
 		try {
-			const segments = Math.min(Math.max(Math.ceil(curvePath.getLength() * 12), 4), 512)
 			const radius = Math.max(width / 2, 0.001)
-			return { geometry: new TubeGeometry(curvePath, segments, radius, 8, closed), opacity }
+			return { geometry: buildTubeGeometry(curvePath.curves, radius, 8, 12, closed), opacity }
 		} catch (e) {
 			console.warn('Failed to create tube:', e)
 			return null
@@ -97,7 +97,7 @@
 	})
 
 	const branchMeshes = $derived.by(() => {
-		const meshes: Array<{ geometry: TubeGeometry; opacity: number }> = []
+		const meshes: Array<{ geometry: BufferGeometry; opacity: number }> = []
 		for (const s of resolved.splits) {
 			const splitIdx = resolved.points.findIndex((p) => p.beat === s.beat)
 			const prev = splitIdx > 0 ? resolved.points[splitIdx - 1] : null
