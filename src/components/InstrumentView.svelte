@@ -128,8 +128,7 @@
 
 		if (impactTime > 0) {
 			impactTime = Math.max(0, impactTime - delta)
-			const fade = easeOutQuart(impactTime / IMPACT_DURATION)
-			fx.impactIntensity.value = fade
+			fx.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION)
 			spinAngle = impactBaseAngle + easeOutQuart(1 - impactTime / IMPACT_DURATION) * Math.PI * 2
 		}
 	})
