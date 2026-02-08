@@ -20,36 +20,26 @@ export const scene: SceneConfig = {
 				{
 					beat: 7.3,
 					sides: 3,
-					color: '#0000ff',
-					signal: { intensity: 0 },
 					midiChannel: 4
 				},
 				{
 					beat: 7.4,
 					sides: 4,
-					color: '#0000ff',
-					signal: { intensity: 0 },
 					midiChannel: 4
 				},
 				{
 					beat: 7.5,
 					sides: 5,
-					color: '#0000ff',
-					signal: { intensity: 0 },
 					midiChannel: 4
 				},
 				{
 					beat: 7.6,
 					sides: 6,
-					color: '#0000ff',
-					signal: { intensity: 0 },
 					midiChannel: 4
 				},
 				{
 					beat: 7.7,
 					sides: 12,
-					color: '#0000ff',
-					signal: { intensity: 0 },
 					midiChannel: 4
 				}
 			]
@@ -61,9 +51,7 @@ export const scene: SceneConfig = {
 				nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3, [0, 2, 0] as Vec3, [0, 3, 0] as Vec3]
 			},
 			color: '#ffff88',
-			instruments: [
-				{ beat: 1.5, sides: 3, color: '#ff0000', midiChannel: 1, signal: { intensity: 0 } }
-			]
+			instruments: [{ beat: 1.5, sides: 3, midiChannel: 1 }]
 		},
 		{
 			rail: {
@@ -81,7 +69,7 @@ export const scene: SceneConfig = {
 				nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
 			},
 			marbles: [{ mode: 'ping-pong' as const, speed: 2 }],
-			color: '#ffff88'
+			color: '#88ff00'
 		},
 		{
 			rail: { id: 'circle1', offset: [0, 0, -3] as Vec3, nodes: circle({ pos: { y: -0.5 } }) },
@@ -105,10 +93,10 @@ export const scene: SceneConfig = {
 				})
 			},
 			instruments: [
-				{ beat: 1.5, sides: 4, color: '#ff0000', midiChannel: 2, signal: { intensity: 0 } },
-				{ beat: 2.5, sides: 5, color: '#ffffff', midiChannel: 2, signal: { intensity: 0 } }
+				{ beat: 1.5, sides: 4, midiChannel: 2 },
+				{ beat: 2.5, sides: 5, midiChannel: 2 }
 			],
-			color: '#ffffff'
+			color: '#ff00ff'
 		},
 		{
 			rail: {
@@ -196,17 +184,13 @@ export const scene: SceneConfig = {
 					beat: 2.5,
 					path: [0],
 					sides: 6,
-					color: '#ffffff',
-					midiChannel: 3,
-					signal: { intensity: 0 }
+					midiChannel: 3
 				},
 				{
 					beat: 2.5,
 					path: [1],
 					sides: 7,
-					color: '#ff00ff',
-					midiChannel: 1,
-					signal: { intensity: 0 }
+					midiChannel: 1
 				}
 			],
 			color: '#8800ff'

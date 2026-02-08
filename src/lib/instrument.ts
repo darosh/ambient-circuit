@@ -23,7 +23,7 @@ export type Instrument = {
 	/** Number of polygon sides (3=triangle, 4=square, 5=pentagon, etc.) */
 	sides: number
 	/** Color of the instrument */
-	color: string
+	color?: string
 	/** MIDI channel (1-16), default 1 */
 	midiChannel?: number
 	/** MIDI note (0-127), default 60 (C4) */

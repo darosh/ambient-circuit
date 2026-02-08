@@ -54,8 +54,12 @@
 		const ms = []
 		const indices: number[] = []
 		for (let i = 0; i < rails.length; i++) {
-			const { rail, marbles: mds } = rails[i]
+			const { rail, marbles: mds, instruments } = rails[i]
 			const resolvedRail = resolveRail(rail)
+
+			instruments?.forEach((ins) => {
+				ins.signal = ins.signal || { intensity: 0 }
+			})
 
 			const configs = mds && mds.length > 0 ? mds : mds === false ? [] : [{}]
 

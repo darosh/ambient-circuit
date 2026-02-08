@@ -19,6 +19,7 @@
 	type Props = {
 		instrument: Instrument
 		rail: ResolvedRail
+		color: string
 		size?: number
 		width?: number
 		cornerRadius?: number
@@ -30,14 +31,15 @@
 		instrument,
 		rail,
 		size = 1,
+		color,
 		width = 0.06,
 		cornerRadius = 0.075,
 		wireframe = false,
 		fxInstruments = true
 	}: Props = $props()
 
-	const fx = $derived(makeInstrumentMaterial(instrument.color))
-	const plainMaterial = $derived(new MeshStandardMaterial({ color: instrument.color }))
+	const fx = $derived(makeInstrumentMaterial(instrument.color || color))
+	const plainMaterial = $derived(new MeshStandardMaterial({ color: instrument.color || color }))
 
 	$effect(() => {
 		fx.mat.wireframe = wireframe

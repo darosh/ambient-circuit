@@ -162,5 +162,5 @@
 {/if}
 
 {#each instruments as instrument, idx (idx)}
-	<InstrumentView size={0.5} {instrument} rail={resolved} {fxInstruments} {wireframe} />
+	<InstrumentView {color} size={0.5} {instrument} rail={resolved} {fxInstruments} {wireframe} />
 {/each}
