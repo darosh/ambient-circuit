@@ -133,7 +133,7 @@
 </script>
 
 {#if fxPost}
-	<Bloom strength={1} radius={0.3} threshold={0.5} />
+	<Bloom strength={.5} radius={.2} threshold={0.5} />
 {/if}
 
 <T.PerspectiveCamera makeDefault position={[4, 6, 8]} fov={30}>
@@ -178,7 +178,7 @@
 				? marbleFxMaterials[marbleRailIndices[idx]]
 				: marblePlainMaterials[marbleRailIndices[idx]]}
 		>
-			<T.SphereGeometry args={[0.09, 16, 16]} />
+			<T.SphereGeometry args={[0.12, 16, 16]} />
 		</T.Mesh>
 	{/if}
 {/each}
