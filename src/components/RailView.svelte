@@ -68,13 +68,14 @@
 
 	function makeTube(
 		curvePath: CurvePath<Vector3> | null,
-		opacity: number
+		opacity: number,
+		closed = false
 	): { geometry: TubeGeometry; opacity: number } | null {
 		if (!curvePath) return null
 		try {
-			const segments = Math.min(Math.max(curvePath.curves.length * 8, 16), 512)
+			const segments = Math.min(Math.max(Math.ceil(curvePath.getLength() * 12), 4), 512)
 			const radius = Math.max(width / 2, 0.001)
-			return { geometry: new TubeGeometry(curvePath, segments, radius, 8, false), opacity }
+			return { geometry: new TubeGeometry(curvePath, segments, radius, 8, closed), opacity }
 		} catch (e) {
 			console.warn('Failed to create tube:', e)
 			return null
@@ -82,7 +83,16 @@
 	}
 
 	const mainMeshes = $derived.by(() => {
-		const m = makeTube(buildCurvePath(resolved.points), 0.9)
+		const pts = resolved.points
+		const first = pts[0]?.p
+		const last = pts[pts.length - 1]?.p
+		const closed =
+			!!first &&
+			!!last &&
+			Math.abs(first[0] - last[0]) < 1e-6 &&
+			Math.abs(first[1] - last[1]) < 1e-6 &&
+			Math.abs(first[2] - last[2]) < 1e-6
+		const m = makeTube(buildCurvePath(pts), 0.9, closed)
 		return m ? [m] : []
 	})
 
