@@ -1,6 +1,8 @@
 import type { Marble } from './marble'
 import type { TempoState } from './tempo'
-import type { Instrument, InstrumentTriggerContext } from './instrument'
+import type { Instrument } from './instrument'
+import type { TriggerHandler } from './scene'
+import type { MidiState } from './midi'
 import { BeatPosition, buildRailCurve, computeBeatPositions } from './rail-geometry'
 import { easingFunctions } from './easing'
 import { Vector3 } from 'three'
@@ -181,7 +183,9 @@ function checkInstrumentTriggers(
 	instruments: Instrument[],
 	railId: string,
 	marbleIndex: number,
-	globalBeat: number
+	globalBeat: number,
+	triggerHandler?: TriggerHandler,
+	midiState?: MidiState | null
 ): void {
 	if (instruments.length === 0) return
 
@@ -213,15 +217,17 @@ function checkInstrumentTriggers(
 			}
 		}
 
-		if (triggered) {
-			const context: InstrumentTriggerContext = {
+		if (triggered && triggerHandler) {
+			triggerHandler({
 				railId,
 				marbleIndex,
 				beat: instrument.beat,
 				globalBeat,
-				direction: marble.direction
-			}
-			instrument.onTrigger(context)
+				direction: marble.direction,
+				instrument,
+				marble,
+				midiState: midiState ?? null
+			})
 		}
 	}
 }
@@ -235,7 +241,9 @@ export function updateMarble(
 	tempo: TempoState,
 	instruments: Instrument[] = [],
 	railId: string = '',
-	marbleIndex: number = 0
+	marbleIndex: number = 0,
+	triggerHandler?: TriggerHandler,
+	midiState?: MidiState | null
 ): void {
 	const { resolvedRail, sequenceMode, easing, startBeat } = marble.config
 	const speed = marble.config.speed ?? 1
@@ -399,7 +407,9 @@ export function updateMarble(
 		instruments,
 		railId,
 		marbleIndex,
-		globalBeat
+		globalBeat,
+		triggerHandler,
+		midiState
 	)
 
 	marble.previousBeat = marble.currentBeat
@@ -415,11 +425,13 @@ export function updateMarbles(
 	marbles: Marble[],
 	tempo: TempoState,
 	instrumentsPerRail: Instrument[][] = [],
-	railIds: string[] = []
+	railIds: string[] = [],
+	triggerHandler?: TriggerHandler,
+	midiState?: MidiState | null
 ): void {
 	for (let i = 0; i < marbles.length; i++) {
 		const instruments = instrumentsPerRail[i] || []
 		const railId = railIds[i] || ''
-		updateMarble(marbles[i], tempo, instruments, railId, i)
+		updateMarble(marbles[i], tempo, instruments, railId, i, triggerHandler, midiState)
 	}
 }

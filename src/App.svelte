@@ -4,7 +4,7 @@
 	import Scene from './components/Scene.svelte'
 	import { createTempoState } from './lib/tempo'
 	import { easingNames } from './lib/easing'
-	import { rails } from './lib/rail-data'
+	import { scenes } from './data/index'
 	import { initMidi, setMidiPort, type MidiState } from './lib/midi'
 	import { WebGPURenderer } from 'three/webgpu'
 	import * as THREE from 'three/webgpu'
@@ -22,13 +22,24 @@
 	let fps = $state(0)
 	let tempo = $state(createTempoState())
 	let easing = $state('linear')
-	let railVisibility = $state(rails.map(() => true))
 	let midiEnabled = $state(false)
 	let midiState = $state<MidiState | null>(null)
 	let midiPortOptions = $derived(
 		midiState ? midiState.outputs.map((p) => ({ text: p.name, value: p.id })) : []
 	)
 	let selectedMidiPort = $state<string | null>(null)
+
+	let sceneId = $state(window.location.hash.slice(1) || scenes[0].id)
+	let activeScene = $derived(scenes.find((s) => s.id === sceneId) ?? scenes[0])
+	let railVisibility = $state(activeScene.rails.map(() => true))
+
+	$effect(() => {
+		window.location.hash = sceneId
+	})
+
+	$effect(() => {
+		tempo.config.bpm = activeScene.bpm
+	})
 
 	// Lazy init MIDI when enabled
 	$effect(() => {
@@ -65,21 +76,24 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <Pane title="Debug" position="fixed">
-	<Folder title="Tempo">
+	<List
+		label="Scene"
+		bind:value={sceneId}
+		options={scenes.map((s) => ({ text: s.id, value: s.id }))}
+	/>
+	<Folder title="Tempo" expanded={false}>
 		<Checkbox label="Play" bind:value={tempo.isPlaying} />
 		<Slider label="BPM" bind:value={tempo.config.bpm} min={30} max={300} />
 		<Monitor label="Beat" value={Math.floor(tempo.currentBeat)} />
 	</Folder>
-	<Folder title="Marbles">
+	<Folder title="FX" expanded={false}>
 		<List label="Easing" bind:value={easing} options={easingNames} />
-	</Folder>
-	<Folder title="FX">
 		<Checkbox label="Post" bind:value={fxPost} />
 		<Checkbox label="Rails" bind:value={fxRails} />
 		<Checkbox label="Marbles" bind:value={fxMarbles} />
 		<Checkbox label="Instruments" bind:value={fxInstruments} />
 	</Folder>
-	<Folder title="Debug">
+	<Folder title="Debug" expanded={false}>
 		<Checkbox label="Stats" bind:value={showStats} />
 		<Checkbox label="Grid" bind:value={showGrid} />
 		<Checkbox label="Points" bind:value={showPoints} />
@@ -90,8 +104,10 @@
 		{/if}
 	</Folder>
 	<Folder title="Rails" expanded={false}>
-		{#each rails as { rail }, i (rail.id)}
-			<Checkbox label={rail.id} bind:value={railVisibility[i]} />
+		{#each activeScene.rails as { rail }, i (rail.id)}
+			{#if i < railVisibility.length}
+				<Checkbox label={rail.id} bind:value={railVisibility[i]} />
+			{/if}
 		{/each}
 	</Folder>
 </Pane>
@@ -105,21 +121,24 @@
 		})
 	}}
 >
-	<Scene
-		{showGrid}
-		{showPoints}
-		{showBeats}
-		{showStats}
-		{fxPost}
-		{fxRails}
-		{fxMarbles}
-		{fxInstruments}
-		{midiState}
-		bind:tempo
-		bind:easing
-		bind:railVisibility
-		bind:fps
-	/>
+	{#key sceneId}
+		<Scene
+			scene={activeScene}
+			{showGrid}
+			{showPoints}
+			{showBeats}
+			{showStats}
+			{fxPost}
+			{fxRails}
+			{fxMarbles}
+			{fxInstruments}
+			{midiState}
+			bind:tempo
+			bind:easing
+			bind:railVisibility
+			bind:fps
+		/>
+	{/key}
 </Canvas>
 
 {#if showStats}

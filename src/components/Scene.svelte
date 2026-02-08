@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
+	import { untrack } from 'svelte'
 	import { OrbitControls } from '@threlte/extras'
 	import RailView from './RailView.svelte'
 	import Bloom from './Bloom.svelte'
@@ -7,12 +8,13 @@
 	import { createMarble } from '../lib/marble'
 	import { updateMarbles } from '../lib/marble-system'
 	import { resolveRail } from '../lib/rail-resolve'
-	import { createRails } from '../lib/rail-data'
 	import type { MidiState } from '../lib/midi'
+	import type { SceneConfig } from '../lib/scene'
 	import { MeshStandardMaterial } from 'three'
 	import { makeMarbleMaterial } from '../lib/config'
 
 	let {
+		scene,
 		showGrid = false,
 		showPoints = false,
 		showBeats = false,
@@ -26,6 +28,7 @@
 		railVisibility = $bindable(),
 		fps = $bindable()
 	}: {
+		scene: SceneConfig
 		showGrid?: boolean
 		showPoints?: boolean
 		showBeats?: boolean
@@ -44,11 +47,10 @@
 	// Init tempo state
 	if (!tempo) tempo = createTempoState()
 
-	// Create marbles (1 per rail, beat 0, looping, forward)
-	// Use static rails initially, then update with MIDI-enabled rails
-	const staticRails = createRails(null, [])
+	// Create marbles once at mount (component remounts per scene via {#key})
+	const rails = untrack(() => scene.rails)
 	let marbles = $state(
-		staticRails.map(({ rail, direction, mode, speed }) =>
+		rails.map(({ rail, direction, mode, speed }) =>
 			createMarble({
 				resolvedRail: resolveRail(rail),
 				startBeat: 0,
@@ -60,11 +62,10 @@
 		)
 	)
 
-	// Create MIDI-enabled rails (reactive to midiState changes)
-	let rails = $derived(createRails(midiState, marbles))
-
-	// Init rail visibility if not provided
-	if (!railVisibility) railVisibility = rails.map(() => true)
+	// Init rail visibility (reset if length mismatch from scene change)
+	if (!railVisibility || railVisibility.length !== rails.length) {
+		railVisibility = rails.map(() => true)
+	}
 
 	// Marble materials (both always created to avoid toggle issues)
 	const marbleFxMaterials = $derived(rails.map((r) => makeMarbleMaterial(r.color || '#ffffff').mat))
@@ -97,7 +98,7 @@
 
 		const instrumentsPerRail = rails.map((r) => r.instruments || [])
 		const railIds = rails.map((r) => r.rail.id)
-		updateMarbles(marbles, tempo, instrumentsPerRail, railIds)
+		updateMarbles(marbles, tempo, instrumentsPerRail, railIds, scene.triggerHandler, midiState)
 	})
 </script>
 
