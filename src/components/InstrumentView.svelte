@@ -53,13 +53,13 @@
 	// Create tube geometry following polygon path with optional rounded corners
 	const geometry = $derived.by(() => {
 		const n = instrument.sides
-		const r = size / 2
+		const r = size / (1 + Math.cos(Math.PI / n))
 		const cr = cornerRadius
 		const path = new CurvePath<Vector3>()
 
 		const verts: Vector3[] = []
 		for (let i = 0; i < n; i++) {
-			const angle = (i / n) * Math.PI * 2 - Math.PI / 2
+			const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + Math.PI / n
 			verts.push(new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, 0))
 		}
 

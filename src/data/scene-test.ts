@@ -15,7 +15,39 @@ export const scene: SceneConfig = {
 				id: 'path',
 				nodes: [[0, 0, 0], 'l i ib u i lb i rrrr ddd ll oooo uu']
 			},
-			color: '#0000ff'
+			color: '#0000ff',
+			instruments: [
+				{
+					beat: 7.3,
+					sides: 3,
+					color: '#0000ff',
+					signal: { intensity: 0 }
+				},
+				{
+					beat: 7.4,
+					sides: 4,
+					color: '#0000ff',
+					signal: { intensity: 0 }
+				},
+				{
+					beat: 7.5,
+					sides: 5,
+					color: '#0000ff',
+					signal: { intensity: 0 }
+				},
+				{
+					beat: 7.6,
+					sides: 6,
+					color: '#0000ff',
+					signal: { intensity: 0 }
+				},
+				{
+					beat: 7.7,
+					sides: 12,
+					color: '#0000ff',
+					signal: { intensity: 0 }
+				}
+			]
 		},
 		{
 			rail: {
