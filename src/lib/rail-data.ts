@@ -106,7 +106,7 @@ export function createRails(midiState: MidiState | null, marbles: Marble[]): Rai
 			instruments: (() => {
 				const inst2 = {
 					beat: 1.5,
-					sides: 7,
+					sides: 4,
 					color: '#ff0000',
 					midiChannel: 2,
 					signal: { intensity: 0 }
@@ -114,7 +114,7 @@ export function createRails(midiState: MidiState | null, marbles: Marble[]): Rai
 				inst2.onTrigger = createTrigger(midiState, marbles, inst2, inst2.signal!)
 				const inst3 = {
 					beat: 2.5,
-					sides: 7,
+					sides: 5,
 					color: '#ffffff',
 					midiChannel: 2,
 					signal: { intensity: 0 }
@@ -210,7 +210,7 @@ export function createRails(midiState: MidiState | null, marbles: Marble[]): Rai
 				const inst4 = {
 					beat: 2.5,
 					path: [0],
-					sides: 7,
+					sides: 6,
 					color: '#ffffff',
 					midiChannel: 3,
 					signal: { intensity: 0 }
