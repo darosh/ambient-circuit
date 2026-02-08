@@ -34,6 +34,7 @@ export interface Marble {
 	branchIndex: number | null // null = main rail, number = branch index
 	routingCounter: number // for weighted branch selection
 	lastGlobalBeat: number // last processed global beat to prevent re-processing
+	signal: { intensity: number } // impact signal, set to 1 on beat crossing
 }
 
 export function createMarble(config: MarbleConfig): Marble {
@@ -45,6 +46,7 @@ export function createMarble(config: MarbleConfig): Marble {
 		position: { x: 0, y: 0, z: 0 } as Vector3,
 		branchIndex: null, // starts on main rail
 		routingCounter: 0, // for weighted routing
-		lastGlobalBeat: -1 // no beat processed yet
+		lastGlobalBeat: -1, // no beat processed yet
+		signal: { intensity: 0 }
 	}
 }

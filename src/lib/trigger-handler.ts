@@ -3,6 +3,7 @@ import { SceneTriggerContext } from './scene'
 
 export function triggerHandler(ctx: SceneTriggerContext) {
 	ctx.instrument.signal!.intensity = 1
+	ctx.marble.signal.intensity = 1
 
 	if (ctx.midiState?.enabled) {
 		const channel = ctx.instrument.midiChannel ?? 1

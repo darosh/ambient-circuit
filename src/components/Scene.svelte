@@ -3,6 +3,7 @@
 	import { untrack } from 'svelte'
 	import { OrbitControls } from '@threlte/extras'
 	import RailView from './RailView.svelte'
+	import MarbleView from './MarbleView.svelte'
 	import Bloom from './Bloom.svelte'
 	import { createTempoState, updateTempo, type TempoState } from '../lib/tempo'
 	import { createMarble } from '../lib/marble'
@@ -10,8 +11,6 @@
 	import { resolveRail } from '../lib/rail-resolve'
 	import type { MidiState } from '../lib/midi'
 	import type { SceneConfig } from '../lib/scene'
-	import { MeshStandardMaterial } from 'three'
-	import { makeMarbleMaterial } from '../lib/config'
 
 	let {
 		scene,
@@ -84,17 +83,6 @@
 	if (!railVisibility || railVisibility.length !== rails.length) {
 		railVisibility = rails.map(() => true)
 	}
-
-	// Marble materials (both always created to avoid toggle issues)
-	const marbleFxMaterials = $derived(rails.map((r) => makeMarbleMaterial(r.color || '#ffffff').mat))
-	const marblePlainMaterials = $derived(
-		rails.map((r) => new MeshStandardMaterial({ color: r.color }))
-	)
-
-	$effect(() => {
-		for (const m of marbleFxMaterials) m.wireframe = wireframe
-		for (const m of marblePlainMaterials) m.wireframe = wireframe
-	})
 
 	// FPS tracking
 	if (fps === undefined) fps = 0
@@ -172,13 +160,11 @@
 
 {#each marbles as marble, idx (idx)}
 	{#if railVisibility[marbleRailIndices[idx]]}
-		<T.Mesh
-			position={[marble.position.x, marble.position.y, marble.position.z]}
-			material={fxMarbles
-				? marbleFxMaterials[marbleRailIndices[idx]]
-				: marblePlainMaterials[marbleRailIndices[idx]]}
-		>
-			<T.SphereGeometry args={[0.12, 16, 16]} />
-		</T.Mesh>
+		<MarbleView
+			{marble}
+			color={rails[marbleRailIndices[idx]].color || '#ffffff'}
+			{wireframe}
+			{fxMarbles}
+		/>
 	{/if}
 {/each}
