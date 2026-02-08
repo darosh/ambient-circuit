@@ -20,6 +20,7 @@
 	let fxRails = $state(true)
 	let fxMarbles = $state(true)
 	let fxInstruments = $state(true)
+	let autoRotate = $state(true)
 	let fps = $state(0)
 	let tempo = $state(createTempoState())
 	let easing = $state('linear')
@@ -86,8 +87,8 @@
 		bind:value={sceneId}
 		options={scenes.map((s) => ({ text: s.id, value: s.id }))}
 	/>
+	<Checkbox label="Play" bind:value={tempo.isPlaying} />
 	<Folder title="Tempo" expanded={false}>
-		<Checkbox label="Play" bind:value={tempo.isPlaying} />
 		<Slider label="BPM" bind:value={tempo.config.bpm} min={30} max={300} />
 		<Monitor label="Beat" value={Math.floor(tempo.currentBeat)} />
 	</Folder>
@@ -97,6 +98,7 @@
 		<Checkbox label="Rails" bind:value={fxRails} />
 		<Checkbox label="Marbles" bind:value={fxMarbles} />
 		<Checkbox label="Instruments" bind:value={fxInstruments} />
+		<Checkbox label="Auto Rotate" bind:value={autoRotate} />
 	</Folder>
 	<Folder title="Debug" expanded={false}>
 		<Checkbox label="Stats" bind:value={showStats} />
@@ -139,6 +141,7 @@
 			fxRails={fxRails && !wireframe}
 			fxMarbles={fxMarbles && !wireframe}
 			fxInstruments={fxInstruments && !wireframe}
+			{autoRotate}
 			{midiState}
 			bind:tempo
 			bind:easing

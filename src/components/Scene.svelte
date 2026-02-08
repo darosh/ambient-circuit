@@ -22,6 +22,7 @@
 		fxRails = true,
 		fxMarbles = true,
 		fxInstruments = true,
+		autoRotate = false,
 		midiState = null,
 		tempo = $bindable(),
 		easing = $bindable(),
@@ -37,6 +38,7 @@
 		fxRails?: boolean
 		fxMarbles?: boolean
 		fxInstruments?: boolean
+		autoRotate?: boolean
 		showStats?: boolean
 		midiState?: MidiState | null
 		tempo?: TempoState
@@ -128,8 +130,8 @@
 	<Bloom strength={0.5} radius={0.2} threshold={0.5} />
 {/if}
 
-<T.PerspectiveCamera makeDefault position={[4, 6, 8]} fov={30}>
-	<OrbitControls enableDamping target={[0, 1, 0]} />
+<T.PerspectiveCamera makeDefault position={[5, 7, 9]} fov={30}>
+	<OrbitControls enableDamping target={[0, 1, 0]} {autoRotate} autoRotateSpeed={0.5} />
 </T.PerspectiveCamera>
 
 <T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />
