@@ -38,13 +38,14 @@ if (!tempo) tempo = createTempoState()
 // Create marbles (1 per rail, beat 0, looping, forward)
 // Use static rails initially, then update with MIDI-enabled rails
 const staticRails = createRails(null, [])
-let marbles = $state(staticRails.map(({ rail, direction, mode }) =>
+let marbles = $state(staticRails.map(({ rail, direction, mode, speed }) =>
 	createMarble({
 		resolvedRail: resolveRail(rail),
 		startBeat: 0,
 		direction: direction || 'forward',
 		sequenceMode: mode || 'looping',
-		easing: easing || 'linear'
+		easing: easing || 'linear',
+		speed: speed ?? 1
 	})
 ))
 

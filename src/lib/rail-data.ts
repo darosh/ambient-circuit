@@ -10,6 +10,7 @@ export type RailData = {
 	color: string
 	mode?: MarbleSequenceMode
 	direction?: MarbleDirection
+	speed?: number
 	instruments?: Instrument[]
 }
 
@@ -63,7 +64,8 @@ export function createRails(midiState: MidiState | null, marbles: Marble[]): Rai
 			nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
 		},
 		mode: 'ping-pong' as MarbleSequenceMode,
-		color: '#ffff88'
+		color: '#ffff88',
+		speed: 2
 	},
 	{
 		rail: { id: 'circle1', offset: [0, 0, -3] as Vec3, nodes: circle({ pos: { y: -0.5 } }) },

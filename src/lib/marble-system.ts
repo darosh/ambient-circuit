@@ -231,19 +231,19 @@ export function updateMarble(
 	railId: string = '',
 	marbleIndex: number = 0
 ): void {
-	const { resolvedRail, sequenceMode, easing, startBeat } = marble.config
+	const { resolvedRail, sequenceMode, easing, startBeat, speed } = marble.config
 
 	// Calculate delta from last update
 	const globalBeat = tempo.currentBeat + tempo.beatProgress
 	const isFirstUpdate = marble.lastGlobalBeat < 0
-	const deltaBeat = isFirstUpdate ? 0 : globalBeat - marble.lastGlobalBeat
+	const deltaBeat = isFirstUpdate ? 0 : (globalBeat - marble.lastGlobalBeat) * speed
 	marble.lastGlobalBeat = globalBeat
 
 	// Update position based on delta, not absolute recalculation
 	let rawBeat: number
 	if (isFirstUpdate) {
-		// First update: use startBeat + globalBeat
-		rawBeat = startBeat + (marble.direction === 'forward' ? globalBeat : -globalBeat)
+		// First update: use startBeat + globalBeat * speed
+		rawBeat = startBeat + (marble.direction === 'forward' ? globalBeat * speed : -globalBeat * speed)
 	} else {
 		// Subsequent updates: increment from current position
 		rawBeat = marble.currentBeat + (marble.direction === 'forward' ? deltaBeat : -deltaBeat)
