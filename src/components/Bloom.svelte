@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { useThrelte, useTask } from '@threlte/core'
 	import { onMount } from 'svelte'
-	import { PostProcessing } from 'three/webgpu'
+	import { PostProcessing, type WebGPURenderer } from 'three/webgpu'
 	import { pass } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 
@@ -15,7 +15,7 @@
 
 	const { renderer, scene, camera, renderStage, autoRender } = useThrelte()
 
-	const postProcessing = new PostProcessing(renderer)
+	const postProcessing = new PostProcessing(renderer as unknown as WebGPURenderer)
 
 	$effect(() => {
 		const scenePass = pass(scene, camera.current)

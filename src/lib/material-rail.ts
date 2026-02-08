@@ -21,9 +21,9 @@ perlinTexture.wrapT = THREE.RepeatWrapping
 
 const timeScale = uniform(0.2)
 
-const toSkewedUv = Fn(([uvCoord, skew]) => {
+const toSkewedUv = Fn(([uvCoord, skew]: any[]) => {
 	return vec2(uvCoord.x.add(uvCoord.y.mul(skew.x)), uvCoord.y.add(uvCoord.x.mul(skew.y)))
-})
+}) as (...args: any[]) => any
 
 /**
  * Create a glowing noise-based rail material (WebGPU/TSL).

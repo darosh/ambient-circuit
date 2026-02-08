@@ -33,11 +33,11 @@ const parabolStrength = uniform(1)
 const parabolOffset = uniform(0.3)
 const parabolAmplitude = uniform(0.2)
 
-const toSkewedUv = Fn(([uv, skew]) => {
+const toSkewedUv = Fn(([uv, skew]: any[]) => {
 	return vec2(uv.x.add(uv.y.mul(skew.x)), uv.y.add(uv.x.mul(skew.y)))
-})
+}) as (...args: any[]) => any
 
-const twistedCylinder = Fn(([position, parabolStrength, parabolOffset, parabolAmplitude, time]) => {
+const twistedCylinder = Fn(([position, parabolStrength, parabolOffset, parabolAmplitude, time]: any[]) => {
 	const angle = atan(position.z, position.x).toVar()
 	const elevation = position.y
 
@@ -54,7 +54,7 @@ const twistedCylinder = Fn(([position, parabolStrength, parabolOffset, parabolAm
 	const twistedPosition = vec3(cos(angle).mul(radius), elevation, sin(angle).mul(radius))
 
 	return twistedPosition
-})
+}) as (...args: any[]) => any
 
 export const emissiveMaterial = new THREE.MeshBasicNodeMaterial({
 	transparent: true,

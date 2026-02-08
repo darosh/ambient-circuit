@@ -26,6 +26,7 @@ let {
 	railVisibility = $bindable(),
 	fps = $bindable()
 }: {
+	showGrid?: boolean
 	showPoints?: boolean
 	showBeats?: boolean
 	fxPost?: boolean
@@ -39,9 +40,6 @@ let {
 	railVisibility?: boolean[]
 	fps?: number
 } = $props()
-
-// Init rail visibility if not provided
-if (!railVisibility) railVisibility = rails.map(() => true)
 
 // Init tempo state
 if (!tempo) tempo = createTempoState()
@@ -62,6 +60,9 @@ let marbles = $state(staticRails.map(({ rail, direction, mode, speed }) =>
 
 // Create MIDI-enabled rails (reactive to midiState changes)
 let rails = $derived(createRails(midiState, marbles))
+
+// Init rail visibility if not provided
+if (!railVisibility) railVisibility = rails.map(() => true)
 
 // Marble materials (both always created to avoid toggle issues)
 const marbleFxMaterials = $derived(rails.map(r => createMarbleMaterial(r.color || '#ffffff')))
