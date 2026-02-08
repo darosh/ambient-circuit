@@ -11,7 +11,7 @@ export const scene: SceneConfig = {
 				id: 'path',
 				nodes: [[0, 0, 0], 'l3 i ib l i lb i']
 			},
-			color: '#0000ff',
+			color: '#0000ff'
 			// marbles: false
 		}
 	]

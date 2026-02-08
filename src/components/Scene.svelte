@@ -55,9 +55,9 @@
 		for (let i = 0; i < rails.length; i++) {
 			const { rail, marbles: mds } = rails[i]
 			const resolvedRail = resolveRail(rail)
-			
-			const configs = mds && mds.length > 0 ? mds : (mds === false ?  [] : [{}])
-			
+
+			const configs = mds && mds.length > 0 ? mds : mds === false ? [] : [{}]
+
 			for (const m of configs) {
 				ms.push(
 					createMarble({
@@ -114,7 +114,14 @@
 
 		const instrumentsPerMarble = marbleRailIndices.map((i) => rails[i].instruments || [])
 		const railIdPerMarble = marbleRailIndices.map((i) => rails[i].rail.id)
-		updateMarbles(marbles, tempo, instrumentsPerMarble, railIdPerMarble, scene.triggerHandler, midiState)
+		updateMarbles(
+			marbles,
+			tempo,
+			instrumentsPerMarble,
+			railIdPerMarble,
+			scene.triggerHandler,
+			midiState
+		)
 	})
 </script>
 
@@ -159,7 +166,9 @@
 	{#if railVisibility[marbleRailIndices[idx]]}
 		<T.Mesh
 			position={[marble.position.x, marble.position.y, marble.position.z]}
-			material={fxMarbles ? marbleFxMaterials[marbleRailIndices[idx]] : marblePlainMaterials[marbleRailIndices[idx]]}
+			material={fxMarbles
+				? marbleFxMaterials[marbleRailIndices[idx]]
+				: marblePlainMaterials[marbleRailIndices[idx]]}
 		>
 			<T.SphereGeometry args={[0.15, 16, 16]} />
 		</T.Mesh>
