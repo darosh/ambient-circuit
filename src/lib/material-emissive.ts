@@ -8,9 +8,6 @@ import {
 	time,
 	atan,
 	uniform,
-	pass,
-	PI,
-	TWO_PI,
 	color,
 	positionLocal,
 	sin,
@@ -33,28 +30,32 @@ const parabolStrength = uniform(1)
 const parabolOffset = uniform(0.3)
 const parabolAmplitude = uniform(0.2)
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const toSkewedUv = Fn(([uv, skew]: any[]) => {
 	return vec2(uv.x.add(uv.y.mul(skew.x)), uv.y.add(uv.x.mul(skew.y)))
 }) as (...args: any[]) => any
 
-const twistedCylinder = Fn(([position, parabolStrength, parabolOffset, parabolAmplitude, time]: any[]) => {
-	const angle = atan(position.z, position.x).toVar()
-	const elevation = position.y
+const twistedCylinder = Fn(
+	([position, parabolStrength, parabolOffset, parabolAmplitude, time]: any[]) => {
+		const angle = atan(position.z, position.x).toVar()
+		const elevation = position.y
 
-	// parabol
-	const radius = parabolStrength
-		.mul(position.y.sub(parabolOffset))
-		.pow(2)
-		.add(parabolAmplitude)
-		.toVar()
+		// parabol
+		const radius = parabolStrength
+			.mul(position.y.sub(parabolOffset))
+			.pow(2)
+			.add(parabolAmplitude)
+			.toVar()
 
-	// turbulences
-	radius.addAssign(sin(elevation.sub(time).mul(20).add(angle.mul(2))).mul(0.05))
+		// turbulences
+		radius.addAssign(sin(elevation.sub(time).mul(20).add(angle.mul(2))).mul(0.05))
 
-	const twistedPosition = vec3(cos(angle).mul(radius), elevation, sin(angle).mul(radius))
+		const twistedPosition = vec3(cos(angle).mul(radius), elevation, sin(angle).mul(radius))
 
-	return twistedPosition
-}) as (...args: any[]) => any
+		return twistedPosition
+	}
+) as (...args: any[]) => any
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 export const emissiveMaterial = new THREE.MeshBasicNodeMaterial({
 	transparent: true,

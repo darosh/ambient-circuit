@@ -3,7 +3,12 @@ import { Vector3 } from 'three'
 import type { ResolvedPoint } from '../src/lib/rail'
 import { computeBeatPositions, buildSegmentCurve } from '../src/lib/rail-geometry'
 
-function pt(p: [number, number, number], beat: number, round: 'to' | 'from' | 'both' | null = null, tangent: number = 0.39): ResolvedPoint {
+function pt(
+	p: [number, number, number],
+	beat: number,
+	round: 'to' | 'from' | 'both' | null = null,
+	tangent: number = 0.39
+): ResolvedPoint {
 	return { p, beat, round, tangent }
 }
 
@@ -44,10 +49,10 @@ describe('computeBeatPositions', () => {
 		// 4-point circle: tangent context available from adjacent points
 		const points = [
 			pt([1, 0, 0], 0, 'both'),
-			pt([0, 0, 1], 4, 'both'),  // gap=4 on this segment
+			pt([0, 0, 1], 4, 'both'), // gap=4 on this segment
 			pt([-1, 0, 0], 5, 'both'),
 			pt([0, 0, -1], 6, 'both'),
-			pt([1, 0, 0], 7, 'both'),  // close loop
+			pt([1, 0, 0], 7, 'both') // close loop
 		]
 		const r = computeBeatPositions(points)
 		expect(r).toHaveLength(8) // beats 0..7
@@ -58,11 +63,7 @@ describe('computeBeatPositions', () => {
 	})
 
 	it('mixed gaps', () => {
-		const points = [
-			pt([0, 0, 0], 0),
-			pt([1, 0, 0], 1),
-			pt([4, 0, 0], 4),
-		]
+		const points = [pt([0, 0, 0], 0), pt([1, 0, 0], 1), pt([4, 0, 0], 4)]
 		const r = computeBeatPositions(points)
 		expect(r.map((b) => b.beat)).toEqual([0, 1, 2, 3, 4])
 		// beat 1 at exact control point
@@ -78,7 +79,7 @@ describe('computeBeatPositions', () => {
 			pt([0, 0, 1], 1, 'both'),
 			pt([-1, 0, 0], 2, 'both'),
 			pt([0, 0, -1], 3, 'both'),
-			pt([1, 0, 0], 4, 'both'),
+			pt([1, 0, 0], 4, 'both')
 		]
 		const r = computeBeatPositions(points)
 		expect(r).toHaveLength(5)
@@ -102,7 +103,7 @@ describe('computeBeatPositions', () => {
 			pt([0, 0, 1], 0.5, 'both'),
 			pt([-1, 0, 0], 1.0, 'both'),
 			pt([0, 0, -1], 1.5, 'both'),
-			pt([1, 0, 0], 2, 'both'),
+			pt([1, 0, 0], 2, 'both')
 		]
 		const r = computeBeatPositions(points)
 		expect(r.map((b) => b.beat)).toEqual([0, 1, 2])
@@ -113,10 +114,7 @@ describe('computeBeatPositions', () => {
 
 describe('tangent scale', () => {
 	it('default tangent=0.39: matches legacy behavior', () => {
-		const points = [
-			pt([1, 0, 0], 0, 'both', 0.39),
-			pt([0, 0, 1], 1, 'both', 0.39),
-		]
+		const points = [pt([1, 0, 0], 0, 'both', 0.39), pt([0, 0, 1], 1, 'both', 0.39)]
 		const curve = buildSegmentCurve(points, 0)
 		expect(curve).not.toBeNull()
 		// Verify control points use correct tangent scale
@@ -128,10 +126,7 @@ describe('tangent scale', () => {
 	})
 
 	it('tangent=0: degenerate curve (control points collapse)', () => {
-		const points = [
-			pt([0, 0, 0], 0, 'both', 0),
-			pt([1, 0, 0], 1, 'both', 0),
-		]
+		const points = [pt([0, 0, 0], 0, 'both', 0), pt([1, 0, 0], 1, 'both', 0)]
 		const curve = buildSegmentCurve(points, 0)
 		expect(curve).not.toBeNull()
 		// Control points collapse to endpoints
@@ -140,10 +135,7 @@ describe('tangent scale', () => {
 	})
 
 	it('tangent=1.0: extreme curve', () => {
-		const points = [
-			pt([0, 0, 0], 0, 'both', 1.0),
-			pt([1, 0, 0], 1, 'both', 1.0),
-		]
+		const points = [pt([0, 0, 0], 0, 'both', 1.0), pt([1, 0, 0], 1, 'both', 1.0)]
 		const curve = buildSegmentCurve(points, 0)
 		expect(curve).not.toBeNull()
 		const chord = 1
@@ -152,10 +144,7 @@ describe('tangent scale', () => {
 	})
 
 	it('asymmetric tangents: tight entry, loose exit', () => {
-		const points = [
-			pt([0, 0, 0], 0, 'both', 0.1),
-			pt([1, 0, 0], 1, 'both', 0.8),
-		]
+		const points = [pt([0, 0, 0], 0, 'both', 0.1), pt([1, 0, 0], 1, 'both', 0.8)]
 		const curve = buildSegmentCurve(points, 0)
 		expect(curve).not.toBeNull()
 		const chord = 1

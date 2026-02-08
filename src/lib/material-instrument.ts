@@ -23,6 +23,6 @@ export function createInstrumentMaterial(hexColor: string) {
 		const emissive = colorNode.mul(1.5).div(lum)
 		return vec4(emissive, 1.0)
 	})()
-	
+
 	return { mat, impactIntensity }
 }

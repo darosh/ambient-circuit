@@ -17,11 +17,11 @@ describe('marble routing through splits', () => {
 					weights: [1, 1], // alternate between branches
 					branches: [
 						[{ p: [1, 1, 0], beat: 2 }], // Branch 0: upper
-						[{ p: [1, -1, 0], beat: 2 }], // Branch 1: lower
-					],
-				},
-			},
-		],
+						[{ p: [1, -1, 0], beat: 2 }] // Branch 1: lower
+					]
+				}
+			}
+		]
 	}
 
 	it('marble starts at beat 0', () => {
@@ -30,7 +30,7 @@ describe('marble routing through splits', () => {
 			startBeat: 0,
 			direction: 'forward',
 			sequenceMode: 'looping',
-			easing: 'linear',
+			easing: 'linear'
 		})
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 
@@ -47,7 +47,7 @@ describe('marble routing through splits', () => {
 			startBeat: 0,
 			direction: 'forward',
 			sequenceMode: 'looping',
-			easing: 'linear',
+			easing: 'linear'
 		})
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.currentBeat = 0
@@ -66,7 +66,7 @@ describe('marble routing through splits', () => {
 			startBeat: 0,
 			direction: 'forward',
 			sequenceMode: 'looping',
-			easing: 'linear',
+			easing: 'linear'
 		})
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.currentBeat = 1
@@ -85,7 +85,7 @@ describe('marble routing through splits', () => {
 			startBeat: 0,
 			direction: 'forward',
 			sequenceMode: 'looping',
-			easing: 'linear',
+			easing: 'linear'
 		})
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.currentBeat = 1
@@ -107,7 +107,7 @@ describe('marble routing through splits', () => {
 			startBeat: 0,
 			direction: 'forward',
 			sequenceMode: 'looping',
-			easing: 'linear',
+			easing: 'linear'
 		})
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.currentBeat = 2
@@ -127,7 +127,7 @@ describe('marble routing through splits', () => {
 			startBeat: 0,
 			direction: 'forward',
 			sequenceMode: 'looping',
-			easing: 'linear',
+			easing: 'linear'
 		})
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 
@@ -155,7 +155,7 @@ describe('marble routing through splits', () => {
 			startBeat: 0,
 			direction: 'forward',
 			sequenceMode: 'looping',
-			easing: 'linear',
+			easing: 'linear'
 		})
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 

@@ -19,10 +19,10 @@ export function circle(opts: CircleOpts = {}): (Vec3 | RailPointFull)[] {
 	const { pos = {}, radius = 1, points = 4 } = opts
 	const n = Math.max(3, points)
 	return Array.from({ length: n + 1 }, (_, i) => {
-		const t = (i % n) / n * 2 * Math.PI
+		const t = ((i % n) / n) * 2 * Math.PI
 		return {
 			p: offset([Math.cos(t) * radius, 0, Math.sin(t) * radius], pos),
-			round: 'both' as const,
+			round: 'both' as const
 		}
 	})
 }
@@ -45,15 +45,15 @@ export function roundedRect(opts: RoundedRectOpts = {}): (Vec3 | RailPointFull)[
 
 	// Clockwise from after TL corner. Per corner: approach (from) → exit (plain).
 	return [
-		offset([-hw + cr, 0, -hh], pos),                          // TL exit (start)
-		{ p: offset([hw - cr, 0, -hh], pos), round: 'from' },    // TR approach
-		offset([hw, 0, -hh + cr], pos),                           // TR exit
-		{ p: offset([hw, 0, hh - cr], pos), round: 'from' },     // BR approach
-		offset([hw - cr, 0, hh], pos),                            // BR exit
-		{ p: offset([-hw + cr, 0, hh], pos), round: 'from' },    // BL approach
-		offset([-hw, 0, hh - cr], pos),                           // BL exit
-		{ p: offset([-hw, 0, -hh + cr], pos), round: 'from' },   // TL approach
-		offset([-hw + cr, 0, -hh], pos),                          // close
+		offset([-hw + cr, 0, -hh], pos), // TL exit (start)
+		{ p: offset([hw - cr, 0, -hh], pos), round: 'from' }, // TR approach
+		offset([hw, 0, -hh + cr], pos), // TR exit
+		{ p: offset([hw, 0, hh - cr], pos), round: 'from' }, // BR approach
+		offset([hw - cr, 0, hh], pos), // BR exit
+		{ p: offset([-hw + cr, 0, hh], pos), round: 'from' }, // BL approach
+		offset([-hw, 0, hh - cr], pos), // BL exit
+		{ p: offset([-hw, 0, -hh + cr], pos), round: 'from' }, // TL approach
+		offset([-hw + cr, 0, -hh], pos) // close
 	]
 }
 
@@ -71,17 +71,14 @@ export type CoilOpts = {
 }
 
 export function coil(opts: CoilOpts = {}): (Vec3 | RailPointFull)[] {
-	const {
-		pos = {}, radius = 1, height = 1,
-		rounds = 2, density = 4, lead = 1,
-	} = opts
+	const { pos = {}, radius = 1, height = 1, rounds = 2, density = 4, lead = 1 } = opts
 	const len = rounds * density + 1
 	const coilPoints: RailPointFull[] = Array.from({ length: len }, (_, i) => {
 		const t = (i / density) * 2 * Math.PI
-		const y = i / (len - 1) * height
+		const y = (i / (len - 1)) * height
 		return {
 			p: offset([Math.cos(t) * radius, y, Math.sin(t) * radius], pos),
-			round: i === 0 ? 'from' as const : i === len - 1 ? 'to' as const : 'both' as const,
+			round: i === 0 ? ('from' as const) : i === len - 1 ? ('to' as const) : ('both' as const)
 		}
 	})
 
@@ -127,10 +124,10 @@ export function spiral(opts: SpiralOpts = {}): (Vec3 | RailPointFull)[] {
 	const spiralPoints: RailPointFull[] = Array.from({ length: len }, (_, i) => {
 		const t = (i / density) * 2 * Math.PI
 		const r = startRadius + Math.ceil((1 + i) / density) * radiusStep
-		const y = i / (len - 1) * height
+		const y = (i / (len - 1)) * height
 		return {
 			p: offset([Math.cos(t) * r, y, Math.sin(t) * r], pos),
-			round: i === 0 ? 'from' as const : i === len - 1 ? 'to' as const : 'both' as const,
+			round: i === 0 ? ('from' as const) : i === len - 1 ? ('to' as const) : ('both' as const),
 			tangent
 		}
 	})

@@ -10,8 +10,8 @@ describe('resolveRail', () => {
 				[0, 0, 0],
 				[1, 0, 0],
 				[2, 0, 0],
-				[3, 0, 0],
-			],
+				[3, 0, 0]
+			]
 		}
 		const r = resolveRail(rail)
 		expect(r.id).toBe('kick')
@@ -28,8 +28,8 @@ describe('resolveRail', () => {
 			beatOffset: 4,
 			nodes: [
 				[0, 0, 0],
-				[1, 0, 0],
-			],
+				[1, 0, 0]
+			]
 		}
 		const r = resolveRail(rail)
 		expect(r.beatOffset).toBe(4)
@@ -40,7 +40,7 @@ describe('resolveRail', () => {
 		const rail: Rail = {
 			id: 'rev',
 			reverse: true,
-			nodes: [[0, 0, 0]],
+			nodes: [[0, 0, 0]]
 		}
 		expect(resolveRail(rail).reverse).toBe(true)
 	})
@@ -53,8 +53,8 @@ describe('resolveRail', () => {
 				{ p: [1, 0, 0], round: 'to' },
 				{ p: [2, 0, 0], round: 'from' },
 				{ p: [3, 0, 0], round: 'both' },
-				[4, 0, 0],
-			],
+				[4, 0, 0]
+			]
 		}
 		const r = resolveRail(rail)
 		expect(r.points[0].round).toBe(null)
@@ -67,11 +67,7 @@ describe('resolveRail', () => {
 	it('explicit beat override', () => {
 		const rail: Rail = {
 			id: 'jump',
-			nodes: [
-				[0, 0, 0],
-				{ p: [1, 0, 0], beat: 4 },
-				[2, 0, 0],
-			],
+			nodes: [[0, 0, 0], { p: [1, 0, 0], beat: 4 }, [2, 0, 0]]
 		}
 		const r = resolveRail(rail)
 		expect(r.points.map((p) => p.beat)).toEqual([0, 4, 5])
@@ -89,17 +85,17 @@ describe('resolveRail', () => {
 						branches: [
 							[
 								[2, 1, 0],
-								[3, 1, 0],
+								[3, 1, 0]
 							],
 							[
 								[2, -1, 0],
-								[3, -1, 0],
-							],
-						],
-					},
+								[3, -1, 0]
+							]
+						]
+					}
 				},
-				[4, 0, 0],
-			],
+				[4, 0, 0]
+			]
 		}
 		const r = resolveRail(rail)
 
@@ -124,10 +120,10 @@ describe('resolveRail', () => {
 					split: {
 						p: [0, 0, 0],
 						weights: [1, 1],
-						branches: [[[1, 0, 0]], [[1, 1, 0]]],
-					},
-				},
-			],
+						branches: [[[1, 0, 0]], [[1, 1, 0]]]
+					}
+				}
+			]
 		}
 		const r = resolveRail(rail)
 		expect(r.points).toHaveLength(1)
@@ -150,17 +146,20 @@ describe('resolveRail', () => {
 									split: {
 										p: [2, 1, 0],
 										weights: [1, 2],
-										branches: [[[2, 2, 0]], [[2, 0, 0]]],
-									},
+										branches: [[[2, 2, 0]], [[2, 0, 0]]]
+									}
 								},
-								[3, 1, 0],
+								[3, 1, 0]
 							],
-							[[1, -1, 0], [2, -1, 0]],
-						],
-					},
+							[
+								[1, -1, 0],
+								[2, -1, 0]
+							]
+						]
+					}
 				},
-				[4, 0, 0],
-			],
+				[4, 0, 0]
+			]
 		}
 		const r = resolveRail(rail)
 		const outerSplit = r.splits[0]
@@ -174,10 +173,7 @@ describe('resolveRail', () => {
 	it('positions preserved exactly', () => {
 		const rail: Rail = {
 			id: 'pos',
-			nodes: [
-				[1.5, -2.3, 0.7],
-				{ p: [3.14, 0, -1], round: 'both' },
-			],
+			nodes: [[1.5, -2.3, 0.7], { p: [3.14, 0, -1], round: 'both' }]
 		}
 		const r = resolveRail(rail)
 		expect(r.points[0].p).toEqual([1.5, -2.3, 0.7])

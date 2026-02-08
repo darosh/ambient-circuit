@@ -20,7 +20,16 @@
 		instruments?: Instrument[]
 	}
 
-	let { rail, color = '#00ffff', width = 0.1, showPoints = false, showBeats = false, fxRails = true, fxInstruments = true, instruments = [] }: Props = $props()
+	let {
+		rail,
+		color = '#00ffff',
+		width = 0.1,
+		showPoints = false,
+		showBeats = false,
+		fxRails = true,
+		fxInstruments = true,
+		instruments = []
+	}: Props = $props()
 
 	const resolved = $derived(resolveRail(rail))
 	const mainPoints = $derived(buildRailCurve(resolved.points))
@@ -31,7 +40,7 @@
 		const result: import('three').Vector3[][] = []
 		for (const s of resolved.splits) {
 			// Find the point before the split in main rail for proper tangent computation
-			const splitIdx = resolved.points.findIndex(p => p.beat === s.beat)
+			const splitIdx = resolved.points.findIndex((p) => p.beat === s.beat)
 			const prevPoint = splitIdx > 0 ? resolved.points[splitIdx - 1] : null
 
 			for (const b of s.branches) {
@@ -135,8 +144,10 @@
 
 {#if showBeats}
 	{#each beatPositions as bp, bpIndex (bpIndex)}
-		{@const isDownbeat = bp.beat === (resolved.beatOffset)}
-		<T.Mesh position={[bp.position.x + .1, bp.position.y + (isDownbeat ? -.25 : .05), bp.position.z]}>
+		{@const isDownbeat = bp.beat === resolved.beatOffset}
+		<T.Mesh
+			position={[bp.position.x + 0.1, bp.position.y + (isDownbeat ? -0.25 : 0.05), bp.position.z]}
+		>
 			<Text3DGeometry
 				text={String(bp.beat)}
 				size={isDownbeat ? 0.2 : 0.2}

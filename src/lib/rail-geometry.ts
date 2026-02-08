@@ -4,9 +4,6 @@ import type { ResolvedPoint, ResolvedRail, Vec3 } from './rail'
 /** Interpolated points per curved segment */
 const CURVE_SEGMENTS = 12
 
-/** @deprecated Use ResolvedPoint.tangent instead — 0.39 is near-optimal for quarter-circle arcs */
-const TANGENT_SCALE = 0.39
-
 export function toV3(p: Vec3): Vector3 {
 	return new Vector3(p[0], p[1], p[2])
 }
@@ -70,10 +67,7 @@ function tangentAt(points: ResolvedPoint[], i: number): Vector3 {
 /**
  * Build the CubicBezierCurve3 for segment i→i+1, or null if straight.
  */
-export function buildSegmentCurve(
-	points: ResolvedPoint[],
-	i: number,
-): CubicBezierCurve3 | null {
+export function buildSegmentCurve(points: ResolvedPoint[], i: number): CubicBezierCurve3 | null {
 	if (!isSegmentCurved(points, i)) return null
 
 	const p0 = toV3(points[i].p)
@@ -137,7 +131,7 @@ export function getPointsForPath(rail: ResolvedRail, path?: number[]): ResolvedP
 	}
 
 	const firstSplit = rail.splits[0]
-	const splitIdx = rail.points.findIndex(p => p.beat === firstSplit.beat)
+	const splitIdx = rail.points.findIndex((p) => p.beat === firstSplit.beat)
 
 	// Include point before split for proper tangent computation
 	const startIdx = Math.max(0, splitIdx - 1)
@@ -264,9 +258,7 @@ export function computeBeatPositions(points: ResolvedPoint[]): BeatPosition[] {
 
 		for (let b = first; b <= last; b++) {
 			const u = (b - beatA) / (beatB - beatA)
-			const pos = bezier
-				? bezier.getPointAt(u)
-				: toV3(points[i].p).lerp(toV3(points[i + 1].p), u)
+			const pos = bezier ? bezier.getPointAt(u) : toV3(points[i].p).lerp(toV3(points[i + 1].p), u)
 			result.push({ beat: b, position: pos })
 		}
 	}

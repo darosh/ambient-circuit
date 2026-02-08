@@ -13,9 +13,9 @@ describe('marble-system', () => {
 			{ p: [0, 0, 0], beat: 0, round: null, tangent: 0.39 },
 			{ p: [1, 0, 0], beat: 1, round: null, tangent: 0.39 },
 			{ p: [2, 0, 0], beat: 2, round: null, tangent: 0.39 },
-			{ p: [3, 0, 0], beat: 3, round: null, tangent: 0.39 },
+			{ p: [3, 0, 0], beat: 3, round: null, tangent: 0.39 }
 		],
-		splits: [],
+		splits: []
 	}
 
 	it('marble starts at beat 0', () => {
@@ -24,7 +24,7 @@ describe('marble-system', () => {
 			startBeat: 0,
 			direction: 'forward',
 			sequenceMode: 'looping',
-			easing: 'linear',
+			easing: 'linear'
 		})
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 
@@ -40,7 +40,7 @@ describe('marble-system', () => {
 			startBeat: 0,
 			direction: 'forward',
 			sequenceMode: 'looping',
-			easing: 'linear',
+			easing: 'linear'
 		})
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.currentBeat = 1
@@ -58,7 +58,7 @@ describe('marble-system', () => {
 			startBeat: 0,
 			direction: 'forward',
 			sequenceMode: 'looping',
-			easing: 'linear',
+			easing: 'linear'
 		})
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.currentBeat = 4 // past end of rail (beat 3)
@@ -74,7 +74,7 @@ describe('marble-system', () => {
 			startBeat: 0,
 			direction: 'forward',
 			sequenceMode: 'ping-pong',
-			easing: 'linear',
+			easing: 'linear'
 		})
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.currentBeat = 4

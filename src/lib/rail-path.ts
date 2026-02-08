@@ -6,7 +6,7 @@ const DIR: Record<string, Vec3> = {
 	u: [0, 1, 0],
 	d: [0, -1, 0],
 	i: [0, 0, -1],
-	o: [0, 0, 1],
+	o: [0, 0, 1]
 }
 
 const DIR_WORDS: Record<string, string> = {
@@ -18,7 +18,7 @@ const DIR_WORDS: Record<string, string> = {
 	out: 'o',
 	to: 't',
 	from: 'f',
-	both: 'b',
+	both: 'b'
 }
 
 const ROUND_CHARS = new Set(['t', 'f', 'b'])

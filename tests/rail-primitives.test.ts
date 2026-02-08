@@ -64,13 +64,13 @@ describe('roundedRect', () => {
 		{ p: [3, 0, 1], round: 'from' },
 		{ p: [2, 0, 0] },
 		{ p: [2, 0, -1], round: 'from' },
-		{ p: [3, 0, -2] },
+		{ p: [3, 0, -2] }
 	]
 
 	it('matches original fixture with equivalent params', () => {
 		const nodes = roundedRect({ pos: { x: 3.5, z: -0.5 }, width: 3, height: 3, cornerRadius: 1 })
 		const pos = getPositions(nodes)
-		const fixturePos = fixture.map(f => f.p)
+		const fixturePos = fixture.map((f) => f.p)
 		expect(pos).toHaveLength(fixturePos.length)
 		for (let i = 0; i < pos.length; i++) {
 			expect(pos[i][0]).toBeCloseTo(fixturePos[i][0])
@@ -110,8 +110,8 @@ describe('roundedRect', () => {
 	it('custom dimensions', () => {
 		const nodes = roundedRect({ width: 6, height: 4 })
 		const pos = getPositions(nodes)
-		const xs = pos.map(p => p[0])
-		const zs = pos.map(p => p[2])
+		const xs = pos.map((p) => p[0])
+		const zs = pos.map((p) => p[2])
 		expect(Math.max(...xs) - Math.min(...xs)).toBeLessThanOrEqual(6)
 		expect(Math.max(...zs) - Math.min(...zs)).toBeLessThanOrEqual(4)
 	})
@@ -119,7 +119,7 @@ describe('roundedRect', () => {
 	it('cornerRadius clamped to half shorter side', () => {
 		const nodes = roundedRect({ width: 2, height: 4, cornerRadius: 100 })
 		const pos = getPositions(nodes)
-		const xs = pos.map(p => p[0])
+		const xs = pos.map((p) => p[0])
 		// cr clamped to hw=1, so all x between -1 and 1
 		expect(Math.max(...xs)).toBeCloseTo(1)
 		expect(Math.min(...xs)).toBeCloseTo(-1)

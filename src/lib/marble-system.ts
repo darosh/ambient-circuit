@@ -48,7 +48,7 @@ function getCurrentPathPoints(marble: Marble): ResolvedPoint[] {
 
 	// If on a branch, return: main points up to split + split point + branch points
 	if (marble.branchIndex !== null && rail.splits.length > 0) {
-		const split = rail.splits[0]  // TODO: handle multiple splits
+		const split = rail.splits[0] // TODO: handle multiple splits
 		const branch = split.branches[marble.branchIndex]
 
 		// Find split point in main rail
@@ -67,7 +67,13 @@ function getCurrentPathPoints(marble: Marble): ResolvedPoint[] {
 /**
  * Calculate marble position from beat and points.
  */
-function calculateMarblePosition(marble: Marble, rawBeat: number, beatPositions: BeatPosition[], points: ResolvedPoint[], easing: string): void {
+function calculateMarblePosition(
+	marble: Marble,
+	rawBeat: number,
+	beatPositions: BeatPosition[],
+	points: ResolvedPoint[],
+	easing: string
+): void {
 	if (beatPositions.length === 0) {
 		marble.position = points[0] ? new Vector3(...points[0].p) : new Vector3()
 		return
@@ -244,7 +250,8 @@ export function updateMarble(
 	let rawBeat: number
 	if (isFirstUpdate) {
 		// First update: use startBeat + globalBeat * speed
-		rawBeat = startBeat + (marble.direction === 'forward' ? globalBeat * speed : -globalBeat * speed)
+		rawBeat =
+			startBeat + (marble.direction === 'forward' ? globalBeat * speed : -globalBeat * speed)
 	} else {
 		// Subsequent updates: increment from current position
 		rawBeat = marble.currentBeat + (marble.direction === 'forward' ? deltaBeat : -deltaBeat)
@@ -269,15 +276,18 @@ export function updateMarble(
 	}
 
 	// Reset branch when crossing split point backward
-	if (marble.branchIndex !== null &&
+	if (
+		marble.branchIndex !== null &&
 		resolvedRail.splits.length > 0 &&
 		marble.direction === 'backward' &&
-		rawBeat < resolvedRail.splits[0].beat) {
+		rawBeat < resolvedRail.splits[0].beat
+	) {
 		marble.branchIndex = null
 	}
 
 	// Check if should assign branch (use unwrapped beat)
-	const shouldAssignBranch = marble.branchIndex === null &&
+	const shouldAssignBranch =
+		marble.branchIndex === null &&
 		resolvedRail.splits.length > 0 &&
 		rawBeat >= resolvedRail.splits[0].beat
 
@@ -382,7 +392,15 @@ export function updateMarble(
 	}
 
 	// Check for instrument triggers before updating beat
-	checkInstrumentTriggers(marble, marble.currentBeat, rawBeat, instruments, railId, marbleIndex, globalBeat)
+	checkInstrumentTriggers(
+		marble,
+		marble.currentBeat,
+		rawBeat,
+		instruments,
+		railId,
+		marbleIndex,
+		globalBeat
+	)
 
 	marble.previousBeat = marble.currentBeat
 	marble.currentBeat = rawBeat

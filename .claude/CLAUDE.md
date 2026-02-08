@@ -5,6 +5,7 @@
 ## Project Vision
 
 Create a "marble-machine-inspired" music sequencer where:
+
 - Marbles travel on rails and trigger instruments as they pass through zones
 - Zones produce sound and visual effects (lightning, glows)
 - **Tone.js** for synthesis, **RNBO** for high-quality effects (reverb, saturation, compression, shimmer)
@@ -23,24 +24,24 @@ Create a "marble-machine-inspired" music sequencer where:
   - **note mode:** carries a note (represented by color), can be changed by `Modifiers`
   - **vanilla mode:** noteless trigger, used for drums or tuned percussive elements; can acquire a note later via `Modifier`
 - `Rails`
-   - sequencer lines, like connections in a printed circuit board
-   - `Marbles` travel on the lines in a loop (or reverse/restart on open-ended rails)
-   - defined as points in 3D space + connection metadata; curves computed automatically
-   - rounding per point: `'to'` (incoming curved), `'from'` (outgoing curved), `'both'` (smooth pass-through)
-   - cubic Bezier interpolation with tangent-aware control points; near-perfect circles from 4 points
-   - capable of producing: straight lines, rounded corners, circles, spirals, coils
-   - each point maps to a `Beat`
-   - support **linear** and **eased** (bounce-in for snappy feel) movement between beats
+  - sequencer lines, like connections in a printed circuit board
+  - `Marbles` travel on the lines in a loop (or reverse/restart on open-ended rails)
+  - defined as points in 3D space + connection metadata; curves computed automatically
+  - rounding per point: `'to'` (incoming curved), `'from'` (outgoing curved), `'both'` (smooth pass-through)
+  - cubic Bezier interpolation with tangent-aware control points; near-perfect circles from 4 points
+  - capable of producing: straight lines, rounded corners, circles, spirals, coils
+  - each point maps to a `Beat`
+  - support **linear** and **eased** (bounce-in for snappy feel) movement between beats
 - `Split` / `Merge`
-   - rail forks/joins — like a fork in the road
-   - split has weighted routing, e.g. `[2,4]` = first 2 marbles go left, next 4 go right, repeating
+  - rail forks/joins — like a fork in the road
+  - split has weighted routing, e.g. `[2,4]` = first 2 marbles go left, next 4 go right, repeating
 - `Modifiers`
-   - zones on a rail that modify the marble's note as it passes through
-   - examples: pitch shift, scale quantization
+  - zones on a rail that modify the marble's note as it passes through
+  - examples: pitch shift, scale quantization
 - `Instruments`
-   - like MIDI instruments in a DAW (e.g. pluck, kick)
-   - visually: portals/rounded lenses around rails, like a lens in a laser beam's path
-   - positioned at `Beat` positions
+  - like MIDI instruments in a DAW (e.g. pluck, kick)
+  - visually: portals/rounded lenses around rails, like a lens in a laser beam's path
+  - positioned at `Beat` positions
 - `AudioPaths`, `FX` — to be elaborated later; will serve as visualization of audio events and processing
 - Physics: minimal at start, may be introduced later for specific areas (note bouncing, granular FX)
 
@@ -53,6 +54,7 @@ Create a "marble-machine-inspired" music sequencer where:
 **Last Updated:** 2026-02-07
 
 **What Works:**
+
 - [x] Basic Threlte project template
 - [x] `Rails` two-layer type system (authored → resolved)
 - [x] `Rails` rendering with cubic Bezier curves (circles, rounded rects, coils)
@@ -80,9 +82,9 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Marble note override support
   - [x] Lazy initialization (only when enabled)
 - [ ] Visual polishing, WebGPU, TSL
-  - [ ] rails 
-  - [ ] marbles 
-  - [ ] instruments 
+  - [ ] rails
+  - [ ] marbles
+  - [ ] instruments
   - [ ] feedback (lightning effects on collision)
   - [ ] complex circuit
 - [ ] Audio instruments triggering (Tone.js)
@@ -90,10 +92,12 @@ Create a "marble-machine-inspired" music sequencer where:
 - [ ] RNBO `FX` audio processing
 
 **Next Steps:**
+
 1. Visual polishing
 2. Complex circuit definition
 
 **Blocked/Questions:**
+
 - None currently
 
 ---
@@ -101,6 +105,7 @@ Create a "marble-machine-inspired" music sequencer where:
 ## Tech Stack
 
 ### Core Technologies
+
 - **Threlte** (Three.js + Svelte) - 3D rendering and scene management
 - **Tone.js** - Audio synthesis (instruments)
 - **RNBO** - High-quality audio effects (reverb, saturation, compression, shimmer)
@@ -108,6 +113,7 @@ Create a "marble-machine-inspired" music sequencer where:
 - **Rapier** - Physics engine, reserved for future use in specific zones
 
 ### Timing
+
 - Frame-independent movement using delta time
 - Marble speed synced to tempo via beat-mapped rail points
 
@@ -139,21 +145,25 @@ Create a "marble-machine-inspired" music sequencer where:
 ### WebGPU Rendering
 
 **Context:**
+
 - Using `WebGPURenderer` from `three/webgpu` (extended via `extend(THREE)` in App.svelte)
 - WebGPU requires NodeMaterial-based materials; ShaderMaterial not compatible
 
 **Compatible:**
+
 - Standard materials via `<T>` catalogue: `<T.MeshStandardMaterial />`, `<T.MeshBasicMaterial />`
 - Geometries from `three/webgpu`: `<T.TubeGeometry />`, `<T.SphereGeometry />`
 - Three.js primitives: `<T.GridHelper />`, `<T.DirectionalLight />`
 
 **NOT Compatible:**
+
 - Line2/LineMaterial from `three/examples/jsm/lines` (uses ShaderMaterial)
 - MeshLine from `@threelte/extras` (uses ShaderMaterial)
 - Grid from `@threelte/extras` (uses ShaderMaterial internally)
 - Text/Billboard from `@threlte/extras` (troika-three-text causes infinite values in drawIndexed)
 
 **Rails Rendering:**
+
 - Use `TubeGeometry` along CatmullRomCurve3 for thick lines
 - Standard `MeshStandardMaterial` via `<T>` automatically uses NodeMaterial version
 - Provides proper lighting/shadows support
@@ -161,6 +171,7 @@ Create a "marble-machine-inspired" music sequencer where:
 ### MIDI System
 
 **Architecture:**
+
 - Web MIDI API via `midi.ts` (init, port selection, sendNote)
 - Instrument MIDI properties: channel (default 1), note (default C4/60), length (default 200ms), velocity (default 100)
 - Marble note override: `marble.config.note` takes precedence over instrument default
@@ -168,6 +179,7 @@ Create a "marble-machine-inspired" music sequencer where:
 - Lazy initialization: MIDI only initialized when checkbox enabled
 
 **onTrigger Handlers:**
+
 - Defined in `rail-data.ts` with `createMidiTrigger()` helper
 - Handlers close over `midiState` and `marbles` for runtime access
 - `createRails(midiState, marbles)` generates rails with MIDI-enabled handlers
@@ -176,12 +188,14 @@ Create a "marble-machine-inspired" music sequencer where:
 ### For Claude Code
 
 **DO:**
+
 - In all interactions and commit messages, be extremely concise and sacrifice grammar for the sake of concision.
 - Use Typescript in ./src/lib
 - Use vitest for library functions
 - Keep marble logic modular (easy to add zone types)
 
 **DON'T:**
+
 - Read files in `/archive` (obsolete experiments)
 - Use Line2/MeshLine/examples/jsm materials with WebGPU renderer
 
@@ -190,6 +204,7 @@ Create a "marble-machine-inspired" music sequencer where:
 ## References
 
 **Documentation:**
+
 - Threlte: https://threlte.xyz/docs
 - Rapier: https://rapier.rs/docs/user_guides/javascript/getting_started
 - RNBO: https://rnbo.cycling74.com/learn/introduction-to-rnbo

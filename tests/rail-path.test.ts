@@ -4,12 +4,19 @@ import { expandPathString } from '../src/lib/rail-path'
 describe('expandPathString', () => {
 	it('emits points for direction chars', () => {
 		const result = expandPathString('r u i')
-		expect(result).toEqual([[1, 0, 0], [1, 1, 0], [1, 1, -1]])
+		expect(result).toEqual([
+			[1, 0, 0],
+			[1, 1, 0],
+			[1, 1, -1]
+		])
 	})
 
 	it('mixed chars still emit per-char', () => {
 		const result = expandPathString('ru')
-		expect(result).toEqual([[1, 0, 0], [1, 1, 0]])
+		expect(result).toEqual([
+			[1, 0, 0],
+			[1, 1, 0]
+		])
 	})
 
 	it('repeated chars collapse to one point', () => {
@@ -29,12 +36,18 @@ describe('expandPathString', () => {
 
 	it('full word tokens', () => {
 		const result = expandPathString('right up')
-		expect(result).toEqual([[1, 0, 0], [1, 1, 0]])
+		expect(result).toEqual([
+			[1, 0, 0],
+			[1, 1, 0]
+		])
 	})
 
 	it('mixed full-word and char', () => {
 		const result = expandPathString('right u')
-		expect(result).toEqual([[1, 0, 0], [1, 1, 0]])
+		expect(result).toEqual([
+			[1, 0, 0],
+			[1, 1, 0]
+		])
 	})
 
 	it('numeric multiplier emits one point', () => {
@@ -55,7 +68,7 @@ describe('expandPathString', () => {
 			[0, 1, 0],
 			[0, 0, 0],
 			[0, 0, -1],
-			[0, 0, 0],
+			[0, 0, 0]
 		])
 	})
 })

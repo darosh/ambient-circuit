@@ -149,7 +149,7 @@ export const easingFunctions: Record<string, EasingFunction> = {
 	easeInOutBounce,
 	easeInBack,
 	easeOutBack,
-	easeInOutBack,
+	easeInOutBack
 }
 
 export const easingNames = Object.keys(easingFunctions)

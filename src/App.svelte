@@ -10,7 +10,7 @@
 	import * as THREE from 'three/webgpu'
 
 	extend(THREE)
-	
+
 	let showGrid = $state(true)
 	let showPoints = $state(false)
 	let showBeats = $state(false)
@@ -25,13 +25,15 @@
 	let railVisibility = $state(rails.map(() => true))
 	let midiEnabled = $state(false)
 	let midiState = $state<MidiState | null>(null)
-	let midiPortOptions = $derived(midiState ? midiState.outputs.map(p => ({ text: p.name, value: p.id })) : [])
+	let midiPortOptions = $derived(
+		midiState ? midiState.outputs.map((p) => ({ text: p.name, value: p.id })) : []
+	)
 	let selectedMidiPort = $state<string | null>(null)
 
 	// Lazy init MIDI when enabled
 	$effect(() => {
 		if (midiEnabled && !midiState) {
-			initMidi().then(state => {
+			initMidi().then((state) => {
 				midiState = state
 				selectedMidiPort = state.selectedPortId
 			})
@@ -94,14 +96,30 @@
 	</Folder>
 </Pane>
 
-<Canvas createRenderer={(canvas) => {
-    return new WebGPURenderer({
-      canvas,
-      antialias: true,
-      forceWebGL: false
-    })
-  }}>
-	<Scene {showGrid} {showPoints} {showBeats} {showStats} {fxPost} {fxRails} {fxMarbles} {fxInstruments} {midiState} bind:tempo bind:easing bind:railVisibility bind:fps />
+<Canvas
+	createRenderer={(canvas) => {
+		return new WebGPURenderer({
+			canvas,
+			antialias: true,
+			forceWebGL: false
+		})
+	}}
+>
+	<Scene
+		{showGrid}
+		{showPoints}
+		{showBeats}
+		{showStats}
+		{fxPost}
+		{fxRails}
+		{fxMarbles}
+		{fxInstruments}
+		{midiState}
+		bind:tempo
+		bind:easing
+		bind:railVisibility
+		bind:fps
+	/>
 </Canvas>
 
 {#if showStats}
@@ -114,7 +132,7 @@
 		bottom: 8px;
 		left: 8px;
 		color: white;
-		opacity: .5;
+		opacity: 0.5;
 		font-size: 32px;
 		pointer-events: none;
 		text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);

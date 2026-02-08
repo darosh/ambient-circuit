@@ -6,7 +6,7 @@ import type {
 	ResolvedRail,
 	ResolvedSegment,
 	ResolvedSplit,
-	Vec3,
+	Vec3
 } from './rail'
 import { isVec3, isSplit, isPointFull, isPathString } from './rail'
 import { expandPathString } from './rail-path'
@@ -56,7 +56,12 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 				beat++
 			} else if (hasExplicitBeats) {
 				// Geometric-only: placeholder, will be interpolated
-				points.push({ p: node.p, beat: NaN, round: node.round ?? null, tangent: node.tangent ?? 0.39 })
+				points.push({
+					p: node.p,
+					beat: NaN,
+					round: node.round ?? null,
+					tangent: node.tangent ?? 0.39
+				})
 			} else {
 				points.push({ p: node.p, beat, round: node.round ?? null, tangent: node.tangent ?? 0.39 })
 				anchors.push(points.length - 1)
@@ -81,7 +86,7 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 				beat: splitBeat,
 				p: node.split.p,
 				weights: node.split.weights,
-				branches: resolvedBranches,
+				branches: resolvedBranches
 			})
 
 			beat = splitBeat + 1
@@ -122,7 +127,7 @@ export function resolveRail(rail: Rail): ResolvedRail {
 	// Apply offset to all points
 	const offsetPoints = points.map((pt) => ({
 		...pt,
-		p: [pt.p[0] + offset[0], pt.p[1] + offset[1], pt.p[2] + offset[2]] as Vec3,
+		p: [pt.p[0] + offset[0], pt.p[1] + offset[1], pt.p[2] + offset[2]] as Vec3
 	}))
 
 	// Apply offset to split points and branch points
@@ -133,9 +138,9 @@ export function resolveRail(rail: Rail): ResolvedRail {
 			...branch,
 			points: branch.points.map((pt) => ({
 				...pt,
-				p: [pt.p[0] + offset[0], pt.p[1] + offset[1], pt.p[2] + offset[2]] as Vec3,
-			})),
-		})),
+				p: [pt.p[0] + offset[0], pt.p[1] + offset[1], pt.p[2] + offset[2]] as Vec3
+			}))
+		}))
 	}))
 
 	return {
@@ -143,6 +148,6 @@ export function resolveRail(rail: Rail): ResolvedRail {
 		beatOffset,
 		reverse: rail.reverse ?? false,
 		points: offsetPoints,
-		splits: offsetSplits,
+		splits: offsetSplits
 	}
 }

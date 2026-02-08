@@ -3,7 +3,15 @@
 	import type { Instrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-geometry'
-	import { MeshStandardMaterial, Shape, Path, ExtrudeGeometry, Vector3, Euler, Matrix4 } from 'three'
+	import {
+		MeshStandardMaterial,
+		Shape,
+		Path,
+		ExtrudeGeometry,
+		Vector3,
+		Euler,
+		Matrix4
+	} from 'three'
 	import { createInstrumentMaterial } from '../lib/material-instrument'
 	import { easeOutQuart } from '../lib/easing'
 
@@ -104,8 +112,8 @@
 {#if transform}
 	<T.Mesh
 		position={[transform.position.x, transform.position.y, transform.position.z]}
-		rotation={rotation}
-		geometry={geometry}
+		{rotation}
+		{geometry}
 		material={fxInstruments ? fx.mat : plainMaterial}
 	/>
 {/if}

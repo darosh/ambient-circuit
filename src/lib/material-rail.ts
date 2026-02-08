@@ -1,18 +1,7 @@
 // based on https://github.com/mrdoob/three.js/blob/master/examples/webgpu_tsl_vfx_tornado.html
 
 import * as THREE from 'three/webgpu'
-import {
-	luminance,
-	min,
-	time,
-	uniform,
-	color,
-	texture,
-	Fn,
-	uv,
-	vec2,
-	vec4
-} from 'three/tsl'
+import { luminance, min, time, uniform, color, texture, Fn, uv, vec2, vec4 } from 'three/tsl'
 
 const textureLoader = new THREE.TextureLoader()
 const perlinTexture = textureLoader.load('./rgb-256x256.png')
@@ -21,9 +10,11 @@ perlinTexture.wrapT = THREE.RepeatWrapping
 
 const timeScale = uniform(0.2)
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const toSkewedUv = Fn(([uvCoord, skew]: any[]) => {
 	return vec2(uvCoord.x.add(uvCoord.y.mul(skew.x)), uvCoord.y.add(uvCoord.x.mul(skew.y)))
 }) as (...args: any[]) => any
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /**
  * Create a glowing noise-based rail material (WebGPU/TSL).
@@ -61,10 +52,7 @@ export function createRailMaterial(hexColor: string) {
 
 		const emissiveColorLuminance = luminance(emissiveColor)
 
-		return vec4(
-			emissiveColor.mul(1.2).div(emissiveColorLuminance),
-			effect.smoothstep(0, 0.1)
-		)
+		return vec4(emissiveColor.mul(1.2).div(emissiveColorLuminance), effect.smoothstep(0, 0.1))
 	})()
 
 	return mat

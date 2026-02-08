@@ -37,17 +37,20 @@ function createTrigger(
 }
 
 export function createRails(midiState: MidiState | null, marbles: Marble[]): RailData[] {
-	const inst1 = { beat: 1.5, sides: 3, color: '#ff0000', midiChannel: 1, signal: { intensity: 0 } } as Instrument
+	const inst1 = {
+		beat: 1.5,
+		sides: 3,
+		color: '#ff0000',
+		midiChannel: 1,
+		signal: { intensity: 0 }
+	} as Instrument
 	inst1.onTrigger = createTrigger(midiState, marbles, inst1, inst1.signal!)
 
 	return [
 		{
 			rail: {
 				id: 'path',
-				nodes: [
-					[-6,0,0],
-					'l3 i ib l i lb i'
-				]
+				nodes: [[-6, 0, 0], 'l3 i ib l i lb i']
 			},
 			color: '#0000ff'
 		},
