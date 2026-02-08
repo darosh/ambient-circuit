@@ -70,14 +70,19 @@
 		return new TubeGeometry(path as unknown as import('three').Curve<Vector3>, n * 21, width / 2, 8, true)
 	})
 
-	// Compute rotation to align normal with tangent
+	const IMPACT_DURATION = 0.4 // seconds
+
+	let spinAngle = $state(0)
+	let impactTime = 0
+	let impactBaseAngle = 0
+
+	// Compute rotation to align normal with tangent, then spin around tangent axis
 	const rotation = $derived.by((): [number, number, number] => {
 		if (!transform) return [0, 0, 0]
 
 		const tangent = transform.tangent
 		const up = new Vector3(0, 1, 0)
 
-		// If tangent is parallel to up, use different reference
 		if (Math.abs(tangent.dot(up)) > 0.99) {
 			up.set(0, 0, 1)
 		}
@@ -85,26 +90,27 @@
 		const right = new Vector3().crossVectors(up, tangent).normalize()
 		const correctedUp = new Vector3().crossVectors(tangent, right).normalize()
 
-		// Build rotation matrix: tangent = forward (Z), correctedUp = up (Y), right = right (X)
+		// Align normal with tangent, then spin around tangent (local Z)
 		const m = new Matrix4()
 		m.makeBasis(right, correctedUp, tangent)
+		m.multiply(new Matrix4().makeRotationZ(spinAngle))
 
 		const euler = new Euler().setFromRotationMatrix(m)
 		return [euler.x, euler.y, euler.z]
 	})
 
-	const IMPACT_DURATION = 0.2 // seconds
-	let impactTime = 0
-
-	// Animate impact uniform over fixed duration using easing
 	useTask((delta) => {
 		if (instrument.signal && instrument.signal.intensity > 0) {
+			impactBaseAngle = spinAngle
 			impactTime = IMPACT_DURATION
 			instrument.signal.intensity = 0
 		}
+
 		if (impactTime > 0) {
 			impactTime = Math.max(0, impactTime - delta)
-			fx.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION)
+			const fade = easeOutQuart(impactTime / IMPACT_DURATION)
+			fx.impactIntensity.value = fade
+			spinAngle = impactBaseAngle + easeOutQuart(1 - impactTime / IMPACT_DURATION) * Math.PI * 2
 		}
 	})
 </script>
