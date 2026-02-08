@@ -1,7 +1,7 @@
 import { circle, roundedRect, coil, spiral } from './rail-primitives'
 import type { Rail, Vec3 } from './rail'
 import type { MarbleDirection, MarbleSequenceMode, Marble } from './marble'
-import type { Instrument, InstrumentTriggerContext } from './instrument'
+import type { Instrument, InstrumentSignal, InstrumentTriggerContext } from './instrument'
 import type { MidiState } from './midi'
 import { sendMidiNote } from './midi'
 
@@ -14,14 +14,16 @@ export type RailData = {
 	instruments?: Instrument[]
 }
 
-// Helper to create MIDI-enabled onTrigger handler
-function createMidiTrigger(
+// Helper to create onTrigger handler (MIDI + impact signal)
+function createTrigger(
 	midiState: MidiState | null,
 	marbles: Marble[],
-	instrument: Instrument
+	instrument: Instrument,
+	signal: InstrumentSignal
 ) {
 	return (ctx: InstrumentTriggerContext) => {
-		console.debug('🎵 Instrument triggered', ctx)
+		signal.intensity = 1
+		// console.debug('🎵 Instrument triggered', ctx)
 
 		if (midiState && midiState.enabled) {
 			const marble = marbles[ctx.marbleIndex]
@@ -35,8 +37,8 @@ function createMidiTrigger(
 }
 
 export function createRails(midiState: MidiState | null, marbles: Marble[]): RailData[] {
-	const inst1 = { beat: 1.5, sides: 3, color: '#ff0000', midiChannel: 1 } as Instrument
-	inst1.onTrigger = createMidiTrigger(midiState, marbles, inst1)
+	const inst1 = { beat: 1.5, sides: 3, color: '#ff0000', midiChannel: 1, signal: { intensity: 0 } } as Instrument
+	inst1.onTrigger = createTrigger(midiState, marbles, inst1, inst1.signal!)
 
 	return [
 	{
@@ -89,10 +91,10 @@ export function createRails(midiState: MidiState | null, marbles: Marble[]): Rai
 			})
 		},
 		instruments: (() => {
-			const inst2 = { beat: 1.5, sides: 7, color: '#ff0000', midiChannel: 2 } as Instrument
-			inst2.onTrigger = createMidiTrigger(midiState, marbles, inst2)
-			const inst3 = { beat: 2.5, sides: 7, color: '#ffffff', midiChannel: 2 } as Instrument
-			inst3.onTrigger = createMidiTrigger(midiState, marbles, inst3)
+			const inst2 = { beat: 1.5, sides: 7, color: '#ff0000', midiChannel: 2, signal: { intensity: 0 } } as Instrument
+			inst2.onTrigger = createTrigger(midiState, marbles, inst2, inst2.signal!)
+			const inst3 = { beat: 2.5, sides: 7, color: '#ffffff', midiChannel: 2, signal: { intensity: 0 } } as Instrument
+			inst3.onTrigger = createTrigger(midiState, marbles, inst3, inst3.signal!)
 			return [inst2, inst3]
 		})(),
 		color: '#ffffff'
@@ -180,10 +182,10 @@ export function createRails(midiState: MidiState | null, marbles: Marble[]): Rai
 		} satisfies Rail,
 		mode: 'ping-pong',
 		instruments: (() => {
-			const inst4 = { beat: 2.5, path: [0], sides: 7, color: '#ffffff', midiChannel: 3 } as Instrument
-			inst4.onTrigger = createMidiTrigger(midiState, marbles, inst4)
-			const inst5 = { beat: 2.5, path: [1], sides: 7, color: '#ff00ff', midiChannel: 1 } as Instrument
-			inst5.onTrigger = createMidiTrigger(midiState, marbles, inst5)
+			const inst4 = { beat: 2.5, path: [0], sides: 7, color: '#ffffff', midiChannel: 3, signal: { intensity: 0 } } as Instrument
+			inst4.onTrigger = createTrigger(midiState, marbles, inst4, inst4.signal!)
+			const inst5 = { beat: 2.5, path: [1], sides: 7, color: '#ff00ff', midiChannel: 1, signal: { intensity: 0 } } as Instrument
+			inst5.onTrigger = createTrigger(midiState, marbles, inst5, inst5.signal!)
 			return [inst4, inst5]
 		})(),
 		color: '#8800ff'

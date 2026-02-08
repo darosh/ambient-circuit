@@ -1,5 +1,7 @@
 import type { MarbleDirection } from './marble'
 
+export type InstrumentSignal = { intensity: number }
+
 export type InstrumentTriggerContext = {
 	/** ID of the rail this instrument is on */
 	railId: string
@@ -35,6 +37,8 @@ export type Instrument = {
 	midiLength?: number
 	/** MIDI velocity (0-127), default 100 */
 	midiVelocity?: number
+	/** Impact signal — onTrigger sets intensity=1, InstrumentView decays it */
+	signal?: InstrumentSignal
 	/** Callback fired when marble crosses this beat */
 	onTrigger: (context: InstrumentTriggerContext) => void
 }

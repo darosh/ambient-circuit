@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { T } from '@threlte/core'
+	import { T, useTask } from '@threlte/core'
 	import type { Instrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-geometry'
 	import { MeshStandardMaterial, Shape, ExtrudeGeometry, Vector3, Euler, Matrix4 } from 'three'
 	import { createInstrumentMaterial } from '../lib/material-instrument'
+	import { easeOutQuart } from '../lib/easing'
 
 	type Props = {
 		instrument: Instrument
@@ -16,7 +17,7 @@
 
 	let { instrument, rail, size = 1, depth = 0.07, fxInstruments = true }: Props = $props()
 
-	const fxMaterial = $derived(createInstrumentMaterial(instrument.color))
+	const fx = $derived(createInstrumentMaterial(instrument.color))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color: instrument.color }))
 
 	// Get points for the instrument's path
@@ -75,6 +76,21 @@
 		const euler = new Euler().setFromRotationMatrix(m)
 		return [euler.x, euler.y, euler.z]
 	})
+
+	const IMPACT_DURATION = 0.2 // seconds
+	let impactTime = 0
+
+	// Animate impact uniform over fixed duration using easing
+	useTask((delta) => {
+		if (instrument.signal && instrument.signal.intensity > 0) {
+			impactTime = IMPACT_DURATION
+			instrument.signal.intensity = 0
+		}
+		if (impactTime > 0) {
+			impactTime = Math.max(0, impactTime - delta)
+			fx.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION)
+		}
+	})
 </script>
 
 {#if transform}
@@ -82,6 +98,6 @@
 		position={[transform.position.x, transform.position.y, transform.position.z]}
 		rotation={rotation}
 		geometry={geometry}
-		material={fxInstruments ? fxMaterial : plainMaterial}
+		material={fxInstruments ? fx.mat : plainMaterial}
 	/>
 {/if}
