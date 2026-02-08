@@ -60,6 +60,33 @@ describe('expandPathString', () => {
 		expect(result).toEqual([[6, 0, 0]])
 	})
 
+	it('compound dir+round tokens', () => {
+		const result = expandPathString('l i ib u i lb i')
+		expect(result).toEqual([
+			[-1, 0, 0],
+			[-1, 0, -1],
+			{ p: [-1, 0, -2], round: 'both' },
+			[-1, 1, -2],
+			[-1, 1, -3],
+			{ p: [-2, 1, -3], round: 'both' },
+			[-2, 1, -4]
+		])
+	})
+
+	it('collapsed repeats produce plain Vec3', () => {
+		const result = expandPathString('rrrr ddd ll oooo uu')
+		expect(result).toEqual([
+			[4, 0, 0],
+			[4, -3, 0],
+			[2, -3, 0],
+			[2, -3, 4],
+			[2, -1, 4]
+		])
+		for (const pt of result) {
+			expect(Array.isArray(pt)).toBe(true)
+		}
+	})
+
 	it('all directions', () => {
 		const result = expandPathString('r l u d i o')
 		expect(result).toEqual([

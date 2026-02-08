@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { T } from '@threlte/core'
 	import { Text3DGeometry } from '@threlte/extras'
-	import type { Rail } from '../lib/rail'
+	import type { Rail, ResolvedPoint } from '../lib/rail'
 	import type { Instrument } from '../lib/instrument'
 	import { resolveRail } from '../lib/rail-resolve'
-	import { buildRailCurve, computeBeatPositions } from '../lib/rail-geometry'
-	import { CatmullRomCurve3, MeshStandardMaterial, TubeGeometry, Vector3 } from 'three'
+	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/rail-geometry'
+	import { CurvePath, LineCurve3, MeshStandardMaterial, TubeGeometry, Vector3 } from 'three'
 	import InstrumentView from './InstrumentView.svelte'
 	import { makeRailMaterial } from '../lib/config'
 
@@ -31,46 +31,22 @@
 		instruments = []
 	}: Props = $props()
 
+	function buildCurvePath(points: ResolvedPoint[], skipFirst = 0): CurvePath<Vector3> | null {
+		const path = new CurvePath<Vector3>()
+		for (let i = skipFirst; i < points.length - 1; i++) {
+			const p0 = toV3(points[i].p)
+			const p1 = toV3(points[i + 1].p)
+			if (p0.distanceTo(p1) < 1e-6) continue
+			const bezier = buildSegmentCurve(points, i)
+			path.add(bezier ?? new LineCurve3(p0, p1))
+		}
+		return path.curves.length > 0 ? path : null
+	}
+
 	const resolved = $derived(resolveRail(rail))
-	const mainPoints = $derived(buildRailCurve(resolved.points))
 	// Always create both materials - switching avoids WebGPU state issues on toggle
 	const fxMaterial = $derived(makeRailMaterial(color).mat)
 	const plainMaterial = $derived(new MeshStandardMaterial({ color }))
-	const branchCurves = $derived.by(() => {
-		const result: import('three').Vector3[][] = []
-		for (const s of resolved.splits) {
-			// Find the point before the split in main rail for proper tangent computation
-			const splitIdx = resolved.points.findIndex((p) => p.beat === s.beat)
-			const prevPoint = splitIdx > 0 ? resolved.points[splitIdx - 1] : null
-
-			for (const b of s.branches) {
-				// Prepend prev point and split point to branch for correct tangent computation
-				const pointsForCurve = prevPoint
-					? [prevPoint, { p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
-					: [{ p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
-
-				const curve = buildRailCurve(pointsForCurve)
-
-				// If prev point exists, find the split point in curve and slice from there
-				if (prevPoint && curve.length > 1) {
-					const splitV3 = new Vector3(s.p[0], s.p[1], s.p[2])
-					let splitCurveIdx = 0
-					let minDist = Infinity
-					for (let i = 0; i < curve.length; i++) {
-						const dist = curve[i].distanceToSquared(splitV3)
-						if (dist < minDist) {
-							minDist = dist
-							splitCurveIdx = i
-						}
-					}
-					result.push(curve.slice(splitCurveIdx))
-				} else {
-					result.push(curve)
-				}
-			}
-		}
-		return result
-	})
 	const beatPositions = $derived.by(() => {
 		if (!showBeats) return []
 		const result = computeBeatPositions(resolved.points)
@@ -83,34 +59,37 @@
 		return result
 	})
 
-	// Create tube mesh for main rail
-	const mainMeshes = $derived.by(() => {
-		if (mainPoints.length < 2) return []
+	function makeTube(
+		curvePath: CurvePath<Vector3> | null,
+		opacity: number
+	): { geometry: TubeGeometry; opacity: number } | null {
+		if (!curvePath) return null
 		try {
-			const curve = new CatmullRomCurve3(mainPoints)
-			const segments = Math.min(Math.max(mainPoints.length * 4, 8), 256)
+			const segments = Math.min(Math.max(curvePath.curves.length * 8, 16), 512)
 			const radius = Math.max(width / 2, 0.001)
-			const geometry = new TubeGeometry(curve, segments, radius, 8, false)
-			return [{ geometry, opacity: 0.9 }]
+			return { geometry: new TubeGeometry(curvePath, segments, radius, 8, false), opacity }
 		} catch (e) {
-			console.warn('Failed to create main rail tube:', e)
-			return []
+			console.warn('Failed to create tube:', e)
+			return null
 		}
+	}
+
+	const mainMeshes = $derived.by(() => {
+		const m = makeTube(buildCurvePath(resolved.points), 0.9)
+		return m ? [m] : []
 	})
 
-	// Create tube meshes for branches
 	const branchMeshes = $derived.by(() => {
 		const meshes: Array<{ geometry: TubeGeometry; opacity: number }> = []
-		for (const points of branchCurves) {
-			if (points.length < 2) continue
-			try {
-				const curve = new CatmullRomCurve3(points)
-				const segments = Math.min(Math.max(points.length * 4, 8), 256)
-				const radius = Math.max(width / 2, 0.001)
-				const geometry = new TubeGeometry(curve, segments, radius, 8, false)
-				meshes.push({ geometry, opacity: 0.7 })
-			} catch (e) {
-				console.warn('Failed to create branch tube:', e)
+		for (const s of resolved.splits) {
+			const splitIdx = resolved.points.findIndex((p) => p.beat === s.beat)
+			const prev = splitIdx > 0 ? resolved.points[splitIdx - 1] : null
+			for (const b of s.branches) {
+				const pts: ResolvedPoint[] = prev
+					? [prev, { p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
+					: [{ p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
+				const m = makeTube(buildCurvePath(pts, prev ? 1 : 0), 0.7)
+				if (m) meshes.push(m)
 			}
 		}
 		return meshes
