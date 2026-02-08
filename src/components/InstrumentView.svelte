@@ -3,7 +3,7 @@
 	import type { Instrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-geometry'
-	import { MeshStandardMaterial, Shape, ExtrudeGeometry, Vector3, Euler, Matrix4 } from 'three'
+	import { MeshStandardMaterial, Shape, Path, ExtrudeGeometry, Vector3, Euler, Matrix4 } from 'three'
 	import { createInstrumentMaterial } from '../lib/material-instrument'
 	import { easeOutQuart } from '../lib/easing'
 
@@ -26,22 +26,30 @@
 	// Get position and tangent at instrument beat
 	const transform = $derived(getBeatTransform(points, instrument.beat))
 
-	// Create extruded polygon geometry
+	// Create extruded polygon ring geometry (hollow — glowing edges only)
 	const geometry = $derived.by(() => {
 		const s = new Shape()
 		const n = instrument.sides
 		const radius = size / 2
+		const innerRadius = radius * 0.72
 
 		for (let i = 0; i <= n; i++) {
 			const angle = (i / n) * Math.PI * 2 - Math.PI / 2
 			const x = Math.cos(angle) * radius
 			const y = Math.sin(angle) * radius
-			if (i === 0) {
-				s.moveTo(x, y)
-			} else {
-				s.lineTo(x, y)
-			}
+			if (i === 0) s.moveTo(x, y)
+			else s.lineTo(x, y)
 		}
+
+		const hole = new Path()
+		for (let i = 0; i <= n; i++) {
+			const angle = (i / n) * Math.PI * 2 - Math.PI / 2
+			const x = Math.cos(angle) * innerRadius
+			const y = Math.sin(angle) * innerRadius
+			if (i === 0) hole.moveTo(x, y)
+			else hole.lineTo(x, y)
+		}
+		s.holes.push(hole)
 
 		const geom = new ExtrudeGeometry(s, {
 			depth: depth,
