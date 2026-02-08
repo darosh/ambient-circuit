@@ -231,7 +231,8 @@ export function updateMarble(
 	railId: string = '',
 	marbleIndex: number = 0
 ): void {
-	const { resolvedRail, sequenceMode, easing, startBeat, speed } = marble.config
+	const { resolvedRail, sequenceMode, easing, startBeat } = marble.config
+	const speed = marble.config.speed ?? 1
 
 	// Calculate delta from last update
 	const globalBeat = tempo.currentBeat + tempo.beatProgress

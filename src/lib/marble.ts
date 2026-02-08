@@ -11,7 +11,7 @@ export interface MarbleConfig {
 	direction: MarbleDirection
 	sequenceMode: MarbleSequenceMode
 	easing: EasingMode
-	speed: number // Speed multiplier (default 1)
+	speed?: number // Speed multiplier (default 1)
 	note?: number // MIDI note for note mode, undefined for vanilla mode
 }
 

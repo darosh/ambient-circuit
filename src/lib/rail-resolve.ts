@@ -1,25 +1,49 @@
 import type {
 	Rail,
 	RailDef,
+	RailNode,
 	ResolvedPoint,
 	ResolvedRail,
 	ResolvedSegment,
 	ResolvedSplit,
 	Vec3,
 } from './rail'
-import { isVec3, isSplit, isPointFull } from './rail'
+import { isVec3, isSplit, isPointFull, isPathString } from './rail'
+import { expandPathString } from './rail-path'
+
+function flattenNodes(nodes: RailDef): Array<Exclude<RailNode, string>> {
+	const out: Array<Exclude<RailNode, string>> = []
+	let lastPos: Vec3 = [0, 0, 0]
+	for (const node of nodes) {
+		if (isPathString(node)) {
+			const expanded = expandPathString(node, lastPos)
+			for (const n of expanded) out.push(n)
+			if (expanded.length > 0) {
+				const last = expanded[expanded.length - 1]
+				lastPos = Array.isArray(last) ? (last as Vec3) : (last as { p: Vec3 }).p
+			}
+		} else {
+			out.push(node)
+			if (isVec3(node)) lastPos = node
+			else if (isPointFull(node)) lastPos = node.p
+			else if (isSplit(node)) lastPos = node.split.p
+		}
+	}
+	return out
+}
 
 function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { endBeat: number } {
+	const nodes_ = flattenNodes(nodes)
 	// If any RailPointFull has an explicit beat, treat RailPointFull without
 	// beat as geometric-only (no auto-increment, beat interpolated later).
-	const hasExplicitBeats = nodes.some((n) => isPointFull(n) && n.beat !== undefined)
+	const hasExplicitBeats = nodes_.some((n) => isPointFull(n) && n.beat !== undefined)
 
 	const points: ResolvedPoint[] = []
 	const anchors: number[] = []
 	const splits: ResolvedSplit[] = []
 	let beat = startBeat
 
-	for (const node of nodes) {
+	for (const node of nodes_) {
 		if (isVec3(node)) {
 			points.push({ p: node, beat, round: null, tangent: 0.39 })
 			anchors.push(points.length - 1)

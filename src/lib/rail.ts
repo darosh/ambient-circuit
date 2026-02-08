@@ -32,7 +32,7 @@ export type RailSplit = {
 }
 
 /** Any element in a rail definition */
-export type RailNode = Vec3 | RailPointFull | RailSplit
+export type RailNode = Vec3 | RailPointFull | RailSplit | string
 
 /** Sequence of nodes (used for branches too) */
 export type RailDef = RailNode[]
@@ -83,9 +83,13 @@ export function isVec3(node: RailNode): node is Vec3 {
 }
 
 export function isSplit(node: RailNode): node is RailSplit {
-	return !Array.isArray(node) && 'split' in node
+	return typeof node === 'object' && !Array.isArray(node) && 'split' in node
 }
 
 export function isPointFull(node: RailNode): node is RailPointFull {
-	return !Array.isArray(node) && 'p' in node
+	return typeof node === 'object' && !Array.isArray(node) && 'p' in node
+}
+
+export function isPathString(node: RailNode): node is string {
+	return typeof node === 'string'
 }

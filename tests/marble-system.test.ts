@@ -10,10 +10,10 @@ describe('marble-system', () => {
 		beatOffset: 0,
 		reverse: false,
 		points: [
-			{ p: [0, 0, 0], beat: 0, round: null },
-			{ p: [1, 0, 0], beat: 1, round: null },
-			{ p: [2, 0, 0], beat: 2, round: null },
-			{ p: [3, 0, 0], beat: 3, round: null },
+			{ p: [0, 0, 0], beat: 0, round: null, tangent: 0.39 },
+			{ p: [1, 0, 0], beat: 1, round: null, tangent: 0.39 },
+			{ p: [2, 0, 0], beat: 2, round: null, tangent: 0.39 },
+			{ p: [3, 0, 0], beat: 3, round: null, tangent: 0.39 },
 		],
 		splits: [],
 	}
