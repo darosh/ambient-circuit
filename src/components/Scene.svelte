@@ -19,6 +19,7 @@ let {
 	fxPost = true,
 	fxRails = true,
 	fxMarbles = true,
+	fxInstruments = true,
 	midiState = null,
 	tempo = $bindable(),
 	easing = $bindable(),
@@ -30,6 +31,7 @@ let {
 	fxPost?: boolean
 	fxRails?: boolean
 	fxMarbles?: boolean
+	fxInstruments?: boolean
 	showStats?: boolean
 	midiState?: MidiState | null
 	tempo?: TempoState
@@ -118,7 +120,7 @@ useTask((delta) => {
 
 {#each rails as { rail, color, instruments }, railIndex (railIndex)}
 	{#if railVisibility[railIndex]}
-		<RailView {rail} {color} width={0.08} {showPoints} {showBeats} {instruments} {fxRails} />
+		<RailView {rail} {color} width={0.08} {showPoints} {showBeats} {instruments} {fxRails} {fxInstruments} />
 	{/if}
 {/each}
 

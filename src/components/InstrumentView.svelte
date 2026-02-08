@@ -3,16 +3,21 @@
 	import type { Instrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-geometry'
-	import { Shape, ExtrudeGeometry, Vector3, Euler, Matrix4 } from 'three'
+	import { MeshStandardMaterial, Shape, ExtrudeGeometry, Vector3, Euler, Matrix4 } from 'three'
+	import { createInstrumentMaterial } from '../lib/material-instrument'
 
 	type Props = {
 		instrument: Instrument
 		rail: ResolvedRail
 		size?: number
 		depth?: number
+		fxInstruments?: boolean
 	}
 
-	let { instrument, rail, size = 1, depth = 0.07 }: Props = $props()
+	let { instrument, rail, size = 1, depth = 0.07, fxInstruments = true }: Props = $props()
+
+	const fxMaterial = $derived(createInstrumentMaterial(instrument.color))
+	const plainMaterial = $derived(new MeshStandardMaterial({ color: instrument.color }))
 
 	// Get points for the instrument's path
 	const points = $derived(getPointsForPath(rail, instrument.path))
@@ -77,7 +82,6 @@
 		position={[transform.position.x, transform.position.y, transform.position.z]}
 		rotation={rotation}
 		geometry={geometry}
-	>
-		<T.MeshStandardMaterial color={instrument.color} />
-	</T.Mesh>
+		material={fxInstruments ? fxMaterial : plainMaterial}
+	/>
 {/if}

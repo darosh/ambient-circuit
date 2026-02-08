@@ -16,10 +16,11 @@
 		showPoints?: boolean
 		showBeats?: boolean
 		fxRails?: boolean
+		fxInstruments?: boolean
 		instruments?: Instrument[]
 	}
 
-	let { rail, color = '#00ffff', width = 0.1, showPoints = false, showBeats = false, fxRails = true, instruments = [] }: Props = $props()
+	let { rail, color = '#00ffff', width = 0.1, showPoints = false, showBeats = false, fxRails = true, fxInstruments = true, instruments = [] }: Props = $props()
 
 	const resolved = $derived(resolveRail(rail))
 	const mainPoints = $derived(buildRailCurve(resolved.points))
@@ -148,5 +149,5 @@
 {/if}
 
 {#each instruments as instrument, idx (idx)}
-	<InstrumentView {instrument} rail={resolved} />
+	<InstrumentView {instrument} rail={resolved} {fxInstruments} />
 {/each}
