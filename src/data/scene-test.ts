@@ -79,7 +79,16 @@ export const scene: SceneConfig = {
 			rail: { id: 'circle1', offset: [0, 0, -3] as Vec3, nodes: circle({ pos: { y: -0.5 } }) },
 			color: c()
 		},
-		{ rail: { id: 'rect1', nodes: roundedRect({ pos: { x: 3.5 } }) }, color: c() },
+		{
+			rail: { id: 'rect1', nodes: roundedRect({ pos: { x: 3.5 } }) },
+			color: c(),
+			instruments: [
+				{ sides: 4, type: 'star', beat: 1, midiChannel: 5 },
+				{ sides: 5, type: 'star', beat: 3, midiChannel: 5 },
+				{ sides: 3, type: 'whirl', beat: 5, midiChannel: 5 },
+				{ sides: 6, type: 'cross', beat: 7, midiChannel: 5 }
+			]
+		},
 		{ rail: { id: 'coil1', nodes: coil({ pos: { x: -3 }, lead: 1 }) }, color: c() },
 		{
 			rail: { id: 'spiral1', nodes: spiral({ pos: { x: 0 }, lead: 1, tangent: 0.5 }) },
