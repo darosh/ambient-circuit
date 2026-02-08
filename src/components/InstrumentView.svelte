@@ -25,7 +25,14 @@
 		fxInstruments?: boolean
 	}
 
-	let { instrument, rail, size = 1, width = 0.06, cornerRadius = 0.075, fxInstruments = true }: Props = $props()
+	let {
+		instrument,
+		rail,
+		size = 1,
+		width = 0.06,
+		cornerRadius = 0.075,
+		fxInstruments = true
+	}: Props = $props()
 
 	const fx = $derived(makeInstrumentMaterial(instrument.color))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color: instrument.color }))
@@ -67,7 +74,13 @@
 			path.add(new LineCurve3(arcEnd, nextArcStart))
 		}
 
-		return new TubeGeometry(path as unknown as import('three').Curve<Vector3>, n * 21, width / 2, 8, true)
+		return new TubeGeometry(
+			path as unknown as import('three').Curve<Vector3>,
+			n * 21,
+			width / 2,
+			8,
+			true
+		)
 	})
 
 	const IMPACT_DURATION = 0.4 // seconds
