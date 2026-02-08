@@ -12,8 +12,8 @@
 		Euler,
 		Matrix4
 	} from 'three'
-	import { createInstrumentMaterial } from '../lib/material-instrument'
 	import { easeOutQuart } from '../lib/easing'
+	import { makeInstrumentMaterial } from '../lib/config'
 
 	type Props = {
 		instrument: Instrument
@@ -25,7 +25,7 @@
 
 	let { instrument, rail, size = 1, depth = 0.07, fxInstruments = true }: Props = $props()
 
-	const fx = $derived(createInstrumentMaterial(instrument.color))
+	const fx = $derived(makeInstrumentMaterial(instrument.color))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color: instrument.color }))
 
 	// Get points for the instrument's path

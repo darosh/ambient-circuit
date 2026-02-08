@@ -8,6 +8,7 @@ export function createMarbleMaterial(hexColor: string) {
 	const baseColor = uniform(color(hexColor))
 	const pulseSpeed = uniform(2.0)
 	const pulseAmount = uniform(0.2)
+	const impactIntensity = uniform(0.0)
 
 	const mat = new THREE.MeshBasicNodeMaterial({
 		transparent: true
@@ -21,5 +22,5 @@ export function createMarbleMaterial(hexColor: string) {
 		return vec4(emissive, 1.0)
 	})()
 
-	return mat
+	return { mat, impactIntensity }
 }

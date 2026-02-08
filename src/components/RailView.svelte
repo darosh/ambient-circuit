@@ -6,8 +6,8 @@
 	import { resolveRail } from '../lib/rail-resolve'
 	import { buildRailCurve, computeBeatPositions } from '../lib/rail-geometry'
 	import { CatmullRomCurve3, MeshStandardMaterial, TubeGeometry, Vector3 } from 'three'
-	import { createRailMaterial } from '../lib/material-rail'
 	import InstrumentView from './InstrumentView.svelte'
+	import { makeRailMaterial } from '../lib/config'
 
 	type Props = {
 		rail: Rail
@@ -34,7 +34,7 @@
 	const resolved = $derived(resolveRail(rail))
 	const mainPoints = $derived(buildRailCurve(resolved.points))
 	// Always create both materials - switching avoids WebGPU state issues on toggle
-	const fxMaterial = $derived(createRailMaterial(color))
+	const fxMaterial = $derived(makeRailMaterial(color).mat)
 	const plainMaterial = $derived(new MeshStandardMaterial({ color }))
 	const branchCurves = $derived.by(() => {
 		const result: import('three').Vector3[][] = []

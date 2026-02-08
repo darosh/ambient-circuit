@@ -9,8 +9,8 @@
 	import { resolveRail } from '../lib/rail-resolve'
 	import { createRails } from '../lib/rail-data'
 	import type { MidiState } from '../lib/midi'
-	import { createMarbleMaterial } from '../lib/material-marble'
 	import { MeshStandardMaterial } from 'three'
+	import { makeMarbleMaterial } from '../lib/config'
 
 	let {
 		showGrid = false,
@@ -67,7 +67,7 @@
 	if (!railVisibility) railVisibility = rails.map(() => true)
 
 	// Marble materials (both always created to avoid toggle issues)
-	const marbleFxMaterials = $derived(rails.map((r) => createMarbleMaterial(r.color || '#ffffff')))
+	const marbleFxMaterials = $derived(rails.map((r) => makeMarbleMaterial(r.color || '#ffffff').mat))
 	const marblePlainMaterials = $derived(
 		rails.map((r) => new MeshStandardMaterial({ color: r.color }))
 	)

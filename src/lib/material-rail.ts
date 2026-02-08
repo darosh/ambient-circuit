@@ -21,6 +21,7 @@ const toSkewedUv = Fn(([uvCoord, skew]: any[]) => {
  */
 export function createRailMaterial(hexColor: string) {
 	const emissiveColor = uniform(color(hexColor))
+	const impactIntensity = uniform(0.0)
 
 	const mat = new THREE.MeshBasicNodeMaterial({
 		transparent: true,
@@ -55,5 +56,5 @@ export function createRailMaterial(hexColor: string) {
 		return vec4(emissiveColor.mul(1.2).div(emissiveColorLuminance), effect.smoothstep(0, 0.1))
 	})()
 
-	return mat
+	return { mat, impactIntensity }
 }
