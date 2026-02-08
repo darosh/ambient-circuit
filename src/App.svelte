@@ -14,6 +14,7 @@
 	let showGrid = $state(true)
 	let showPoints = $state(false)
 	let showBeats = $state(false)
+	let wireframe = $state(false)
 	let showStats = $state(true)
 	let fxPost = $state(true)
 	let fxRails = $state(true)
@@ -98,6 +99,7 @@
 		<Checkbox label="Grid" bind:value={showGrid} />
 		<Checkbox label="Points" bind:value={showPoints} />
 		<Checkbox label="Beats" bind:value={showBeats} />
+		<Checkbox label="Wireframe" bind:value={wireframe} />
 		<Checkbox label="MIDI" bind:value={midiEnabled} />
 		{#if midiEnabled && midiState && midiState.outputs.length > 0}
 			<List label="Port" bind:value={selectedMidiPort} options={midiPortOptions} />
@@ -127,11 +129,12 @@
 			{showGrid}
 			{showPoints}
 			{showBeats}
+			{wireframe}
 			{showStats}
-			{fxPost}
-			{fxRails}
-			{fxMarbles}
-			{fxInstruments}
+			fxPost={fxPost && !wireframe}
+			fxRails={fxRails && !wireframe}
+			fxMarbles={fxMarbles && !wireframe}
+			fxInstruments={fxInstruments && !wireframe}
 			{midiState}
 			bind:tempo
 			bind:easing

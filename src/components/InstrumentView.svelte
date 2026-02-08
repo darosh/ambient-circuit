@@ -22,6 +22,7 @@
 		size?: number
 		width?: number
 		cornerRadius?: number
+		wireframe?: boolean
 		fxInstruments?: boolean
 	}
 
@@ -31,11 +32,17 @@
 		size = 1,
 		width = 0.06,
 		cornerRadius = 0.075,
+		wireframe = false,
 		fxInstruments = true
 	}: Props = $props()
 
 	const fx = $derived(makeInstrumentMaterial(instrument.color))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color: instrument.color }))
+
+	$effect(() => {
+		fx.mat.wireframe = wireframe
+		plainMaterial.wireframe = wireframe
+	})
 
 	// Get points for the instrument's path
 	const points = $derived(getPointsForPath(rail, instrument.path))

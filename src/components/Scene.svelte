@@ -18,6 +18,7 @@
 		showGrid = false,
 		showPoints = false,
 		showBeats = false,
+		wireframe = false,
 		fxPost = true,
 		fxRails = true,
 		fxMarbles = true,
@@ -32,6 +33,7 @@
 		showGrid?: boolean
 		showPoints?: boolean
 		showBeats?: boolean
+		wireframe?: boolean
 		fxPost?: boolean
 		fxRails?: boolean
 		fxMarbles?: boolean
@@ -88,6 +90,11 @@
 	const marblePlainMaterials = $derived(
 		rails.map((r) => new MeshStandardMaterial({ color: r.color }))
 	)
+
+	$effect(() => {
+		for (const m of marbleFxMaterials) m.wireframe = wireframe
+		for (const m of marblePlainMaterials) m.wireframe = wireframe
+	})
 
 	// FPS tracking
 	if (fps === undefined) fps = 0
@@ -155,6 +162,7 @@
 			width={0.06}
 			{showPoints}
 			{showBeats}
+			{wireframe}
 			{instruments}
 			{fxRails}
 			{fxInstruments}

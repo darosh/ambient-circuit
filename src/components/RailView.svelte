@@ -15,6 +15,7 @@
 		width?: number
 		showPoints?: boolean
 		showBeats?: boolean
+		wireframe?: boolean
 		fxRails?: boolean
 		fxInstruments?: boolean
 		instruments?: Instrument[]
@@ -26,6 +27,7 @@
 		width = 0.1,
 		showPoints = false,
 		showBeats = false,
+		wireframe = false,
 		fxRails = true,
 		fxInstruments = true,
 		instruments = []
@@ -47,6 +49,11 @@
 	// Always create both materials - switching avoids WebGPU state issues on toggle
 	const fxMaterial = $derived(makeRailMaterial(color).mat)
 	const plainMaterial = $derived(new MeshStandardMaterial({ color }))
+
+	$effect(() => {
+		fxMaterial.wireframe = wireframe
+		plainMaterial.wireframe = wireframe
+	})
 	const beatPositions = $derived.by(() => {
 		if (!showBeats) return []
 		const result = computeBeatPositions(resolved.points)
@@ -139,5 +146,5 @@
 {/if}
 
 {#each instruments as instrument, idx (idx)}
-	<InstrumentView size={0.5} {instrument} rail={resolved} {fxInstruments} />
+	<InstrumentView size={0.5} {instrument} rail={resolved} {fxInstruments} {wireframe} />
 {/each}
