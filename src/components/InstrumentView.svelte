@@ -52,35 +52,99 @@
 	// Get position and tangent at instrument beat
 	const transform = $derived(getBeatTransform(points, instrument.beat))
 
-	// Create tube geometry following polygon path with optional rounded corners
+	// Create tube geometry based on instrument type
 	const geometry = $derived.by(() => {
+		const type = instrument.type || 'poly'
 		const n = instrument.sides
-		const r = size / (1 + Math.cos(Math.PI / n))
 		const cr = cornerRadius
 		const path = new CurvePath<Vector3>()
 
-		const verts: Vector3[] = []
-		for (let i = 0; i < n; i++) {
-			const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + Math.PI / n
-			verts.push(new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, 0))
-		}
-
-		for (let i = 0; i < n; i++) {
-			const curr = verts[i]
-			const next = verts[(i + 1) % n]
-			const prev = verts[(i - 1 + n) % n]
-
-			const inDir = new Vector3().subVectors(curr, prev).normalize()
-			const outDir = new Vector3().subVectors(next, curr).normalize()
-
-			const arcStart = curr.clone().addScaledVector(inDir, -cr)
-			const arcEnd = curr.clone().addScaledVector(outDir, cr)
-			const nextArcStart = next.clone().addScaledVector(outDir, -cr)
-
-			if (cr > 0) {
-				path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+		if (type === 'poly') {
+			const r = size / (1 + Math.cos(Math.PI / n))
+			const verts: Vector3[] = []
+			for (let i = 0; i < n; i++) {
+				const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + Math.PI / n
+				verts.push(new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, 0))
 			}
-			path.add(new LineCurve3(arcEnd, nextArcStart))
+
+			for (let i = 0; i < n; i++) {
+				const curr = verts[i]
+				const next = verts[(i + 1) % n]
+				const prev = verts[(i - 1 + n) % n]
+
+				const inDir = new Vector3().subVectors(curr, prev).normalize()
+				const outDir = new Vector3().subVectors(next, curr).normalize()
+
+				const arcStart = curr.clone().addScaledVector(inDir, -cr)
+				const arcEnd = curr.clone().addScaledVector(outDir, cr)
+				const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+				if (cr > 0) {
+					path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+				}
+				path.add(new LineCurve3(arcEnd, nextArcStart))
+			}
+		} else if (type === 'star') {
+			const outerR = size / (1 + Math.cos(Math.PI / n))
+			const innerR = outerR * 0.3
+			const verts: Vector3[] = []
+
+			for (let i = 0; i < n * 2; i++) {
+				const angle = (i / (n * 2)) * Math.PI * 2 - Math.PI / 2 + Math.PI
+				const r = i % 2 === 0 ? outerR : innerR
+				verts.push(new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, 0))
+			}
+
+			for (let i = 0; i < n * 2; i++) {
+				const curr = verts[i]
+				const next = verts[(i + 1) % (n * 2)]
+				const prev = verts[(i - 1 + n * 2) % (n * 2)]
+
+				const inDir = new Vector3().subVectors(curr, prev).normalize()
+				const outDir = new Vector3().subVectors(next, curr).normalize()
+
+				const arcStart = curr.clone().addScaledVector(inDir, -cr)
+				const arcEnd = curr.clone().addScaledVector(outDir, cr)
+				const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+				if (cr > 0) {
+					path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+				}
+				path.add(new LineCurve3(arcEnd, nextArcStart))
+			}
+		} else if (type === 'whirl' || type === 'cross') {
+			const outerR = size / (1 + Math.cos(Math.PI / n))
+
+			for (let i = 0; i < n; i++) {
+				const angle = (i / n) * Math.PI * 2 - Math.PI / 2
+
+				// Center point
+				const center = new Vector3(0, 0, 0)
+
+				// Outer point (tip of water drop)
+				const tip = new Vector3(Math.cos(angle) * outerR, Math.sin(angle) * outerR, 0)
+
+				// Control points for water drop shape
+				const angleSpread = Math.PI / n
+				const leftAngle = angle - angleSpread * (type === 'whirl' ? -1.8 : 0)
+				const rightAngle = angle + angleSpread * (type === 'whirl' ? 1.8 : 0)
+
+				// Bezier control points for smooth water drop
+				const leftCtrl = new Vector3(
+					Math.cos(leftAngle) * outerR * 0.5,
+					Math.sin(leftAngle) * outerR * 0.5,
+					0
+				)
+				const rightCtrl = new Vector3(
+					Math.cos(rightAngle) * outerR * 0.5,
+					Math.sin(rightAngle) * outerR * 0.5,
+					0
+				)
+
+				// Water drop: center → left → tip → right → center
+				path.add(new QuadraticBezierCurve3(center, leftCtrl, tip))
+				path.add(new QuadraticBezierCurve3(tip, rightCtrl, center))
+			}
 		}
 
 		return new TubeGeometry(

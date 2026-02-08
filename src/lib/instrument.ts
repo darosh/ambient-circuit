@@ -22,6 +22,8 @@ export type Instrument = {
 	path?: number[]
 	/** Number of polygon sides (3=triangle, 4=square, 5=pentagon, etc.) */
 	sides: number
+	/** Visual type: poly (default), star, whirl or cross */
+	type?: 'poly' | 'star' | 'whirl' | 'cross'
 	/** Color of the instrument */
 	color?: string
 	/** MIDI channel (1-16), default 1 */
