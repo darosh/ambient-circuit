@@ -5,7 +5,8 @@
 	import type { Instrument } from '../lib/instrument'
 	import { resolveRail } from '../lib/rail-resolve'
 	import { buildRailCurve, computeBeatPositions } from '../lib/rail-geometry'
-	import { CatmullRomCurve3, TubeGeometry, Vector3 } from 'three'
+	import { CatmullRomCurve3, MeshStandardMaterial, TubeGeometry, Vector3 } from 'three'
+	import { createRailMaterial } from '../lib/material-rail'
 	import InstrumentView from './InstrumentView.svelte'
 
 	type Props = {
@@ -14,13 +15,17 @@
 		width?: number
 		showPoints?: boolean
 		showBeats?: boolean
+		fxRails?: boolean
 		instruments?: Instrument[]
 	}
 
-	let { rail, color = '#00ffff', width = 0.1, showPoints = false, showBeats = false, instruments = [] }: Props = $props()
+	let { rail, color = '#00ffff', width = 0.1, showPoints = false, showBeats = false, fxRails = true, instruments = [] }: Props = $props()
 
 	const resolved = $derived(resolveRail(rail))
 	const mainPoints = $derived(buildRailCurve(resolved.points))
+	// Always create both materials - switching avoids WebGPU state issues on toggle
+	const fxMaterial = $derived(createRailMaterial(color))
+	const plainMaterial = $derived(new MeshStandardMaterial({ color }))
 	const branchCurves = $derived.by(() => {
 		const result: import('three').Vector3[][] = []
 		for (const s of resolved.splits) {
@@ -101,14 +106,11 @@
 		return meshes
 	})
 
-	// All meshes combined
 	const allMeshes = $derived([...mainMeshes, ...branchMeshes])
 </script>
 
-{#each allMeshes as { geometry, opacity }, idx (idx)}
-	<T.Mesh {geometry}>
-		<T.MeshStandardMaterial {color} transparent={true} {opacity} />
-	</T.Mesh>
+{#each allMeshes as { geometry }, idx (idx)}
+	<T.Mesh {geometry} material={fxRails ? fxMaterial : plainMaterial} />
 {/each}
 
 {#if showPoints}

@@ -15,6 +15,8 @@
 	let showPoints = $state(false)
 	let showBeats = $state(false)
 	let showStats = $state(true)
+	let fxPost = $state(true)
+	let fxRails = $state(true)
 	let fps = $state(0)
 	let tempo = $state(createTempoState())
 	let easing = $state('linear')
@@ -67,6 +69,10 @@
 	<Folder title="Marbles">
 		<List label="Easing" bind:value={easing} options={easingNames} />
 	</Folder>
+	<Folder title="FX">
+		<Checkbox label="Post" bind:value={fxPost} />
+		<Checkbox label="Rails" bind:value={fxRails} />
+	</Folder>
 	<Folder title="Debug">
 		<Checkbox label="Stats" bind:value={showStats} />
 		<Checkbox label="Grid" bind:value={showGrid} />
@@ -91,7 +97,7 @@
       forceWebGL: false
     })
   }}>
-	<Scene {showGrid} {showPoints} {showBeats} {showStats} {midiState} bind:tempo bind:easing bind:railVisibility bind:fps />
+	<Scene {showGrid} {showPoints} {showBeats} {showStats} {fxPost} {fxRails} {midiState} bind:tempo bind:easing bind:railVisibility bind:fps />
 </Canvas>
 
 {#if showStats}

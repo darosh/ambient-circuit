@@ -2,6 +2,7 @@
 import { T, useTask } from '@threlte/core'
 import { OrbitControls } from '@threlte/extras'
 import RailView from './RailView.svelte'
+import Bloom from './Bloom.svelte'
 import { createTempoState, updateTempo, type TempoState } from '../lib/tempo'
 import { createMarble } from '../lib/marble'
 import { updateMarbles } from '../lib/marble-system'
@@ -13,6 +14,8 @@ let {
 	showGrid = false,
 	showPoints = false,
 	showBeats = false,
+	fxPost = true,
+	fxRails = true,
 	midiState = null,
 	tempo = $bindable(),
 	easing = $bindable(),
@@ -21,6 +24,8 @@ let {
 }: {
 	showPoints?: boolean
 	showBeats?: boolean
+	fxPost?: boolean
+	fxRails?: boolean
 	showStats?: boolean
 	midiState?: MidiState | null
 	tempo?: TempoState
@@ -81,6 +86,10 @@ useTask((delta) => {
 })
 </script>
 
+{#if fxPost}
+	<Bloom strength={1} radius={0.3} threshold={0.5} />
+{/if}
+
 <T.PerspectiveCamera makeDefault position={[4, 6, 8]} fov={30}>
 	<OrbitControls enableDamping target={[0, 1, 0]} />
 </T.PerspectiveCamera>
@@ -101,7 +110,7 @@ useTask((delta) => {
 
 {#each rails as { rail, color, instruments }, railIndex (railIndex)}
 	{#if railVisibility[railIndex]}
-		<RailView {rail} {color} width={0.08} {showPoints} {showBeats} {instruments} />
+		<RailView {rail} {color} width={0.08} {showPoints} {showBeats} {instruments} {fxRails} />
 	{/if}
 {/each}
 
