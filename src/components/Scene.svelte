@@ -9,6 +9,8 @@ import { updateMarbles } from '../lib/marble-system'
 import { resolveRail } from '../lib/rail-resolve'
 import { createRails } from '../lib/rail-data'
 import type { MidiState } from '../lib/midi'
+import { createMarbleMaterial } from '../lib/material-marble'
+import { MeshStandardMaterial } from 'three'
 
 let {
 	showGrid = false,
@@ -16,6 +18,7 @@ let {
 	showBeats = false,
 	fxPost = true,
 	fxRails = true,
+	fxMarbles = true,
 	midiState = null,
 	tempo = $bindable(),
 	easing = $bindable(),
@@ -26,6 +29,7 @@ let {
 	showBeats?: boolean
 	fxPost?: boolean
 	fxRails?: boolean
+	fxMarbles?: boolean
 	showStats?: boolean
 	midiState?: MidiState | null
 	tempo?: TempoState
@@ -56,6 +60,10 @@ let marbles = $state(staticRails.map(({ rail, direction, mode, speed }) =>
 
 // Create MIDI-enabled rails (reactive to midiState changes)
 let rails = $derived(createRails(midiState, marbles))
+
+// Marble materials (both always created to avoid toggle issues)
+const marbleFxMaterials = $derived(rails.map(r => createMarbleMaterial(r.color || '#ffffff')))
+const marblePlainMaterials = $derived(rails.map(r => new MeshStandardMaterial({ color: r.color })))
 
 // FPS tracking
 if (fps === undefined) fps = 0
@@ -116,10 +124,11 @@ useTask((delta) => {
 
 {#each marbles as marble, idx (idx)}
 	{#if railVisibility[idx]}
-		<T.Mesh position={[marble.position.x, marble.position.y, marble.position.z]}>
+		<T.Mesh
+			position={[marble.position.x, marble.position.y, marble.position.z]}
+			material={fxMarbles ? marbleFxMaterials[idx] : marblePlainMaterials[idx]}
+		>
 			<T.SphereGeometry args={[0.15, 16, 16]} />
-			<T.MeshStandardMaterial metalness={.8} roughness={.6} color={rails[idx].color} emissive={rails[idx].color}
-															emissiveIntensity={0.1} />
 		</T.Mesh>
 	{/if}
 {/each}
