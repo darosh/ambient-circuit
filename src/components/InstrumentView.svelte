@@ -12,7 +12,7 @@
 		Vector3,
 		Euler,
 		Matrix4
-	} from 'three'
+	} from 'three/webgpu'
 	import { easeOutQuart } from '../lib/easing'
 	import { makeInstrumentMaterial } from '../lib/config'
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import type { Marble } from '../lib/marble'
-	import { MeshStandardMaterial } from 'three'
+	import { MeshStandardMaterial } from 'three/webgpu'
 	import { makeMarbleMaterial } from '../lib/config'
 	import { easeOutQuart } from '../lib/easing'
 

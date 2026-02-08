@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { Canvas, extend } from '@threlte/core'
+	import { Canvas } from '@threlte/core'
 	import { Pane, Checkbox, Slider, Folder, Monitor, List } from 'svelte-tweakpane-ui'
 	import Scene from './components/Scene.svelte'
 	import { createTempoState } from './lib/tempo'
 	import { easingNames } from './lib/easing'
-	import { scenes } from './data/index'
+	import { scenes } from './data'
 	import { initMidi, setMidiPort, type MidiState } from './lib/midi'
 	import { WebGPURenderer } from 'three/webgpu'
 	// import * as THREE from 'three/webgpu'

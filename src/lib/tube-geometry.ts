@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, type Curve, Vector3 } from 'three'
+import { BufferAttribute, BufferGeometry, type Curve, Vector3 } from 'three/webgpu'
 
 /**
  * Build a tube geometry from sub-curves with junction-aware Frenet frames.

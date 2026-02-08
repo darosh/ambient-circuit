@@ -1,4 +1,4 @@
-import { Vector3, CubicBezierCurve3 } from 'three'
+import { Vector3, CubicBezierCurve3 } from 'three/webgpu'
 import type { ResolvedPoint, ResolvedRail, Vec3 } from './rail'
 
 /** Interpolated points per curved segment */

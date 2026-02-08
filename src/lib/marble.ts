@@ -1,5 +1,5 @@
 import type { ResolvedRail } from './rail'
-import type { Vector3 } from 'three'
+import type { Vector3 } from 'three/webgpu'
 
 export type MarbleDirection = 'forward' | 'backward'
 export type MarbleSequenceMode = 'looping' | 'ping-pong'

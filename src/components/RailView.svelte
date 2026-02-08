@@ -5,7 +5,13 @@
 	import type { Instrument } from '../lib/instrument'
 	import { resolveRail } from '../lib/rail-resolve'
 	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/rail-geometry'
-	import { type BufferGeometry, CurvePath, LineCurve3, MeshStandardMaterial, Vector3 } from 'three'
+	import {
+		type BufferGeometry,
+		CurvePath,
+		LineCurve3,
+		MeshStandardMaterial,
+		Vector3
+	} from 'three/webgpu'
 	import InstrumentView from './InstrumentView.svelte'
 	import { makeRailMaterial } from '../lib/config'
 	import { buildTubeGeometry } from '../lib/tube-geometry'

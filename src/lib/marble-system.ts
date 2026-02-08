@@ -5,7 +5,7 @@ import type { TriggerHandler } from './scene'
 import type { MidiState } from './midi'
 import { BeatPosition, buildRailCurve, computeBeatPositions } from './rail-geometry'
 import { easingFunctions } from './easing'
-import { Vector3 } from 'three'
+import { Vector3 } from 'three/webgpu'
 import { ResolvedPoint, ResolvedSplit } from './rail'
 
 /**
