@@ -19,7 +19,7 @@ const toSkewedUv = Fn(([uvCoord, skew]: any[]) => {
 /**
  * Create a glowing noise-based rail material (WebGPU/TSL).
  */
-export function createRailMaterial(hexColor: string) {
+export function createRailMaterial(hexColor: string, initialIntensity = 1.2) {
 	const emissiveColor = uniform(color(hexColor))
 	const impactIntensity = uniform(0.0)
 
@@ -53,7 +53,10 @@ export function createRailMaterial(hexColor: string) {
 
 		const emissiveColorLuminance = luminance(emissiveColor)
 
-		return vec4(emissiveColor.mul(1.2).div(emissiveColorLuminance), effect.smoothstep(0, 0.1))
+		return vec4(
+			emissiveColor.mul(impactIntensity.add(initialIntensity)).div(emissiveColorLuminance),
+			effect.smoothstep(0, 0.1)
+		)
 	})()
 
 	return { mat, impactIntensity }
