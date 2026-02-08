@@ -3,7 +3,6 @@ import { triggerHandler } from '../lib/trigger-handler'
 
 import type { Vec3 } from '../lib/rail'
 import type { Rail } from '../lib/rail'
-import type { MarbleSequenceMode } from '../lib/marble'
 import type { SceneConfig } from '../lib/scene'
 
 export const scene: SceneConfig = {
@@ -14,7 +13,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'path',
-				nodes: [[-6, 0, 0], 'l3 i ib l i lb i']
+				nodes: [[0, 0, 0], 'l i ib u i lb i rrrr ddd ll oooo uu']
 			},
 			color: '#0000ff'
 		},
@@ -35,7 +34,7 @@ export const scene: SceneConfig = {
 				offset: [-4, 0, -3] as Vec3,
 				nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
 			},
-			direction: 'backward',
+			marbles: [{ direction: 'backward' as const }],
 			color: '#ffff88'
 		},
 		{
@@ -44,9 +43,8 @@ export const scene: SceneConfig = {
 				offset: [3, 0, -3] as Vec3,
 				nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
 			},
-			mode: 'ping-pong' as MarbleSequenceMode,
-			color: '#ffff88',
-			speed: 2
+			marbles: [{ mode: 'ping-pong' as const, speed: 2 }],
+			color: '#ffff88'
 		},
 		{
 			rail: { id: 'circle1', offset: [0, 0, -3] as Vec3, nodes: circle({ pos: { y: -0.5 } }) },
@@ -155,7 +153,7 @@ export const scene: SceneConfig = {
 					}
 				]
 			} satisfies Rail,
-			mode: 'ping-pong',
+			marbles: [{ mode: 'ping-pong' as const }],
 			instruments: [
 				{
 					beat: 2.5,

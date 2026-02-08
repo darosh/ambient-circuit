@@ -9,9 +9,10 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'path',
-				nodes: [[-6, 0, 0], 'l3 i ib l i lb i']
+				nodes: [[0, 0, 0], 'l3 i ib l i lb i']
 			},
-			color: '#0000ff'
+			color: '#0000ff',
+			// marbles: false
 		}
 	]
 }

@@ -49,18 +49,34 @@
 
 	// Create marbles once at mount (component remounts per scene via {#key})
 	const rails = untrack(() => scene.rails)
-	let marbles = $state(
-		rails.map(({ rail, direction, mode, speed }) =>
-			createMarble({
-				resolvedRail: resolveRail(rail),
-				startBeat: 0,
-				direction: direction || 'forward',
-				sequenceMode: mode || 'looping',
-				easing: easing || 'linear',
-				speed: speed ?? 1
-			})
-		)
-	)
+	const _init = (() => {
+		const ms = []
+		const indices: number[] = []
+		for (let i = 0; i < rails.length; i++) {
+			const { rail, marbles: mds } = rails[i]
+			const resolvedRail = resolveRail(rail)
+			
+			const configs = mds && mds.length > 0 ? mds : (mds === false ?  [] : [{}])
+			
+			for (const m of configs) {
+				ms.push(
+					createMarble({
+						resolvedRail,
+						startBeat: m.start ?? 0,
+						direction: m.direction ?? 'forward',
+						sequenceMode: m.mode ?? 'looping',
+						easing: easing || 'linear',
+						speed: m.speed ?? 1,
+						note: m.note
+					})
+				)
+				indices.push(i)
+			}
+		}
+		return { ms, indices }
+	})()
+	let marbles = $state(_init.ms)
+	const marbleRailIndices = _init.indices
 
 	// Init rail visibility (reset if length mismatch from scene change)
 	if (!railVisibility || railVisibility.length !== rails.length) {
@@ -96,9 +112,9 @@
 			marble.config.easing = easing || 'linear'
 		}
 
-		const instrumentsPerRail = rails.map((r) => r.instruments || [])
-		const railIds = rails.map((r) => r.rail.id)
-		updateMarbles(marbles, tempo, instrumentsPerRail, railIds, scene.triggerHandler, midiState)
+		const instrumentsPerMarble = marbleRailIndices.map((i) => rails[i].instruments || [])
+		const railIdPerMarble = marbleRailIndices.map((i) => rails[i].rail.id)
+		updateMarbles(marbles, tempo, instrumentsPerMarble, railIdPerMarble, scene.triggerHandler, midiState)
 	})
 </script>
 
@@ -140,10 +156,10 @@
 {/each}
 
 {#each marbles as marble, idx (idx)}
-	{#if railVisibility[idx]}
+	{#if railVisibility[marbleRailIndices[idx]]}
 		<T.Mesh
 			position={[marble.position.x, marble.position.y, marble.position.z]}
-			material={fxMarbles ? marbleFxMaterials[idx] : marblePlainMaterials[idx]}
+			material={fxMarbles ? marbleFxMaterials[marbleRailIndices[idx]] : marblePlainMaterials[marbleRailIndices[idx]]}
 		>
 			<T.SphereGeometry args={[0.15, 16, 16]} />
 		</T.Mesh>
