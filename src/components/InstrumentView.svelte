@@ -5,9 +5,10 @@
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-geometry'
 	import {
 		MeshStandardMaterial,
-		Shape,
-		Path,
-		ExtrudeGeometry,
+		CurvePath,
+		LineCurve3,
+		QuadraticBezierCurve3,
+		TubeGeometry,
 		Vector3,
 		Euler,
 		Matrix4
@@ -19,11 +20,12 @@
 		instrument: Instrument
 		rail: ResolvedRail
 		size?: number
-		depth?: number
+		width?: number
+		cornerRadius?: number
 		fxInstruments?: boolean
 	}
 
-	let { instrument, rail, size = 1, depth = 0.07, fxInstruments = true }: Props = $props()
+	let { instrument, rail, size = 1, width = 0.06, cornerRadius = 0.075, fxInstruments = true }: Props = $props()
 
 	const fx = $derived(makeInstrumentMaterial(instrument.color))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color: instrument.color }))
@@ -34,40 +36,38 @@
 	// Get position and tangent at instrument beat
 	const transform = $derived(getBeatTransform(points, instrument.beat))
 
-	// Create extruded polygon ring geometry (hollow — glowing edges only)
+	// Create tube geometry following polygon path with optional rounded corners
 	const geometry = $derived.by(() => {
-		const s = new Shape()
 		const n = instrument.sides
-		const radius = size / 2
-		const innerRadius = radius * 0.72
+		const r = size / 2
+		const cr = cornerRadius
+		const path = new CurvePath<Vector3>()
 
-		for (let i = 0; i <= n; i++) {
+		const verts: Vector3[] = []
+		for (let i = 0; i < n; i++) {
 			const angle = (i / n) * Math.PI * 2 - Math.PI / 2
-			const x = Math.cos(angle) * radius
-			const y = Math.sin(angle) * radius
-			if (i === 0) s.moveTo(x, y)
-			else s.lineTo(x, y)
+			verts.push(new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, 0))
 		}
 
-		const hole = new Path()
-		for (let i = 0; i <= n; i++) {
-			const angle = (i / n) * Math.PI * 2 - Math.PI / 2
-			const x = Math.cos(angle) * innerRadius
-			const y = Math.sin(angle) * innerRadius
-			if (i === 0) hole.moveTo(x, y)
-			else hole.lineTo(x, y)
+		for (let i = 0; i < n; i++) {
+			const curr = verts[i]
+			const next = verts[(i + 1) % n]
+			const prev = verts[(i - 1 + n) % n]
+
+			const inDir = new Vector3().subVectors(curr, prev).normalize()
+			const outDir = new Vector3().subVectors(next, curr).normalize()
+
+			const arcStart = curr.clone().addScaledVector(inDir, -cr)
+			const arcEnd = curr.clone().addScaledVector(outDir, cr)
+			const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+			if (cr > 0) {
+				path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+			}
+			path.add(new LineCurve3(arcEnd, nextArcStart))
 		}
-		s.holes.push(hole)
 
-		const geom = new ExtrudeGeometry(s, {
-			depth: depth,
-			bevelEnabled: false
-		})
-
-		// Center along extrusion axis (Z)
-		geom.translate(0, 0, -depth / 2)
-
-		return geom
+		return new TubeGeometry(path as unknown as import('three').Curve<Vector3>, n * 21, width / 2, 8, true)
 	})
 
 	// Compute rotation to align normal with tangent
