@@ -77,10 +77,12 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: { id: 'circle1', offset: [0, 0, -3] as Vec3, nodes: circle({ pos: { y: -0.5 } }) },
+			marbles: [{ type: 'poly' as const, sides: 3 }],
 			color: c()
 		},
 		{
 			rail: { id: 'rect1', nodes: roundedRect({ pos: { x: 3.5 } }) },
+			marbles: [{ type: 'poly' as const, sides: 6 }],
 			color: c(),
 			instruments: [
 				{ sides: 4, type: 'star', beat: 1, midiChannel: 5 },
@@ -89,9 +91,14 @@ export const scene: SceneConfig = {
 				{ sides: 6, type: 'cross', beat: 7, midiChannel: 5 }
 			]
 		},
-		{ rail: { id: 'coil1', nodes: coil({ pos: { x: -3 }, lead: 1 }) }, color: c() },
+		{
+			rail: { id: 'coil1', nodes: coil({ pos: { x: -3 }, lead: 1 }) },
+			marbles: [{ type: 'coil' as const, rounds: 4, speed: 0.5 }],
+			color: c()
+		},
 		{
 			rail: { id: 'spiral1', nodes: spiral({ pos: { x: 0 }, lead: 1, tangent: 0.5 }) },
+			marbles: [{ type: 'poly' as const, sides: 4 }],
 			color: c()
 		},
 		{
@@ -207,6 +214,32 @@ export const scene: SceneConfig = {
 				}
 			],
 			color: c()
+		},
+		{
+			color: c(),
+			rail: {
+				id: 'square-coil',
+				offset: [2, 0, 3],
+				nodes: [[0, 0, 0], 'urdl']
+			},
+			instruments: [{ beat: 3.5, sides: 12 }],
+			marbles: [
+				{ type: 'coil', rounds: 2 },
+				{ type: 'coil', rounds: 3, start: 2 }
+			]
+		},
+		{
+			color: colors[0],
+			rail: {
+				id: 'square-poly',
+				offset: [3, 0, -4],
+				nodes: [[0, 0, 0], 'urdl']
+			},
+			instruments: [{ beat: 1.5, sides: 4 }],
+			marbles: [
+				{ type: 'poly', sides: 3 },
+				{ type: 'poly', sides: 4, start: 2 }
+			]
 		}
 	]
 }

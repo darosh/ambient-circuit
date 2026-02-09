@@ -15,6 +15,8 @@ export type EasingMode =
 	| 'easeOutExpo'
 	| string
 
+export type MarbleType = 'ball' | 'poly' | 'coil'
+
 export interface MarbleConfig {
 	resolvedRail: ResolvedRail
 	startBeat: number
@@ -23,6 +25,9 @@ export interface MarbleConfig {
 	easing: EasingMode
 	speed?: number // Speed multiplier (default 1)
 	note?: number // MIDI note for note mode, undefined for vanilla mode
+	type?: MarbleType // Visual type (default 'ball')
+	sides?: number // For poly type (default 6)
+	rounds?: number // For coil type (default 3)
 }
 
 export interface Marble {
@@ -31,6 +36,8 @@ export interface Marble {
 	previousBeat: number // previous beat to detect crossings
 	direction: MarbleDirection
 	position: Vector3 // computed 3D position
+	tangent: Vector3 // tangent direction at current position
+	up: Vector3 // up vector for orientation (parallel transport)
 	branchIndex: number | null // null = main rail, number = branch index
 	routingCounter: number // for weighted branch selection
 	lastGlobalBeat: number // last processed global beat to prevent re-processing
@@ -44,6 +51,8 @@ export function createMarble(config: MarbleConfig): Marble {
 		previousBeat: config.startBeat,
 		direction: config.direction,
 		position: { x: 0, y: 0, z: 0 } as Vector3,
+		tangent: { x: 1, y: 0, z: 0 } as Vector3,
+		up: { x: 0, y: 1, z: 0 } as Vector3, // initial up vector
 		branchIndex: null, // starts on main rail
 		routingCounter: 0, // for weighted routing
 		lastGlobalBeat: -1, // no beat processed yet

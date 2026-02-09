@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, type Curve, Vector3 } from 'three/webgpu'
+import { BufferAttribute, BufferGeometry, type Curve, Vector3, LineCurve3 } from 'three/webgpu'
 
 /**
  * Build a tube geometry from sub-curves with junction-aware Frenet frames.
@@ -145,6 +145,89 @@ export function buildTubeGeometry(
 			const b = a + R + 1
 			const c = a + 1
 			const d = b + 1
+			indices.push(a, b, d, a, d, c)
+		}
+	}
+
+	const geo = new BufferGeometry()
+	geo.setIndex(indices)
+	geo.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3))
+	geo.setAttribute('normal', new BufferAttribute(new Float32Array(normals), 3))
+	geo.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2))
+	return geo
+}
+
+/**
+ * Build a polygon-extruded tube for marbles.
+ * Creates a short segment along tangent with polygon cross-section.
+ */
+export function buildPolygonTube(
+	position: Vector3,
+	tangent: Vector3,
+	up: Vector3,
+	sides: number,
+	radius: number,
+	length: number
+): BufferGeometry {
+	// Create short line segment along tangent
+	const halfLen = length / 2
+	const start = position.clone().addScaledVector(tangent, -halfLen)
+	const end = position.clone().addScaledVector(tangent, halfLen)
+	const curve = new LineCurve3(start, end)
+
+	// Compute right and corrected up for frame
+	const right = new Vector3().crossVectors(up, tangent).normalize()
+	const correctedUp = new Vector3().crossVectors(tangent, right).normalize()
+
+	// Create polygon vertices in frame space
+	const n = sides
+	const r = radius / (1 + Math.cos(Math.PI / n))
+	const polygonVerts: Vector3[] = []
+	for (let i = 0; i < n; i++) {
+		const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + Math.PI / n
+		const x = Math.cos(angle) * r
+		const y = Math.sin(angle) * r
+		polygonVerts.push(new Vector3(x, y, 0))
+	}
+
+	// Sample along curve
+	const numSegments = 2
+	const positions: number[] = []
+	const normals: number[] = []
+	const uvs: number[] = []
+	const indices: number[] = []
+
+	for (let i = 0; i <= numSegments; i++) {
+		const t = i / numSegments
+		const p = curve.getPointAt(t)
+		const uvX = t
+
+		for (let j = 0; j < n; j++) {
+			const vert = polygonVerts[j]
+			// Transform polygon vertex to world space
+			const worldPos = p.clone().addScaledVector(right, vert.x).addScaledVector(correctedUp, vert.y)
+
+			// Normal points from center to vertex (in polygon plane)
+			const normal = right
+				.clone()
+				.multiplyScalar(vert.x)
+				.add(correctedUp.clone().multiplyScalar(vert.y))
+				.normalize()
+
+			positions.push(worldPos.x, worldPos.y, worldPos.z)
+			normals.push(normal.x, normal.y, normal.z)
+			uvs.push(uvX, j / n)
+		}
+	}
+
+	// Stitch faces
+	for (let i = 0; i < numSegments; i++) {
+		for (let j = 0; j < n; j++) {
+			const a = i * n + j
+			const b = a + n
+			const c = i * n + ((j + 1) % n)
+			const d = b + ((j + 1) % n) - j
+
 			indices.push(a, b, d, a, d, c)
 		}
 	}

@@ -1,4 +1,4 @@
-import type { MarbleSequenceMode, MarbleDirection } from './marble'
+import type { MarbleSequenceMode, MarbleDirection, MarbleType } from './marble'
 import type { Rail } from './rail'
 import type { Instrument } from './instrument'
 
@@ -8,6 +8,9 @@ export type MarbleData = {
 	speed?: number
 	start?: number
 	note?: number
+	type?: MarbleType
+	sides?: number
+	rounds?: number
 }
 
 export type RailData = {

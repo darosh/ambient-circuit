@@ -3,7 +3,12 @@ import type { TempoState } from './tempo'
 import type { Instrument } from './instrument'
 import type { TriggerHandler } from './scene'
 import type { MidiState } from './midi'
-import { BeatPosition, buildRailCurve, computeBeatPositions } from './rail-geometry'
+import {
+	BeatPosition,
+	buildRailCurve,
+	computeBeatPositions,
+	buildSegmentCurve
+} from './rail-geometry'
 import { easingFunctions } from './easing'
 import { Vector3 } from 'three/webgpu'
 import { ResolvedPoint, ResolvedSplit } from './rail'
@@ -78,6 +83,7 @@ function calculateMarblePosition(
 ): void {
 	if (beatPositions.length === 0) {
 		marble.position = points[0] ? new Vector3(...points[0].p) : new Vector3()
+		marble.tangent = new Vector3(1, 0, 0)
 		return
 	}
 
@@ -101,6 +107,45 @@ function calculateMarblePosition(
 	const easingFn = easingFunctions[easing] || easingFunctions.linear
 	let easedT = easingFn(t)
 	easedT = Math.max(0, Math.min(1, easedT))
+
+	// Compute tangent from curve (before arc-length interpolation)
+	const curve = buildSegmentCurve(points, beatIndex)
+	let newTangent: Vector3
+	if (curve) {
+		newTangent = curve.getTangentAt(easedT).normalize()
+	} else {
+		// Straight segment - use direction from p0 to p1
+		const dir = new Vector3()
+			.subVectors(new Vector3(...points[beatIndex + 1].p), new Vector3(...points[beatIndex].p))
+			.normalize()
+		newTangent = dir.lengthSq() > 0 ? dir : new Vector3(1, 0, 0)
+	}
+
+	// Parallel transport: rotate previous up vector to stay perpendicular to new tangent
+	const prevTangent = new Vector3(marble.tangent.x, marble.tangent.y, marble.tangent.z)
+	const prevUp = new Vector3(marble.up.x, marble.up.y, marble.up.z)
+
+	// If tangent changed significantly, update up vector via parallel transport
+	if (prevTangent.dot(newTangent) < 0.9999) {
+		// Compute rotation axis and angle between old and new tangent
+		const axis = new Vector3().crossVectors(prevTangent, newTangent)
+		const axisLen = axis.length()
+
+		if (axisLen > 0.0001) {
+			// Rotate up vector around axis
+			axis.normalize()
+			const angle = Math.acos(Math.max(-1, Math.min(1, prevTangent.dot(newTangent))))
+			const newUp = prevUp.clone().applyAxisAngle(axis, angle)
+
+			// Ensure up is perpendicular to tangent
+			const proj = newUp.clone().multiplyScalar(newUp.dot(newTangent))
+			newUp.sub(proj).normalize()
+
+			marble.up = newUp
+		}
+	}
+
+	marble.tangent = newTangent
 
 	// Build rail polyline and find segment between beat positions
 	const railPolyline = buildRailCurve(points)
@@ -126,6 +171,7 @@ function calculateMarblePosition(
 	// Interpolate along segment polyline (arc-length based)
 	if (segmentPoints.length < 2) {
 		marble.position = bp0.position.clone()
+		marble.tangent = new Vector3(1, 0, 0)
 		return
 	}
 
@@ -140,6 +186,7 @@ function calculateMarblePosition(
 
 	if (totalLength === 0) {
 		marble.position = segmentPoints[0].clone()
+		marble.tangent = new Vector3(1, 0, 0)
 		return
 	}
 
