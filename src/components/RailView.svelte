@@ -228,8 +228,8 @@
 					<T.Mesh>
 						<Text3DGeometry
 							text={rail.id.toUpperCase()}
-							size={0.3}
-							depth={0.02}
+							size={0.26}
+							depth={0.01}
 							bevelEnabled={false}
 							{font}
 							oncreate={align}
