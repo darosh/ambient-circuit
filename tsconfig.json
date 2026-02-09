@@ -11,5 +11,6 @@
 		"moduleResolution": "bundler",
 		"target": "es2015",
 		"lib": ["es2022", "DOM"]
-	}
+	},
+	"exclude": ["docs"]
 }
