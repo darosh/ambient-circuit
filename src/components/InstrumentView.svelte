@@ -39,7 +39,7 @@
 		fxInstruments = true
 	}: Props = $props()
 
-	const fx = $derived(makeInstrumentMaterial(instrument.color || color))
+	const fx = $derived(makeInstrumentMaterial(instrument.color || color, instrument.type !== 'heart'))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color: instrument.color || color }))
 
 	$effect(() => {

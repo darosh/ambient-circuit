@@ -31,12 +31,12 @@ const toSkewedUv = Fn(([uvCoord, skew]: any[]) => {
 /**
  * Create a glowing noise-based rail material (WebGPU/TSL).
  */
-export function createRailMaterial(hexColor: string, initialIntensity = 0.7) {
+export function createRailMaterial(hexColor: string, initialIntensity = 0.7, transparent = true) {
 	const emissiveColor = uniform(color(hexColor))
 	const impactIntensity = uniform(0.0)
 
 	const mat = new MeshBasicNodeMaterial({
-		transparent: true,
+		transparent,
 		side: DoubleSide
 	})
 
