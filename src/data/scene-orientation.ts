@@ -1,7 +1,7 @@
 import type { SceneConfig } from '../lib/scene'
 import { triggerHandler } from '../lib/trigger-handler'
 
-const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff']
+const colors = ['#0000ff', '#8800ff', '#ff8888', '#ff00ff', '#ff0000']
 let ci = 0
 const c = () => colors[ci++ % colors.length]
 
@@ -15,8 +15,8 @@ export const scene: SceneConfig = {
 			rail: {
 				id: 'horizontal-z',
 				nodes: [
-					[-4, 0, -2],
-					[-4, 0, 2]
+					[-3, 0, -2],
+					[-3, 0, 2]
 				]
 			},
 			color: c(),
@@ -53,6 +53,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'diagonal-xz',
+				offset: [2, -2, 1],
 				nodes: [
 					[-2, 0, 2],
 					[2, 0, -2]
@@ -200,7 +201,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'tilt-45',
-				offset: [-6, 0, 0],
+				offset: [-4, 0, 2],
 				tilt: 45,
 				nodes: [
 					[0, 0, 0],
@@ -214,7 +215,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'tilt-90',
-				offset: [-6, 0, -2],
+				offset: [-4, 0, -1],
 				tilt: 90,
 				nodes: [
 					[0, 0, 0],
@@ -228,7 +229,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'tilt-180',
-				offset: [-6, 0, -4],
+				offset: [-4, 0, -4],
 				tilt: 180,
 				nodes: [
 					[0, 0, 0],
