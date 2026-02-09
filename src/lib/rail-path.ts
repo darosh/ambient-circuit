@@ -52,6 +52,23 @@ export function expandPathString(
 
 	for (const token of str.trim().split(/\s+/)) {
 		if (!token) continue
+		// Check for "dir+round+tangent" shorthand, e.g. "ib1" = in + both rounding + tangent 1
+		const tangentMatch = token.match(/^([a-z]+)([tfb])(-?\d+(?:\.\d+)?)$/i)
+		if (tangentMatch) {
+			const chars = tangentMatch[1].toLowerCase()
+			const roundCh = tangentMatch[2]
+			const tangent = parseFloat(tangentMatch[3])
+			const mapped = DIR_WORDS[chars]
+			const ch = mapped !== undefined ? mapped : chars.length === 1 ? chars : null
+			if (ch && DIR[ch] && ROUND_CHARS.has(roundCh)) {
+				const d = DIR[ch]
+				pos[0] += d[0]
+				pos[1] += d[1]
+				pos[2] += d[2]
+				result.push({ p: [pos[0], pos[1], pos[2]] as Vec3, round: ROUND_MAP[roundCh], tangent })
+				continue
+			}
+		}
 		// Check for "dir+number" shorthand, e.g. "l3" = move left 3 units, one point
 		const numMatch = token.match(/^([a-z]+)(-?\d+(?:\.\d+)?)$/i)
 		if (numMatch) {

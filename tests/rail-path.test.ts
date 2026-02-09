@@ -55,6 +55,11 @@ describe('expandPathString', () => {
 		expect(result).toEqual([[-3, 0, 0]])
 	})
 
+	it('float multiplier emits one point', () => {
+		const result = expandPathString('l0.1')
+		expect(result).toEqual([[-0.1, 0, 0]])
+	})
+
 	it('startPos offset', () => {
 		const result = expandPathString('r', [5, 0, 0])
 		expect(result).toEqual([[6, 0, 0]])
@@ -69,6 +74,19 @@ describe('expandPathString', () => {
 			[-1, 1, -2],
 			[-1, 1, -3],
 			{ p: [-2, 1, -3], round: 'both' },
+			[-2, 1, -4]
+		])
+	})
+
+	it('compound dir+round tokens with tangents', () => {
+		const result = expandPathString('l i ib1 u i lb0.2 i')
+		expect(result).toEqual([
+			[-1, 0, 0],
+			[-1, 0, -1],
+			{ p: [-1, 0, -2], round: 'both', tangent: 1 },
+			[-1, 1, -2],
+			[-1, 1, -3],
+			{ p: [-2, 1, -3], round: 'both', tangent: 0.2 },
 			[-2, 1, -4]
 		])
 	})

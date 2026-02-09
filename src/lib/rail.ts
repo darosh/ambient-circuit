@@ -1,6 +1,8 @@
 /** 3D position */
 export type Vec3 = [x: number, y: number, z: number]
-export type Vec3Curve = [x: number, y: number, z: number, Rounding] | [x: number, y: number, z: number, Rounding, t: number]
+export type Vec3Curve =
+	| [x: number, y: number, z: number, Rounding]
+	| [x: number, y: number, z: number, Rounding, t: number]
 
 /** Rounding behavior at a point */
 export type Rounding = 'to' | 'from' | 'both'
