@@ -85,14 +85,14 @@ export const scene: SceneConfig = {
 			},
 			color: c(),
 			instruments: [
-				{ type: 'cone', beat: 1, rounds: 1 },
-				{ type: 'cone', beat: 2, rounds: 2 },
-				{ type: 'cone', beat: 3, rounds: 3 },
-				{ type: 'cone', beat: 4, rounds: 4 },
-				{ type: 'cone', beat: 5, rounds: 5 },
-				{ type: 'cone', beat: 6, rounds: 6 },
-				{ type: 'cone', beat: 7, rounds: 7 },
-				{ type: 'cone', beat: 8, rounds: 8 }
+				{ type: 'cone', beat: 1, rounds: 1, active: false },
+				{ type: 'cone', beat: 2, rounds: 2, active: false },
+				{ type: 'cone', beat: 3, rounds: 3, active: false },
+				{ type: 'cone', beat: 4, rounds: 4, active: false },
+				{ type: 'cone', beat: 5, rounds: 5, active: false },
+				{ type: 'cone', beat: 6, rounds: 6, active: false },
+				{ type: 'cone', beat: 7, rounds: 7, active: false },
+				{ type: 'cone', beat: 8, rounds: 8, active: false }
 			]
 		},
 		{
@@ -102,14 +102,14 @@ export const scene: SceneConfig = {
 			},
 			color: c(),
 			instruments: [
-				{ type: 'spiral', beat: 1, rounds: 1 },
-				{ type: 'spiral', beat: 2, rounds: 2 },
-				{ type: 'spiral', beat: 3, rounds: 3 },
-				{ type: 'spiral', beat: 4, rounds: 4 },
-				{ type: 'spiral', beat: 5, rounds: 5 },
-				{ type: 'spiral', beat: 6, rounds: 6 },
-				{ type: 'spiral', beat: 7, rounds: 7 },
-				{ type: 'spiral', beat: 8, rounds: 8 }
+				{ type: 'spiral', beat: 1, rounds: 1, active: false },
+				{ type: 'spiral', beat: 2, rounds: 2, active: false },
+				{ type: 'spiral', beat: 3, rounds: 3, active: false },
+				{ type: 'spiral', beat: 4, rounds: 4, active: false },
+				{ type: 'spiral', beat: 5, rounds: 5, active: false },
+				{ type: 'spiral', beat: 6, rounds: 6, active: false },
+				{ type: 'spiral', beat: 7, rounds: 7, active: false },
+				{ type: 'spiral', beat: 8, rounds: 8, active: false }
 			]
 		},
 		{
@@ -118,7 +118,34 @@ export const scene: SceneConfig = {
 				nodes: [[2, 0, 4], 'i i i i i i i i']
 			},
 			color: c(),
-			instruments: [{ type: 'heart', beat: 4 }]
+			instruments: [
+				{ type: 'heart', beat: 3, pulse: true },
+				{ type: 'heart', beat: 5, pulse: false }
+			]
+		},
+		{
+			rail: {
+				id: 'arrow',
+				nodes: [[3, 0, 4], 'i i i i i i i i']
+			},
+			color: c(),
+			instruments: [
+				{ type: 'arrow', beat: 3, point: 'forward' },
+				{ type: 'arrow', beat: 5, point: 'backward' }
+			]
+		},
+		{
+			rail: {
+				id: 'active',
+				nodes: [[4, 0, 4], 'i i i i i i i i']
+			},
+			color: c(),
+			instruments: [
+				{ type: 'cone', beat: 1, rounds: 3, active: true },
+				{ type: 'cone', beat: 3, rounds: 3, active: false },
+				{ type: 'spiral', beat: 5, rounds: 3, active: true },
+				{ type: 'spiral', beat: 7, rounds: 3, active: false }
+			]
 		}
 	]
 }

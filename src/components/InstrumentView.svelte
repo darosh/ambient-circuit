@@ -13,7 +13,7 @@
 		Euler,
 		Matrix4
 	} from 'three/webgpu'
-	import { easeOutQuart } from '../lib/easing'
+	import { easeOutQuart, easeInBounce } from '../lib/easing'
 	import { makeInstrumentMaterial } from '../lib/config'
 	import { buildTubeGeometry } from '../lib/tube-geometry'
 
@@ -57,14 +57,15 @@
 	const geometry = $derived.by(() => {
 		const type = instrument.type || 'poly'
 		const n =
-			type === 'heart' || type === 'spiral' || type === 'cone'
+			type === 'heart' || type === 'spiral' || type === 'cone' || type === 'arrow'
 				? 0
 				: (instrument as { sides: number }).sides
 		const cr = cornerRadius
 		const path = new CurvePath<Vector3>()
 
 		if (type === 'poly') {
-			const r = size / (1 + Math.cos(Math.PI / n))
+			const adjustedSize = n === 2 ? size * 0.5 : size
+			const r = adjustedSize / (1 + Math.cos(Math.PI / n))
 			const verts: Vector3[] = []
 			for (let i = 0; i < n; i++) {
 				const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + Math.PI / n
@@ -89,7 +90,8 @@
 				path.add(new LineCurve3(arcEnd, nextArcStart))
 			}
 		} else if (type === 'star') {
-			const outerR = size / (1 + Math.cos(Math.PI / n))
+			const adjustedSize = n === 2 ? size * 0.5 : size
+			const outerR = adjustedSize / (1 + Math.cos(Math.PI / n))
 			const innerR = outerR * 0.3
 			const verts: Vector3[] = []
 
@@ -117,7 +119,8 @@
 				path.add(new LineCurve3(arcEnd, nextArcStart))
 			}
 		} else if (type === 'whirl' || type === 'cross') {
-			const outerR = size / (1 + Math.cos(Math.PI / n))
+			const adjustedSize = n === 2 ? size * 0.5 : size
+			const outerR = adjustedSize / (1 + Math.cos(Math.PI / n))
 
 			for (let i = 0; i < n; i++) {
 				const angle = (i / n) * Math.PI * 2 - Math.PI / 2
@@ -252,6 +255,31 @@
 
 				path.add(new LineCurve3(new Vector3(x, y, z), new Vector3(nextX, nextY, nextZ)))
 			}
+		} else if (type === 'arrow') {
+			const angle = (instrument.type === 'arrow' ? instrument.angle : undefined) ?? Math.PI / 3
+			const point = (instrument.type === 'arrow' ? instrument.point : undefined) || 'forward'
+			const align = (instrument.type === 'arrow' ? instrument.align : undefined) || 'center'
+
+			const length = size * 1
+
+			// Z offset based on alignment
+			let zOffset = align === 'tip' ? 0 : align === 'back' ? -1 : -0.5
+
+			// Z scale based on point direction
+			const zScale = point === 'backward' ? -1 : 1
+
+			// V-shape: two rays from origin at ±(angle/2)
+			const halfAngle = angle / 2
+			const tipY1 = Math.sin(halfAngle) * length
+			const tipY2 = -tipY1
+			const tipZ = Math.cos(halfAngle) * length
+
+			const origin = new Vector3(0, 0, zScale * (length * zOffset))
+			const tip1 = new Vector3(0, tipY1, zScale * (tipZ + length * zOffset))
+			const tip2 = new Vector3(0, tipY2, zScale * (tipZ + length * zOffset))
+
+			path.add(new LineCurve3(origin, tip1))
+			path.add(new LineCurve3(origin, tip2))
 		}
 
 		// Use buildTubeGeometry for heart (smoother parametric curve)
@@ -260,18 +288,21 @@
 			return buildTubeGeometry(path.curves, width / 2, 8, 12, true)
 		}
 
-		// Spiral and cone are open shapes, others are closed
-		const closed = type !== 'spiral' && type !== 'cone'
+		// Spiral, cone, and arrow are open shapes, others are closed
+		const closed = type !== 'spiral' && type !== 'cone' && type !== 'arrow'
 
 		// Calculate tubular segments based on type
 		// For spiral/cone: use path complexity (rounds * segments per round)
+		// For arrow: moderate detail
 		// For polygon types: use polygon sides * density
 		const tubularSegments =
 			type === 'spiral' || type === 'cone'
 				? ((instrument.type === 'spiral' || instrument.type === 'cone'
 						? instrument.rounds
 						: undefined) || 3) * 64 // Higher detail for spirals
-				: n * 21
+				: type === 'arrow'
+					? 16
+					: n * 21
 
 		return new TubeGeometry(
 			path as unknown as import('three').Curve<Vector3>,
@@ -283,12 +314,34 @@
 	})
 
 	const IMPACT_DURATION = 0.4 // seconds
+	const ACTIVE_ROTATION_SPEED = 1 // rotations per second
+	const IMPACT_BOOST_SPEED = 3 // additional rotations/sec on impact
+	const IMPACT_BOOST_DECAY = 0.6 // seconds to decay boost
+	const BOUNCE_AMPLITUDE = 0.2 // units
 
 	let spinAngle = $state(0)
 	let impactTime = 0
 	let impactBaseAngle = 0
+	let activeRotation = $state(0)
+	let impactBoostSpeed = $state(0)
+	let bounceOffset = $state(0)
 
-	// Compute rotation to align normal with tangent, then spin around tangent axis
+	const activeRotationEnabled = $derived.by(() => {
+		const type = instrument.type || 'poly'
+		if (type === 'spiral' && instrument.type === 'spiral') {
+			return instrument.active ?? true
+		}
+		if (type === 'cone' && instrument.type === 'cone') {
+			return instrument.active ?? true
+		}
+		return false
+	})
+
+	const pulseAnimationEnabled = $derived.by(() => {
+		return instrument.type === 'heart' && (instrument.pulse ?? true)
+	})
+
+	// Compute rotation to align normal with tangent, then apply base rotation offsets and spin
 	const rotation = $derived.by((): [number, number, number] => {
 		if (!transform) return [0, 0, 0]
 
@@ -306,35 +359,87 @@
 		const right = new Vector3().crossVectors(up, tangent).normalize()
 		const correctedUp = new Vector3().crossVectors(tangent, right).normalize()
 
-		// Align normal with tangent, then spin around tangent (local Z)
+		// Align normal with tangent
 		const m = new Matrix4()
 		m.makeBasis(right, correctedUp, tangent)
-		m.multiply(new Matrix4().makeRotationZ(spinAngle))
+
+		// Apply base rotation offset based on type
+		const type = instrument.type || 'poly'
+		if (type === 'poly' || type === 'star' || type === 'heart') {
+			m.multiply(new Matrix4().makeRotationZ(-Math.PI / 2))
+		} else if (type === 'cross' || type === 'whirl') {
+			m.multiply(new Matrix4().makeRotationZ(Math.PI / 2))
+		} else if (type === 'cone' || type === 'spiral') {
+			m.multiply(new Matrix4().makeRotationZ(-Math.PI))
+		}
+
+		// Apply active rotation (continuous for spiral/cone)
+		if (activeRotationEnabled) {
+			m.multiply(new Matrix4().makeRotationZ(activeRotation))
+		}
+
+		// Apply impact spin (for non-pulse types or when pulse is disabled)
+		if (!pulseAnimationEnabled) {
+			m.multiply(new Matrix4().makeRotationZ(spinAngle))
+		}
 
 		const euler = new Euler().setFromRotationMatrix(m)
 		return [euler.x, euler.y, euler.z]
+	})
+
+	// Compute position with bounce offset for pulse animation
+	const position = $derived.by((): [number, number, number] => {
+		if (!transform) return [0, 0, 0]
+		const base = transform.position.clone()
+
+		if (pulseAnimationEnabled && bounceOffset > 0) {
+			// Bounce along world Y axis (up)
+			base.y += bounceOffset
+		}
+
+		return [base.x, base.y, base.z]
 	})
 
 	useTask((delta) => {
 		if (instrument.signal && instrument.signal.intensity > 0) {
 			impactBaseAngle = spinAngle
 			impactTime = IMPACT_DURATION
+			impactBoostSpeed = IMPACT_BOOST_SPEED
 			instrument.signal.intensity = 0
+		}
+
+		// Active rotation for spiral/cone
+		if (activeRotationEnabled) {
+			activeRotation += delta * (ACTIVE_ROTATION_SPEED + impactBoostSpeed) * Math.PI * 2
+		}
+
+		// Decay impact boost
+		if (impactBoostSpeed > 0) {
+			impactBoostSpeed = Math.max(
+				0,
+				impactBoostSpeed - delta * (IMPACT_BOOST_SPEED / IMPACT_BOOST_DECAY)
+			)
+		}
+
+		// Pulse animation for heart
+		if (pulseAnimationEnabled && impactTime > 0) {
+			bounceOffset = BOUNCE_AMPLITUDE * easeInBounce(impactTime / IMPACT_DURATION)
+		} else {
+			bounceOffset = 0
 		}
 
 		if (impactTime > 0) {
 			impactTime = Math.max(0, impactTime - delta)
 			fx.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION)
-			spinAngle = impactBaseAngle + easeOutQuart(1 - impactTime / IMPACT_DURATION) * Math.PI * 2
+
+			// Impact spin for non-pulse types
+			if (!pulseAnimationEnabled) {
+				spinAngle = impactBaseAngle + easeOutQuart(1 - impactTime / IMPACT_DURATION) * Math.PI * 2
+			}
 		}
 	})
 </script>
 
 {#if transform}
-	<T.Mesh
-		position={[transform.position.x, transform.position.y, transform.position.z]}
-		{rotation}
-		{geometry}
-		material={fxInstruments ? fx.mat : plainMaterial}
-	/>
+	<T.Mesh {position} {rotation} {geometry} material={fxInstruments ? fx.mat : plainMaterial} />
 {/if}

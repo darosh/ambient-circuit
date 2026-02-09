@@ -43,6 +43,8 @@ type PolyInstrument = InstrumentBase & {
 
 type HeartInstrument = InstrumentBase & {
 	type: 'heart'
+	/** Bounce animation on impact (default true) */
+	pulse?: boolean
 }
 
 type SpiralInstrument = InstrumentBase & {
@@ -51,6 +53,8 @@ type SpiralInstrument = InstrumentBase & {
 	rounds?: number
 	/** Counter-clockwise spiral direction (default false) */
 	counterCW?: boolean
+	/** Continuous rotation (default true) */
+	active?: boolean
 }
 
 type ConeInstrument = InstrumentBase & {
@@ -63,6 +67,23 @@ type ConeInstrument = InstrumentBase & {
 	align?: 'center' | 'tip' | 'back'
 	/** Cone tip pointing direction along rail (default 'forward') */
 	point?: 'forward' | 'backward'
+	/** Continuous rotation (default true) */
+	active?: boolean
 }
 
-export type Instrument = PolyInstrument | HeartInstrument | SpiralInstrument | ConeInstrument
+type ArrowInstrument = InstrumentBase & {
+	type: 'arrow'
+	/** V-shape opening angle in radians */
+	angle?: number
+	/** Arrow alignment: which part is at beat position (default 'center') */
+	align?: 'center' | 'tip' | 'back'
+	/** Arrow tip pointing direction along rail (default 'forward') */
+	point?: 'forward' | 'backward'
+}
+
+export type Instrument =
+	| PolyInstrument
+	| HeartInstrument
+	| SpiralInstrument
+	| ConeInstrument
+	| ArrowInstrument
