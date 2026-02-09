@@ -90,6 +90,8 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] 'ball' (default sphere)
   - [x] 'poly' (extruded polygon with `sides` param, oriented along rail)
   - [x] 'coil' (spiral with `rounds` param, spins on impact, oriented along rail)
+  - [ ] 'heart'
+- [ ] Extend marble logic: `bouncer: true` will reverse direction on collision of two marbles and call bounceHandler with bouncer and affected marble as ctx
 - [ ] Visual polishing, WebGPU, TSL
   - [ ] rails
   - [ ] marbles
