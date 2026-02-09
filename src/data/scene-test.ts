@@ -75,8 +75,8 @@ export const scene: SceneConfig = {
 			},
 			marbles: [{ type: 'poly', sides: 12, mode: 'ping-pong' as const, speed: 2 }],
 			instruments: [
-				{ type: 'cone', beat: 0.05, align: 'tip', point: 'backward' },
-				{ type: 'cone', beat: 0.95, align: 'tip' }
+				{ type: 'cone', beat: 0.05, align: 'tip', point: 'backward', midiChannel: 6 },
+				{ type: 'cone', beat: 0.95, align: 'tip', midiChannel: 6 }
 			],
 			color: c()
 		},
