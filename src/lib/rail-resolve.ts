@@ -1,4 +1,5 @@
-import type {
+import {
+	isVec3Curve,
 	Rail,
 	RailDef,
 	RailNode,
@@ -6,6 +7,7 @@ import type {
 	ResolvedRail,
 	ResolvedSegment,
 	ResolvedSplit,
+	Rounding,
 	Vec3
 } from './rail'
 import { isVec3, isSplit, isPointFull, isPathString } from './rail'
@@ -24,7 +26,7 @@ function flattenNodes(nodes: RailDef): Array<Exclude<RailNode, string>> {
 			}
 		} else {
 			out.push(node)
-			if (isVec3(node)) lastPos = node
+			if (isVec3(node) || isVec3Curve(node)) lastPos = <Vec3>node.slice(0, 3)
 			else if (isPointFull(node)) lastPos = node.p
 			else if (isSplit(node)) lastPos = node.split.p
 		}
@@ -46,6 +48,15 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 	for (const node of nodes_) {
 		if (isVec3(node)) {
 			points.push({ p: node, beat, round: null, tangent: 0.39 })
+			anchors.push(points.length - 1)
+			beat++
+		} else if (isVec3Curve(node)) {
+			points.push({
+				p: <Vec3>node.slice(0, 3),
+				beat,
+				round: <Rounding>(<unknown>node[3]),
+				tangent: 0.39
+			})
 			anchors.push(points.length - 1)
 			beat++
 		} else if (isPointFull(node)) {

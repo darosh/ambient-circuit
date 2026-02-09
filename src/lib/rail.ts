@@ -1,5 +1,6 @@
 /** 3D position */
 export type Vec3 = [x: number, y: number, z: number]
+export type Vec3Curve = [x: number, y: number, z: number, Rounding]
 
 /** Rounding behavior at a point */
 export type Rounding = 'to' | 'from' | 'both'
@@ -32,7 +33,7 @@ export type RailSplit = {
 }
 
 /** Any element in a rail definition */
-export type RailNode = Vec3 | RailPointFull | RailSplit | string
+export type RailNode = Vec3 | RailPointFull | RailSplit | string | Vec3Curve
 
 /** Sequence of nodes (used for branches too) */
 export type RailDef = RailNode[]
@@ -79,7 +80,11 @@ export type ResolvedRail = ResolvedSegment & {
 // ── Type guards ─────────────────────────────────────────────
 
 export function isVec3(node: RailNode): node is Vec3 {
-	return Array.isArray(node)
+	return Array.isArray(node) && node.length === 3
+}
+
+export function isVec3Curve(node: RailNode): node is Vec3Curve {
+	return Array.isArray(node) && node.length === 4
 }
 
 export function isSplit(node: RailNode): node is RailSplit {

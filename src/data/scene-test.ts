@@ -240,6 +240,27 @@ export const scene: SceneConfig = {
 				{ type: 'poly', sides: 3 },
 				{ type: 'poly', sides: 4, start: 2 }
 			]
+		},
+		{
+			color: colors[0],
+			rail: {
+				id: 'loop',
+				offset: [0, 0, 4],
+				nodes: [
+					[0, 0, 0],
+					[1, 0, 0.5],
+					[1.5, 1, 0.3],
+					{p: [1, 2, 0], round: 'both', tangent: .8},
+					[0.5, 1, -0.3],
+					[1, 0, -0.5],
+					[2, 0, 0]
+				]
+			},
+			instruments: [{ beat: 1.5, sides: 4 }],
+			marbles: [
+				{ type: 'poly', sides: 3, mode: 'ping-pong' },
+				{ type: 'ball', start: 2, direction: 'backward', mode: 'ping-pong' }
+			]
 		}
 	]
 }
