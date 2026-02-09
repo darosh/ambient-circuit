@@ -21,7 +21,7 @@
 	let fxRails = $state(true)
 	let fxMarbles = $state(true)
 	let fxInstruments = $state(true)
-	let autoRotate = $state(true)
+	let autoRotate = $state(false)
 	let fps = $state(0)
 	let tempo = $state(createTempoState())
 	let easing = $state('linear')
