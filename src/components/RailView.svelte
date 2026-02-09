@@ -15,7 +15,7 @@
 	import InstrumentView from './InstrumentView.svelte'
 	import { makeRailMaterial } from '../lib/config'
 	import { buildTubeGeometry } from '../lib/tube-geometry'
-
+	
 	type Props = {
 		rail: Rail
 		color?: string
@@ -26,6 +26,7 @@
 		fxRails?: boolean
 		fxInstruments?: boolean
 		instruments?: Instrument[]
+		font?: never
 	}
 
 	let {
@@ -37,7 +38,8 @@
 		wireframe = false,
 		fxRails = true,
 		fxInstruments = true,
-		instruments = []
+		instruments = [],
+		font
 	}: Props = $props()
 
 	function buildCurvePath(points: ResolvedPoint[], skipFirst = 0): CurvePath<Vector3> | null {
@@ -155,8 +157,9 @@
 				size={isDownbeat ? 0.2 : 0.2}
 				depth={0.01}
 				bevelEnabled={false}
+				font={font}
 			/>
-			<T.MeshBasicMaterial color={isDownbeat ? '#ffffff' : color} />
+			<T.MeshBasicMaterial color={color} />
 		</T.Mesh>
 	{/each}
 {/if}

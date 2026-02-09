@@ -11,6 +11,10 @@
 	import { resolveRail } from '../lib/rail-resolve'
 	import type { MidiState } from '../lib/midi'
 	import type { SceneConfig } from '../lib/scene'
+	import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
+	import { useLoader } from '@threlte/core'
+
+	export const font = useLoader(FontLoader).load('./outfit-medium-regular.json')
 
 	let {
 		scene,
@@ -163,6 +167,7 @@
 			{instruments}
 			{fxRails}
 			{fxInstruments}
+			{font}
 		/>
 	{/if}
 {/each}
