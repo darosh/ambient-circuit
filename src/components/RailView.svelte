@@ -199,7 +199,7 @@
 			<Suspense>
 				<T.Mesh>
 					<Text3DGeometry
-						text={String(bp.beat)}
+						text={bp.beat.toString()}
 						size={isDownbeat ? 0.2 : 0.2}
 						depth={0.01}
 						bevelEnabled={false}
