@@ -16,8 +16,8 @@ export const scene: SceneConfig = {
 	rails: [
 		{
 			rail: {
-				id: 'path',
-				nodes: [[0, 0, 0], 'l i ib u i lb i rrrr ddd ll oooo uu']
+				id: 'long',
+				nodes: [[0, 0, 0], 'l i i u i lf i rrrr ddd ll oooo uu']
 			},
 			color: c(),
 			instruments: [
@@ -50,16 +50,17 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'line',
+				id: 'tri',
 				offset: [-3, 0, -3] as Vec3,
 				nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3, [0, 2, 0] as Vec3, [0, 3, 0] as Vec3]
 			},
 			color: colors[1],
-			instruments: [{ beat: 1.5, sides: 3, midiChannel: 1 }]
+			instruments: [{ beat: 1.5, sides: 3, midiChannel: 1 }],
+			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		{
 			rail: {
-				id: 'line-back',
+				id: 'back',
 				offset: [-4, 0, -3] as Vec3,
 				nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
 			},
@@ -68,9 +69,9 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'line-ping',
+				id: 'cones',
 				offset: [3, 0, -3] as Vec3,
-				nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
+				nodes: [[0, 0, 0] as Vec3, [1, 0.5, 0] as Vec3]
 			},
 			marbles: [{ type: 'poly', sides: 12, mode: 'ping-pong' as const, speed: 2 }],
 			instruments: [
@@ -80,12 +81,12 @@ export const scene: SceneConfig = {
 			color: c()
 		},
 		{
-			rail: { id: 'circle1', offset: [0, 0, -3] as Vec3, nodes: circle({ pos: { y: -0.5 } }) },
+			rail: { id: 'round-all', offset: [0, 0, -3] as Vec3, nodes: circle({ pos: { y: -0.5 } }) },
 			marbles: [{ type: 'poly' as const, sides: 3 }],
 			color: c()
 		},
 		{
-			rail: { id: 'rect1', nodes: roundedRect({ pos: { x: 3.5 } }) },
+			rail: { id: 'round-rect', nodes: roundedRect({ pos: { x: 3.5 } }) },
 			marbles: [{ type: 'poly' as const, sides: 6 }],
 			color: c(),
 			instruments: [
@@ -96,18 +97,22 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: { id: 'coil1', nodes: coil({ pos: { x: -3 }, lead: 1 }) },
+			rail: { id: 'coil', nodes: coil({ pos: { x: -3 }, lead: 1 }) },
 			marbles: [{ type: 'coil' as const, rounds: 4, speed: 0.5 }],
 			color: c()
 		},
 		{
-			rail: { id: 'spiral1', nodes: spiral({ pos: { x: 0 }, lead: 1, tangent: 0.5 }) },
+			rail: {
+				id: 'spiral',
+				offset: [0, -0.5, 0],
+				nodes: spiral({ pos: { x: 0 }, lead: 1, tangent: 0.5 })
+			},
 			marbles: [{ type: 'poly' as const, sides: 4 }],
 			color: c()
 		},
 		{
 			rail: {
-				id: 'circle2',
+				id: 'poly-round',
 				nodes: circle({ pos: { x: 0, y: 1.5 } }).map((n, i, arr) => {
 					if (i === 0)
 						return { ...(typeof n === 'object' && 'p' in n ? n : { p: n as Vec3 }), beat: 0 }
@@ -124,7 +129,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'fork-demo',
+				id: 'split',
 				offset: [0, 0, 2] as Vec3,
 				nodes: [
 					[-1, 0, 0] as Vec3,
@@ -141,7 +146,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'round-test',
+				id: 'round-one',
 				offset: [3, 0, 2] as Vec3,
 				nodes: [
 					[-1, 0, 0] as Vec3,
@@ -159,7 +164,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'fork-demo2',
+				id: 'round-split',
 				offset: [-3, 0, 2] as Vec3,
 				nodes: [
 					[-1, 0, 0] as Vec3,
@@ -185,8 +190,8 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'fork-ping',
-				offset: [-3, 0, 3] as Vec3,
+				id: 'split-ping',
+				offset: [-3.5, -0.5, 3] as Vec3,
 				nodes: [
 					[-1, 0, 0] as Vec3,
 					{
@@ -240,7 +245,7 @@ export const scene: SceneConfig = {
 		{
 			color: colors[0],
 			rail: {
-				id: 'square-poly',
+				id: 'square',
 				offset: [3, 0, -4],
 				nodes: [[0, 0, 0], 'urdl']
 			},
