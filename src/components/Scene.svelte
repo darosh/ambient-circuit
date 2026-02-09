@@ -83,8 +83,8 @@
 						speed: m.speed ?? 1,
 						note: m.note,
 						type: m.type,
-						sides: m.sides,
-						rounds: m.rounds
+						...(m.type === 'poly' ? { sides: m.sides } : {}),
+						...(m.type === 'coil' ? { rounds: m.rounds } : {})
 					})
 				)
 				indices.push(i)

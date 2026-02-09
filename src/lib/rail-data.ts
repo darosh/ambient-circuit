@@ -1,17 +1,30 @@
-import type { MarbleSequenceMode, MarbleDirection, MarbleType } from './marble'
+import type { MarbleSequenceMode, MarbleDirection } from './marble'
 import type { Rail } from './rail'
 import type { Instrument } from './instrument'
 
-export type MarbleData = {
+type MarbleDataBase = {
 	direction?: MarbleDirection
 	mode?: MarbleSequenceMode
 	speed?: number
 	start?: number
 	note?: number
-	type?: MarbleType
-	sides?: number
-	rounds?: number
 }
+
+type BallMarbleData = MarbleDataBase & {
+	type?: 'ball'
+}
+
+type PolyMarbleData = MarbleDataBase & {
+	type: 'poly'
+	sides: number
+}
+
+type CoilMarbleData = MarbleDataBase & {
+	type: 'coil'
+	rounds: number
+}
+
+export type MarbleData = BallMarbleData | PolyMarbleData | CoilMarbleData
 
 export type RailData = {
 	rail: Rail
