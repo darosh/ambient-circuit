@@ -79,37 +79,30 @@
 		}
 
 		if (e.code === 'KeyW' && e.target === document.body) {
-			e.preventDefault()
 			wireframe = !wireframe
 		}
 
 		if (e.code === 'KeyR' && e.target === document.body) {
-			e.preventDefault()
 			autoRotate = !autoRotate
 		}
 
 		if (e.code === 'KeyE' && e.target === document.body) {
-			e.preventDefault()
 			easing = easingNames[(easingNames.findIndex((x) => x === easing) + 1) % easingNames.length]
 		}
 
 		if (e.code === 'KeyB' && e.target === document.body) {
-			e.preventDefault()
 			showBeats = !showBeats
 		}
 
 		if (e.code === 'KeyN' && e.target === document.body) {
-			e.preventDefault()
 			showNames = !showNames
 		}
 
 		if (e.code === 'KeyG' && e.target === document.body) {
-			e.preventDefault()
 			showGrid = !showGrid
 		}
 
 		if (e.code === 'KeyM' && e.target === document.body) {
-			e.preventDefault()
 			midiEnabled = !midiEnabled
 		}
 	}
