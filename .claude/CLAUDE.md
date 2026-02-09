@@ -86,6 +86,10 @@ Create a "marble-machine-inspired" music sequencer where:
   - repeated chars collapse: `lll` = one point at -3
   - numeric multiplier: `l3` = one point at -3
   - full words supported: `right`, `up`, `left3`, etc.
+- [x] Marble visual types
+  - [x] 'ball' (default sphere)
+  - [x] 'poly' (extruded polygon with `sides` param, oriented along rail)
+  - [x] 'coil' (spiral with `rounds` param, spins on impact, oriented along rail)
 - [ ] Visual polishing, WebGPU, TSL
   - [ ] rails
   - [ ] marbles
@@ -199,6 +203,7 @@ Create a "marble-machine-inspired" music sequencer where:
 - Use Typescript in ./src/lib
 - Use vitest for library functions
 - Keep marble logic modular (easy to add zone types)
+- Run lint, check and dev before asking for commit
 
 **DON'T:**
 
