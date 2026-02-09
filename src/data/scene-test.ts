@@ -75,8 +75,8 @@ export const scene: SceneConfig = {
 			},
 			marbles: [{ type: 'poly', sides: 12, mode: 'ping-pong' as const, speed: 2 }],
 			instruments: [
-				{ type: 'cone', beat: 0.05, sides: 2, align: 'tip', point: 'backward' },
-				{ type: 'cone', beat: 0.95, sides: 2, align: 'tip' }
+				{ type: 'cone', beat: 0.05, align: 'tip', point: 'backward' },
+				{ type: 'cone', beat: 0.95, align: 'tip' }
 			],
 			color: c()
 		},
@@ -156,9 +156,9 @@ export const scene: SceneConfig = {
 				]
 			},
 			instruments: [
-				{ type: 'heart', beat: 0.5, sides: 36 },
-				{ type: 'spiral', beat: 2, sides: 2, counterCW: true },
-				{ type: 'spiral', beat: 2.5, sides: 2 }
+				{ type: 'heart', beat: 0.5 },
+				{ type: 'spiral', beat: 2, counterCW: true },
+				{ type: 'spiral', beat: 2.5 }
 			],
 			color: c()
 		},

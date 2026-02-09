@@ -56,7 +56,10 @@
 	// Create tube geometry based on instrument type
 	const geometry = $derived.by(() => {
 		const type = instrument.type || 'poly'
-		const n = instrument.sides
+		const n =
+			type === 'heart' || type === 'spiral' || type === 'cone'
+				? 0
+				: (instrument as { sides: number }).sides
 		const cr = cornerRadius
 		const path = new CurvePath<Vector3>()
 
@@ -175,8 +178,8 @@
 				path.add(new LineCurve3(new Vector3(x, y, 0), new Vector3(nextX, nextY, 0)))
 			}
 		} else if (type === 'spiral') {
-			const rounds = instrument.rounds || 3
-			const counterCW = instrument.counterCW || false
+			const rounds = (instrument.type === 'spiral' ? instrument.rounds : undefined) || 3
+			const counterCW = (instrument.type === 'spiral' ? instrument.counterCW : undefined) || false
 			const innerR = 0.1
 			const outerR = size
 			const segments = rounds * 32
@@ -205,10 +208,10 @@
 				path.add(new LineCurve3(new Vector3(x, y, 0), new Vector3(nextX, nextY, 0)))
 			}
 		} else if (type === 'cone') {
-			const rounds = instrument.rounds || 3
-			const counterCW = instrument.counterCW || false
-			const point = instrument.point || 'forward'
-			const align = instrument.align || 'center'
+			const rounds = (instrument.type === 'cone' ? instrument.rounds : undefined) || 3
+			const counterCW = (instrument.type === 'cone' ? instrument.counterCW : undefined) || false
+			const point = (instrument.type === 'cone' ? instrument.point : undefined) || 'forward'
+			const align = (instrument.type === 'cone' ? instrument.align : undefined) || 'center'
 			const innerR = 0.1
 			const outerR = size
 			const depth = size * 1.5
@@ -265,7 +268,9 @@
 		// For polygon types: use polygon sides * density
 		const tubularSegments =
 			type === 'spiral' || type === 'cone'
-				? (instrument.rounds || 3) * 64 // Higher detail for spirals
+				? ((instrument.type === 'spiral' || instrument.type === 'cone'
+						? instrument.rounds
+						: undefined) || 3) * 64 // Higher detail for spirals
 				: n * 21
 
 		return new TubeGeometry(
