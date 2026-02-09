@@ -26,6 +26,7 @@
 	let tempo = $state(createTempoState())
 	let easing = $state('linear')
 	let midiEnabled = $state(false)
+	let debugEnabled = $state(true)
 	let midiState = $state<MidiState | null>(null)
 	let midiPortOptions = $derived(
 		midiState ? midiState.outputs.map((p) => ({ text: p.name, value: p.id })) : []
@@ -105,11 +106,20 @@
 		if (e.code === 'KeyM' && e.target === document.body) {
 			midiEnabled = !midiEnabled
 		}
+		
+		if (e.code === 'KeyD' && e.target === document.body) {
+			debugEnabled = !debugEnabled
+		}
+		
+		if (e.code === 'KeyF' && e.target === document.body) {
+			showStats = !showStats
+		}
 	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
+{#if debugEnabled}
 <Pane title="Debug" position="fixed">
 	<List
 		label="Scene"
@@ -159,10 +169,12 @@
 				N: Names<br />
 				G: Grid<br />
 				M: MIDI<br />
+				D: Debug<br />
 			</div>
 		</Element>
 	</Folder>
 </Pane>
+{/if}
 
 <Canvas
 	createRenderer={(canvas) => {
