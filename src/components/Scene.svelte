@@ -15,13 +15,14 @@
 	import { useLoader } from '@threlte/core'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 
-	export const font = <Font><unknown>useLoader(FontLoader).load('./outfit-medium-regular.json')
+	export const font = <Font>(<unknown>useLoader(FontLoader).load('./outfit-medium-regular.json'))
 
 	let {
 		scene,
 		showGrid = false,
 		showPoints = false,
 		showBeats = false,
+		showNames = false,
 		wireframe = false,
 		fxPost = true,
 		fxRails = true,
@@ -38,6 +39,7 @@
 		showGrid?: boolean
 		showPoints?: boolean
 		showBeats?: boolean
+		showNames?: boolean
 		wireframe?: boolean
 		fxPost?: boolean
 		fxRails?: boolean
@@ -164,6 +166,7 @@
 			width={0.06}
 			{showPoints}
 			{showBeats}
+			{showNames}
 			{wireframe}
 			{instruments}
 			{fxRails}

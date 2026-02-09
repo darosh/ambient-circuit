@@ -14,6 +14,7 @@
 	let showGrid = $state(true)
 	let showPoints = $state(false)
 	let showBeats = $state(false)
+	let showNames = $state(false)
 	let wireframe = $state(false)
 	let showStats = $state(true)
 	let fxPost = $state(true)
@@ -97,6 +98,11 @@
 			showBeats = !showBeats
 		}
 
+		if (e.code === 'KeyN' && e.target === document.body) {
+			e.preventDefault()
+			showNames = !showNames
+		}
+
 		if (e.code === 'KeyG' && e.target === document.body) {
 			e.preventDefault()
 			showGrid = !showGrid
@@ -135,6 +141,7 @@
 		<Checkbox label="Grid" bind:value={showGrid} />
 		<Checkbox label="Points" bind:value={showPoints} />
 		<Checkbox label="Beats" bind:value={showBeats} />
+		<Checkbox label="Names" bind:value={showNames} />
 		<Checkbox label="Wireframe" bind:value={wireframe} />
 		<Checkbox label="MIDI" bind:value={midiEnabled} />
 		{#if midiEnabled && midiState && midiState.outputs.length > 0}
@@ -156,6 +163,7 @@
 				R: Rotation<br />
 				E: Easing<br />
 				B: Beats<br />
+				N: Names<br />
 				G: Grid<br />
 				M: MIDI<br />
 			</div>
@@ -178,6 +186,7 @@
 			{showGrid}
 			{showPoints}
 			{showBeats}
+			{showNames}
 			{wireframe}
 			{showStats}
 			fxPost={fxPost && !wireframe}

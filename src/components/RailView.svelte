@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { T } from '@threlte/core'
-	import { Text3DGeometry } from '@threlte/extras'
+	import { T, useThrelte, useTask } from '@threlte/core'
+	import { Text3DGeometry, Align, Suspense } from '@threlte/extras'
 	import type { Rail, ResolvedPoint } from '../lib/rail'
 	import type { Instrument } from '../lib/instrument'
 	import { resolveRail } from '../lib/rail-resolve'
@@ -8,6 +8,7 @@
 	import {
 		type BufferGeometry,
 		CurvePath,
+		Group,
 		LineCurve3,
 		MeshStandardMaterial,
 		Vector3
@@ -16,13 +17,14 @@
 	import { makeRailMaterial } from '../lib/config'
 	import { buildTubeGeometry } from '../lib/tube-geometry'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
-	
+
 	type Props = {
 		rail: Rail
 		color?: string
 		width?: number
 		showPoints?: boolean
 		showBeats?: boolean
+		showNames?: boolean
 		wireframe?: boolean
 		fxRails?: boolean
 		fxInstruments?: boolean
@@ -36,6 +38,7 @@
 		width = 0.1,
 		showPoints = false,
 		showBeats = false,
+		showNames = false,
 		wireframe = false,
 		fxRails = true,
 		fxInstruments = true,
@@ -122,6 +125,45 @@
 	})
 
 	const allMeshes = $derived([...mainMeshes, ...branchMeshes])
+
+	const railNamePosition = $derived.by(() => {
+		if (!showNames || resolved.points.length === 0) return null
+		let minX = Infinity,
+			maxX = -Infinity
+		let maxY = -Infinity
+		let minZ = Infinity
+		for (const pt of resolved.points) {
+			if (pt.p[0] < minX) minX = pt.p[0]
+			if (pt.p[0] > maxX) maxX = pt.p[0]
+			if (pt.p[1] > maxY) maxY = pt.p[1]
+			if (pt.p[2] < minZ) minZ = pt.p[2]
+		}
+		for (const split of resolved.splits) {
+			for (const branch of split.branches) {
+				for (const pt of branch.points) {
+					if (pt.p[0] < minX) minX = pt.p[0]
+					if (pt.p[0] > maxX) maxX = pt.p[0]
+					if (pt.p[1] > maxY) maxY = pt.p[1]
+					if (pt.p[2] < minZ) minZ = pt.p[2]
+				}
+			}
+		}
+		const midX = (minX + maxX) / 2
+		return new Vector3(midX, maxY + 0.5, minZ)
+	})
+
+	const { camera } = useThrelte()
+	let nameGroup = $state<Group | undefined>()
+	const beatGroups = $state<(Group | undefined)[]>([])
+
+	useTask(() => {
+		if (!camera.current) return
+		const rot = camera.current.quaternion
+		if (nameGroup) nameGroup.quaternion.copy(rot)
+		for (const group of beatGroups) {
+			if (group) group.quaternion.copy(rot)
+		}
+	})
 </script>
 
 {#each allMeshes as { geometry }, idx (idx)}
@@ -150,19 +192,54 @@
 {#if showBeats}
 	{#each beatPositions as bp, bpIndex (bpIndex)}
 		{@const isDownbeat = bp.beat === resolved.beatOffset}
-		<T.Mesh
-			position={[bp.position.x + 0.1, bp.position.y + (isDownbeat ? -0.25 : 0.05), bp.position.z]}
+		<T.Group
+			bind:ref={beatGroups[bpIndex]}
+			position={[bp.position.x + 0.2, bp.position.y + (isDownbeat ? -0.25 : 0.05), bp.position.z]}
 		>
-			<Text3DGeometry
-				text={String(bp.beat)}
-				size={isDownbeat ? 0.2 : 0.2}
-				depth={0.01}
-				bevelEnabled={false}
-				{font}
-			/>
-			<T.MeshBasicMaterial {color} />
-		</T.Mesh>
+			<Suspense>
+				<Align>
+					{#snippet children({ align })}
+						<T.Mesh>
+							<Text3DGeometry
+								text={String(bp.beat)}
+								size={isDownbeat ? 0.2 : 0.2}
+								depth={0.01}
+								bevelEnabled={false}
+								{font}
+								oncreate={align}
+							/>
+							<T.MeshBasicMaterial {color} />
+						</T.Mesh>
+					{/snippet}
+				</Align>
+			</Suspense>
+		</T.Group>
 	{/each}
+{/if}
+
+{#if showNames && railNamePosition}
+	<T.Group
+		bind:ref={nameGroup}
+		position={[railNamePosition.x, railNamePosition.y, railNamePosition.z]}
+	>
+		<Suspense>
+			<Align>
+				{#snippet children({ align })}
+					<T.Mesh>
+						<Text3DGeometry
+							text={rail.id.toUpperCase()}
+							size={0.3}
+							depth={0.02}
+							bevelEnabled={false}
+							{font}
+							oncreate={align}
+						/>
+						<T.MeshBasicMaterial {color} />
+					</T.Mesh>
+				{/snippet}
+			</Align>
+		</Suspense>
+	</T.Group>
 {/if}
 
 {#each instruments as instrument, idx (idx)}
