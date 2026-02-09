@@ -23,9 +23,17 @@ export type Instrument = {
 	/** Number of polygon sides (3=triangle, 4=square, 5=pentagon, etc.) */
 	sides: number
 	/** Visual type: poly (default), star, whirl or cross */
-	type?: 'poly' | 'star' | 'whirl' | 'cross'
+	type?: 'poly' | 'star' | 'whirl' | 'cross' | 'heart' | 'spiral' | 'cone'
 	/** Color of the instrument */
 	color?: string
+	/** Number of spiral rounds for spiral/cone types (default 3) */
+	rounds?: number
+	/** Counter-clockwise spiral direction for spiral/cone (default false) */
+	counterCW?: boolean
+	/** Cone alignment: which part is at beat position (default 'center') */
+	align?: 'center' | 'tip' | 'back'
+	/** Cone tip pointing direction along rail (default 'forward') */
+	point?: 'forward' | 'backward'
 	/** MIDI channel (1-16), default 1 */
 	midiChannel?: number
 	/** MIDI note (0-127), default 60 (C4) */

@@ -72,7 +72,11 @@ export const scene: SceneConfig = {
 				offset: [3, 0, -3] as Vec3,
 				nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
 			},
-			marbles: [{ mode: 'ping-pong' as const, speed: 2 }],
+			marbles: [{ type: 'poly', sides: 12, mode: 'ping-pong' as const, speed: 2 }],
+			instruments: [
+				{ type: 'cone', beat: 0.05, sides: 2, align: 'tip', point: 'backward' },
+				{ type: 'cone', beat: 0.95, sides: 2, align: 'tip' }
+			],
 			color: c()
 		},
 		{
@@ -146,6 +150,11 @@ export const scene: SceneConfig = {
 					[1, 2, 0] as Vec3
 				]
 			},
+			instruments: [
+				{ type: 'heart', beat: 0.5, sides: 36 },
+				{ type: 'spiral', beat: 2, sides: 2, counterCW: true },
+				{ type: 'spiral', beat: 2.5, sides: 2 }
+			],
 			color: c()
 		},
 		{
@@ -250,7 +259,7 @@ export const scene: SceneConfig = {
 					[0, 0, 0],
 					[1, 0, 0.5],
 					[1.5, 1, 0.3],
-					{p: [1, 2, 0], round: 'both', tangent: .8},
+					{ p: [1, 2, 0], round: 'both', tangent: 0.8 },
 					[0.5, 1, -0.3],
 					[1, 0, -0.5],
 					[2, 0, 0]

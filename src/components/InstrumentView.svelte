@@ -15,6 +15,7 @@
 	} from 'three/webgpu'
 	import { easeOutQuart } from '../lib/easing'
 	import { makeInstrumentMaterial } from '../lib/config'
+	import { buildTubeGeometry } from '../lib/tube-geometry'
 
 	type Props = {
 		instrument: Instrument
@@ -90,7 +91,7 @@
 			const verts: Vector3[] = []
 
 			for (let i = 0; i < n * 2; i++) {
-				const angle = (i / (n * 2)) * Math.PI * 2 - Math.PI / 2 + Math.PI
+				const angle = (i / (n * 2)) * Math.PI * 2 - Math.PI / 2 + Math.PI / n
 				const r = i % 2 === 0 ? outerR : innerR
 				verts.push(new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, 0))
 			}
@@ -145,14 +146,134 @@
 				path.add(new QuadraticBezierCurve3(center, leftCtrl, tip))
 				path.add(new QuadraticBezierCurve3(tip, rightCtrl, center))
 			}
+		} else if (type === 'heart') {
+			const segments = 36
+			const scale = size * 0.5
+
+			for (let i = 0; i < segments; i++) {
+				const t = (i / segments) * Math.PI * 2
+				const nextT = ((i + 1) / segments) * Math.PI * 2
+
+				// Heart parametric: x = sin³(t), y = (13cos(t) - 5cos(2t) - 2cos(3t) - cos(4t))/16
+				const sin3 = Math.pow(Math.sin(t), 3)
+				const x = scale * sin3
+				const y =
+					(scale *
+						(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))) /
+					16
+
+				const nextSin3 = Math.pow(Math.sin(nextT), 3)
+				const nextX = scale * nextSin3
+				const nextY =
+					(scale *
+						(13 * Math.cos(nextT) -
+							5 * Math.cos(2 * nextT) -
+							2 * Math.cos(3 * nextT) -
+							Math.cos(4 * nextT))) /
+					16
+
+				path.add(new LineCurve3(new Vector3(x, y, 0), new Vector3(nextX, nextY, 0)))
+			}
+		} else if (type === 'spiral') {
+			const rounds = instrument.rounds || 3
+			const counterCW = instrument.counterCW || false
+			const innerR = 0.1
+			const outerR = size
+			const segments = rounds * 32
+
+			for (let i = 0; i < segments; i++) {
+				// Non-uniform sampling: more detail at smaller radius (center)
+				// Using t^1.5 concentrates more segments where radius is small
+				const u = i / segments
+				const t = Math.pow(u, 1.5)
+				let theta = t * rounds * Math.PI * 2
+				if (counterCW) theta = -theta
+
+				const r = innerR + (outerR - innerR) * t
+				const x = r * Math.cos(theta)
+				const y = r * Math.sin(theta)
+
+				const nextU = (i + 1) / segments
+				const nextT = Math.pow(nextU, 1.5)
+				let nextTheta = nextT * rounds * Math.PI * 2
+				if (counterCW) nextTheta = -nextTheta
+
+				const nextR = innerR + (outerR - innerR) * nextT
+				const nextX = nextR * Math.cos(nextTheta)
+				const nextY = nextR * Math.sin(nextTheta)
+
+				path.add(new LineCurve3(new Vector3(x, y, 0), new Vector3(nextX, nextY, 0)))
+			}
+		} else if (type === 'cone') {
+			const rounds = instrument.rounds || 3
+			const counterCW = instrument.counterCW || false
+			const point = instrument.point || 'forward'
+			const align = instrument.align || 'center'
+			const innerR = 0.1
+			const outerR = size
+			const depth = size * 1.5
+			const segments = rounds * 32
+
+			// Z offset based on alignment (which part is at beat position)
+			let zOffset = -0.5 // center (default)
+			if (align === 'tip') zOffset = 0
+			else if (align === 'back') zOffset = -1
+
+			// Z scale based on point direction (which way tip points)
+			let zScale = 1 // forward (default)
+			if (point === 'backward') zScale = -1
+
+			for (let i = 0; i < segments; i++) {
+				// Non-uniform sampling: more detail at smaller radius (start)
+				const u = i / segments
+				const t = Math.pow(u, 1.5)
+				let theta = t * rounds * Math.PI * 2
+				if (counterCW) theta = -theta
+
+				const r = innerR + (outerR - innerR) * t
+				const z = depth * zScale * (t + zOffset)
+
+				const x = r * Math.cos(theta)
+				const y = r * Math.sin(theta)
+
+				const nextU = (i + 1) / segments
+				const nextT = Math.pow(nextU, 1.5)
+				let nextTheta = nextT * rounds * Math.PI * 2
+				if (counterCW) nextTheta = -nextTheta
+
+				const nextR = innerR + (outerR - innerR) * nextT
+				const nextZ = depth * zScale * (nextT + zOffset)
+
+				const nextX = nextR * Math.cos(nextTheta)
+				const nextY = nextR * Math.sin(nextTheta)
+
+				path.add(new LineCurve3(new Vector3(x, y, z), new Vector3(nextX, nextY, nextZ)))
+			}
 		}
+
+		// Use buildTubeGeometry for heart (smoother parametric curve)
+		// Use TubeGeometry for others (works better for existing types)
+		if (type === 'heart') {
+			return buildTubeGeometry(path.curves, width / 2, 8, 12, true)
+		}
+
+		// Spiral and cone are open shapes, others are closed
+		const closed = type !== 'spiral' && type !== 'cone'
+
+		// Calculate tubular segments based on type
+		// For spiral/cone: use path complexity (rounds * segments per round)
+		// For polygon types: use polygon sides * density
+		const tubularSegments =
+			type === 'spiral' || type === 'cone'
+				? (instrument.rounds || 3) * 64 // Higher detail for spirals
+				: n * 21
 
 		return new TubeGeometry(
 			path as unknown as import('three').Curve<Vector3>,
-			n * 21,
+			tubularSegments,
 			width / 2,
 			8,
-			true
+			closed
 		)
 	})
 
@@ -167,11 +288,15 @@
 		if (!transform) return [0, 0, 0]
 
 		const tangent = transform.tangent
-		const up = new Vector3(0, 1, 0)
 
-		if (Math.abs(tangent.dot(up)) > 0.99) {
-			up.set(0, 0, 1)
-		}
+		// Compute proper up vector perpendicular to tangent (Gram-Schmidt)
+		// Choose reference vector based on tangent direction
+		const ref = Math.abs(tangent.x) <= 0.9 ? new Vector3(1, 0, 0) : new Vector3(0, 1, 0)
+		// Project out component parallel to tangent
+		const up = ref
+			.clone()
+			.sub(tangent.clone().multiplyScalar(ref.dot(tangent)))
+			.normalize()
 
 		const right = new Vector3().crossVectors(up, tangent).normalize()
 		const correctedUp = new Vector3().crossVectors(tangent, right).normalize()
