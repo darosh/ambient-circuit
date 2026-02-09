@@ -158,6 +158,7 @@ export function resolveRail(rail: Rail): ResolvedRail {
 		id: rail.id,
 		beatOffset,
 		reverse: rail.reverse ?? false,
+		tilt: rail.tilt ?? 90,
 		points: offsetPoints,
 		splits: offsetSplits
 	}

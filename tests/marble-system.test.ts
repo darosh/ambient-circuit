@@ -9,6 +9,7 @@ describe('marble-system', () => {
 		id: 'test',
 		beatOffset: 0,
 		reverse: false,
+		tilt: 0,
 		points: [
 			{ p: [0, 0, 0], beat: 0, round: null, tangent: 0.39 },
 			{ p: [1, 0, 0], beat: 1, round: null, tangent: 0.39 },

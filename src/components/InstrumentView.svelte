@@ -348,8 +348,8 @@
 		const tangent = transform.tangent
 
 		// Compute proper up vector perpendicular to tangent (Gram-Schmidt)
-		// Choose reference vector based on tangent direction
-		const ref = Math.abs(tangent.x) <= 0.9 ? new Vector3(1, 0, 0) : new Vector3(0, 1, 0)
+		// Use world Y unless tangent is nearly vertical
+		const ref = Math.abs(tangent.y) < 0.9 ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0)
 		// Project out component parallel to tangent
 		const up = ref
 			.clone()
@@ -371,6 +371,12 @@
 			m.multiply(new Matrix4().makeRotationZ(Math.PI / 2))
 		} else if (type === 'cone' || type === 'spiral') {
 			m.multiply(new Matrix4().makeRotationZ(-Math.PI))
+		}
+
+		// Apply rail tilt (design element)
+		const tiltRad = ((rail.tilt ?? 0) * Math.PI) / 180
+		if (tiltRad !== 0) {
+			m.multiply(new Matrix4().makeRotationZ(tiltRad))
 		}
 
 		// Apply active rotation (continuous for spiral/cone)

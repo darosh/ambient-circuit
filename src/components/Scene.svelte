@@ -62,9 +62,11 @@
 	const _init = (() => {
 		const ms = []
 		const indices: number[] = []
+		const resolved = []
 		for (let i = 0; i < rails.length; i++) {
 			const { rail, marbles: mds, instruments } = rails[i]
 			const resolvedRail = resolveRail(rail)
+			resolved.push(resolvedRail)
 
 			instruments?.forEach((ins) => {
 				ins.signal = ins.signal || { intensity: 0 }
@@ -90,10 +92,11 @@
 				indices.push(i)
 			}
 		}
-		return { ms, indices }
+		return { ms, indices, resolved }
 	})()
 	let marbles = $state(_init.ms)
 	const marbleRailIndices = _init.indices
+	const resolvedRails = _init.resolved
 
 	// Init rail visibility (reset if length mismatch from scene change)
 	if (!railVisibility || railVisibility.length !== rails.length) {
@@ -180,6 +183,7 @@
 	{#if railVisibility[marbleRailIndices[idx]]}
 		<MarbleView
 			bind:marble={marbles[idx]}
+			rail={resolvedRails[marbleRailIndices[idx]]}
 			color={rails[marbleRailIndices[idx]].color || '#ffffff'}
 			{wireframe}
 			{fxMarbles}

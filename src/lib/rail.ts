@@ -49,6 +49,8 @@ export type Rail = {
 	reverse?: boolean
 	/** 3D offset applied to all points. Default: [0,0,0] */
 	offset?: Vec3
+	/** Rotation around tangent in degrees. Default: 90 */
+	tilt?: number
 	nodes: RailDef
 }
 
@@ -77,6 +79,7 @@ export type ResolvedRail = ResolvedSegment & {
 	id: string
 	beatOffset: number
 	reverse: boolean
+	tilt: number
 }
 
 // ── Type guards ─────────────────────────────────────────────

@@ -20,7 +20,8 @@ export const scene: SceneConfig = {
 				]
 			},
 			color: c(),
-			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }]
+			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }],
+			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		// Horizontal rail (X-axis right)
 		{
@@ -32,7 +33,8 @@ export const scene: SceneConfig = {
 				]
 			},
 			color: c(),
-			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }]
+			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }],
+			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		// Vertical rail (Y-axis up)
 		{
@@ -44,7 +46,8 @@ export const scene: SceneConfig = {
 				]
 			},
 			color: c(),
-			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }]
+			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }],
+			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		// Diagonal XZ plane
 		{
@@ -56,7 +59,8 @@ export const scene: SceneConfig = {
 				]
 			},
 			color: c(),
-			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }]
+			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }],
+			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		// Diagonal XY plane (climbing)
 		{
@@ -68,7 +72,8 @@ export const scene: SceneConfig = {
 				]
 			},
 			color: c(),
-			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }]
+			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }],
+			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		// Curved rail (horizontal curve)
 		{
@@ -86,7 +91,8 @@ export const scene: SceneConfig = {
 				{ type: 'poly', beat: 0.5, sides: 3 },
 				{ type: 'poly', beat: 1.5, sides: 3 },
 				{ type: 'poly', beat: 2.5, sides: 3 }
-			]
+			],
+			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		// Spiral going up
 		{
@@ -105,7 +111,8 @@ export const scene: SceneConfig = {
 				{ type: 'poly', beat: 0.5, sides: 3 },
 				{ type: 'poly', beat: 1.5, sides: 3 },
 				{ type: 'poly', beat: 2.5, sides: 3 }
-			]
+			],
+			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		// Circle (closed loop)
 		{
@@ -125,7 +132,8 @@ export const scene: SceneConfig = {
 				{ type: 'poly', beat: 1, sides: 3 },
 				{ type: 'poly', beat: 2, sides: 3 },
 				{ type: 'poly', beat: 3, sides: 3 }
-			]
+			],
+			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		// S-curve (horizontal snake)
 		{
@@ -144,7 +152,8 @@ export const scene: SceneConfig = {
 				{ type: 'poly', beat: 0.5, sides: 3 },
 				{ type: 'poly', beat: 1.5, sides: 3 },
 				{ type: 'poly', beat: 2.5, sides: 3 }
-			]
+			],
+			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		// Helix (3D spiral)
 		{
@@ -163,7 +172,8 @@ export const scene: SceneConfig = {
 			instruments: [
 				{ type: 'poly', beat: 1, sides: 3 },
 				{ type: 'poly', beat: 3, sides: 3 }
-			]
+			],
+			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		{
 			rail: {
@@ -183,7 +193,51 @@ export const scene: SceneConfig = {
 				{ type: 'poly', beat: 2.5, sides: 3 },
 				{ type: 'poly', beat: 3.5, sides: 3 },
 				{ type: 'poly', beat: 0.5, sides: 3 }
-			]
+			],
+			marbles: [{ type: 'poly', sides: 3 }]
+		},
+		// Tilt examples
+		{
+			rail: {
+				id: 'tilt-45',
+				offset: [-6, 0, 0],
+				tilt: 45,
+				nodes: [
+					[0, 0, 0],
+					[0, 0, 2]
+				]
+			},
+			color: c(),
+			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }],
+			marbles: [{ type: 'poly', sides: 3 }]
+		},
+		{
+			rail: {
+				id: 'tilt-90',
+				offset: [-6, 0, -2],
+				tilt: 90,
+				nodes: [
+					[0, 0, 0],
+					[0, 0, 2]
+				]
+			},
+			color: c(),
+			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }],
+			marbles: [{ type: 'poly', sides: 3 }]
+		},
+		{
+			rail: {
+				id: 'tilt-180',
+				offset: [-6, 0, -4],
+				tilt: 180,
+				nodes: [
+					[0, 0, 0],
+					[0, 0, 2]
+				]
+			},
+			color: c(),
+			instruments: [{ type: 'poly', beat: 0.5, sides: 3 }],
+			marbles: [{ type: 'poly', sides: 3 }]
 		}
 	]
 }

@@ -14,15 +14,17 @@
 	import { makeMarbleMaterial } from '../lib/config'
 	import { easeOutQuart } from '../lib/easing'
 	import { buildTubeGeometry } from '../lib/tube-geometry'
+	import type { ResolvedRail } from '../lib/rail'
 
 	type Props = {
 		marble: Marble
+		rail: ResolvedRail
 		color: string
 		wireframe?: boolean
 		fxMarbles?: boolean
 	}
 
-	let { marble = $bindable(), color, wireframe = false, fxMarbles = true }: Props = $props()
+	let { marble = $bindable(), rail, color, wireframe = false, fxMarbles = true }: Props = $props()
 
 	const fx = $derived(makeMarbleMaterial(color))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color }))
@@ -116,15 +118,34 @@
 		if (type === 'ball') return [0, 0, 0]
 
 		const tangent = new Vector3(marble.tangent.x, marble.tangent.y, marble.tangent.z)
-		const up = new Vector3(marble.up.x, marble.up.y, marble.up.z)
+
+		// Compute up vector using Gram-Schmidt (same as InstrumentView)
+		// Use world Y unless tangent is nearly vertical
+		const ref = Math.abs(tangent.y) < 0.9 ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0)
+		const up = ref
+			.clone()
+			.sub(tangent.clone().multiplyScalar(ref.dot(tangent)))
+			.normalize()
 
 		const right = new Vector3().crossVectors(up, tangent).normalize()
 		const correctedUp = new Vector3().crossVectors(tangent, right).normalize()
 
-		// Align normal with tangent, then spin around tangent (local Z)
+		// Align normal with tangent
 		const m = new Matrix4()
 		m.makeBasis(right, correctedUp, tangent)
 
+		// Apply base rotation offset (match instrument orientation)
+		if (type === 'poly') {
+			m.multiply(new Matrix4().makeRotationZ(-Math.PI / 2))
+		}
+
+		// Apply rail tilt
+		const tiltRad = ((rail.tilt ?? 0) * Math.PI) / 180
+		if (tiltRad !== 0) {
+			m.multiply(new Matrix4().makeRotationZ(tiltRad))
+		}
+
+		// Apply continuous spin for coil type
 		if (type === 'coil') {
 			m.multiply(new Matrix4().makeRotationZ(spinAngle))
 		}
