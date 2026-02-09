@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"build:font": "node ./scripts/font.js ./public/Outfit-Medium.ttf ./public/outfit-medium-regular.json '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-_:.,;|'",
+		"build:font": "node ./scripts/font.js ./public/Outfit-Medium.ttf ./public/outfit-medium-regular.json '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-_:.,;|()[]{} '",
 		"preview": "vite preview",
 		"check": "svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
