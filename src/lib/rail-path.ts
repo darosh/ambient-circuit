@@ -9,18 +9,6 @@ const DIR: Record<string, Vec3> = {
 	o: [0, 0, 1]
 }
 
-const DIR_WORDS: Record<string, string> = {
-	right: 'r',
-	left: 'l',
-	up: 'u',
-	down: 'd',
-	in: 'i',
-	out: 'o',
-	to: 't',
-	from: 'f',
-	both: 'b'
-}
-
 const ROUND_CHARS = new Set(['t', 'f', 'b'])
 const ROUND_MAP: Record<string, 'to' | 'from' | 'both'> = { t: 'to', f: 'from', b: 'both' }
 
@@ -31,86 +19,58 @@ export function expandPathString(
 	const result: Array<Vec3 | RailPointFull> = []
 	const pos: [number, number, number] = [startPos[0], startPos[1], startPos[2]]
 
-	const processChar = (ch: string) => {
-		if (DIR[ch]) {
-			const d = DIR[ch]
-			pos[0] += d[0]
-			pos[1] += d[1]
-			pos[2] += d[2]
-			result.push([pos[0], pos[1], pos[2]] as Vec3)
-		} else if (ROUND_CHARS.has(ch)) {
-			const round = ROUND_MAP[ch]
-			if (result.length === 0) return
-			const last = result[result.length - 1]
-			if (Array.isArray(last)) {
-				result[result.length - 1] = { p: last as Vec3, round }
-			} else {
-				;(last as RailPointFull).round = round
-			}
-		}
-	}
-
 	for (const token of str.trim().split(/\s+/)) {
 		if (!token) continue
-		// Check for "dir+round+tangent" shorthand, e.g. "ib1" = in + both rounding + tangent 1
-		const tangentMatch = token.match(/^([a-z]+)([tfb])(-?\d+(?:\.\d+)?)$/i)
-		if (tangentMatch) {
-			const chars = tangentMatch[1].toLowerCase()
-			const roundCh = tangentMatch[2]
-			const tangent = parseFloat(tangentMatch[3])
-			const mapped = DIR_WORDS[chars]
-			const ch = mapped !== undefined ? mapped : chars.length === 1 ? chars : null
-			if (ch && DIR[ch] && ROUND_CHARS.has(roundCh)) {
-				const d = DIR[ch]
-				pos[0] += d[0]
-				pos[1] += d[1]
-				pos[2] += d[2]
-				result.push({ p: [pos[0], pos[1], pos[2]] as Vec3, round: ROUND_MAP[roundCh], tangent })
-				continue
-			}
-		}
-		// Check for "dir+number" shorthand, e.g. "l3" = move left 3 units, one point
-		const numMatch = token.match(/^([a-z]+)(-?\d+(?:\.\d+)?)$/i)
-		if (numMatch) {
-			const chars = numMatch[1].toLowerCase()
-			const n = parseFloat(numMatch[2])
-			const mapped = DIR_WORDS[chars]
-			const ch = mapped !== undefined ? mapped : chars.length === 1 ? chars : null
-			if (ch && DIR[ch]) {
-				const d = DIR[ch]
-				pos[0] += d[0] * n
-				pos[1] += d[1] * n
-				pos[2] += d[2] * n
-				result.push([pos[0], pos[1], pos[2]] as Vec3)
-				continue
-			}
-		}
-		const mapped = DIR_WORDS[token.toLowerCase()]
-		if (mapped !== undefined) {
-			processChar(mapped)
-		} else {
-			// Group consecutive same-direction chars: "lll" → one move of 3
-			let i = 0
-			while (i < token.length) {
-				const ch = token[i]
-				if (DIR[ch]) {
-					let count = 1
-					while (i + count < token.length && token[i + count] === ch) count++
-					if (count > 1) {
-						const d = DIR[ch]
-						pos[0] += d[0] * count
-						pos[1] += d[1] * count
-						pos[2] += d[2] * count
-						result.push([pos[0], pos[1], pos[2]] as Vec3)
-					} else {
-						processChar(ch)
-					}
-					i += count
+
+		// Check for rounding+tangent suffix: e.g. "rub1", "l3u2b0.5"
+		const roundTangentMatch = token.match(/^(.+)([tfb])(-?\d+(?:\.\d+)?)$/i)
+		// Check for just rounding suffix: e.g. "rub", "l3u2b"
+		const roundMatch = !roundTangentMatch ? token.match(/^(.+)([tfb])$/i) : null
+
+		const dirPart = roundTangentMatch ? roundTangentMatch[1] : roundMatch ? roundMatch[1] : token
+		const roundCh = roundTangentMatch ? roundTangentMatch[2] : roundMatch ? roundMatch[2] : null
+		const tangent = roundTangentMatch ? parseFloat(roundTangentMatch[3]) : undefined
+
+		// Parse direction part to accumulate movements
+		const delta: [number, number, number] = [0, 0, 0]
+		let i = 0
+		while (i < dirPart.length) {
+			const ch = dirPart[i]
+			if (DIR[ch]) {
+				// Check if followed by a number
+				const numMatch = dirPart.slice(i + 1).match(/^(-?\d+(?:\.\d+)?)/)
+				if (numMatch) {
+					const n = parseFloat(numMatch[0])
+					const d = DIR[ch]
+					delta[0] += d[0] * n
+					delta[1] += d[1] * n
+					delta[2] += d[2] * n
+					i += 1 + numMatch[0].length
 				} else {
-					processChar(ch)
+					const d = DIR[ch]
+					delta[0] += d[0]
+					delta[1] += d[1]
+					delta[2] += d[2]
 					i++
 				}
+			} else {
+				i++
 			}
+		}
+
+		pos[0] += delta[0]
+		pos[1] += delta[1]
+		pos[2] += delta[2]
+
+		if (roundCh && ROUND_CHARS.has(roundCh)) {
+			const round = ROUND_MAP[roundCh]
+			if (tangent !== undefined) {
+				result.push({ p: [pos[0], pos[1], pos[2]] as Vec3, round, tangent })
+			} else {
+				result.push({ p: [pos[0], pos[1], pos[2]] as Vec3, round })
+			}
+		} else {
+			result.push([pos[0], pos[1], pos[2]] as Vec3)
 		}
 	}
 

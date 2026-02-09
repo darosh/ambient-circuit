@@ -81,11 +81,10 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Instrument MIDI properties (channel, note, length, velocity)
   - [x] Marble note override support
   - [x] Lazy initialization (only when enabled)
-- [x] String path shorthand for `RailNode` — `"r u l3 ib"` syntax
-  - direction chars: `r/l/u/d/i/o`, rounding chars: `t/f/b`
-  - repeated chars collapse: `lll` = one point at -3
-  - numeric multiplier: `l3` = one point at -3
-  - full words supported: `right`, `up`, `left3`, etc.
+- [x] String path shorthand for `RailNode` — space-delimited syntax
+  - space = point delimiter, each token produces one point
+  - direction chars: `r/l/u/d/i/o`, rounding: `t/f/b`, tangent: number suffix
+  - examples: `ru` = one point [1,1,0], `l3u2` = one point [-3,2,0], `rub` = [1,1,0] with rounding both, `ilt0.5` = [i+l] with rounding to, tangent 0.5
 - [x] Marble visual types
   - [x] 'ball' (default sphere)
   - [x] 'poly' (extruded polygon with `sides` param, oriented along rail)
