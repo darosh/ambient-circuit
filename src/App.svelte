@@ -106,11 +106,11 @@
 		if (e.code === 'KeyM' && e.target === document.body) {
 			midiEnabled = !midiEnabled
 		}
-		
+
 		if (e.code === 'KeyD' && e.target === document.body) {
 			debugEnabled = !debugEnabled
 		}
-		
+
 		if (e.code === 'KeyF' && e.target === document.body) {
 			showStats = !showStats
 		}
@@ -120,60 +120,60 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if debugEnabled}
-<Pane title="Debug" position="fixed">
-	<List
-		label="Scene"
-		bind:value={sceneId}
-		options={scenes.map((s) => ({ text: s.id, value: s.id }))}
-	/>
-	<Checkbox label="Play" bind:value={tempo.isPlaying} />
-	<Folder title="Tempo" expanded={false}>
-		<Slider label="BPM" bind:value={tempo.config.bpm} min={30} max={300} />
-		<Monitor label="Beat" value={Math.floor(tempo.currentBeat)} />
-	</Folder>
-	<Folder title="FX" expanded={false}>
-		<List label="Easing" bind:value={easing} options={easingNames} />
-		<Checkbox label="Post" bind:value={fxPost} />
-		<Checkbox label="Rails" bind:value={fxRails} />
-		<Checkbox label="Marbles" bind:value={fxMarbles} />
-		<Checkbox label="Instruments" bind:value={fxInstruments} />
-		<Checkbox label="Auto Rotate" bind:value={autoRotate} />
-	</Folder>
-	<Folder title="Debug" expanded={false}>
-		<Checkbox label="Stats" bind:value={showStats} />
-		<Checkbox label="Grid" bind:value={showGrid} />
-		<Checkbox label="Points" bind:value={showPoints} />
-		<Checkbox label="Beats" bind:value={showBeats} />
-		<Checkbox label="Names" bind:value={showNames} />
-		<Checkbox label="Wireframe" bind:value={wireframe} />
-		<Checkbox label="MIDI" bind:value={midiEnabled} />
-		{#if midiEnabled && midiState && midiState.outputs.length > 0}
-			<List label="Port" bind:value={selectedMidiPort} options={midiPortOptions} />
-		{/if}
-	</Folder>
-	<Folder title="Rails" expanded={false}>
-		{#each activeScene.rails as { rail }, i (rail.id)}
-			{#if i < railVisibility.length}
-				<Checkbox label={rail.id} bind:value={railVisibility[i]} />
+	<Pane title="Debug" position="fixed">
+		<List
+			label="Scene"
+			bind:value={sceneId}
+			options={scenes.map((s) => ({ text: s.id, value: s.id }))}
+		/>
+		<Checkbox label="Play" bind:value={tempo.isPlaying} />
+		<Folder title="Tempo" expanded={false}>
+			<Slider label="BPM" bind:value={tempo.config.bpm} min={30} max={300} />
+			<Monitor label="Beat" value={Math.floor(tempo.currentBeat)} />
+		</Folder>
+		<Folder title="FX" expanded={false}>
+			<List label="Easing" bind:value={easing} options={easingNames} />
+			<Checkbox label="Post" bind:value={fxPost} />
+			<Checkbox label="Rails" bind:value={fxRails} />
+			<Checkbox label="Marbles" bind:value={fxMarbles} />
+			<Checkbox label="Instruments" bind:value={fxInstruments} />
+			<Checkbox label="Auto Rotate" bind:value={autoRotate} />
+		</Folder>
+		<Folder title="Debug" expanded={false}>
+			<Checkbox label="Stats" bind:value={showStats} />
+			<Checkbox label="Grid" bind:value={showGrid} />
+			<Checkbox label="Points" bind:value={showPoints} />
+			<Checkbox label="Beats" bind:value={showBeats} />
+			<Checkbox label="Names" bind:value={showNames} />
+			<Checkbox label="Wireframe" bind:value={wireframe} />
+			<Checkbox label="MIDI" bind:value={midiEnabled} />
+			{#if midiEnabled && midiState && midiState.outputs.length > 0}
+				<List label="Port" bind:value={selectedMidiPort} options={midiPortOptions} />
 			{/if}
-		{/each}
-	</Folder>
-	<Folder title="Hotkeys" expanded={false}>
-		<Element>
-			<div class="help">
-				Space: Play<br /><br />
-				W: Wireframe<br />
-				R: Rotation<br />
-				E: Easing<br />
-				B: Beats<br />
-				N: Names<br />
-				G: Grid<br />
-				M: MIDI<br />
-				D: Debug<br />
-			</div>
-		</Element>
-	</Folder>
-</Pane>
+		</Folder>
+		<Folder title="Rails" expanded={false}>
+			{#each activeScene.rails as { rail }, i (rail.id)}
+				{#if i < railVisibility.length}
+					<Checkbox label={rail.id} bind:value={railVisibility[i]} />
+				{/if}
+			{/each}
+		</Folder>
+		<Folder title="Hotkeys" expanded={false}>
+			<Element>
+				<div class="help">
+					Space: Play<br /><br />
+					W: Wireframe<br />
+					R: Rotation<br />
+					E: Easing<br />
+					B: Beats<br />
+					N: Names<br />
+					G: Grid<br />
+					M: MIDI<br />
+					D: Debug<br />
+				</div>
+			</Element>
+		</Folder>
+	</Pane>
 {/if}
 
 <Canvas

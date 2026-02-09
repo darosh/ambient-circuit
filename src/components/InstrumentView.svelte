@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	import type { Instrument } from '../lib/instrument'
+	import type { Instrument, PolyInstrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-geometry'
 	import {
@@ -16,6 +16,7 @@
 	import { easeOutQuart, easeInBounce } from '../lib/easing'
 	import { makeInstrumentMaterial } from '../lib/config'
 	import { buildTubeGeometry } from '../lib/tube-geometry'
+	import { lerp } from 'three/src/math/MathUtils.js'
 
 	type Props = {
 		instrument: Instrument
@@ -39,7 +40,9 @@
 		fxInstruments = true
 	}: Props = $props()
 
-	const fx = $derived(makeInstrumentMaterial(instrument.color || color, instrument.type !== 'heart'))
+	const fx = $derived(
+		makeInstrumentMaterial(instrument.color || color, instrument.type !== 'heart')
+	)
 	const plainMaterial = $derived(new MeshStandardMaterial({ color: instrument.color || color }))
 
 	$effect(() => {
@@ -313,6 +316,58 @@
 		)
 	})
 
+	// Inner geometry for fill mode (poly only)
+	const innerGeometry = $derived.by(() => {
+		if (!(instrument as PolyInstrument).fill) return null
+
+		const n = (instrument as PolyInstrument).sides
+
+		if (n < 3) return null
+
+		const cr = cornerRadius / 2
+		const path = new CurvePath<Vector3>()
+
+		const adjustedSize = n === 2 ? size * 0.5 : size
+		const outerR = adjustedSize / (1 + Math.cos(Math.PI / n))
+		const coef = n === 3 ? 3 : lerp(2.5, 2, (Math.min(n, 12) - 3) / 9)
+		const innerR = outerR - coef * width
+
+		if (innerR <= 0) return null
+
+		const verts: Vector3[] = []
+
+		for (let i = 0; i < n; i++) {
+			const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + Math.PI / n
+			verts.push(new Vector3(Math.cos(angle) * innerR, Math.sin(angle) * innerR, 0))
+		}
+
+		for (let i = 0; i < n; i++) {
+			const curr = verts[i]
+			const next = verts[(i + 1) % n]
+			const prev = verts[(i - 1 + n) % n]
+
+			const inDir = new Vector3().subVectors(curr, prev).normalize()
+			const outDir = new Vector3().subVectors(next, curr).normalize()
+
+			const arcStart = curr.clone().addScaledVector(inDir, -cr)
+			const arcEnd = curr.clone().addScaledVector(outDir, cr)
+			const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+			if (cr > 0) {
+				path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+			}
+			path.add(new LineCurve3(arcEnd, nextArcStart))
+		}
+
+		return new TubeGeometry(
+			path as unknown as import('three').Curve<Vector3>,
+			n * 21,
+			width / 2,
+			8,
+			true
+		)
+	})
+
 	const IMPACT_DURATION = 0.4 // seconds
 	const ACTIVE_ROTATION_SPEED = 1 // rotations per second
 	const IMPACT_BOOST_SPEED = 3 // additional rotations/sec on impact
@@ -327,11 +382,10 @@
 	let bounceOffset = $state(0)
 
 	const activeRotationEnabled = $derived.by(() => {
-		const type = instrument.type || 'poly'
-		if (type === 'spiral' && instrument.type === 'spiral') {
+		if (instrument.type === 'spiral') {
 			return instrument.active ?? true
 		}
-		if (type === 'cone' && instrument.type === 'cone') {
+		if (instrument.type === 'cone') {
 			return instrument.active ?? true
 		}
 		return false
@@ -448,4 +502,12 @@
 
 {#if transform}
 	<T.Mesh {position} {rotation} {geometry} material={fxInstruments ? fx.mat : plainMaterial} />
+	{#if innerGeometry}
+		<T.Mesh
+			{position}
+			{rotation}
+			geometry={innerGeometry}
+			material={fxInstruments ? fx.mat : plainMaterial}
+		/>
+	{/if}
 {/if}

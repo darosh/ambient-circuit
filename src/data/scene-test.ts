@@ -60,6 +60,24 @@ export const scene: SceneConfig = {
 					beat: 10.7,
 					type: 'arrow',
 					midiChannel: 4
+				},
+				{
+					beat: 9.25,
+					fill: true,
+					sides: 3,
+					midiChannel: 4
+				},
+				{
+					beat: 9.5,
+					fill: true,
+					sides: 4,
+					midiChannel: 4
+				},
+				{
+					beat: 9.75,
+					fill: true,
+					sides: 12,
+					midiChannel: 4
 				}
 			]
 		},

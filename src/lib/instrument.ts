@@ -34,10 +34,29 @@ type InstrumentBase = {
 	signal?: InstrumentSignal
 }
 
-type PolyInstrument = InstrumentBase & {
-	/** Visual type: poly (default), star, whirl or cross */
-	type?: 'poly' | 'star' | 'whirl' | 'cross'
+export type PolyInstrument = InstrumentBase & {
+	type?: 'poly'
 	/** Number of polygon sides (3=triangle, 4=square, 5=pentagon, etc.) */
+	sides: number
+	/** Fill mode: creates inner shape at radius - 2*width (default false) */
+	fill?: boolean
+}
+
+type StarInstrument = InstrumentBase & {
+	type: 'star'
+	/** Number of star points */
+	sides: number
+}
+
+type WhirlInstrument = InstrumentBase & {
+	type: 'whirl'
+	/** Number of whirl shapes */
+	sides: number
+}
+
+type CrossInstrument = InstrumentBase & {
+	type: 'cross'
+	/** Number of cross shapes */
 	sides: number
 }
 
@@ -83,6 +102,9 @@ type ArrowInstrument = InstrumentBase & {
 
 export type Instrument =
 	| PolyInstrument
+	| StarInstrument
+	| WhirlInstrument
+	| CrossInstrument
 	| HeartInstrument
 	| SpiralInstrument
 	| ConeInstrument
