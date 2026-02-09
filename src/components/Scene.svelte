@@ -13,8 +13,9 @@
 	import type { SceneConfig } from '../lib/scene'
 	import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 	import { useLoader } from '@threlte/core'
+	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 
-	export const font = useLoader(FontLoader).load('./outfit-medium-regular.json')
+	export const font = <Font><unknown>useLoader(FontLoader).load('./outfit-medium-regular.json')
 
 	let {
 		scene,

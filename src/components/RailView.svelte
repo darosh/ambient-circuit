@@ -15,6 +15,7 @@
 	import InstrumentView from './InstrumentView.svelte'
 	import { makeRailMaterial } from '../lib/config'
 	import { buildTubeGeometry } from '../lib/tube-geometry'
+	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 	
 	type Props = {
 		rail: Rail
@@ -26,7 +27,7 @@
 		fxRails?: boolean
 		fxInstruments?: boolean
 		instruments?: Instrument[]
-		font?: never
+		font?: Font
 	}
 
 	let {
@@ -157,9 +158,9 @@
 				size={isDownbeat ? 0.2 : 0.2}
 				depth={0.01}
 				bevelEnabled={false}
-				font={font}
+				{font}
 			/>
-			<T.MeshBasicMaterial color={color} />
+			<T.MeshBasicMaterial {color} />
 		</T.Mesh>
 	{/each}
 {/if}

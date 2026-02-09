@@ -5,3 +5,4 @@ yarn.lock
 
 .claude/
 docs/
+public/

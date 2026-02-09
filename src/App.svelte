@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Canvas } from '@threlte/core'
-	import { Pane, Checkbox, Slider, Folder, Monitor, List } from 'svelte-tweakpane-ui'
+	import { Pane, Checkbox, Slider, Folder, Monitor, List, Element } from 'svelte-tweakpane-ui'
 	import Scene from './components/Scene.svelte'
 	import { createTempoState } from './lib/tempo'
 	import { easingNames } from './lib/easing'
@@ -76,6 +76,36 @@
 			e.preventDefault()
 			tempo.isPlaying = !tempo.isPlaying
 		}
+
+		if (e.code === 'KeyW' && e.target === document.body) {
+			e.preventDefault()
+			wireframe = !wireframe
+		}
+
+		if (e.code === 'KeyR' && e.target === document.body) {
+			e.preventDefault()
+			autoRotate = !autoRotate
+		}
+
+		if (e.code === 'KeyE' && e.target === document.body) {
+			e.preventDefault()
+			easing = easingNames[(easingNames.findIndex((x) => x === easing) + 1) % easingNames.length]
+		}
+
+		if (e.code === 'KeyB' && e.target === document.body) {
+			e.preventDefault()
+			showBeats = !showBeats
+		}
+
+		if (e.code === 'KeyG' && e.target === document.body) {
+			e.preventDefault()
+			showGrid = !showGrid
+		}
+
+		if (e.code === 'KeyM' && e.target === document.body) {
+			e.preventDefault()
+			midiEnabled = !midiEnabled
+		}
 	}
 </script>
 
@@ -117,6 +147,19 @@
 				<Checkbox label={rail.id} bind:value={railVisibility[i]} />
 			{/if}
 		{/each}
+	</Folder>
+	<Folder title="Hotkeys" expanded={false}>
+		<Element>
+			<div class="help">
+				Space: Play<br /><br />
+				W: Wireframe<br />
+				R: Rotation<br />
+				E: Easing<br />
+				B: Beats<br />
+				G: Grid<br />
+				M: MIDI<br />
+			</div>
+		</Element>
 	</Folder>
 </Pane>
 
@@ -166,5 +209,14 @@
 		pointer-events: none;
 		text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
 		z-index: 1000;
+	}
+
+	.help {
+		font-family: 'Roboto Mono', 'Source Code Pro', Menlo, Courier, monospace;
+		font-size: 13px;
+		font-weight: 500;
+		line-height: 18px;
+		color: #fff;
+		padding: 9px;
 	}
 </style>
