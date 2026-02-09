@@ -1,6 +1,6 @@
 /** 3D position */
 export type Vec3 = [x: number, y: number, z: number]
-export type Vec3Curve = [x: number, y: number, z: number, Rounding]
+export type Vec3Curve = [x: number, y: number, z: number, Rounding] | [x: number, y: number, z: number, Rounding, t: number]
 
 /** Rounding behavior at a point */
 export type Rounding = 'to' | 'from' | 'both'
@@ -84,7 +84,7 @@ export function isVec3(node: RailNode): node is Vec3 {
 }
 
 export function isVec3Curve(node: RailNode): node is Vec3Curve {
-	return Array.isArray(node) && node.length === 4
+	return Array.isArray(node) && (node.length === 4 || node.length === 5)
 }
 
 export function isSplit(node: RailNode): node is RailSplit {

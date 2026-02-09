@@ -41,7 +41,8 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 't.2',
-				nodes: [[1, 0, -4], { p: [1, 2, -4], round: 'both', tangent: 0.2 }, 'oo']
+				// nodes: [[1, 0, -4], { p: [1, 2, -4], round: 'both', tangent: 0.2 }, 'oo']
+				nodes: [[1, 0, -4], [1, 2, -4, 'both', 0.2], 'oo']
 			},
 			color: c()
 		},

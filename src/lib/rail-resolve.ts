@@ -55,7 +55,7 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 				p: <Vec3>node.slice(0, 3),
 				beat,
 				round: <Rounding>(<unknown>node[3]),
-				tangent: 0.39
+				tangent: node[4] ?? 0.39
 			})
 			anchors.push(points.length - 1)
 			beat++
