@@ -45,6 +45,21 @@ export const scene: SceneConfig = {
 					beat: 7.7,
 					sides: 12,
 					midiChannel: 4
+				},
+				{
+					beat: 10.3,
+					type: 'arrow',
+					midiChannel: 4
+				},
+				{
+					beat: 10.5,
+					type: 'arrow',
+					midiChannel: 4
+				},
+				{
+					beat: 10.7,
+					type: 'arrow',
+					midiChannel: 4
 				}
 			]
 		},
@@ -83,7 +98,12 @@ export const scene: SceneConfig = {
 		{
 			rail: { id: 'round-all', offset: [0, 0, -3] as Vec3, nodes: circle({ pos: { y: -0.5 } }) },
 			marbles: [{ type: 'poly' as const, sides: 3 }],
-			color: c()
+			color: c(),
+			instruments: [
+				{ type: 'heart', beat: 2.8 },
+				{ type: 'heart', beat: 3 },
+				{ type: 'heart', beat: 3.2 }
+			]
 		},
 		{
 			rail: { id: 'round-rect', nodes: roundedRect({ pos: { x: 3.5 } }) },
