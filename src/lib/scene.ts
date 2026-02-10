@@ -2,6 +2,7 @@ import type { Instrument, InstrumentTriggerContext } from './instrument'
 import type { Marble } from './marble'
 import type { MidiState } from './midi'
 import type { RailData } from './rail-data'
+import { Vector3Tuple } from 'three/webgpu'
 
 export type SceneTriggerContext = InstrumentTriggerContext & {
 	instrument: Instrument
@@ -16,4 +17,6 @@ export type SceneConfig = {
 	bpm: number
 	rails: RailData[]
 	triggerHandler?: TriggerHandler
+	camera?: Vector3Tuple
+	target?: Vector3Tuple
 }

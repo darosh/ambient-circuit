@@ -161,8 +161,13 @@
 	<Bloom strength={0.5} radius={0.2} threshold={0.5} />
 {/if}
 
-<T.PerspectiveCamera makeDefault position={[5, 7, 9]} fov={30}>
-	<OrbitControls enableDamping target={[0, 1, 0]} {autoRotate} autoRotateSpeed={0.5} />
+<T.PerspectiveCamera makeDefault position={scene.camera ?? [5, 7, 9]} fov={30}>
+	<OrbitControls
+		enableDamping
+		target={scene.target ?? [0, 1, 0]}
+		{autoRotate}
+		autoRotateSpeed={0.5}
+	/>
 </T.PerspectiveCamera>
 
 <T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />
