@@ -54,11 +54,13 @@ export const scene: SceneConfig = {
 				{
 					beat: 10.5,
 					type: 'arrow',
+					kind: 'play',
 					midiChannel: 4
 				},
 				{
 					beat: 10.7,
 					type: 'arrow',
+					kind: 'fwd',
 					midiChannel: 4
 				},
 				{
@@ -77,6 +79,13 @@ export const scene: SceneConfig = {
 					beat: 9.75,
 					fill: true,
 					sides: 12,
+					midiChannel: 4
+				},
+				{
+					beat: 4.5,
+					type: 'sun',
+					rays: 12,
+					brightness: 3,
 					midiChannel: 4
 				}
 			]
@@ -255,13 +264,15 @@ export const scene: SceneConfig = {
 				{
 					beat: 2.5,
 					path: [0],
+					type: 'whirl',
 					sides: 6,
 					midiChannel: 3
 				},
 				{
 					beat: 2.5,
 					path: [1],
-					sides: 7,
+					type: 'sun',
+					rays: 0,
 					midiChannel: 1
 				}
 			],
