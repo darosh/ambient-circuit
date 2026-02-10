@@ -12,6 +12,19 @@ export const scene: SceneConfig = {
 	rails: [
 		{
 			rail: {
+				id: 'fill',
+				nodes: [[-5, 0, 4], 'i i i i i i i i']
+			},
+			color: c(),
+			instruments: [
+				{ type: 'poly', beat: 2, sides: 3, fill: true },
+				{ type: 'poly', beat: 3, sides: 4, fill: true },
+				{ type: 'poly', beat: 4, sides: 5, fill: true },
+				{ type: 'poly', beat: 5, sides: 12, fill: true }
+			]
+		},
+		{
+			rail: {
 				id: 'poly',
 				nodes: [[-4, 0, 4], 'i i i i i i i i']
 			},
