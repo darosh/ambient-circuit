@@ -19,6 +19,19 @@
 	import { buildTubeGeometry } from '../lib/tube-geometry'
 	import { lerp } from 'three/src/math/MathUtils.js'
 
+	// Geometry segment multipliers
+	const SPIRAL_SEGMENTS_PER_ROUND = 32
+	const CONE_SEGMENTS_PER_ROUND = 32
+	const ARROW_CIRCLE_SEGMENTS = 36
+	const TUBULAR_SEGMENTS_SPIRAL = 64
+	const TUBULAR_SEGMENTS_ARROW_CIRCLE = 72
+	const TUBULAR_SEGMENTS_POLY = 21
+	const TUBULAR_SEGMENTS_ARROW_OTHER = 16
+	const TUBULAR_SEGMENTS_SUN_RAY = 16
+	const RADIAL_SEGMENTS = 8
+	const HEART_SEGMENTS = 36
+	const HEART_CLOSED_SEGMENTS = 12
+
 	type Props = {
 		instrument: Instrument
 		rail: ResolvedRail
@@ -159,7 +172,7 @@
 				path.add(new QuadraticBezierCurve3(tip, rightCtrl, center))
 			}
 		} else if (type === 'heart') {
-			const segments = 36
+			const segments = HEART_SEGMENTS
 			const scale = size * 0.5
 
 			for (let i = 0; i < segments; i++) {
@@ -191,7 +204,7 @@
 			const counterCW = (instrument.type === 'spiral' ? instrument.counterCW : undefined) || false
 			const innerR = width
 			const outerR = width * 2 * rounds
-			const segments = rounds * 32
+			const segments = rounds * SPIRAL_SEGMENTS_PER_ROUND
 
 			for (let i = 0; i < segments; i++) {
 				// Non-uniform sampling: more detail at smaller radius (center)
@@ -224,7 +237,7 @@
 			const innerR = width
 			const outerR = width * 1 * rounds
 			const depth = width * 2 * rounds
-			const segments = rounds * 32
+			const segments = rounds * CONE_SEGMENTS_PER_ROUND
 
 			// Z offset based on alignment (which part is at beat position)
 			let zOffset = -0.5 // center (default)
@@ -318,7 +331,7 @@
 			} else if (kind === 'rec') {
 				// Circle (centered, ignores align/point)
 				const radius = length / 2
-				const segments = 36
+				const segments = ARROW_CIRCLE_SEGMENTS
 				for (let i = 0; i < segments; i++) {
 					const angle1 = (i / segments) * Math.PI * 2
 					const angle2 = ((i + 1) / segments) * Math.PI * 2
@@ -432,7 +445,13 @@
 		// Use buildTubeGeometry for heart (smoother parametric curve)
 		// Use TubeGeometry for others (works better for existing types)
 		if (type === 'heart') {
-			return buildTubeGeometry(path.curves, width / 2, 8, 12, true)
+			return buildTubeGeometry(
+				path.curves,
+				width / 2,
+				RADIAL_SEGMENTS,
+				HEART_CLOSED_SEGMENTS,
+				true
+			)
 		}
 
 		// Determine closed shapes
@@ -453,24 +472,24 @@
 			type === 'spiral' || type === 'cone'
 				? ((instrument.type === 'spiral' || instrument.type === 'cone'
 						? instrument.rounds
-						: undefined) || 3) * 64 // Higher detail for spirals
+						: undefined) || 3) * TUBULAR_SEGMENTS_SPIRAL
 				: type === 'arrow'
 					? arrowKind === 'rec'
-						? 72 // Circle: more segments for smoothness
+						? TUBULAR_SEGMENTS_ARROW_CIRCLE
 						: arrowKind === 'play' || arrowKind === 'fwd'
-							? 3 * 21 // Triangle: match poly 3
+							? 3 * TUBULAR_SEGMENTS_POLY
 							: arrowKind === 'stop'
-								? 4 * 21 // Square: match poly 4
-								: 16 // Other arrows: moderate detail
+								? 4 * TUBULAR_SEGMENTS_POLY
+								: TUBULAR_SEGMENTS_ARROW_OTHER
 					: type === 'sun'
-						? 12 * 21 // 12-sided inner circle
-						: n * 21
+						? 12 * TUBULAR_SEGMENTS_POLY
+						: n * TUBULAR_SEGMENTS_POLY
 
 		const mainGeometry = new TubeGeometry(
 			path as unknown as import('three').Curve<Vector3>,
 			tubularSegments,
 			width / 2,
-			8,
+			RADIAL_SEGMENTS,
 			closed
 		)
 
@@ -480,7 +499,7 @@
 				secondaryPath as unknown as import('three').Curve<Vector3>,
 				tubularSegments,
 				width / 2,
-				8,
+				RADIAL_SEGMENTS,
 				closed
 			)
 			return mergeGeometries([mainGeometry, secondaryGeometry])
@@ -492,9 +511,9 @@
 			for (const rayPath of sunRayPaths) {
 				const rayGeometry = new TubeGeometry(
 					rayPath as unknown as import('three').Curve<Vector3>,
-					16, // Simple line segments, moderate detail
+					TUBULAR_SEGMENTS_SUN_RAY,
 					width / 2,
-					8,
+					RADIAL_SEGMENTS,
 					false // Open shape
 				)
 				geometries.push(rayGeometry)
@@ -550,9 +569,9 @@
 
 		return new TubeGeometry(
 			path as unknown as import('three').Curve<Vector3>,
-			n * 21,
+			n * TUBULAR_SEGMENTS_POLY,
 			width / 2,
-			8,
+			RADIAL_SEGMENTS,
 			true
 		)
 	})

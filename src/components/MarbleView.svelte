@@ -16,6 +16,21 @@
 	import { buildTubeGeometry } from '../lib/tube-geometry'
 	import type { ResolvedRail } from '../lib/rail'
 
+	// Geometry constants
+	const MARBLE_WIDTH = 0.06
+	const MARBLE_SIZE = 0.2
+	const MARBLE_CORNER_RADIUS = 0.02
+	const MARBLE_RADIAL_SEGMENTS = 8
+	const MARBLE_CLOSED_SEGMENTS = 12
+	const COIL_SEGMENTS_PER_ROUND = 16
+	const BALL_RADIUS = 0.12
+	const BALL_WIDTH_SEGMENTS = 16
+	const BALL_HEIGHT_SEGMENTS = 16
+
+	// Animation constants
+	const TANGENT_VERTICAL_THRESHOLD = 0.9
+	const COIL_SPIN_SPEED = 2 // rotations per second
+
 	type Props = {
 		marble: Marble
 		rail: ResolvedRail
@@ -44,9 +59,9 @@
 			return null // use declarative geometry in template
 		}
 
-		const width = 0.06
-		const size = 0.2
-		const cr = 0.02
+		const width = MARBLE_WIDTH
+		const size = MARBLE_SIZE
+		const cr = MARBLE_CORNER_RADIUS
 
 		if (type === 'poly') {
 			const n = sides
@@ -77,19 +92,25 @@
 				curves.push(new LineCurve3(arcEnd, nextArcStart))
 			}
 
-			return buildTubeGeometry(curves, width / 2, 8, 12, true)
+			return buildTubeGeometry(
+				curves,
+				width / 2,
+				MARBLE_RADIAL_SEGMENTS,
+				MARBLE_CLOSED_SEGMENTS,
+				true
+			)
 		} else if (type === 'coil') {
 			const path = new CurvePath<Vector3>()
 			const r = size / 2
 			const length = width * 3 * rounds
 
-			for (let i = 0; i < rounds * 16; i++) {
-				const t = i / (rounds * 16)
+			for (let i = 0; i < rounds * COIL_SEGMENTS_PER_ROUND; i++) {
+				const t = i / (rounds * COIL_SEGMENTS_PER_ROUND)
 				const angle = t * rounds * Math.PI * 2
 				const z = t * length - length / 2
 
 				const curr = new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, z)
-				const nextT = (i + 1) / (rounds * 16)
+				const nextT = (i + 1) / (rounds * COIL_SEGMENTS_PER_ROUND)
 				const nextAngle = nextT * rounds * Math.PI * 2
 				const nextZ = nextT * length - length / 2
 				const next = new Vector3(Math.cos(nextAngle) * r, Math.sin(nextAngle) * r, nextZ)
@@ -99,9 +120,9 @@
 
 			return new TubeGeometry(
 				path as unknown as import('three').Curve<Vector3>,
-				rounds * 16,
+				rounds * COIL_SEGMENTS_PER_ROUND,
 				width / 2,
-				8,
+				MARBLE_RADIAL_SEGMENTS,
 				false
 			)
 		}
@@ -121,7 +142,10 @@
 
 		// Compute up vector using Gram-Schmidt (same as InstrumentView)
 		// Use world Y unless tangent is nearly vertical
-		const ref = Math.abs(tangent.y) < 0.9 ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0)
+		const ref =
+			Math.abs(tangent.y) < TANGENT_VERTICAL_THRESHOLD
+				? new Vector3(0, 1, 0)
+				: new Vector3(1, 0, 0)
 		const up = ref
 			.clone()
 			.sub(tangent.clone().multiplyScalar(ref.dot(tangent)))
@@ -167,8 +191,7 @@
 
 		// Continuous spinning for coil type
 		if (type === 'coil') {
-			const spinSpeed = 2 // rotations per second
-			spinAngle += delta * spinSpeed * Math.PI * 2
+			spinAngle += delta * COIL_SPIN_SPEED * Math.PI * 2
 		}
 	})
 </script>
@@ -178,7 +201,7 @@
 		position={[marble.position.x, marble.position.y, marble.position.z]}
 		material={fxMarbles ? fx.mat : plainMaterial}
 	>
-		<T.SphereGeometry args={[0.12, 16, 16]} />
+		<T.SphereGeometry args={[BALL_RADIUS, BALL_WIDTH_SEGMENTS, BALL_HEIGHT_SEGMENTS]} />
 	</T.Mesh>
 {:else if geometry}
 	<T.Mesh
