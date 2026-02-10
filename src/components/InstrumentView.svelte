@@ -186,8 +186,8 @@
 		} else if (type === 'spiral') {
 			const rounds = (instrument.type === 'spiral' ? instrument.rounds : undefined) || 3
 			const counterCW = (instrument.type === 'spiral' ? instrument.counterCW : undefined) || false
-			const innerR = 0.1
-			const outerR = size
+			const innerR = width
+			const outerR = width * 2 * rounds
 			const segments = rounds * 32
 
 			for (let i = 0; i < segments; i++) {
@@ -218,9 +218,9 @@
 			const counterCW = (instrument.type === 'cone' ? instrument.counterCW : undefined) || false
 			const point = (instrument.type === 'cone' ? instrument.point : undefined) || 'forward'
 			const align = (instrument.type === 'cone' ? instrument.align : undefined) || 'center'
-			const innerR = 0.1
-			const outerR = size
-			const depth = size * 1.5
+			const innerR = width
+			const outerR = width * 1 * rounds
+			const depth = width * 2 * rounds
 			const segments = rounds * 32
 
 			// Z offset based on alignment (which part is at beat position)
