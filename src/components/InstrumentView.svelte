@@ -447,13 +447,7 @@
 		// Use buildTubeGeometry for heart (smoother parametric curve)
 		// Use TubeGeometry for others (works better for existing types)
 		if (type === 'heart') {
-			return buildTubeGeometry(
-				path.curves,
-				width / 2,
-				RADIAL_SEGMENTS,
-				HEART_CLOSED_SEGMENTS,
-				true
-			)
+			return buildTubeGeometry(path.curves, width / 2, RADIAL_SEGMENTS, HEART_CLOSED_SEGMENTS, true)
 		}
 
 		// Determine closed shapes

@@ -143,9 +143,7 @@
 		// Compute up vector using Gram-Schmidt (same as InstrumentView)
 		// Use world Y unless tangent is nearly vertical
 		const ref =
-			Math.abs(tangent.y) < TANGENT_VERTICAL_THRESHOLD
-				? new Vector3(0, 1, 0)
-				: new Vector3(1, 0, 0)
+			Math.abs(tangent.y) < TANGENT_VERTICAL_THRESHOLD ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0)
 		const up = ref
 			.clone()
 			.sub(tangent.clone().multiplyScalar(ref.dot(tangent)))

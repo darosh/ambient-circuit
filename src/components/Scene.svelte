@@ -86,7 +86,7 @@
 		const indices: number[] = []
 		const resolved = []
 		for (let i = 0; i < rails.length; i++) {
-			const { rail, marbles: mds, instruments } = rails[i]
+			const { rail, marbles: mds } = rails[i]
 			const resolvedRail = resolveRail(rail)
 			resolved.push(resolvedRail)
 
