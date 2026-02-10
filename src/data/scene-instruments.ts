@@ -109,8 +109,25 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'cone',
+				id: 'sun',
 				nodes: [[1, 0, 4], 'i i i i i i i i']
+			},
+			color: c(),
+			instruments: [
+				{ type: 'sun', beat: 0.5, rays: 0 },
+				{ type: 'sun', beat: 1.5, rays: 3 },
+				{ type: 'sun', beat: 2.5, rays: 4 },
+				{ type: 'sun', beat: 3.5, rays: 5 },
+				{ type: 'sun', beat: 4.5, rays: 6 },
+				{ type: 'sun', beat: 5.5, rays: 12, brightness: 1 },
+				{ type: 'sun', beat: 6.5, rays: 12 },
+				{ type: 'sun', beat: 7.5, rays: 12, brightness: 3 }
+			]
+		},
+		{
+			rail: {
+				id: 'cone',
+				nodes: [[2, 0, 4], 'i i i i i i i i']
 			},
 			color: c(),
 			instruments: [
@@ -126,7 +143,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'spiral',
-				nodes: [[2, 0, 4], 'i i i i i i i i']
+				nodes: [[3, 0, 4], 'i i i i i i i i']
 			},
 			color: c(),
 			instruments: [
@@ -139,7 +156,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'active',
-				nodes: [[3, 0, 4], 'i i i i i i i i']
+				nodes: [[4, 0, 4], 'i i i i i i i i']
 			},
 			color: c(),
 			instruments: [
@@ -150,7 +167,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'heart',
-				nodes: [[4, 0, 4], 'i i i i i i i i']
+				nodes: [[5, 0, 4], 'i i i i i i i i']
 			},
 			color: c(),
 			instruments: [

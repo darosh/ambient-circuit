@@ -102,6 +102,13 @@ type ArrowInstrument = InstrumentBase & {
 	point?: 'forward' | 'backward'
 }
 
+type SunInstrument = InstrumentBase & {
+	type: 'sun'
+	/** Number of rays extending from center (default 6) */
+	rays?: number
+	brightness?: number
+}
+
 export type Instrument =
 	| PolyInstrument
 	| StarInstrument
@@ -111,3 +118,4 @@ export type Instrument =
 	| SpiralInstrument
 	| ConeInstrument
 	| ArrowInstrument
+	| SunInstrument

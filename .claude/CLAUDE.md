@@ -51,7 +51,7 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Phase:** Marbles & sequencing
 
-**Last Updated:** 2026-02-08
+**Last Updated:** 2026-02-10
 
 **What Works:**
 
@@ -92,7 +92,9 @@ Create a "marble-machine-inspired" music sequencer where:
 - [x] Instrument visual types
   - [x] 'heart' (parametric cardioid, `sides` controls smoothness, uses buildTubeGeometry)
   - [x] 'spiral' (Archimedean spiral, `rounds` and `counterCW` params, non-uniform sampling for detail)
-  - [x] 'cone' (3D conical spiral, `rounds`, `counterCW`, `align` [center/tip/back], `point` [forward/backward]) 
+  - [x] 'cone' (3D conical spiral, `rounds`, `counterCW`, `align` [center/tip/back], `point` [forward/backward])
+  - [x] 'arrow' (7 shape variants via `kind` prop: plain/play/fwd/rec/stop/step/pause)
+  - [x] 'sun' (12-sided inner circle + configurable rays with `brightness` param) 
 - [ ] Extend marble logic: `bouncer: true` will reverse direction on collision of two marbles and call bounceHandler with bouncer and affected marble as ctx
 - [ ] Visual polishing, WebGPU, TSL
   - [ ] rails

@@ -61,12 +61,13 @@
 	const geometry = $derived.by(() => {
 		const type = instrument.type || 'poly'
 		const n =
-			type === 'heart' || type === 'spiral' || type === 'cone' || type === 'arrow'
+			type === 'heart' || type === 'spiral' || type === 'cone' || type === 'arrow' || type === 'sun'
 				? 0
 				: (instrument as { sides: number }).sides
 		const cr = cornerRadius
 		const path = new CurvePath<Vector3>()
 		let secondaryPath: CurvePath<Vector3> | null = null
+		let sunRayPaths: CurvePath<Vector3>[] = []
 
 		if (type === 'poly') {
 			const adjustedSize = n === 2 ? size * 0.5 : size
@@ -375,6 +376,57 @@
 				secondaryPath = new CurvePath<Vector3>()
 				secondaryPath.add(new LineCurve3(origin1, origin2))
 			}
+		} else if (type === 'sun') {
+			const numRays = (instrument.type === 'sun' ? instrument.rays : undefined) ?? 6
+
+			// Inner circle: 12-sided polygon (like poly inner fill with n=12)
+			const n = 12
+			const adjustedSize = size
+			const outerR = adjustedSize / (1 + Math.cos(Math.PI / n))
+			const coef = lerp(2.5, 2, (Math.min(n, 12) - 3) / 9)
+			const innerR = outerR - coef * width
+
+			const verts: Vector3[] = []
+			for (let i = 0; i < n; i++) {
+				const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + Math.PI / n
+				verts.push(new Vector3(Math.cos(angle) * innerR, Math.sin(angle) * innerR, 0))
+			}
+
+			// Create inner circle with rounded corners
+			for (let i = 0; i < n; i++) {
+				const curr = verts[i]
+				const next = verts[(i + 1) % n]
+				const prev = verts[(i - 1 + n) % n]
+
+				const inDir = new Vector3().subVectors(curr, prev).normalize()
+				const outDir = new Vector3().subVectors(next, curr).normalize()
+
+				const arcStart = curr.clone().addScaledVector(inDir, -cr)
+				const arcEnd = curr.clone().addScaledVector(outDir, cr)
+				const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+				if (cr > 0) {
+					path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+				}
+				path.add(new LineCurve3(arcEnd, nextArcStart))
+			}
+
+			// Rays: start at innerR + width gap, end at size * 1.5
+			// Each ray is a separate path to avoid connection artifacts
+			const brightness = (instrument.type === 'sun' ? instrument.brightness : undefined) ?? 2
+			const rayStart = innerR + width
+			const rayEnd = rayStart + width * brightness
+
+			if (brightness && numRays) {
+				for (let i = 0; i < numRays; i++) {
+					const angle = (i / numRays) * Math.PI * 2 - Math.PI / 2
+					const start = new Vector3(Math.cos(angle) * rayStart, Math.sin(angle) * rayStart, 0)
+					const end = new Vector3(Math.cos(angle) * rayEnd, Math.sin(angle) * rayEnd, 0)
+					const rayPath = new CurvePath<Vector3>()
+					rayPath.add(new LineCurve3(start, end))
+					sunRayPaths.push(rayPath)
+				}
+			}
 		}
 
 		// Use buildTubeGeometry for heart (smoother parametric curve)
@@ -385,7 +437,7 @@
 
 		// Determine closed shapes
 		// Open: spiral, cone, arrow kinds (plain, fwd, step, pause)
-		// Closed: poly, star, whirl, cross, heart, arrow kinds (play, rec, stop)
+		// Closed: poly, star, whirl, cross, heart, arrow kinds (play, rec, stop), sun
 		const arrowKind = instrument.type === 'arrow' ? instrument.kind || 'plain' : 'plain'
 		const closed =
 			type !== 'spiral' &&
@@ -395,6 +447,7 @@
 		// Calculate tubular segments based on type
 		// For spiral/cone: use path complexity (rounds * segments per round)
 		// For arrow: match poly segment count for equivalent shapes
+		// For sun: 12-sided inner circle like poly 12
 		// For polygon types: use polygon sides * density
 		const tubularSegments =
 			type === 'spiral' || type === 'cone'
@@ -409,7 +462,9 @@
 							: arrowKind === 'stop'
 								? 4 * 21 // Square: match poly 4
 								: 16 // Other arrows: moderate detail
-					: n * 21
+					: type === 'sun'
+						? 12 * 21 // 12-sided inner circle
+						: n * 21
 
 		const mainGeometry = new TubeGeometry(
 			path as unknown as import('three').Curve<Vector3>,
@@ -429,6 +484,22 @@
 				closed
 			)
 			return mergeGeometries([mainGeometry, secondaryGeometry])
+		}
+
+		// Merge sun ray geometries (each ray separate to avoid connection artifacts)
+		if (sunRayPaths.length > 0) {
+			const geometries = [mainGeometry]
+			for (const rayPath of sunRayPaths) {
+				const rayGeometry = new TubeGeometry(
+					rayPath as unknown as import('three').Curve<Vector3>,
+					16, // Simple line segments, moderate detail
+					width / 2,
+					8,
+					false // Open shape
+				)
+				geometries.push(rayGeometry)
+			}
+			return mergeGeometries(geometries)
 		}
 
 		return mainGeometry
@@ -539,7 +610,7 @@
 		const type = instrument.type || 'poly'
 		if (type === 'poly' || type === 'star' || type === 'heart') {
 			m.multiply(new Matrix4().makeRotationZ(-Math.PI / 2))
-		} else if (type === 'cross' || type === 'whirl') {
+		} else if (type === 'cross' || type === 'whirl' || type === 'sun') {
 			m.multiply(new Matrix4().makeRotationZ(Math.PI / 2))
 		} else if (type === 'cone' || type === 'spiral') {
 			m.multiply(new Matrix4().makeRotationZ(-Math.PI))
