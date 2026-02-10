@@ -272,7 +272,7 @@ export const scene: SceneConfig = {
 			rail: {
 				id: 'square-coil',
 				offset: [2, 0, 3],
-				nodes: [[0, 0, 0], 'urdl']
+				nodes: [[0, 0, 0], 'u r d l']
 			},
 			instruments: [{ beat: 3.5, sides: 12 }],
 			marbles: [
@@ -285,7 +285,7 @@ export const scene: SceneConfig = {
 			rail: {
 				id: 'square',
 				offset: [3, 0, -4],
-				nodes: [[0, 0, 0], 'urdl']
+				nodes: [[0, 0, 0], 'u r d l']
 			},
 			instruments: [{ beat: 1.5, sides: 4 }],
 			marbles: [
