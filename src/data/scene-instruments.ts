@@ -70,7 +70,7 @@ export const scene: SceneConfig = {
 				{ type: 'whirl', beat: 4.5, sides: 6 },
 				{ type: 'whirl', beat: 5.5, sides: 7 },
 				{ type: 'whirl', beat: 6.5, sides: 8 },
-				{ type: 'whirl', beat: 7.5, sides: 12 }
+				{ type: 'whirl', beat: 7.5, sides: 9 }
 			]
 		},
 		{
@@ -87,7 +87,7 @@ export const scene: SceneConfig = {
 				{ type: 'star', beat: 4.5, sides: 6 },
 				{ type: 'star', beat: 5.5, sides: 7 },
 				{ type: 'star', beat: 6.5, sides: 8 },
-				{ type: 'star', beat: 7.5, sides: 12 }
+				{ type: 'star', beat: 7.5, sides: 9 }
 			]
 		},
 		{

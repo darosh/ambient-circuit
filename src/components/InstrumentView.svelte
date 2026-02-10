@@ -135,7 +135,7 @@
 				const tip = new Vector3(Math.cos(angle) * outerR, Math.sin(angle) * outerR, 0)
 
 				// Control points for water drop shape
-				const angleSpread = Math.PI / n
+				const angleSpread = n === 2 ? 2 * Math.PI : (Math.PI / n)
 				const leftAngle = angle - angleSpread * (type === 'whirl' ? -1.8 : 0)
 				const rightAngle = angle + angleSpread * (type === 'whirl' ? 1.8 : 0)
 
