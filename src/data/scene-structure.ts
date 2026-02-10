@@ -1,7 +1,7 @@
 import type { SceneConfig } from '../lib/scene'
+import { colors } from './colors'
 import { triggerHandler } from '../lib/trigger-handler'
 
-const colors = ['#0000ff', '#ff00ff', '#ff0000', '#ff8888', '#8800ff']
 let ci = 0
 const c = () => colors[ci++ % colors.length]
 

@@ -1,11 +1,9 @@
-import { circle, roundedRect, coil, spiral } from '../lib/rail-primitives'
+import type { SceneConfig } from '../lib/scene'
+import { colors } from './colors'
 import { triggerHandler } from '../lib/trigger-handler'
 
-import type { Vec3 } from '../lib/rail'
-import type { Rail } from '../lib/rail'
-import type { SceneConfig } from '../lib/scene'
+import { circle, roundedRect, coil, spiral } from '../lib/rail-primitives'
 
-const colors = ['#0000ff', '#ff00ff', '#ff0000', '#ff8888', '#8800ff']
 let ci = 0
 const c = () => colors[ci++ % colors.length]
 
@@ -93,8 +91,13 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'tri',
-				offset: [-3, 0, -3] as Vec3,
-				nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3, [0, 2, 0] as Vec3, [0, 3, 0] as Vec3]
+				offset: [-3, 0, -3],
+				nodes: [
+					[0, 0, 0],
+					[0, 1, 0],
+					[0, 2, 0],
+					[0, 3, 0]
+				]
 			},
 			color: colors[1],
 			instruments: [{ beat: 1.5, sides: 3, midiChannel: 1 }],
@@ -103,8 +106,11 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'back',
-				offset: [-4, 0, -3] as Vec3,
-				nodes: [[0, 0, 0] as Vec3, [0, 1, 0] as Vec3]
+				offset: [-4, 0, -3],
+				nodes: [
+					[0, 0, 0],
+					[0, 1, 0]
+				]
 			},
 			marbles: [{ direction: 'backward' as const }],
 			color: c()
@@ -112,8 +118,11 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'cones',
-				offset: [3, 0, -3] as Vec3,
-				nodes: [[0, 0, 0] as Vec3, [1, 0.5, 0] as Vec3]
+				offset: [3, 0, -3],
+				nodes: [
+					[0, 0, 0],
+					[1, 0.5, 0]
+				]
 			},
 			marbles: [{ type: 'poly', sides: 12, mode: 'ping-pong' as const, speed: 2 }],
 			instruments: [
@@ -123,7 +132,7 @@ export const scene: SceneConfig = {
 			color: c()
 		},
 		{
-			rail: { id: 'round-all', offset: [0, 0, -3] as Vec3, nodes: circle({ pos: { y: -0.5 } }) },
+			rail: { id: 'round-all', offset: [0, 0, -3], nodes: circle({ pos: { y: -0.5 } }) },
 			marbles: [{ type: 'poly' as const, sides: 3 }],
 			color: c(),
 			instruments: [
@@ -161,10 +170,9 @@ export const scene: SceneConfig = {
 			rail: {
 				id: 'poly-round',
 				nodes: circle({ pos: { x: 0, y: 1.5 } }).map((n, i, arr) => {
-					if (i === 0)
-						return { ...(typeof n === 'object' && 'p' in n ? n : { p: n as Vec3 }), beat: 0 }
+					if (i === 0) return { ...(typeof n === 'object' && 'p' in n ? n : { p: n }), beat: 0 }
 					if (i === arr.length - 1)
-						return { ...(typeof n === 'object' && 'p' in n ? n : { p: n as Vec3 }), beat: 3 }
+						return { ...(typeof n === 'object' && 'p' in n ? n : { p: n }), beat: 3 }
 					return n
 				})
 			},
@@ -177,30 +185,25 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'split',
-				offset: [0, 0, 2] as Vec3,
+				offset: [0, 0, 2],
 				nodes: [
-					[-1, 0, 0] as Vec3,
+					[-1, 0, 0],
 					{
 						split: {
-							p: [0, 0, 0] as Vec3,
+							p: [0, 0, 0],
 							weights: [1, 1],
-							branches: [[{ p: [1, 1, 0] as Vec3, beat: 2 }], [{ p: [1, -1, 0] as Vec3, beat: 2 }]]
+							branches: [[{ p: [1, 1, 0], beat: 2 }], [{ p: [1, -1, 0], beat: 2 }]]
 						}
 					}
 				]
-			} satisfies Rail,
+			},
 			color: c()
 		},
 		{
 			rail: {
 				id: 'round-one',
-				offset: [3, 0, 2] as Vec3,
-				nodes: [
-					[-1, 0, 0] as Vec3,
-					[0, 0, 0] as Vec3,
-					{ p: [1, 1, 0] as Vec3, beat: 2, round: 'to' as const },
-					[1, 2, 0] as Vec3
-				]
+				offset: [3, 0, 2],
+				nodes: [[-1, 0, 0], [0, 0, 0], { p: [1, 1, 0], beat: 2, round: 'to' as const }, [1, 2, 0]]
 			},
 			instruments: [
 				{ type: 'heart', beat: 0.5 },
@@ -212,53 +215,53 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'round-split',
-				offset: [-3, 0, 2] as Vec3,
+				offset: [-3, 0, 2],
 				nodes: [
-					[-1, 0, 0] as Vec3,
+					[-1, 0, 0],
 					{
 						split: {
-							p: [0, 0, 0] as Vec3,
+							p: [0, 0, 0],
 							weights: [1, 1],
 							branches: [
 								[
-									{ p: [1, 1, 0] as Vec3, beat: 2, round: 'to' as const },
-									{ p: [1, 2, 0] as Vec3, beat: 3 }
+									{ p: [1, 1, 0], beat: 2, round: 'to' as const },
+									{ p: [1, 2, 0], beat: 3 }
 								],
 								[
-									{ p: [1, -1, 0] as Vec3, beat: 2, round: 'to' as const },
-									{ p: [1, -2, 0] as Vec3, beat: 3 }
+									{ p: [1, -1, 0], beat: 2, round: 'to' as const },
+									{ p: [1, -2, 0], beat: 3 }
 								]
 							]
 						}
 					}
 				]
-			} satisfies Rail,
+			},
 			color: c()
 		},
 		{
 			rail: {
 				id: 'split-ping',
-				offset: [-3.5, -0.5, 3] as Vec3,
+				offset: [-3.5, -0.5, 3],
 				nodes: [
-					[-1, 0, 0] as Vec3,
+					[-1, 0, 0],
 					{
 						split: {
-							p: [0, 0, 0] as Vec3,
+							p: [0, 0, 0],
 							weights: [1, 1],
 							branches: [
 								[
-									{ p: [1, 1, 0] as Vec3, beat: 2, round: 'to' as const },
-									{ p: [1, 2, 0] as Vec3, beat: 3 }
+									{ p: [1, 1, 0], beat: 2, round: 'to' as const },
+									{ p: [1, 2, 0], beat: 3 }
 								],
 								[
-									{ p: [1, -1, 0] as Vec3, beat: 2, round: 'to' as const },
-									{ p: [1, -2, 0] as Vec3, beat: 3 }
+									{ p: [1, -1, 0], beat: 2, round: 'to' as const },
+									{ p: [1, -2, 0], beat: 3 }
 								]
 							]
 						}
 					}
 				]
-			} satisfies Rail,
+			},
 			marbles: [{ mode: 'ping-pong' as const }],
 			instruments: [
 				{
