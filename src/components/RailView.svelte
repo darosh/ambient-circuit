@@ -204,6 +204,29 @@
 		}, Math.random() * 250)
 	})
 
+	// Progressive instrument rendering
+	let visibleInstruments = $state<typeof instruments>([])
+
+	$effect(() => {
+		visibleInstruments = []
+		let index = 0
+		const batchSize = 16 // instruments per frame
+
+		function renderBatch() {
+			if (index >= instruments.length) return
+
+			const end = Math.min(index + batchSize, instruments.length)
+			visibleInstruments = instruments.slice(0, end)
+			index = end
+
+			if (index < instruments.length) {
+				setTimeout(() => requestAnimationFrame(renderBatch), 0)
+			}
+		}
+
+		setTimeout(() => requestAnimationFrame(renderBatch), 0)
+	})
+
 	useTask(() => {
 		if (!camera.current) return
 		const rot = camera.current.quaternion
@@ -285,6 +308,6 @@
 	</T.Group>
 {/if}
 
-{#each instruments as instrument, idx (idx)}
+{#each visibleInstruments as instrument, idx (idx)}
 	<InstrumentView {color} size={0.5} {instrument} rail={resolved} {fxInstruments} {wireframe} />
 {/each}
