@@ -10,10 +10,10 @@ import { scene as sceneCrossing } from './scene-crossing'
 
 export const scenes: SceneConfig[] = [
 	sceneTest,
+	sceneStructure,
 	sceneInstruments,
 	sceneMarbles,
 	sceneRails,
 	sceneOrientation,
-	sceneCrossing,
-	sceneStructure
+	sceneCrossing
 ]
