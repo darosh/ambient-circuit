@@ -59,6 +59,28 @@
 
 	// Create marbles once at mount (component remounts per scene via {#key})
 	const rails = untrack(() => scene.rails)
+
+	// Create reactive signal map - wrap all instrument signals in $state
+	const signalStates = $state<Array<{ intensity: number }>>(
+		(() => {
+			const signals: Array<{ intensity: number }> = []
+			for (const { instruments } of rails) {
+				instruments?.forEach(() => {
+					signals.push({ intensity: 0 })
+				})
+			}
+			return signals
+		})()
+	)
+
+	// Assign signals to instruments (reactive reference)
+	let signalIndex = 0
+	for (const { instruments } of rails) {
+		instruments?.forEach((ins) => {
+			ins.signal = signalStates[signalIndex++]
+		})
+	}
+
 	const _init = (() => {
 		const ms = []
 		const indices: number[] = []
@@ -67,10 +89,6 @@
 			const { rail, marbles: mds, instruments } = rails[i]
 			const resolvedRail = resolveRail(rail)
 			resolved.push(resolvedRail)
-
-			instruments?.forEach((ins) => {
-				ins.signal = ins.signal || { intensity: 0 }
-			})
 
 			const configs = mds && mds.length > 0 ? mds : mds === false ? [] : [{}]
 

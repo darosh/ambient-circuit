@@ -309,5 +309,13 @@
 {/if}
 
 {#each visibleInstruments as instrument, idx (idx)}
-	<InstrumentView {color} size={0.5} {instrument} rail={resolved} {fxInstruments} {wireframe} />
+	<InstrumentView
+		{color}
+		size={0.5}
+		{instrument}
+		rail={resolved}
+		bind:signal={instrument.signal}
+		{fxInstruments}
+		{wireframe}
+	/>
 {/each}

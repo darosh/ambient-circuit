@@ -36,6 +36,7 @@
 		instrument: Instrument
 		rail: ResolvedRail
 		color: string
+		signal?: { intensity: number }
 		size?: number
 		width?: number
 		cornerRadius?: number
@@ -48,6 +49,7 @@
 		rail,
 		size = 1,
 		color,
+		signal = $bindable(),
 		width = 0.06,
 		cornerRadius = 0.075,
 		wireframe = false,
@@ -669,11 +671,11 @@
 	})
 
 	useTask((delta) => {
-		if (instrument.signal && instrument.signal.intensity > 0) {
+		if (signal && signal.intensity > 0) {
 			impactBaseAngle = spinAngle
 			impactTime = IMPACT_DURATION
 			impactBoostSpeed = IMPACT_BOOST_SPEED
-			instrument.signal.intensity = 0
+			signal.intensity = 0
 		}
 
 		// Active rotation for spiral/cone
