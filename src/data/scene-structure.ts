@@ -3,7 +3,7 @@ import { colors } from './colors'
 import { triggerHandler } from '../lib/trigger-handler'
 
 let ci = 0
-const c = () => colors[ci++ % colors.length]
+const _c = () => colors[ci++ % colors.length]
 
 export const scene: SceneConfig = {
 	id: 'scene-structure',
@@ -11,17 +11,34 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	rails: [
 		{
-			color: c(),
+			color: colors[1],
 			rail: {
-				id: 'structure',
+				id: 'sector-a',
 				nodes: [
+					'o o o l l l l u u u u',
 					'o1 r1 u1 r1 d1 l1 d1 r1 u1 l1 u1 r1 d1 l1 d1 r1 ',
 					'o1 l1 u1 l1 d1 r1 d1 l1 u1 r1 u1 l1 d1 r1 d1 l1 ',
-					'i1 r1 i1 u1 i1 l1 i1 d1 i1 r1 i1 u1 i1 l1 i1 d1 ',
+					'i1 r1 i1 u1 i1 l1 i1 d1 i1 r1 i1 u1 i1 l1 i1 d1 '
+				]
+			}
+		},
+		{
+			color: colors[0],
+			rail: {
+				id: 'sector-b',
+				nodes: [
 					'o2 r2 u1 r1 u1 l2 u1 r1 d1 r2 d1 l1 d1 r1 d1 l1 ',
 					'u1 l1 u1 r1 u1 l1 u1 r1 d1 l1 d1 r1 d1 l1 d1 r1 ',
 					'i2 l2 i1 l1 i1 r2 i1 l1 u1 l2 u1 r1 u1 l1 u1 r1 ',
-					'o1 r1 o1 u1 o1 l1 o1 d1 o1 r1 o1 u1 o1 l1 o1 d1 ',
+					'o1 r1 o1 u1 o1 l1 o1 d1 o1 r1 o1 u1 o1 l1 o1 d1 '
+				]
+			}
+		},
+		{
+			color: colors[3],
+			rail: {
+				id: 'sector-c',
+				nodes: [
 					'r1 u1 r1 l1 r1 d1 r1 l1 u1 r1 u1 l1 u1 r1 u1 l1 ',
 					'i1 l1 i1 r1 i1 l1 i1 r1 d1 l1 d1 r1 d1 l1 d1 r1 ',
 					'o1 u1 o1 r1 o1 u1 o1 l1 o1 d1 o1 l1 o1 u1 o1 r1 ',

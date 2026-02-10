@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import type { Rail } from '../src/lib/rail'
-import { resolveRail } from '../src/lib/rail-resolve'
+import { resolveRail, validateNoDuplicateMidPathPositions } from '../src/lib/rail-resolve'
 
 describe('resolveRail', () => {
 	it('straight rail: auto-increments beats from 0', () => {
@@ -185,5 +185,70 @@ describe('resolveRail', () => {
 		const r = resolveRail(rail)
 		expect(r.points).toHaveLength(0)
 		expect(r.splits).toHaveLength(0)
+	})
+
+	it('resolves eight (validation detects mid-path duplicate)', () => {
+		const rail: Rail = {
+			id: 'eight',
+			nodes: [[0, 0, 0], 'ir or ol il il ol or ir']
+		}
+
+		const r = resolveRail(rail)
+		expect(r.points).toHaveLength(9)
+
+		// Validation function (for testing only) detects duplicate
+		expect(() => validateNoDuplicateMidPathPositions(r.points, rail.id)).toThrow(
+			/duplicate positions in the middle of a path/i
+		)
+		expect(() => validateNoDuplicateMidPathPositions(r.points, rail.id)).toThrow(/beat 4/)
+	})
+
+	it('resolves eight-no-cross', () => {
+		const rail: Rail = {
+			id: 'eight-ext',
+			nodes: [[0, 0, -3], 'ir or ol ilu0.01 il ol or ird0.01 ']
+		}
+
+		const r = resolveRail(rail)
+
+		expect(r.points).toHaveLength(9)
+		expect(r.splits).toHaveLength(0)
+	})
+
+	it('validation detects duplicate mid-path positions', () => {
+		const rail: Rail = {
+			id: 'duplicate-test',
+			nodes: [
+				[0, 0, 0],
+				[1, 0, 0],
+				[2, 0, 0],
+				[1, 0, 0],
+				[3, 0, 0]
+			]
+		}
+
+		const r = resolveRail(rail)
+		expect(() => validateNoDuplicateMidPathPositions(r.points, rail.id)).toThrow(
+			/duplicate positions in the middle of a path/i
+		)
+		expect(() => validateNoDuplicateMidPathPositions(r.points, rail.id)).toThrow(
+			/beat (1|3).*beat (1|3)/i
+		)
+	})
+
+	it('validation allows closed loop with first == last', () => {
+		const rail: Rail = {
+			id: 'closed-loop',
+			nodes: [
+				[0, 0, 0],
+				[1, 0, 0],
+				[1, 1, 0],
+				[0, 1, 0],
+				[0, 0, 0]
+			]
+		}
+
+		const r = resolveRail(rail)
+		expect(() => validateNoDuplicateMidPathPositions(r.points, rail.id)).not.toThrow()
 	})
 })

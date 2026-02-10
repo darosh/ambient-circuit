@@ -7,7 +7,8 @@ import {
 	BeatPosition,
 	buildRailCurve,
 	computeBeatPositions,
-	buildSegmentCurve
+	buildSegmentCurve,
+	enhanceBeatPositionsWithPolylineIndices
 } from './rail-geometry'
 import { easingFunctions } from './easing'
 import { Vector3 } from 'three/webgpu'
@@ -147,10 +148,28 @@ function calculateMarblePosition(
 
 	marble.tangent = newTangent
 
-	// Build rail polyline and find segment between beat positions
+	// Build rail polyline once
 	const railPolyline = buildRailCurve(points)
-	const idx0 = findClosestPointIndex(railPolyline, bp0.position)
-	const idx1 = findClosestPointIndex(railPolyline, bp1.position)
+
+	// Enhance beat positions with polyline indices for context-aware lookup
+	// This resolves ambiguity when multiple points share the same position
+	let effectiveBp0 = bp0
+	let effectiveBp1 = bp1
+	if (bp0.polylineIndex === undefined || bp1.polylineIndex === undefined) {
+		const enhancedBeatPositions = enhanceBeatPositionsWithPolylineIndices(
+			beatPositions,
+			railPolyline
+		)
+		effectiveBp0 = enhancedBeatPositions[beatIndex] || bp0
+		effectiveBp1 =
+			enhancedBeatPositions[Math.min(beatIndex + 1, enhancedBeatPositions.length - 1)] || bp1
+	}
+
+	// Use polyline indices if available (context-aware), fallback to position search
+	const idx0 =
+		effectiveBp0.polylineIndex ?? findClosestPointIndex(railPolyline, effectiveBp0.position)
+	const idx1 =
+		effectiveBp1.polylineIndex ?? findClosestPointIndex(railPolyline, effectiveBp1.position)
 
 	// Extract curve segment between beat positions
 	const segmentPoints: Vector3[] = []

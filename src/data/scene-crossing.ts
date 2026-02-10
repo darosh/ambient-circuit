@@ -16,6 +16,13 @@ export const scene: SceneConfig = {
 				nodes: [[0, 0, 0], 'ir or ol il il ol or ir']
 			},
 			color: c()
+		},
+		{
+			rail: {
+				id: 'eight-no-cross',
+				nodes: [[0, 0, -3], 'ir or ol ilu0.01 il ol or ird0.01 ']
+			},
+			color: c()
 		}
 	]
 }

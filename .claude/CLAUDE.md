@@ -66,6 +66,7 @@ Create a "marble-machine-inspired" music sequencer where:
 - [x] `Marbles` on rails, tempo-synced movement
 - [x] Arc-length-based beat positioning (marbles hit beats accurately)
 - [x] Marble movement matches visualization exactly (arc-length interpolation on rail polyline)
+- [x] Context-aware marble positioning (beat-to-polyline mapping handles mid-path position duplicates)
 - [x] Easing system (31 functions via maath + custom: quad, elastic, bounce, back)
 - [x] Sequence modes: looping (forward/backward), ping-pong (smooth bouncing)
 - [x] Direction tracking: forward/backward with proper wrapping

@@ -12,6 +12,7 @@ import {
 } from './rail'
 import { isVec3, isSplit, isPointFull, isPathString } from './rail'
 import { expandPathString } from './rail-path'
+import { Vector3 } from 'three/webgpu'
 
 function flattenNodes(nodes: RailDef): Array<Exclude<RailNode, string>> {
 	const out: Array<Exclude<RailNode, string>> = []
@@ -128,6 +129,44 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 	}
 
 	return { points, splits, endBeat: beat }
+}
+
+/**
+ * Validate that no mid-path points share the same position.
+ * Only allows first == last for closed loops.
+ * Exported for testing only - not enforced in production.
+ */
+export function validateNoDuplicateMidPathPositions(points: ResolvedPoint[], railId: string): void {
+	const n = points.length
+	if (n < 3) return
+
+	const toV3 = (p: Vec3) => new Vector3(p[0], p[1], p[2])
+
+	// Check if closed loop
+	const closed = toV3(points[0].p).distanceTo(toV3(points[n - 1].p)) < 1e-6
+
+	// Check points 1..(n-2) for duplicates with ANY point
+	// For closed loops, exclude last point from comparison (it's allowed to match first)
+	const checkEnd = closed ? n - 1 : n
+
+	for (let i = 1; i < n - 1; i++) {
+		const posI = toV3(points[i].p)
+
+		for (let j = 0; j < checkEnd; j++) {
+			if (i === j) continue
+
+			const posJ = toV3(points[j].p)
+			const dist = posI.distanceTo(posJ)
+
+			if (dist < 1e-6) {
+				throw new Error(
+					`Rail '${railId}': Point at beat ${points[i].beat} shares position with ` +
+						`point at beat ${points[j].beat}. Duplicate positions in the middle of a path ` +
+						`cause ambiguous marble movement. Add a small offset (e.g., 'u0.01') to separate them.`
+				)
+			}
+		}
+	}
 }
 
 export function resolveRail(rail: Rail): ResolvedRail {
