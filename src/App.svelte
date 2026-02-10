@@ -178,11 +178,15 @@
 
 <Canvas
 	createRenderer={(canvas) => {
-		return new WebGPURenderer({
+		const renderer = new WebGPURenderer({
 			canvas,
 			antialias: true,
 			forceWebGL: false
 		})
+
+		renderer.dispose = () => {}
+
+		return renderer
 	}}
 >
 	{#key sceneId}
