@@ -156,6 +156,54 @@
 	let nameGroup = $state<Group | undefined>()
 	const beatGroups = $state<(Group | undefined)[]>([])
 
+	// Progressive rendering: batch text creation to avoid blocking
+	let visibleBeats = $state<typeof beatPositions>([])
+	let renderCancelled = false
+
+	$effect(() => {
+		// Reset when beatPositions or showBeats changes
+		if (!showBeats || beatPositions.length === 0) {
+			visibleBeats = []
+			renderCancelled = true
+			return
+		}
+
+		renderCancelled = false
+		visibleBeats = []
+		const batchSize = 1 // beats per frame
+		let index = 0
+
+		function renderBatch() {
+			if (renderCancelled) return
+			const end = Math.min(index + batchSize, beatPositions.length)
+			visibleBeats = beatPositions.slice(0, end)
+			index = end
+			if (index < beatPositions.length) {
+				requestAnimationFrame(renderBatch)
+			}
+		}
+
+		requestAnimationFrame(renderBatch)
+
+		return () => {
+			renderCancelled = true
+		}
+	})
+
+	// Defer rail name to next frame
+	let showNameDeferred = $state(false)
+
+	$effect(() => {
+		if (!showNames || !railNamePosition) {
+			showNameDeferred = false
+			return
+		}
+
+		setTimeout(() => {
+			showNameDeferred = true
+		}, Math.random() * 250)
+	})
+
 	useTask(() => {
 		if (!camera.current) return
 		const rot = camera.current.quaternion
@@ -190,7 +238,7 @@
 {/if}
 
 {#if showBeats}
-	{#each beatPositions as bp, bpIndex (bpIndex)}
+	{#each visibleBeats as bp, bpIndex (bpIndex)}
 		{@const isDownbeat = bp.beat === resolved.beatOffset}
 		<T.Group
 			bind:ref={beatGroups[bpIndex]}
@@ -212,7 +260,7 @@
 	{/each}
 {/if}
 
-{#if showNames && railNamePosition}
+{#if showNameDeferred && railNamePosition}
 	<T.Group
 		bind:ref={nameGroup}
 		position={[railNamePosition.x, railNamePosition.y, railNamePosition.z]}
