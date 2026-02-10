@@ -13,6 +13,7 @@
 		Euler,
 		Matrix4
 	} from 'three/webgpu'
+	import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 	import { easeOutQuart, easeInBounce } from '../lib/easing'
 	import { makeInstrumentMaterial } from '../lib/config'
 	import { buildTubeGeometry } from '../lib/tube-geometry'
@@ -65,6 +66,7 @@
 				: (instrument as { sides: number }).sides
 		const cr = cornerRadius
 		const path = new CurvePath<Vector3>()
+		let secondaryPath: CurvePath<Vector3> | null = null
 
 		if (type === 'poly') {
 			const adjustedSize = n === 2 ? size * 0.5 : size
@@ -135,7 +137,7 @@
 				const tip = new Vector3(Math.cos(angle) * outerR, Math.sin(angle) * outerR, 0)
 
 				// Control points for water drop shape
-				const angleSpread = n === 2 ? 2 * Math.PI : (Math.PI / n)
+				const angleSpread = n === 2 ? 2 * Math.PI : Math.PI / n
 				const leftAngle = angle - angleSpread * (type === 'whirl' ? -1.8 : 0)
 				const rightAngle = angle + angleSpread * (type === 'whirl' ? 1.8 : 0)
 
@@ -259,30 +261,120 @@
 				path.add(new LineCurve3(new Vector3(x, y, z), new Vector3(nextX, nextY, nextZ)))
 			}
 		} else if (type === 'arrow') {
+			const kind = (instrument.type === 'arrow' ? instrument.kind : undefined) || 'plain'
 			const angle = (instrument.type === 'arrow' ? instrument.angle : undefined) ?? Math.PI / 3
 			const point = (instrument.type === 'arrow' ? instrument.point : undefined) || 'forward'
 			const align = (instrument.type === 'arrow' ? instrument.align : undefined) || 'center'
 
 			const length = size * 1
 
-			// Z offset based on alignment
+			// Z offset based on alignment (for directional shapes)
 			let zOffset = align === 'tip' ? 0 : align === 'back' ? -1 : -0.5
 
-			// Z scale based on point direction
+			// Z scale based on point direction (for directional shapes)
 			const zScale = point === 'backward' ? -1 : 1
 
-			// V-shape: two rays from origin at ±(angle/2)
-			const halfAngle = angle / 2
-			const tipY1 = Math.sin(halfAngle) * length
-			const tipY2 = -tipY1
-			const tipZ = Math.cos(halfAngle) * length
+			if (kind === 'plain' || kind === 'step') {
+				// V-shape: two rays from origin at ±(angle/2)
+				const halfAngle = angle / 2
+				const tipY1 = Math.sin(halfAngle) * length
+				const tipY2 = -tipY1
+				const tipZ = Math.cos(halfAngle) * length
 
-			const origin = new Vector3(0, 0, zScale * (length * zOffset))
-			const tip1 = new Vector3(0, tipY1, zScale * (tipZ + length * zOffset))
-			const tip2 = new Vector3(0, tipY2, zScale * (tipZ + length * zOffset))
+				const origin = new Vector3(0, 0, -zScale * (length * zOffset))
+				const tip1 = new Vector3(0, tipY1, -zScale * (tipZ + length * zOffset))
+				const tip2 = new Vector3(0, tipY2, -zScale * (tipZ + length * zOffset))
 
-			path.add(new LineCurve3(origin, tip1))
-			path.add(new LineCurve3(origin, tip2))
+				path.add(new LineCurve3(origin, tip1))
+				path.add(new LineCurve3(origin, tip2))
+			} else if (kind === 'play' || kind === 'fwd') {
+				// Equilateral triangle with rounded corners
+				const height = length
+				const halfBase = height / Math.sqrt(3)
+				const verts = [
+					new Vector3(0, 0, zScale * (height + length * zOffset)),
+					new Vector3(0, halfBase, zScale * (length * zOffset)),
+					new Vector3(0, -halfBase, zScale * (length * zOffset))
+				]
+
+				for (let i = 0; i < 3; i++) {
+					const curr = verts[i]
+					const next = verts[(i + 1) % 3]
+					const prev = verts[(i - 1 + 3) % 3]
+
+					const inDir = new Vector3().subVectors(curr, prev).normalize()
+					const outDir = new Vector3().subVectors(next, curr).normalize()
+
+					const arcStart = curr.clone().addScaledVector(inDir, -cr)
+					const arcEnd = curr.clone().addScaledVector(outDir, cr)
+					const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+					if (cr > 0) {
+						path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+					}
+					path.add(new LineCurve3(arcEnd, nextArcStart))
+				}
+			} else if (kind === 'rec') {
+				// Circle (centered, ignores align/point)
+				const radius = length / 2
+				const segments = 36
+				for (let i = 0; i < segments; i++) {
+					const angle1 = (i / segments) * Math.PI * 2
+					const angle2 = ((i + 1) / segments) * Math.PI * 2
+					const p1 = new Vector3(0, Math.cos(angle1) * radius, Math.sin(angle1) * radius)
+					const p2 = new Vector3(0, Math.cos(angle2) * radius, Math.sin(angle2) * radius)
+					path.add(new LineCurve3(p1, p2))
+				}
+			} else if (kind === 'stop') {
+				// Square with rounded corners (centered, ignores align/point)
+				const halfSize = length / 2
+				const verts = [
+					new Vector3(0, halfSize, halfSize),
+					new Vector3(0, halfSize, -halfSize),
+					new Vector3(0, -halfSize, -halfSize),
+					new Vector3(0, -halfSize, halfSize)
+				]
+				for (let i = 0; i < 4; i++) {
+					const curr = verts[i]
+					const next = verts[(i + 1) % 4]
+					const prev = verts[(i - 1 + 4) % 4]
+					const inDir = new Vector3().subVectors(curr, prev).normalize()
+					const outDir = new Vector3().subVectors(next, curr).normalize()
+					const arcStart = curr.clone().addScaledVector(inDir, -cr)
+					const arcEnd = curr.clone().addScaledVector(outDir, cr)
+					const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+					if (cr > 0) {
+						path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+					}
+					path.add(new LineCurve3(arcEnd, nextArcStart))
+				}
+			} else if (kind === 'pause') {
+				// Two parallel vertical lines (centered, ignores align/point)
+				const spacing = width * 2.5
+				const height = length
+				const line1Start = new Vector3(0, -height / 2, -spacing / 2)
+				const line1End = new Vector3(0, height / 2, -spacing / 2)
+				const line2Start = new Vector3(0, -height / 2, spacing / 2)
+				const line2End = new Vector3(0, height / 2, spacing / 2)
+				// Primary: first line
+				path.add(new LineCurve3(line1Start, line1End))
+				// Secondary: second line
+				secondaryPath = new CurvePath<Vector3>()
+				secondaryPath.add(new LineCurve3(line2Start, line2End))
+			}
+
+			if (kind === 'fwd' || kind === 'step') {
+				// V-arrow + vertical line at base (two disconnected geometries)
+				const halfAngle = angle / 2
+				const tipY1 = Math.sin(halfAngle) * length
+				const tipY2 = -tipY1
+				const origin1 = new Vector3(0, tipY1, -zScale * (length * zOffset))
+				const origin2 = new Vector3(0, tipY2, -zScale * (length * zOffset))
+
+				// Secondary: base line
+				secondaryPath = new CurvePath<Vector3>()
+				secondaryPath.add(new LineCurve3(origin1, origin2))
+			}
 		}
 
 		// Use buildTubeGeometry for heart (smoother parametric curve)
@@ -291,12 +383,18 @@
 			return buildTubeGeometry(path.curves, width / 2, 8, 12, true)
 		}
 
-		// Spiral, cone, and arrow are open shapes, others are closed
-		const closed = type !== 'spiral' && type !== 'cone' && type !== 'arrow'
+		// Determine closed shapes
+		// Open: spiral, cone, arrow kinds (plain, fwd, step, pause)
+		// Closed: poly, star, whirl, cross, heart, arrow kinds (play, rec, stop)
+		const arrowKind = instrument.type === 'arrow' ? instrument.kind || 'plain' : 'plain'
+		const closed =
+			type !== 'spiral' &&
+			type !== 'cone' &&
+			!(type === 'arrow' && ['plain', 'step', 'pause'].includes(arrowKind))
 
 		// Calculate tubular segments based on type
 		// For spiral/cone: use path complexity (rounds * segments per round)
-		// For arrow: moderate detail
+		// For arrow: match poly segment count for equivalent shapes
 		// For polygon types: use polygon sides * density
 		const tubularSegments =
 			type === 'spiral' || type === 'cone'
@@ -304,16 +402,36 @@
 						? instrument.rounds
 						: undefined) || 3) * 64 // Higher detail for spirals
 				: type === 'arrow'
-					? 16
+					? arrowKind === 'rec'
+						? 72 // Circle: more segments for smoothness
+						: arrowKind === 'play' || arrowKind === 'fwd'
+							? 3 * 21 // Triangle: match poly 3
+							: arrowKind === 'stop'
+								? 4 * 21 // Square: match poly 4
+								: 16 // Other arrows: moderate detail
 					: n * 21
 
-		return new TubeGeometry(
+		const mainGeometry = new TubeGeometry(
 			path as unknown as import('three').Curve<Vector3>,
 			tubularSegments,
 			width / 2,
 			8,
 			closed
 		)
+
+		// Merge secondary geometry if it exists (for disconnected shapes like step, pause)
+		if (secondaryPath) {
+			const secondaryGeometry = new TubeGeometry(
+				secondaryPath as unknown as import('three').Curve<Vector3>,
+				tubularSegments,
+				width / 2,
+				8,
+				closed
+			)
+			return mergeGeometries([mainGeometry, secondaryGeometry])
+		}
+
+		return mainGeometry
 	})
 
 	// Inner geometry for fill mode (poly only)

@@ -92,7 +92,9 @@ type ConeInstrument = InstrumentBase & {
 
 type ArrowInstrument = InstrumentBase & {
 	type: 'arrow'
-	/** V-shape opening angle in radians */
+	/** Shape variant (default 'plain') */
+	kind?: 'plain' | 'play' | 'fwd' | 'rec' | 'stop' | 'step' | 'pause'
+	/** V-shape opening angle in radians (only for 'plain' and 'step') */
 	angle?: number
 	/** Arrow alignment: which part is at beat position (default 'center') */
 	align?: 'center' | 'tip' | 'back'

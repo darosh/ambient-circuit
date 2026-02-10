@@ -92,8 +92,25 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'cone',
+				id: 'arrow',
 				nodes: [[0, 0, 4], 'i i i i i i i i']
+			},
+			color: c(),
+			instruments: [
+				{ type: 'arrow', beat: 0.5, kind: 'pause' },
+				{ type: 'arrow', beat: 1.5, kind: 'stop' },
+				{ type: 'arrow', beat: 2.5, kind: 'play' },
+				{ type: 'arrow', beat: 3.5, kind: 'fwd' },
+				{ type: 'arrow', beat: 4.5, kind: 'rec' },
+				{ type: 'arrow', beat: 5.5, kind: 'step' },
+				{ type: 'arrow', beat: 6.5, point: 'forward' },
+				{ type: 'arrow', beat: 7.5, point: 'backward' }
+			]
+		},
+		{
+			rail: {
+				id: 'cone',
+				nodes: [[1, 0, 4], 'i i i i i i i i']
 			},
 			color: c(),
 			instruments: [
@@ -103,13 +120,13 @@ export const scene: SceneConfig = {
 				{ type: 'cone', beat: 3.5, rounds: 4, active: false },
 				{ type: 'cone', beat: 4.5, rounds: 5, active: false },
 				{ type: 'cone', beat: 5.5, rounds: 6, active: false },
-				{ type: 'cone', beat: 6.5, rounds: 7, active: false },
+				{ type: 'cone', beat: 6.5, rounds: 7, active: false }
 			]
 		},
 		{
 			rail: {
 				id: 'spiral',
-				nodes: [[1, 0, 4], 'i i i i i i i i']
+				nodes: [[2, 0, 4], 'i i i i i i i i']
 			},
 			color: c(),
 			instruments: [
@@ -122,34 +139,23 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'active',
-				nodes: [[2, 0, 4], 'i i i i i i i i']
+				nodes: [[3, 0, 4], 'i i i i i i i i']
 			},
 			color: c(),
 			instruments: [
 				{ type: 'cone', beat: 5.5, rounds: 5, active: true },
-				{ type: 'spiral', beat: 7.5, rounds: 3, active: true },
+				{ type: 'spiral', beat: 7.5, rounds: 3, active: true }
 			]
 		},
 		{
 			rail: {
 				id: 'heart',
-				nodes: [[3, 0, 4], 'i i i i i i i i']
+				nodes: [[4, 0, 4], 'i i i i i i i i']
 			},
 			color: c(),
 			instruments: [
 				{ type: 'heart', beat: 5.5, pulse: true },
 				{ type: 'heart', beat: 7.5, pulse: false }
-			]
-		},
-		{
-			rail: {
-				id: 'arrow',
-				nodes: [[4, 0, 4], 'i i i i i i i i']
-			},
-			color: c(),
-			instruments: [
-				{ type: 'arrow', beat: 5.5, point: 'forward' },
-				{ type: 'arrow', beat: 7.5, point: 'backward' }
 			]
 		}
 	]
