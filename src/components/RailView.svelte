@@ -265,19 +265,24 @@
 		{@const isDownbeat = bp.beat === resolved.beatOffset}
 		<T.Group
 			bind:ref={beatGroups[bpIndex]}
-			position={[bp.position.x + 0.1, bp.position.y + (isDownbeat ? -0.25 : 0.05), bp.position.z]}
+			position={[bp.position.x + 0.2, bp.position.y + (isDownbeat ? -0.25 : 0.2), bp.position.z]}
 		>
 			<Suspense>
-				<T.Mesh>
-					<Text3DGeometry
-						text={bp.beat.toString()}
-						size={isDownbeat ? 0.2 : 0.2}
-						depth={0.01}
-						bevelEnabled={false}
-						{font}
-					/>
-					<T.MeshBasicMaterial {color} />
-				</T.Mesh>
+				<Align>
+					{#snippet children({ align })}
+						<T.Mesh>
+							<Text3DGeometry
+								text={bp.beat.toString()}
+								size={isDownbeat ? 0.2 : 0.2}
+								depth={0.01}
+								bevelEnabled={false}
+								{font}
+								oncreate={align}
+							/>
+							<T.MeshBasicMaterial {color} />
+						</T.Mesh>
+					{/snippet}
+				</Align>
 			</Suspense>
 		</T.Group>
 	{/each}
