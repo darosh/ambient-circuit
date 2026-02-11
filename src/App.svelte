@@ -1,15 +1,36 @@
 <script lang="ts">
 	import { Canvas } from '@threlte/core'
-	import { Pane, Checkbox, Slider, Folder, Monitor, List, Element } from 'svelte-tweakpane-ui'
+	import {
+		ThemeUtils,
+		Pane,
+		Checkbox,
+		Slider,
+		Folder,
+		Monitor,
+		List,
+		Element
+	} from 'svelte-tweakpane-ui'
+	import type { Theme } from 'svelte-tweakpane-ui'
 	import Scene from './components/Scene.svelte'
 	import { createTempoState } from './lib/tempo'
 	import { easingNames } from './lib/easing'
 	import { scenes } from './data'
 	import { initMidi, setMidiPort, type MidiState, setMidiState } from './lib/midi/midi'
 	import { WebGPURenderer } from 'three/webgpu'
-	// import * as THREE from 'three/webgpu'
 
+	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
+
+	const buttonBackgroundColor = 'hsl(230, 7%, 10%)'
+	const customizedTheme: Theme = {
+		...ThemeUtils.presets.translucent,
+		bladeValueWidth: '100px',
+		buttonBackgroundColor,
+		buttonBackgroundColorActive: buttonBackgroundColor,
+		buttonBackgroundColorFocus: buttonBackgroundColor,
+		buttonBackgroundColorHover: buttonBackgroundColor,
+		buttonForegroundColor: 'hsl(230, 7%, 70%)'
+	}
 
 	let showGrid = $state(true)
 	let showPoints = $state(false)
@@ -117,17 +138,26 @@
 		if (e.code === 'KeyF' && e.target === document.body) {
 			showStats = !showStats
 		}
+
+		if (e.code === 'KeyS' && e.target === document.body) {
+			sceneId = scenes[(scenes.findIndex((d) => d.id === sceneId) + 1) % scenes.length].id
+		}
+
+		if (e.code === 'KeyA' && e.target === document.body) {
+			sceneId =
+				scenes[(scenes.findIndex((d) => d.id === sceneId) - 1 + scenes.length) % scenes.length].id
+		}
 	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
 {#if debugEnabled}
-	<Pane title="Debug" position="fixed">
+	<Pane title="Debug" position="fixed" width={200} theme={customizedTheme}>
 		<List
 			label="Scene"
 			bind:value={sceneId}
-			options={scenes.map((s) => ({ text: s.id, value: s.id }))}
+			options={scenes.map((s) => ({ text: s.id.replaceAll('scene-', ''), value: s.id }))}
 		/>
 		<Checkbox label="Play" bind:value={tempo.isPlaying} />
 		<Folder title="Tempo" expanded={false}>
@@ -164,7 +194,10 @@
 		<Folder title="Hotkeys" expanded={false}>
 			<Element>
 				<div class="help">
-					Space: Play<br /><br />
+					Space: Play<br />
+					D: Debug<br />
+					F: FPS<br />
+					<br />
 					W: Wireframe<br />
 					R: Rotation<br />
 					E: Easing<br />
@@ -172,7 +205,8 @@
 					N: Names<br />
 					G: Grid<br />
 					M: MIDI<br />
-					D: Debug<br />
+					S: Next scene<br />
+					A: Previous scene<br />
 				</div>
 			</Element>
 		</Folder>
