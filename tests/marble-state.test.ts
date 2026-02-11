@@ -125,7 +125,9 @@ describe('MarbleState - full roundtrip with triggers', () => {
 
 		// Should have triggered at beat 2 (update 2), then beat 6 (update 3 crosses it)
 		expect(triggerHandler).toHaveBeenCalledTimes(2) // beat 2 + beat 6
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		expect((triggerHandler as any).mock.calls[0][0]).toMatchObject({ beat: 2 })
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		expect((triggerHandler as any).mock.calls[1][0]).toMatchObject({ beat: 6 })
 
 		// Marble should now be at beat 6
