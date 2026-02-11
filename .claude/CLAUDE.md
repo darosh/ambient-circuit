@@ -97,19 +97,31 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] 'arrow' (7 shape variants via `kind` prop: plain/play/fwd/rec/stop/step/pause)
   - [x] 'sun' (12-sided inner circle + configurable rays with `brightness` param)
 - [x] Non-linear sequencing - runtime marble modification
-  - [x] `MarbleState` API via `ctx.state` in instrument handlers
-  - [x] Speed modification: `ctx.state.speed = 2` (runtime override)
-  - [x] Direction reversal: `ctx.state.reverse()` (prevents re-trigger oscillation)
-  - [x] Beat positioning: `ctx.state.beat = 6` or `ctx.state.shiftBeat(3)`
-  - [x] Note modification: `ctx.state.note = 72`
+  - [x] `MarbleState` API via `ctx.marble.state` in instrument handlers
+  - [x] Speed modification: `ctx.marble.state.speed = 2` (runtime override)
+  - [x] Direction reversal: `ctx.marble.state.reverse()` (prevents re-trigger oscillation)
+  - [x] Beat positioning: `ctx.marble.state.beat = 6` or `ctx.marble.state.shiftBeat(3)`
+  - [x] Note modification: `ctx.marble.state.note = 72`
   - [x] Re-trigger prevention (lastTriggeredBeat + direction tracking)
   - [x] Auto-clear on loop/bounce (fixes short rails < 1.5 beat range)
   - [x] Fractional beat support (7.3, 7.4, 7.5 trigger independently)
-  - [x] Demo scene (scene-logic) with 6 examples
+  - [x] Demo scene (scene-logic) with 10 examples
+- [x] SceneCtx - global coordination architecture
+  - [x] Scene-wide context: `ctx.scene` (all marbles/instruments/rails)
+  - [x] Entity wrappers: MarbleEntity/InstrumentEntity/RailEntity with State API
+  - [x] Clean TriggerContext: `ctx.marble`, `ctx.instrument`, `ctx.rail`
+  - [x] Global beat handler with lifecycle (init/play/pause/tick/destroy)
+  - [x] Configurable beat resolution (8=eighth notes, 16=sixteenth, etc.)
+  - [x] Visibility enforcement (Phase 2.1): Views respect `visible` property
+  - [x] Timer cleanup pattern via destroy phase
+  - [x] Cross-entity manipulation (reverse all marbles, target specific entities)
+  - [x] Test scenes: scene-ctx-test, scene-global-beat
 - [ ] Non-linear sequencing - advanced
-  - [ ] Change instrument params in TriggerHandler
+  - [x] Change instrument params in TriggerHandler
   - [ ] Marble collisions: `bouncer: true` reverses on collision
   - [ ] Multi-marble interaction patterns
+  - [ ] Active state enforcement (skip inactive instruments/marbles)
+  - [ ] Rail switching API (teleport between rails)
 - [ ] Visual polishing, WebGPU, TSL
   - [x] rails
   - [x] marbles
@@ -121,9 +133,10 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Next Steps:**
 
-1. Fix: Beat jump doesn't trigger jumped-to instrument
-2. Instrument runtime modification (color, type, params)
-3. Marble runtime modification (type, params, color)
+1. Fix: Beat jump doesn't trigger jumped-to instrument (middle arrow not triggered on way back)
+2. Active state enforcement (Phase 2.2): Skip inactive instruments/marbles in triggers
+3. Rail switching API (Phase 3): Teleport marbles between rails with validation
+4. Marble collisions (Phase 4): Bouncer marbles with collision detection
 
 **Blocked/Questions:**
 
@@ -158,14 +171,86 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/rail-primitives.ts - circle(), roundedRect(), coil(), spiral() helpers
 /src/lib/tempo.ts          - Global tempo/beat system (BPM, play/pause)
 /src/lib/marble.ts         - Marble types (config, state, direction, easing)
+/src/lib/marble-state.ts   - MarbleState API (safe mutations with visible/active)
 /src/lib/marble-system.ts  - Marble movement logic (arc-length + curve following)
+/src/lib/instrument.ts     - Instrument type with MIDI properties
+/src/lib/instrument-state.ts - InstrumentState API (safe mutations with visible/active)
+/src/lib/rail-state.ts     - RailState API (safe mutations with visible/active)
+/src/lib/scene.ts          - TriggerContext, GlobalBeatContext, SceneConfig types
+/src/lib/scene-ctx.ts      - SceneCtx types (MarbleEntity/InstrumentEntity/RailEntity)
+/src/lib/scene-ctx-factory.ts - createSceneCtx(), updateSceneCtx()
 /src/lib/easing.ts         - Easing functions (maath + custom)
 /src/lib/midi.ts           - Web MIDI API wrapper (init, port selection, sendNote)
 /src/lib/rail-data.ts      - Rail definitions with MIDI-enabled onTrigger handlers
-/src/lib/instrument.ts     - Instrument type with MIDI properties
 /src/components/Scene.svelte    - 3D scene with rails, marbles, tempo integration
 /src/components/RailView.svelte - renders Rail as TubeGeometry + debug points/beats
 /tests                     - vitest tests (not colocated)
+```
+
+---
+
+## TriggerContext API
+
+Instrument handlers receive `TriggerContext` with clean access to current and scene-wide state:
+
+**Context structure:**
+```typescript
+ctx.marble        // MarbleEntity: current marble with .state API
+ctx.instrument    // InstrumentEntity: current instrument with .state API
+ctx.rail          // RailEntity: current rail with .state API
+ctx.scene         // SceneCtx: all marbles/instruments/rails in scene
+ctx.midiState     // MidiState | null
+// + InstrumentTriggerContext fields (railId, marbleIndex, beat, globalBeat, etc.)
+```
+
+**Common patterns:**
+```typescript
+actionHandler(ctx) {
+  // Modify current marble
+  ctx.marble.state.reverse()
+  ctx.marble.state.speed = 2
+  ctx.marble.state.beat = 6
+  ctx.marble.state.visible = false
+
+  // Modify current instrument
+  ctx.instrument.state.color = '#ff0000'
+  ctx.instrument.state.visible = false
+
+  // Access all entities (cross-entity manipulation)
+  ctx.scene.marbles.forEach(m => m.state.reverse())
+  ctx.scene.instruments[0].state.color = '#00ff00'
+
+  // Access underlying objects when needed
+  ctx.instrument.instrument.signal!.intensity = 1
+  ctx.marble.marble.config.note
+}
+
+globalBeatHandler(ctx) {
+  // Lifecycle phases: 'init' | 'tick' | 'play' | 'pause' | 'destroy'
+  if (ctx.phase === 'destroy') {
+    // Cleanup timers/intervals
+  }
+
+  // Access scene state
+  ctx.scene.marbles[0].state.speed = 2
+  ctx.beat  // current globalBeat (float)
+  ctx.isPlaying
+}
+```
+
+**Timer cleanup pattern:**
+```typescript
+const timers: number[] = []
+
+globalBeatHandler(ctx) {
+  if (ctx.phase === 'destroy') {
+    timers.forEach(id => clearTimeout(id))
+    timers.length = 0
+  } else if (ctx.phase === 'tick') {
+    const timer = setTimeout(() => { /* ... */ }, 100)
+    timers.push(timer)
+  }
+}
 ```
 
 ---
