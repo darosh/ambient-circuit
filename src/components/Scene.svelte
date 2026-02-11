@@ -11,7 +11,6 @@
 	import { resolveRail } from '../lib/rail-resolve'
 	import type { MidiState } from '../lib/midi'
 	import type { SceneConfig } from '../lib/scene'
-	import type { SceneCtx } from '../lib/scene-ctx'
 	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
 	import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 	import { useLoader } from '@threlte/core'

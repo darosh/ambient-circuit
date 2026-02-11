@@ -10,11 +10,11 @@ export const scene: SceneConfig = {
 	triggerHandler(ctx) {
 		console.log('TRIGGER', ctx.railId, ctx.beat, ctx.marbleBeat, ctx)
 
-		ctx.instrument.signal!.intensity = 1
-		ctx.marble.signal.intensity = 1
+		ctx.instrument.instrument.signal!.intensity = 1
+		ctx.marble.marble.signal.intensity = 1
 
-		if (ctx.instrument.actionHandler) {
-			ctx.instrument.actionHandler(ctx)
+		if (ctx.instrument.instrument.actionHandler) {
+			ctx.instrument.instrument.actionHandler(ctx)
 		}
 	},
 	rails: [
@@ -33,7 +33,7 @@ export const scene: SceneConfig = {
 					beat: 4,
 					actionHandler(ctx) {
 						// Reverse direction (prevents immediate re-trigger)
-						ctx.state.reverse()
+						ctx.marble.state.reverse()
 					}
 				}
 			]
@@ -54,8 +54,8 @@ export const scene: SceneConfig = {
 					beat: 2,
 					actionHandler(ctx) {
 						// Double speed up to max 8x
-						const newSpeed = ctx.state.speed * 2
-						ctx.state.speed = newSpeed > 8 ? 1 : newSpeed
+						const newSpeed = ctx.marble.state.speed * 2
+						ctx.marble.state.speed = newSpeed > 8 ? 1 : newSpeed
 					}
 				}
 			]
@@ -76,7 +76,7 @@ export const scene: SceneConfig = {
 					beat: 2,
 					actionHandler(ctx) {
 						// Jump forward 4 beats
-						ctx.state.beat = 6
+						ctx.marble.state.beat = 6
 					}
 				},
 				{
@@ -84,7 +84,7 @@ export const scene: SceneConfig = {
 					beat: 6,
 					actionHandler(ctx) {
 						// Jump back to start
-						ctx.state.beat = 0
+						ctx.marble.state.beat = 0
 					}
 				}
 			]
@@ -105,7 +105,7 @@ export const scene: SceneConfig = {
 					midiChannel: 2,
 					actionHandler(ctx) {
 						// Shift up an octave
-						ctx.state.note = (ctx.state.note ?? 60) + 12
+						ctx.marble.state.note = (ctx.marble.state.note ?? 60) + 12
 					}
 				},
 				{
@@ -114,7 +114,7 @@ export const scene: SceneConfig = {
 					midiChannel: 2,
 					actionHandler(ctx) {
 						// Reset to C4
-						ctx.state.note = 60
+						ctx.marble.state.note = 60
 					}
 				}
 			]
@@ -134,10 +134,10 @@ export const scene: SceneConfig = {
 					beat: 3,
 					actionHandler(ctx) {
 						// Speed up and reverse
-						ctx.state.speed = 2
+						ctx.marble.state.speed = 2
 
 						if (Math.random() > 0.5) {
-							ctx.state.reverse()
+							ctx.marble.state.reverse()
 						}
 					}
 				},
@@ -146,8 +146,8 @@ export const scene: SceneConfig = {
 					beat: 5,
 					actionHandler(ctx) {
 						// Jump and change speed
-						ctx.state.beat = 1
-						ctx.state.speed = 1
+						ctx.marble.state.beat = 1
+						ctx.marble.state.speed = 1
 					}
 				}
 			]
@@ -183,7 +183,7 @@ export const scene: SceneConfig = {
 					beat: 4,
 					actionHandler(ctx) {
 						// Change instrument color to red
-						ctx.instrumentState.color = c()
+						ctx.instrument.state.color = c()
 					}
 				}
 			]
@@ -203,7 +203,7 @@ export const scene: SceneConfig = {
 					beat: 4,
 					brightness: 0,
 					actionHandler(ctx) {
-						ctx.instrumentState.brightness = ((ctx.instrumentState.brightness ?? 0) + 1) % 4
+						ctx.instrument.state.brightness = ((ctx.instrument.state.brightness ?? 0) + 1) % 4
 					}
 				}
 			]
@@ -223,8 +223,8 @@ export const scene: SceneConfig = {
 					beat: 2,
 					actionHandler(ctx) {
 						// Change marble to poly
-						ctx.state.type = 'poly'
-						ctx.state.sides = 5
+						ctx.marble.state.type = 'poly'
+						ctx.marble.state.sides = 5
 					}
 				},
 				{
@@ -232,8 +232,8 @@ export const scene: SceneConfig = {
 					beat: 4,
 					actionHandler(ctx) {
 						// Change marble to coil
-						ctx.state.type = 'coil'
-						ctx.state.rounds = 4
+						ctx.marble.state.type = 'coil'
+						ctx.marble.state.rounds = 4
 					}
 				},
 				{
@@ -241,7 +241,7 @@ export const scene: SceneConfig = {
 					beat: 6,
 					actionHandler(ctx) {
 						// Back to ball
-						ctx.state.type = 'ball'
+						ctx.marble.state.type = 'ball'
 					}
 				}
 			]
@@ -260,14 +260,14 @@ export const scene: SceneConfig = {
 					type: 'cone',
 					beat: 2,
 					actionHandler(ctx) {
-						ctx.state.color = colors[0]
+						ctx.marble.state.color = colors[0]
 					}
 				},
 				{
 					type: 'cone',
 					beat: 5,
 					actionHandler(ctx) {
-						ctx.state.color = colors[1]
+						ctx.marble.state.color = colors[1]
 					}
 				},
 				{
@@ -275,7 +275,7 @@ export const scene: SceneConfig = {
 					beat: 7,
 					actionHandler(ctx) {
 						// Back to original color
-						ctx.state.color = undefined
+						ctx.marble.state.color = undefined
 					}
 				}
 			]

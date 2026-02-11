@@ -3,9 +3,7 @@ import type { TempoState } from './tempo'
 import type { Instrument } from './instrument'
 import type { TriggerHandler, GlobalBeatHandler } from './scene'
 import type { MidiState } from './midi'
-import type { SceneCtx, HandlerCtx } from './scene-ctx'
-import { MarbleState } from './marble-state'
-import { InstrumentState } from './instrument-state'
+import type { SceneCtx } from './scene-ctx'
 import {
 	BeatPosition,
 	buildRailCurve,
@@ -390,42 +388,28 @@ function checkInstrumentTriggers(
 					marble.runtime.lastTriggeredBeat = instrument.beat
 					marble.runtime.lastTriggeredDirection = marble.direction
 
-					// Build context for handler
-					const marbleState = new MarbleState(marble, jumpBeat)
-					const instrumentState = new InstrumentState(instrument)
-
-					// Build handler context (if sceneCtx available)
-					let handlerCtx: HandlerCtx | undefined
 					if (sceneCtx) {
+						// Find entities
 						const marbleEntity = sceneCtx.marbles[marbleIndex]
 						const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
 						const railEntity = sceneCtx.rails.find((re) => re.id === railId)
 
 						if (marbleEntity && instrumentEntity && railEntity) {
-							handlerCtx = {
-								scene: sceneCtx,
+							triggerHandler({
+								railId,
+								marbleIndex,
+								beat: instrument.beat,
+								globalBeat,
+								marbleBeat: jumpBeat,
+								direction: marble.direction,
 								marble: marbleEntity,
 								instrument: instrumentEntity,
-								rail: railEntity
-							}
+								rail: railEntity,
+								scene: sceneCtx,
+								midiState: midiState ?? null
+							})
 						}
 					}
-
-					triggerHandler({
-						railId,
-						marbleIndex,
-						beat: instrument.beat,
-						globalBeat,
-						marbleBeat: jumpBeat,
-						direction: marble.direction,
-						instrument,
-						marble,
-						state: marbleState,
-						instrumentState,
-						midiState: midiState ?? null,
-						scene: sceneCtx!,
-						ctx: handlerCtx!
-					})
 				}
 			}
 		}
@@ -450,7 +434,7 @@ function checkInstrumentTriggers(
 			}
 		}
 
-		if (triggered && triggerHandler) {
+		if (triggered && triggerHandler && sceneCtx) {
 			// Prevent immediate re-trigger in same direction at same beat
 			// Use actual beat (not floored) to support fractional positions like 7.3, 7.4, 7.5
 			if (
@@ -462,42 +446,26 @@ function checkInstrumentTriggers(
 			marble.runtime.lastTriggeredBeat = instrument.beat
 			marble.runtime.lastTriggeredDirection = marble.direction
 
-			// Build context for handler
-			const marbleState = new MarbleState(marble, marbleBeat)
-			const instrumentState = new InstrumentState(instrument)
+			// Find entities
+			const marbleEntity = sceneCtx.marbles[marbleIndex]
+			const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
+			const railEntity = sceneCtx.rails.find((re) => re.id === railId)
 
-			// Build handler context (if sceneCtx available)
-			let handlerCtx: HandlerCtx | undefined
-			if (sceneCtx) {
-				const marbleEntity = sceneCtx.marbles[marbleIndex]
-				const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
-				const railEntity = sceneCtx.rails.find((re) => re.id === railId)
-
-				if (marbleEntity && instrumentEntity && railEntity) {
-					handlerCtx = {
-						scene: sceneCtx,
-						marble: marbleEntity,
-						instrument: instrumentEntity,
-						rail: railEntity
-					}
-				}
+			if (marbleEntity && instrumentEntity && railEntity) {
+				triggerHandler({
+					railId,
+					marbleIndex,
+					beat: instrument.beat,
+					globalBeat,
+					marbleBeat,
+					direction: marble.direction,
+					marble: marbleEntity,
+					instrument: instrumentEntity,
+					rail: railEntity,
+					scene: sceneCtx,
+					midiState: midiState ?? null
+				})
 			}
-
-			triggerHandler({
-				railId,
-				marbleIndex,
-				beat: instrument.beat,
-				globalBeat,
-				marbleBeat,
-				direction: marble.direction,
-				instrument,
-				marble,
-				state: marbleState,
-				instrumentState,
-				midiState: midiState ?? null,
-				scene: sceneCtx!,
-				ctx: handlerCtx!
-			})
 		}
 	}
 }

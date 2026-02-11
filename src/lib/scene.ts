@@ -1,28 +1,23 @@
-import type { Instrument, InstrumentTriggerContext } from './instrument'
-import type { Marble } from './marble'
-import type { MarbleState } from './marble-state'
-import type { InstrumentState } from './instrument-state'
+import type { InstrumentTriggerContext } from './instrument'
 import type { MidiState } from './midi'
 import type { RailData } from './rail-data'
-import type { SceneCtx, HandlerCtx } from './scene-ctx'
+import type { SceneCtx, MarbleEntity, InstrumentEntity, RailEntity } from './scene-ctx'
 import { Vector3Tuple } from 'three/webgpu'
 
-export type SceneTriggerContext = InstrumentTriggerContext & {
-	// Legacy fields (backward compat)
-	instrument: Instrument
-	marble: Marble
-	state: MarbleState
-	instrumentState: InstrumentState
-	midiState: MidiState | null
+export type TriggerContext = InstrumentTriggerContext & {
+	// Current entities (clean access)
+	marble: MarbleEntity
+	instrument: InstrumentEntity
+	rail: RailEntity
 
-	// NEW: scene-wide context
+	// Scene-wide context
 	scene: SceneCtx
 
-	// NEW: handler context (current entities)
-	ctx: HandlerCtx
+	// Convenience/legacy
+	midiState: MidiState | null
 }
 
-export type TriggerHandler = (ctx: SceneTriggerContext) => void
+export type TriggerHandler = (ctx: TriggerContext) => void
 
 /**
  * Global beat handler context (fired every fractional beat)

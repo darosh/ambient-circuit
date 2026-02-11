@@ -22,12 +22,12 @@ export const scene: SceneConfig = {
 		console.log('TRIGGER', ctx.railId, ctx.beat, ctx.marbleBeat)
 
 		// Signal visual feedback
-		ctx.instrument.signal!.intensity = 1
-		ctx.marble.signal.intensity = 1
+		ctx.instrument.instrument.signal!.intensity = 1
+		ctx.marble.marble.signal.intensity = 1
 
 		// Execute instrument action if present
-		if (ctx.instrument.actionHandler) {
-			ctx.instrument.actionHandler(ctx)
+		if (ctx.instrument.instrument.actionHandler) {
+			ctx.instrument.instrument.actionHandler(ctx)
 		}
 	},
 	rails: [
@@ -123,8 +123,8 @@ export const scene: SceneConfig = {
 					beat: 2,
 					actionHandler(ctx) {
 						// Toggle this instrument's active state
-						console.log('Toggling instrument active:', !ctx.instrumentState.activityState)
-						ctx.instrumentState.activityState = !ctx.instrumentState.activityState
+						console.log('Toggling instrument active:', !ctx.instrument.state.activityState)
+						ctx.instrument.state.activityState = !ctx.instrument.state.activityState
 					}
 				},
 				{

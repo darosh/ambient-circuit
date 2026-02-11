@@ -20,7 +20,13 @@ export const scene: SceneConfig = {
 		} else if (ctx.phase === 'pause') {
 			console.log('[GLOBAL] Pause - beat:', ctx.beat.toFixed(3))
 		} else if (ctx.phase === 'destroy') {
-			console.log('[GLOBAL] Destroy - beat:', ctx.beat.toFixed(3), 'clearing', timers.length, 'timers')
+			console.log(
+				'[GLOBAL] Destroy - beat:',
+				ctx.beat.toFixed(3),
+				'clearing',
+				timers.length,
+				'timers'
+			)
 			// Cleanup any timers/intervals here
 			timers.forEach((id) => clearTimeout(id))
 			timers.length = 0
@@ -38,11 +44,11 @@ export const scene: SceneConfig = {
 	},
 	triggerHandler(ctx) {
 		console.log('TRIGGER', ctx.railId, ctx.beat)
-		ctx.instrument.signal!.intensity = 1
-		ctx.marble.signal.intensity = 1
+		ctx.instrument.instrument.signal!.intensity = 1
+		ctx.marble.marble.signal.intensity = 1
 
-		if (ctx.instrument.actionHandler) {
-			ctx.instrument.actionHandler(ctx)
+		if (ctx.instrument.instrument.actionHandler) {
+			ctx.instrument.instrument.actionHandler(ctx)
 		}
 	},
 	rails: [
