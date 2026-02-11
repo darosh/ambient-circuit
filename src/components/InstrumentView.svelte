@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	import type { Instrument, PolyInstrument } from '../lib/instrument'
+	import type { Instrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-geometry'
 	import {
@@ -59,6 +59,7 @@
 	// Derived values for visual properties (runtime overrides config)
 	const effectiveColor = $derived(instrument.runtime?.color ?? instrument.color ?? color)
 	const effectiveType = $derived(instrument.type ?? 'poly')
+	/* eslint-disable @typescript-eslint/no-explicit-any */
 	const effectiveSides = $derived(instrument.runtime?.sides ?? (instrument as any).sides)
 	const effectiveRounds = $derived(instrument.runtime?.rounds ?? (instrument as any).rounds)
 	const effectiveBrightness = $derived(
@@ -72,9 +73,8 @@
 	const effectivePoint = $derived(instrument.runtime?.point ?? (instrument as any).point)
 	const effectiveKind = $derived(instrument.runtime?.kind ?? (instrument as any).kind)
 	const effectiveAngle = $derived(instrument.runtime?.angle ?? (instrument as any).angle)
-	const effectivePulse = $derived(instrument.runtime?.pulse ?? (instrument as any).pulse)
-	const effectiveActive = $derived(instrument.runtime?.active ?? (instrument as any).active)
 	const effectiveRays = $derived(instrument.runtime?.rays ?? (instrument as any).rays)
+	/* eslint-enable @typescript-eslint/no-explicit-any */
 
 	const fx = $derived(makeInstrumentMaterial(effectiveColor, effectiveType !== 'heart'))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color: effectiveColor }))

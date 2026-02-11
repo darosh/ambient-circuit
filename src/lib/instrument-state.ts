@@ -20,6 +20,7 @@ export class InstrumentState {
 		this.instrument.runtime!.color = value
 	}
 
+	/* eslint-disable @typescript-eslint/no-explicit-any */
 	// Sides (for poly, star, whirl, cross)
 	get sides(): number | undefined {
 		const typed = this.instrument as any
@@ -127,4 +128,5 @@ export class InstrumentState {
 	set rays(value: number | undefined) {
 		this.instrument.runtime!.rays = value
 	}
+	/* eslint-enable @typescript-eslint/no-explicit-any */
 }

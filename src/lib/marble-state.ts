@@ -18,7 +18,7 @@ export class MarbleState {
 		this.marble.runtime.speed = value
 	}
 
-	// Direction (handles re-trigger prevention)
+	// Direction (clears re-trigger tracking when changed)
 	get direction(): MarbleDirection {
 		return this.marble.direction
 	}

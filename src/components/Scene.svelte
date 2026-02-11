@@ -73,9 +73,11 @@
 		})()
 	)
 
+	/* eslint-disable @typescript-eslint/no-explicit-any */
 	const runtimeStates = $state<Array<Record<string, any>>>(
 		(() => {
 			const runtimes: Array<Record<string, any>> = []
+			/* eslint-enable @typescript-eslint/no-explicit-any */
 			for (const { instruments } of rails) {
 				instruments?.forEach(() => {
 					runtimes.push({})
