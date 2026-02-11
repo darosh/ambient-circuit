@@ -3,6 +3,22 @@ import { TriggerHandler } from './scene'
 
 export type InstrumentSignal = { intensity: number }
 
+export interface InstrumentRuntime {
+	color?: string
+	sides?: number
+	rounds?: number
+	brightness?: number
+	fill?: boolean
+	counterCW?: boolean
+	align?: 'center' | 'tip' | 'back'
+	point?: 'forward' | 'backward'
+	kind?: 'plain' | 'play' | 'fwd' | 'rec' | 'stop' | 'step' | 'pause'
+	angle?: number
+	pulse?: boolean
+	active?: boolean
+	rays?: number
+}
+
 export type InstrumentTriggerContext = {
 	railId: string
 	marbleIndex: number
@@ -35,6 +51,8 @@ type InstrumentBase = {
 	/** Impact signal — set intensity=1 in triggerHandler, InstrumentView decays it */
 	signal?: InstrumentSignal
 	actionHandler?: TriggerHandler
+	/** Runtime state for visual overrides */
+	runtime?: InstrumentRuntime
 }
 
 export type PolyInstrument = InstrumentBase & {

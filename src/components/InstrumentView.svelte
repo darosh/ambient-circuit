@@ -56,10 +56,28 @@
 		fxInstruments = true
 	}: Props = $props()
 
-	const fx = $derived(
-		makeInstrumentMaterial(instrument.color || color, instrument.type !== 'heart')
+	// Derived values for visual properties (runtime overrides config)
+	const effectiveColor = $derived(instrument.runtime?.color ?? instrument.color ?? color)
+	const effectiveType = $derived(instrument.type ?? 'poly')
+	const effectiveSides = $derived(instrument.runtime?.sides ?? (instrument as any).sides)
+	const effectiveRounds = $derived(instrument.runtime?.rounds ?? (instrument as any).rounds)
+	const effectiveBrightness = $derived(
+		instrument.runtime?.brightness ?? (instrument as any).brightness
 	)
-	const plainMaterial = $derived(new MeshStandardMaterial({ color: instrument.color || color }))
+	const effectiveFill = $derived(instrument.runtime?.fill ?? (instrument as any).fill)
+	const effectiveCounterCW = $derived(
+		instrument.runtime?.counterCW ?? (instrument as any).counterCW
+	)
+	const effectiveAlign = $derived(instrument.runtime?.align ?? (instrument as any).align)
+	const effectivePoint = $derived(instrument.runtime?.point ?? (instrument as any).point)
+	const effectiveKind = $derived(instrument.runtime?.kind ?? (instrument as any).kind)
+	const effectiveAngle = $derived(instrument.runtime?.angle ?? (instrument as any).angle)
+	const effectivePulse = $derived(instrument.runtime?.pulse ?? (instrument as any).pulse)
+	const effectiveActive = $derived(instrument.runtime?.active ?? (instrument as any).active)
+	const effectiveRays = $derived(instrument.runtime?.rays ?? (instrument as any).rays)
+
+	const fx = $derived(makeInstrumentMaterial(effectiveColor, effectiveType !== 'heart'))
+	const plainMaterial = $derived(new MeshStandardMaterial({ color: effectiveColor }))
 
 	$effect(() => {
 		fx.mat.wireframe = wireframe
@@ -74,11 +92,11 @@
 
 	// Create tube geometry based on instrument type
 	const geometry = $derived.by(() => {
-		const type = instrument.type || 'poly'
+		const type = effectiveType
 		const n =
 			type === 'heart' || type === 'spiral' || type === 'cone' || type === 'arrow' || type === 'sun'
 				? 0
-				: (instrument as { sides: number }).sides
+				: effectiveSides
 		const cr = cornerRadius
 		const path = new CurvePath<Vector3>()
 		let secondaryPath: CurvePath<Vector3> | null = null
@@ -202,8 +220,8 @@
 				path.add(new LineCurve3(new Vector3(x, y, 0), new Vector3(nextX, nextY, 0)))
 			}
 		} else if (type === 'spiral') {
-			const rounds = (instrument.type === 'spiral' ? instrument.rounds : undefined) || 3
-			const counterCW = (instrument.type === 'spiral' ? instrument.counterCW : undefined) || false
+			const rounds = effectiveRounds || 3
+			const counterCW = effectiveCounterCW || false
 			const innerR = width
 			const outerR = width * 2 * rounds
 			const segments = rounds * SPIRAL_SEGMENTS_PER_ROUND
@@ -232,10 +250,10 @@
 				path.add(new LineCurve3(new Vector3(x, y, 0), new Vector3(nextX, nextY, 0)))
 			}
 		} else if (type === 'cone') {
-			const rounds = (instrument.type === 'cone' ? instrument.rounds : undefined) || 3
-			const counterCW = (instrument.type === 'cone' ? instrument.counterCW : undefined) || false
-			const point = (instrument.type === 'cone' ? instrument.point : undefined) || 'forward'
-			const align = (instrument.type === 'cone' ? instrument.align : undefined) || 'center'
+			const rounds = effectiveRounds || 3
+			const counterCW = effectiveCounterCW || false
+			const point = effectivePoint || 'forward'
+			const align = effectiveAlign || 'center'
 			const innerR = width
 			const outerR = width * 1 * rounds
 			const depth = width * 2 * rounds
@@ -277,10 +295,10 @@
 				path.add(new LineCurve3(new Vector3(x, y, z), new Vector3(nextX, nextY, nextZ)))
 			}
 		} else if (type === 'arrow') {
-			const kind = (instrument.type === 'arrow' ? instrument.kind : undefined) || 'plain'
-			const angle = (instrument.type === 'arrow' ? instrument.angle : undefined) ?? Math.PI / 3
-			const point = (instrument.type === 'arrow' ? instrument.point : undefined) || 'forward'
-			const align = (instrument.type === 'arrow' ? instrument.align : undefined) || 'center'
+			const kind = effectiveKind || 'plain'
+			const angle = effectiveAngle ?? Math.PI / 3
+			const point = effectivePoint || 'forward'
+			const align = effectiveAlign || 'center'
 
 			const length = size * 1
 
@@ -392,7 +410,7 @@
 				secondaryPath.add(new LineCurve3(origin1, origin2))
 			}
 		} else if (type === 'sun') {
-			const numRays = (instrument.type === 'sun' ? instrument.rays : undefined) ?? 6
+			const numRays = effectiveRays ?? 6
 
 			// Inner circle: 12-sided polygon (like poly inner fill with n=12)
 			const n = 12
@@ -428,7 +446,7 @@
 
 			// Rays: start at innerR + width gap, end at size * 1.5
 			// Each ray is a separate path to avoid connection artifacts
-			const brightness = (instrument.type === 'sun' ? instrument.brightness : undefined) ?? 2
+			const brightness = effectiveBrightness ?? 2
 			const rayStart = innerR + width
 			const rayEnd = rayStart + width * brightness
 
@@ -453,7 +471,7 @@
 		// Determine closed shapes
 		// Open: spiral, cone, arrow kinds (plain, fwd, step, pause)
 		// Closed: poly, star, whirl, cross, heart, arrow kinds (play, rec, stop), sun
-		const arrowKind = instrument.type === 'arrow' ? instrument.kind || 'plain' : 'plain'
+		const arrowKind = effectiveKind || 'plain'
 		const closed =
 			type !== 'spiral' &&
 			type !== 'cone' &&
@@ -466,9 +484,7 @@
 		// For polygon types: use polygon sides * density
 		const tubularSegments =
 			type === 'spiral' || type === 'cone'
-				? ((instrument.type === 'spiral' || instrument.type === 'cone'
-						? instrument.rounds
-						: undefined) || 3) * TUBULAR_SEGMENTS_SPIRAL
+				? (effectiveRounds || 3) * TUBULAR_SEGMENTS_SPIRAL
 				: type === 'arrow'
 					? arrowKind === 'rec'
 						? TUBULAR_SEGMENTS_ARROW_CIRCLE
@@ -522,9 +538,9 @@
 
 	// Inner geometry for fill mode (poly only)
 	const innerGeometry = $derived.by(() => {
-		if (!(instrument as PolyInstrument).fill) return null
+		if (!effectiveFill) return null
 
-		const n = (instrument as PolyInstrument).sides
+		const n = effectiveSides
 
 		if (n < 3) return null
 

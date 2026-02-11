@@ -41,17 +41,19 @@
 
 	let { marble = $bindable(), rail, color, wireframe = false, fxMarbles = true }: Props = $props()
 
-	const fx = $derived(makeMarbleMaterial(color))
-	const plainMaterial = $derived(new MeshStandardMaterial({ color }))
+	const effectiveColor = $derived(marble.runtime.color ?? color)
+
+	const fx = $derived(makeMarbleMaterial(effectiveColor))
+	const plainMaterial = $derived(new MeshStandardMaterial({ color: effectiveColor }))
 
 	$effect(() => {
 		fx.mat.wireframe = wireframe
 		plainMaterial.wireframe = wireframe
 	})
 
-	const type = $derived(marble.config.type || 'ball')
-	const sides = $derived(marble.config.sides || 6)
-	const rounds = $derived(marble.config.rounds || 3)
+	const type = $derived(marble.runtime.type ?? marble.config.type ?? 'ball')
+	const sides = $derived(marble.runtime.sides ?? marble.config.sides ?? 6)
+	const rounds = $derived(marble.runtime.rounds ?? marble.config.rounds ?? 3)
 
 	// Create geometry based on type
 	const geometry = $derived.by(() => {

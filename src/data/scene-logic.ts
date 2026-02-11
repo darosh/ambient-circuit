@@ -8,7 +8,7 @@ export const scene: SceneConfig = {
 	id: 'scene-logic',
 	bpm: 120,
 	triggerHandler(ctx) {
-		console.log('TRIGGER', ctx.railId, ctx.beat, ctx.marbleBeat)
+		console.log('TRIGGER', ctx.railId, ctx.beat, ctx.marbleBeat, ctx)
 
 		ctx.instrument.signal!.intensity = 1
 		ctx.marble.signal.intensity = 1
@@ -166,6 +166,118 @@ export const scene: SceneConfig = {
 				{ beat: 2.4, sides: 4, midiChannel: 3 },
 				{ beat: 2.6, sides: 5, midiChannel: 3 },
 				{ beat: 2.8, sides: 6, midiChannel: 3 }
+			]
+		},
+		// Example 7: Visual transformations - instrument color
+		{
+			rail: {
+				id: 'inst-color',
+				offset: [-4, 0, -2],
+				nodes: [[0, 0, 0], 'r r r r r r r r']
+			},
+			color: c(),
+			marbles: [{ type: 'ball', start: 0 }],
+			instruments: [
+				{
+					type: 'heart',
+					beat: 4,
+					actionHandler(ctx) {
+						// Change instrument color to red
+						ctx.instrumentState.color = c()
+					}
+				}
+			]
+		},
+		// Example 8: Visual transformations - sun brightness
+		{
+			rail: {
+				id: 'sun-brightness',
+				offset: [-4, 0, -3],
+				nodes: [[0, 0, 0], 'r r r r r r r r']
+			},
+			color: c(),
+			marbles: [{ type: 'poly', sides: 3, start: 0 }],
+			instruments: [
+				{
+					type: 'sun',
+					beat: 4,
+					brightness: 0,
+					actionHandler(ctx) {
+						ctx.instrumentState.brightness = ((ctx.instrumentState.brightness ?? 0) + 1) % 4
+					}
+				}
+			]
+		},
+		// Example 9: Visual transformations - marble shape (there and back)
+		{
+			rail: {
+				id: 'marble-shape',
+				offset: [-4, 0, -4],
+				nodes: [[0, 0, 0], 'r r r r r r r r']
+			},
+			color: c(),
+			marbles: [{ type: 'ball', start: 0 }],
+			instruments: [
+				{
+					type: 'spiral',
+					beat: 2,
+					actionHandler(ctx) {
+						// Change marble to poly
+						ctx.state.type = 'poly'
+						ctx.state.sides = 5
+					}
+				},
+				{
+					type: 'spiral',
+					beat: 4,
+					actionHandler(ctx) {
+						// Change marble to coil
+						ctx.state.type = 'coil'
+						ctx.state.rounds = 4
+					}
+				},
+				{
+					type: 'spiral',
+					beat: 6,
+					actionHandler(ctx) {
+						// Back to ball
+						ctx.state.type = 'ball'
+					}
+				}
+			]
+		},
+		// Example 10: Visual transformations - marble color (there and back)
+		{
+			rail: {
+				id: 'marble-color',
+				offset: [-4, 0, -5],
+				nodes: [[0, 0, 0], 'r r r r r r r r']
+			},
+			color: c(),
+			marbles: [{ type: 'ball', start: 0 }],
+			instruments: [
+				{
+					type: 'cone',
+					beat: 2,
+					actionHandler(ctx) {
+						ctx.state.color = colors[0]
+					}
+				},
+				{
+					type: 'cone',
+					beat: 5,
+					actionHandler(ctx) {
+						ctx.state.color = colors[1]
+					}
+				},
+				{
+					type: 'cone',
+					beat: 7,
+					actionHandler(ctx) {
+						// Back to original color
+						ctx.state.color = undefined
+					}
+				}
 			]
 		}
 	]

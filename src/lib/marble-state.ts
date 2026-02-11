@@ -51,4 +51,33 @@ export class MarbleState {
 	reverse(): void {
 		this.direction = this.direction === 'forward' ? 'backward' : 'forward'
 	}
+
+	// Visual properties (runtime overrides)
+	get type() {
+		return this.marble.runtime.type ?? this.marble.config.type ?? 'ball'
+	}
+	set type(value: import('./marble').MarbleType) {
+		this.marble.runtime.type = value
+	}
+
+	get sides() {
+		return this.marble.runtime.sides ?? this.marble.config.sides ?? 6
+	}
+	set sides(value: number) {
+		this.marble.runtime.sides = value
+	}
+
+	get rounds() {
+		return this.marble.runtime.rounds ?? this.marble.config.rounds ?? 3
+	}
+	set rounds(value: number) {
+		this.marble.runtime.rounds = value
+	}
+
+	get color(): string | undefined {
+		return this.marble.runtime.color
+	}
+	set color(value: string | undefined) {
+		this.marble.runtime.color = value
+	}
 }

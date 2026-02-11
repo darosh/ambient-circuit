@@ -1,6 +1,7 @@
 import type { Instrument, InstrumentTriggerContext } from './instrument'
 import type { Marble } from './marble'
 import type { MarbleState } from './marble-state'
+import type { InstrumentState } from './instrument-state'
 import type { MidiState } from './midi'
 import type { RailData } from './rail-data'
 import { Vector3Tuple } from 'three/webgpu'
@@ -9,6 +10,7 @@ export type SceneTriggerContext = InstrumentTriggerContext & {
 	instrument: Instrument
 	marble: Marble
 	state: MarbleState
+	instrumentState: InstrumentState
 	midiState: MidiState | null
 }
 

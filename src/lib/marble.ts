@@ -37,6 +37,11 @@ export interface MarbleRuntime {
 	lastTriggeredDirection?: MarbleDirection // direction when last triggered
 	targetBeat?: number // if set, overrides computed beat at end of update
 	jumpedToBeat?: number // beat we just jumped to (trigger instruments here next frame)
+	// Visual overrides
+	type?: MarbleType // overrides config.type
+	sides?: number // overrides config.sides (for poly type)
+	rounds?: number // overrides config.rounds (for coil type)
+	color?: string // hex color override (e.g. '#ff0000')
 }
 
 export interface Marble {

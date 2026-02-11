@@ -4,6 +4,7 @@ import type { Instrument } from './instrument'
 import type { TriggerHandler } from './scene'
 import type { MidiState } from './midi'
 import { MarbleState } from './marble-state'
+import { InstrumentState } from './instrument-state'
 import {
 	BeatPosition,
 	buildRailCurve,
@@ -299,6 +300,7 @@ function checkInstrumentTriggers(
 						instrument,
 						marble,
 						state: new MarbleState(marble, jumpBeat),
+						instrumentState: new InstrumentState(instrument),
 						midiState: midiState ?? null
 					})
 				}
@@ -347,6 +349,7 @@ function checkInstrumentTriggers(
 				instrument,
 				marble,
 				state: new MarbleState(marble, marbleBeat),
+				instrumentState: new InstrumentState(instrument),
 				midiState: midiState ?? null
 			})
 		}

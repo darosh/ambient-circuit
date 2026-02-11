@@ -60,7 +60,7 @@
 	// Create marbles once at mount (component remounts per scene via {#key})
 	const rails = untrack(() => scene.rails)
 
-	// Create reactive signal map - wrap all instrument signals in $state
+	// Create reactive signal and runtime maps
 	const signalStates = $state<Array<{ intensity: number }>>(
 		(() => {
 			const signals: Array<{ intensity: number }> = []
@@ -73,11 +73,25 @@
 		})()
 	)
 
-	// Assign signals to instruments (reactive reference)
+	const runtimeStates = $state<Array<Record<string, any>>>(
+		(() => {
+			const runtimes: Array<Record<string, any>> = []
+			for (const { instruments } of rails) {
+				instruments?.forEach(() => {
+					runtimes.push({})
+				})
+			}
+			return runtimes
+		})()
+	)
+
+	// Assign signals and runtimes to instruments (reactive references)
 	let signalIndex = 0
 	for (const { instruments } of rails) {
 		instruments?.forEach((ins) => {
-			ins.signal = signalStates[signalIndex++]
+			ins.signal = signalStates[signalIndex]
+			ins.runtime = runtimeStates[signalIndex]
+			signalIndex++
 		})
 	}
 
