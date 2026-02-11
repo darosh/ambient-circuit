@@ -7,6 +7,7 @@ const c = () => colors[ci++ % colors.length]
 export const scene: SceneConfig = {
 	id: 'scene-active-visible',
 	bpm: 120,
+	camera: [0, 12, 7],
 	globalBeatResolution: 1, // every half beat
 	globalBeatHandler(_ctx) {
 		_ctx.scene.marbles[3].state.visible = false
