@@ -98,6 +98,16 @@
 		})
 	}
 
+	// Create reactive runtime states for rails
+	const railRuntimeStates = $state<Array<{ color?: string }>>(
+		rails.map(() => ({}))
+	)
+
+	// Assign runtimes to rails (reactive references)
+	for (let i = 0; i < rails.length; i++) {
+		rails[i].runtime = railRuntimeStates[i]
+	}
+
 	const _init = (() => {
 		const ms = []
 		const indices: number[] = []
@@ -229,17 +239,15 @@
 	/>
 {/if}
 
-{#each rails as { rail, color, instruments }, railIndex (railIndex)}
+{#each rails as railData, railIndex (railIndex)}
 	{#if railVisibility[railIndex]}
 		<RailView
-			{rail}
-			{color}
+			{railData}
 			width={0.06}
 			{showPoints}
 			{showBeats}
 			{showNames}
 			{wireframe}
-			{instruments}
 			{fxRails}
 			{fxInstruments}
 			{font}

@@ -9,7 +9,12 @@ export class RailState {
 		private rail: RailData,
 		private visibility: { value: boolean },
 		private activity: { value: boolean }
-	) {}
+	) {
+		// Initialize runtime if not present
+		if (!this.rail.runtime) {
+			this.rail.runtime = {}
+		}
+	}
 
 	get visible(): boolean {
 		return this.visibility.value
@@ -30,10 +35,10 @@ export class RailState {
 	}
 
 	get color(): string {
-		return this.rail.color
+		return this.rail.runtime?.color ?? this.rail.color
 	}
 	set color(v: string) {
-		this.rail.color = v
+		this.rail.runtime!.color = v
 	}
 
 	// Future: other rail params (thickness, glow, etc.)

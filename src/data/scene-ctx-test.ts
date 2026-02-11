@@ -148,6 +148,33 @@ export const scene: SceneConfig = {
 					}
 				}
 			]
+		},
+		{
+			rail: {
+				id: 'toggle-color',
+				offset: [-3, 0, -2],
+				nodes: [[0, 0, 0], 'r r r r r r']
+			},
+			color: c(),
+			marbles: [{ type: 'ball', start: 0 }],
+			instruments: [
+				{
+					type: 'sun',
+					beat: 2,
+					rays: 12,
+					actionHandler(ctx) {
+						ctx.rail.state.color = c()
+					}
+				},
+				{
+					type: 'sun',
+					beat: 4,
+					rays: 12,
+					actionHandler(ctx) {
+						ctx.rail.state.color = c()
+					}
+				}
+			]
 		}
 	]
 }

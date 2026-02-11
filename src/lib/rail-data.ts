@@ -26,9 +26,14 @@ type CoilMarbleData = MarbleDataBase & {
 
 export type MarbleData = BallMarbleData | PolyMarbleData | CoilMarbleData
 
+export type RailRuntime = {
+	color?: string
+}
+
 export type RailData = {
 	rail: Rail
 	color: string
 	marbles?: MarbleData[] | false
 	instruments?: Instrument[]
+	runtime?: RailRuntime
 }

@@ -126,7 +126,7 @@ describe('scene-ctx', () => {
 
 		// Test rail state
 		sceneCtx.rails[0].state.color = '#0000ff'
-		expect(rails[0].color).toBe('#0000ff')
+		expect(rails[0].runtime!.color).toBe('#0000ff')
 	})
 
 	it('visibility/activity refs work with async mutations', async () => {

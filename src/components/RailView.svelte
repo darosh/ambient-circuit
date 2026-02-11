@@ -3,6 +3,7 @@
 	import { Text3DGeometry, Align, Suspense } from '@threlte/extras'
 	import type { Rail, ResolvedPoint } from '../lib/rail'
 	import type { Instrument } from '../lib/instrument'
+	import type { RailData } from '../lib/rail-data'
 	import { resolveRail } from '../lib/rail-resolve'
 	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/rail-curve'
 	import {
@@ -19,8 +20,7 @@
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 
 	type Props = {
-		rail: Rail
-		color?: string
+		railData: RailData
 		width?: number
 		showPoints?: boolean
 		showBeats?: boolean
@@ -28,13 +28,11 @@
 		wireframe?: boolean
 		fxRails?: boolean
 		fxInstruments?: boolean
-		instruments?: Instrument[]
 		font?: Font
 	}
 
 	let {
-		rail,
-		color = '#00ffff',
+		railData,
 		width = 0.1,
 		showPoints = false,
 		showBeats = false,
@@ -42,9 +40,12 @@
 		wireframe = false,
 		fxRails = true,
 		fxInstruments = true,
-		instruments = [],
 		font
 	}: Props = $props()
+
+	const rail = $derived(railData.rail)
+	const color = $derived(railData.runtime?.color ?? railData.color)
+	const instruments = $derived(railData.instruments ?? [])
 
 	function buildCurvePath(points: ResolvedPoint[], skipFirst = 0): CurvePath<Vector3> | null {
 		const path = new CurvePath<Vector3>()
