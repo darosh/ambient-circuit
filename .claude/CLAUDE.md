@@ -167,7 +167,7 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/rail.ts           - Rail types (authored + resolved) and type guards
 /src/lib/rail-path.ts      - expandPathString(): string path shorthand → Vec3/RailPointFull[]
 /src/lib/rail-resolve.ts   - resolveRail(): authored → engine-internal form (flattens path strings)
-/src/lib/rail-geometry.ts  - buildRailCurve(): resolved points → Vector3 polyline
+/src/lib/rail-curve.ts     - buildRailCurve(): resolved points → Vector3 polyline
 /src/lib/rail-primitives.ts - circle(), roundedRect(), coil(), spiral() helpers
 /src/lib/tempo.ts          - Global tempo/beat system (BPM, play/pause)
 /src/lib/marble.ts         - Marble types (config, state, direction, easing)
@@ -180,7 +180,7 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/scene-ctx.ts      - SceneCtx types (MarbleEntity/InstrumentEntity/RailEntity)
 /src/lib/scene-ctx-factory.ts - createSceneCtx(), updateSceneCtx()
 /src/lib/easing.ts         - Easing functions (maath + custom)
-/src/lib/midi.ts           - Web MIDI API wrapper (init, port selection, sendNote)
+/src/lib/midi/midi.ts      - Web MIDI API wrapper (init, port selection, sendNote)
 /src/lib/rail-data.ts      - Rail definitions with MIDI-enabled onTrigger handlers
 /src/components/Scene.svelte    - 3D scene with rails, marbles, tempo integration
 /src/components/RailView.svelte - renders Rail as TubeGeometry + debug points/beats
