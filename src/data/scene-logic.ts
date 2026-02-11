@@ -133,11 +133,13 @@ export const scene: SceneConfig = {
 					type: 'spiral',
 					beat: 3,
 					actionHandler(ctx) {
-						// Speed up and reverse
 						ctx.marble.state.speed = 2
-
-						if (Math.random() > 0.5) {
+						
+						if (ctx.instrument.state.spinning) {
 							ctx.marble.state.reverse()
+							ctx.instrument.state.spinning = false
+						} else {
+							ctx.instrument.state.spinning = true
 						}
 					}
 				},
@@ -260,22 +262,33 @@ export const scene: SceneConfig = {
 					type: 'cone',
 					beat: 2,
 					actionHandler(ctx) {
-						ctx.marble.state.color = colors[0]
+						ctx.rail.state.color = c()
+						ctx.marble.state.color = ctx.rail.state.color
+						ctx.scene.instruments
+							.filter((i) => i.railId === ctx.railId)
+							.forEach((i) => i.state.color === ctx.rail.state.color)
 					}
 				},
 				{
 					type: 'cone',
 					beat: 5,
 					actionHandler(ctx) {
-						ctx.marble.state.color = colors[1]
+						ctx.rail.state.color = c()
+						ctx.marble.state.color = ctx.rail.state.color
+						ctx.scene.instruments
+							.filter((i) => i.railId === ctx.railId)
+							.forEach((i) => i.state.color === ctx.rail.state.color)
 					}
 				},
 				{
 					type: 'cone',
 					beat: 7,
 					actionHandler(ctx) {
-						// Back to original color
-						ctx.marble.state.color = undefined
+						ctx.rail.state.color = c()
+						ctx.marble.state.color = ctx.rail.state.color
+						ctx.scene.instruments
+							.filter((i) => i.railId === ctx.railId)
+							.forEach((i) => i.state.color === ctx.rail.state.color)
 					}
 				}
 			]

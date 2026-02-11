@@ -118,7 +118,7 @@ export class InstrumentState {
 	// Spinning (for spiral, cone)
 	get spinning(): boolean | undefined {
 		const typed = this.instrument as any
-		return this.instrument.runtime!.spinning ?? typed.spinning
+		return this.instrument.runtime!.spinning ?? typed.spinning ?? true
 	}
 	set spinning(value: boolean | undefined) {
 		this.instrument.runtime!.spinning = value

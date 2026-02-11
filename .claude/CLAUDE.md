@@ -140,7 +140,10 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Blocked/Questions:**
 
-- None currently
+1. We need single source of truth handling of default values, not this: 
+```typescript
+return this.instrument.runtime!.spinning ?? typed.spinning ?? true
+```
 
 ---
 
