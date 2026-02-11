@@ -7,7 +7,7 @@ const c = () => colors[ci++ % colors.length]
 export const scene: SceneConfig = {
 	id: 'scene-logic',
 	bpm: 120,
-	camera: [0,17,15],
+	camera: [0, 17, 15],
 	triggerHandler(ctx) {
 		console.log('TRIGGER', ctx.railId, ctx.beat, ctx.marbleBeat, ctx)
 
