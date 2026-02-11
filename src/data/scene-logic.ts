@@ -75,9 +75,7 @@ export const scene: SceneConfig = {
 					kind: 'play',
 					beat: 2,
 					actionHandler(ctx) {
-						// Jump forward 4 beats, does not work
-						// ctx.state.shiftBeat(4)
-						// does not work as well
+						// Jump forward 4 beats
 						ctx.state.beat = 6
 					}
 				},
