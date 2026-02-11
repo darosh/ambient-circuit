@@ -400,6 +400,10 @@ function checkInstrumentTriggers(
 					marble.runtime.lastTriggeredDirection = marble.direction
 
 					if (marbleEntity && railEntity) {
+						// Set trigger context for position mirroring on reverse
+						marble.runtime.inTrigger = true
+						marble.runtime.triggerBeat = instrument.beat
+
 						triggerHandler({
 							railId,
 							marbleIndex,
@@ -413,6 +417,10 @@ function checkInstrumentTriggers(
 							scene: sceneCtx,
 							midiState: midiState ?? null
 						})
+
+						// Clear trigger context
+						marble.runtime.inTrigger = false
+						marble.runtime.triggerBeat = undefined
 					}
 				}
 			}
@@ -461,6 +469,10 @@ function checkInstrumentTriggers(
 			marble.runtime.lastTriggeredDirection = marble.direction
 
 			if (marbleEntity && railEntity) {
+				// Set trigger context for position mirroring on reverse
+				marble.runtime.inTrigger = true
+				marble.runtime.triggerBeat = instrument.beat
+
 				triggerHandler({
 					railId,
 					marbleIndex,
@@ -474,6 +486,10 @@ function checkInstrumentTriggers(
 					scene: sceneCtx,
 					midiState: midiState ?? null
 				})
+
+				// Clear trigger context
+				marble.runtime.inTrigger = false
+				marble.runtime.triggerBeat = undefined
 			}
 		}
 	}
@@ -654,22 +670,6 @@ export function updateMarble(
 				marble.runtime.lastTriggeredBeat = undefined
 				marble.runtime.lastTriggeredDirection = undefined
 			}
-		}
-	}
-
-	// Clear lastTriggered if marble moved away in current direction (direction-aware)
-	// Forward: clear when we've moved past the triggered beat
-	// Backward: clear when we've moved before the triggered beat
-	const epsilon = 0.1
-	if (marble.runtime.lastTriggeredBeat !== undefined) {
-		const delta = rawBeat - marble.runtime.lastTriggeredBeat
-		const movedAway =
-			(marble.direction === 'forward' && delta > epsilon) ||
-			(marble.direction === 'backward' && delta < -epsilon)
-
-		if (movedAway) {
-			marble.runtime.lastTriggeredBeat = undefined
-			marble.runtime.lastTriggeredDirection = undefined
 		}
 	}
 

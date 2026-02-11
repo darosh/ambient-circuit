@@ -99,9 +99,7 @@
 	}
 
 	// Create reactive runtime states for rails
-	const railRuntimeStates = $state<Array<{ color?: string }>>(
-		rails.map(() => ({}))
-	)
+	const railRuntimeStates = $state<Array<{ color?: string }>>(rails.map(() => ({})))
 
 	// Assign runtimes to rails (reactive references)
 	for (let i = 0; i < rails.length; i++) {

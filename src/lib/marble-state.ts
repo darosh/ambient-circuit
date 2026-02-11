@@ -25,6 +25,22 @@ export class MarbleState {
 		return this.marble.direction
 	}
 	set direction(value: MarbleDirection) {
+		// Mirror position if reversing during trigger (prevents immediate re-cross)
+		if (
+			this.marble.runtime.inTrigger &&
+			this.marble.runtime.triggerBeat !== undefined &&
+			value !== this.marble.direction
+		) {
+			const triggerBeat = this.marble.runtime.triggerBeat
+			const offset = this.marble.currentBeat - triggerBeat
+			// Mirror across trigger beat: if at triggerBeat + 0.01, move to triggerBeat - 0.01
+			this.marble.currentBeat = triggerBeat - offset
+			this.marble.previousBeat = this.marble.currentBeat
+		} else {
+			this.marble.runtime.lastTriggeredBeat = undefined
+			this.marble.runtime.lastTriggeredDirection = undefined
+		}
+
 		this.marble.direction = value
 		// Update direction tracking for re-trigger prevention
 		// Don't overwrite lastTriggeredBeat - already set correctly by checkInstrumentTriggers

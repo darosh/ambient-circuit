@@ -37,6 +37,9 @@ export interface MarbleRuntime {
 	lastTriggeredDirection?: MarbleDirection // direction when last triggered
 	targetBeat?: number // if set, overrides computed beat at end of update
 	jumpedToBeat?: number // beat we just jumped to (trigger instruments here next frame)
+	// Trigger context (for mirroring on reverse)
+	inTrigger?: boolean // true while trigger handler is executing
+	triggerBeat?: number // beat that triggered the current handler
 	// Visual overrides
 	type?: MarbleType // overrides config.type
 	sides?: number // overrides config.sides (for poly type)

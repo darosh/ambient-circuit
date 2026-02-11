@@ -9,6 +9,7 @@ import { scene as sceneStructure } from './scene-structure'
 import { scene as sceneCrossing } from './scene-crossing'
 import { scene as sceneLogic } from './scene-logic'
 import { scene as sceneCtxTest } from './scene-ctx-test'
+import { scene as sceneReverse } from './scene-reverse'
 import { scene as sceneGlobalBeat } from './scene-global-beat'
 
 export const scenes: SceneConfig[] = [
@@ -19,7 +20,8 @@ export const scenes: SceneConfig[] = [
 	sceneRails,
 	sceneOrientation,
 	sceneLogic,
-	sceneCrossing,
 	sceneCtxTest,
-	sceneGlobalBeat
+	sceneReverse,
+	sceneGlobalBeat,
+	sceneCrossing
 ]

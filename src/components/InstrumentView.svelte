@@ -602,7 +602,9 @@
 	let impactBoostSpeed = $state(0)
 	let bounceOffset = $state(0)
 
+	/* eslint-disable @typescript-eslint/no-explicit-any */
 	const effectiveSpinning = $derived(instrument.runtime?.spinning ?? (instrument as any).spinning)
+	/* eslint-enable @typescript-eslint/no-explicit-any */
 	const activeRotationEnabled = $derived.by(() => {
 		if (instrument.type === 'spiral') {
 			return effectiveSpinning ?? true

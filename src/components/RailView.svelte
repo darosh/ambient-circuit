@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { T, useThrelte, useTask } from '@threlte/core'
 	import { Text3DGeometry, Align, Suspense } from '@threlte/extras'
-	import type { Rail, ResolvedPoint } from '../lib/rail'
-	import type { Instrument } from '../lib/instrument'
+	import type { ResolvedPoint } from '../lib/rail'
 	import type { RailData } from '../lib/rail-data'
 	import { resolveRail } from '../lib/rail-resolve'
 	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/rail-curve'
