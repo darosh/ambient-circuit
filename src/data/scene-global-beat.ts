@@ -1,6 +1,6 @@
 import type { SceneConfig } from '../lib/scene'
 import { colors } from './colors'
-import { globalHandlerFactory } from '../lib/trigger-handler'
+import { globalHandlerFactory, triggerHandler } from '../lib/trigger-handler'
 
 let ci = 0
 const c = () => colors[ci++ % colors.length]
@@ -16,15 +16,7 @@ export const scene: SceneConfig = {
 			ctx.scene.instruments[0]!.state.visible = true
 		}, 100)
 	}),
-	triggerHandler(ctx) {
-		console.log('TRIGGER', ctx.railId, ctx.beat)
-		ctx.instrument.instrument.signal!.intensity = 1
-		ctx.marble.marble.signal.intensity = 1
-
-		if (ctx.instrument.instrument.actionHandler) {
-			ctx.instrument.instrument.actionHandler(ctx)
-		}
-	},
+	triggerHandler,
 	rails: [
 		// Simple rail with instrument at downbeats
 		{

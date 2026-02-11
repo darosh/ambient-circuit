@@ -1,24 +1,16 @@
 import type { SceneConfig } from '../lib/scene'
 import { colors } from './colors'
+import { globalHandlerFactory } from '../lib/trigger-handler'
 
 let ci = 0
 const c = () => colors[ci++ % colors.length]
 
-// Store timer IDs for cleanup
-const timers: number[] = []
 let prev = Date.now()
 
 export const scene: SceneConfig = {
 	id: 'scene-reverse',
 	bpm: 120,
-	globalBeatHandler(ctx) {
-		if (ctx.phase === 'destroy') {
-			console.log('[CTX] Cleanup - clearing', timers.length, 'timers')
-			// Clear all timers on destroy
-			timers.forEach((id) => clearTimeout(id))
-			timers.length = 0
-		}
-	},
+	globalBeatHandler: globalHandlerFactory(),
 	triggerHandler(ctx) {
 		// console.log('TRIGGER', ctx.railId, ctx.beat, ctx.marbleBeat)
 

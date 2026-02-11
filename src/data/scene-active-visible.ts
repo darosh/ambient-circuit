@@ -1,5 +1,6 @@
 import type { SceneConfig } from '../lib/scene'
 import { colors } from './colors'
+import { triggerHandler } from '../lib/trigger-handler'
 
 let ci = 0
 const c = () => colors[ci++ % colors.length]
@@ -12,15 +13,7 @@ export const scene: SceneConfig = {
 	globalBeatHandler(_ctx) {
 		_ctx.scene.marbles[3].state.visible = false
 	},
-	triggerHandler(ctx) {
-		console.log('TRIGGER', ctx.railId, ctx.beat)
-		ctx.instrument.instrument.signal!.intensity = 1
-		ctx.marble.marble.signal.intensity = 1
-
-		if (ctx.instrument.instrument.actionHandler) {
-			ctx.instrument.instrument.actionHandler(ctx)
-		}
-	},
+	triggerHandler,
 	rails: [
 		{
 			rail: {

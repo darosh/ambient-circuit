@@ -1,6 +1,6 @@
 import type { SceneConfig } from '../lib/scene'
 import { colors } from './colors'
-import { globalHandlerFactory } from '../lib/trigger-handler'
+import { globalHandlerFactory, triggerHandler } from '../lib/trigger-handler'
 
 let ci = 0
 const c = () => colors[ci++ % colors.length]
@@ -11,18 +11,7 @@ export const scene: SceneConfig = {
 	id: 'scene-ctx-test',
 	bpm: 120,
 	globalBeatHandler,
-	triggerHandler(ctx) {
-		console.log('TRIGGER', ctx.railId, ctx.beat, ctx.marbleBeat)
-
-		// Signal visual feedback
-		ctx.instrument.instrument.signal!.intensity = 1
-		ctx.marble.marble.signal.intensity = 1
-
-		// Execute instrument action if present
-		if (ctx.instrument.instrument.actionHandler) {
-			ctx.instrument.instrument.actionHandler(ctx)
-		}
-	},
+	triggerHandler,
 	rails: [
 		// Example 1: Reverse all marbles
 		{
@@ -38,7 +27,7 @@ export const scene: SceneConfig = {
 					type: 'sun',
 					beat: 3,
 					actionHandler(ctx) {
-						console.log('Reversing all marbles!')
+						// console.log('Reversing all marbles!')
 						// Reverse ALL marbles in the scene
 						ctx.scene.marbles.forEach((_m) => {
 							_m.state.reverse()
@@ -47,7 +36,7 @@ export const scene: SceneConfig = {
 						const otherMarble = ctx.scene.marbles.find(
 							(x) => x.marble.config.resolvedRail.id === 'target-other'
 						)
-						console.log('Other marble at: ', otherMarble?.marble.currentBeat)
+						// console.log('Other marble at: ', otherMarble?.marble.currentBeat)
 					}
 				}
 			]
@@ -71,7 +60,7 @@ export const scene: SceneConfig = {
 						const targetMarble = ctx.scene.marbles[0]
 
 						if (targetMarble) {
-							console.log('Other: speeding up marble 0')
+							// console.log('Other: speeding up marble 0')
 							targetMarble.state.speed = targetMarble.state.speed * 1.5
 
 							if (targetMarble.state.speed > 4) {
@@ -96,7 +85,7 @@ export const scene: SceneConfig = {
 					type: 'heart',
 					beat: 1,
 					actionHandler(ctx) {
-						console.log('Blinking all instruments')
+						// console.log('Blinking all instruments')
 						// Hide all instruments briefly
 						ctx.scene.instruments.forEach((inst) => {
 							inst.state.visible = false
@@ -125,7 +114,7 @@ export const scene: SceneConfig = {
 					beat: 2,
 					actionHandler(_ctx) {
 						// Toggle this instrument's active state - should fire once, then never again
-						console.log('Toggling instrument active to false (should fire once only)')
+						// console.log('Toggling instrument active to false (should fire once only)')
 						_ctx.instrument.state.spinning = false
 						_ctx.instrument.state.active = false
 					}

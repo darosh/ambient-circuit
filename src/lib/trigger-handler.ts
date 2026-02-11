@@ -2,10 +2,18 @@ import { sendMidiNote, getMidiState } from './midi/midi'
 import { GlobalBeatContext, TriggerContext } from './scene'
 
 export function triggerHandler(ctx: TriggerContext) {
+	// console.log('TRIGGER', ctx.railId, ctx.beat)
+
+	// Signal visual feedback
 	ctx.instrument.instrument.signal!.intensity = 1
 	ctx.marble.marble.signal.intensity = 1
 
 	const midiState = getMidiState()
+
+	// Execute instrument action if present
+	if (ctx.instrument.instrument.actionHandler) {
+		ctx.instrument.instrument.actionHandler(ctx)
+	}
 
 	if (midiState?.enabled) {
 		const channel = ctx.instrument.instrument.midiChannel ?? 1

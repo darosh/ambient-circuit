@@ -1,5 +1,6 @@
 import type { SceneConfig } from '../lib/scene'
 import { colors } from './colors'
+import { triggerHandler } from '../lib/trigger-handler'
 
 let ci = 0
 const c = () => colors[ci++ % colors.length]
@@ -8,16 +9,7 @@ export const scene: SceneConfig = {
 	id: 'scene-logic',
 	bpm: 120,
 	camera: [0, 17, 15],
-	triggerHandler(ctx) {
-		console.log('TRIGGER', ctx.railId, ctx.beat, ctx.marbleBeat, ctx)
-
-		ctx.instrument.instrument.signal!.intensity = 1
-		ctx.marble.marble.signal.intensity = 1
-
-		if (ctx.instrument.instrument.actionHandler) {
-			ctx.instrument.instrument.actionHandler(ctx)
-		}
-	},
+	triggerHandler,
 	rails: [
 		// Example 1: Direction reversal
 		{
