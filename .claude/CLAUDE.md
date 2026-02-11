@@ -143,7 +143,7 @@ Create a "marble-machine-inspired" music sequencer where:
 
 1. We need single source of truth handling of default values, not this: ```return this.instrument.runtime!.spinning ?? typed.spinning ?? true```
 2. Instrument on last and first beat is never triggered, in both sequencing modes
-
+3. `visible` prop missing in `InstrumentBase`
 ---
 
 ## Tech Stack
