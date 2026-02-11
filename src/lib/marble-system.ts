@@ -351,7 +351,6 @@ function checkInstrumentTriggers(
 	marbleIndex: number,
 	globalBeat: number,
 	triggerHandler?: TriggerHandler,
-	midiState?: MidiState | null,
 	sceneCtx?: SceneCtx
 ): void {
 	if (instruments.length === 0) return
@@ -414,8 +413,7 @@ function checkInstrumentTriggers(
 							marble: marbleEntity,
 							instrument: instrumentEntity,
 							rail: railEntity,
-							scene: sceneCtx,
-							midiState: midiState ?? null
+							scene: sceneCtx
 						})
 
 						// Clear trigger context
@@ -484,7 +482,6 @@ function checkInstrumentTriggers(
 					instrument: instrumentEntity,
 					rail: railEntity,
 					scene: sceneCtx,
-					midiState: midiState ?? null
 				})
 
 				// Clear trigger context
@@ -506,7 +503,6 @@ export function updateMarble(
 	railId: string = '',
 	marbleIndex: number = 0,
 	triggerHandler?: TriggerHandler,
-	midiState?: MidiState | null,
 	sceneCtx?: SceneCtx
 ): void {
 	const { resolvedRail, sequenceMode, easing, startBeat } = marble.config
@@ -684,7 +680,6 @@ export function updateMarble(
 		marbleIndex,
 		globalBeat,
 		triggerHandler,
-		midiState,
 		sceneCtx
 	)
 
@@ -713,7 +708,6 @@ export function updateMarbles(
 	instrumentsPerRail: Instrument[][] = [],
 	railIds: string[] = [],
 	triggerHandler?: TriggerHandler,
-	midiState?: MidiState | null,
 	sceneCtx?: SceneCtx,
 	globalHandler?: GlobalBeatHandler,
 	globalBeatResolution?: number
@@ -727,6 +721,6 @@ export function updateMarbles(
 	for (let i = 0; i < marbles.length; i++) {
 		const instruments = instrumentsPerRail[i] || []
 		const railId = railIds[i] || ''
-		updateMarble(marbles[i], tempo, instruments, railId, i, triggerHandler, midiState, sceneCtx)
+		updateMarble(marbles[i], tempo, instruments, railId, i, triggerHandler, sceneCtx)
 	}
 }

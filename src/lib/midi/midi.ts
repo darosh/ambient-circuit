@@ -12,6 +12,16 @@ export type MidiState = {
 
 const STORAGE_KEY = 'ambient-circuit-midi-port'
 
+let midiState: MidiState
+
+export function getMidiState () {
+	return midiState
+}
+
+export function setMidiState (midiState_: MidiState) {
+	midiState = midiState_
+}
+
 export async function initMidi(): Promise<MidiState> {
 	try {
 		const access = await navigator.requestMIDIAccess()

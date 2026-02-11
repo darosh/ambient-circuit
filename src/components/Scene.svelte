@@ -30,7 +30,6 @@
 		fxMarbles = true,
 		fxInstruments = true,
 		autoRotate = false,
-		midiState = null,
 		tempo = $bindable(),
 		easing = $bindable(),
 		railVisibility = $bindable(),
@@ -48,7 +47,6 @@
 		fxInstruments?: boolean
 		autoRotate?: boolean
 		showStats?: boolean
-		midiState?: MidiState | null
 		tempo?: TempoState
 		easing?: string
 		railVisibility?: boolean[]
@@ -202,7 +200,6 @@
 			instrumentsPerMarble,
 			railIdPerMarble,
 			scene.triggerHandler,
-			midiState,
 			sceneCtx,
 			scene.globalBeatHandler,
 			scene.globalBeatResolution

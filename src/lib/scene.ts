@@ -12,9 +12,6 @@ export type TriggerContext = InstrumentTriggerContext & {
 
 	// Scene-wide context
 	scene: SceneCtx
-
-	// Convenience/legacy
-	midiState: MidiState | null
 }
 
 export type TriggerHandler = (ctx: TriggerContext) => void

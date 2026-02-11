@@ -5,7 +5,7 @@
 	import { createTempoState } from './lib/tempo'
 	import { easingNames } from './lib/easing'
 	import { scenes } from './data'
-	import { initMidi, setMidiPort, type MidiState } from './lib/midi/midi'
+	import { initMidi, setMidiPort, type MidiState, setMidiState } from './lib/midi/midi'
 	import { WebGPURenderer } from 'three/webgpu'
 	// import * as THREE from 'three/webgpu'
 
@@ -54,6 +54,7 @@
 		if (midiEnabled && !midiState) {
 			initMidi().then((state) => {
 				midiState = state
+				setMidiState(midiState)
 				selectedMidiPort = state.selectedPortId
 			})
 		}
@@ -203,7 +204,6 @@
 			fxMarbles={fxMarbles && !wireframe}
 			fxInstruments={fxInstruments && !wireframe}
 			{autoRotate}
-			{midiState}
 			bind:tempo
 			bind:easing
 			bind:railVisibility
