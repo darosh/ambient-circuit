@@ -139,12 +139,10 @@ Create a "marble-machine-inspired" music sequencer where:
 3. Rail switching API (Phase 3): Teleport marbles between rails with validation
 4. Marble collisions (Phase 4): Bouncer marbles with collision detection
 
-**Blocked/Questions:**
+**Blocked/Questions/Problems:**
 
-1. We need single source of truth handling of default values, not this: 
-```typescript
-return this.instrument.runtime!.spinning ?? typed.spinning ?? true
-```
+1. We need single source of truth handling of default values, not this: ```return this.instrument.runtime!.spinning ?? typed.spinning ?? true```
+2. Instrument on last and first beat is never triggered, in both sequencing modes
 
 ---
 
