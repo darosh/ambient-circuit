@@ -1,11 +1,12 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createMarble, type Marble, type MarbleConfig } from '../src/lib/marble'
+import { createMarble, type MarbleConfig } from '../src/lib/marble'
 import { MarbleState } from '../src/lib/marble-state'
 import { updateMarble } from '../src/lib/marble-system'
 import { resolveRail } from '../src/lib/rail-resolve'
 import { createTempoState, type TempoState } from '../src/lib/tempo'
 import type { Instrument } from '../src/lib/instrument'
 import type { TriggerHandler } from '../src/lib/scene'
+import { MockInstance } from '@vitest/spy'
 
 describe('MarbleState - full roundtrip with triggers', () => {
 	// Helper to create a simple rail
@@ -137,9 +138,11 @@ describe('MarbleState - full roundtrip with triggers', () => {
 
 		// Continue moving - should eventually trigger beat 6 when crossing again
 		advanceTempo(tempo, 10) // wrap around via looping
-		const callsBefore = (triggerHandler as any).mock.calls.length
+		const callsBefore = (triggerHandler as unknown as MockInstance).mock.calls.length
 		updateMarble(marble, tempo, instruments, 'test-rail', 0, triggerHandler)
-		expect((triggerHandler as any).mock.calls.length).toBeGreaterThan(callsBefore)
+		expect((triggerHandler as unknown as MockInstance).mock.calls.length).toBeGreaterThan(
+			callsBefore
+		)
 	})
 
 	it('speed changes apply on next update', () => {
@@ -302,7 +305,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			{ type: 'sun', beat: 6 }
 		]
 
-		let triggeredBeats: number[] = []
+		const triggeredBeats: number[] = []
 		const triggerHandler: TriggerHandler = vi.fn((ctx) => {
 			triggeredBeats.push(ctx.beat)
 			if (ctx.beat === 2) {
@@ -331,5 +334,4 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		// Marble should have moved forward after jumping
 		expect(marble.currentBeat).toBeGreaterThan(6)
 	})
-
 })
