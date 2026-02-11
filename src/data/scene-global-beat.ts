@@ -81,6 +81,46 @@ export const scene: SceneConfig = {
 				{ type: 'sun', beat: 4 },
 				{ type: 'sun', beat: 7.5 }
 			]
+		},
+		{
+			rail: {
+				id: 'circle-start',
+				offset: [-4, 0, -3],
+				nodes: [[0, 0, 0], 'ib rb ob lb']
+			},
+			color: c(),
+			marbles: [{ type: 'ball', start: 0 }],
+			instruments: [{ type: 'sun', beat: 0 }]
+		},
+		{
+			rail: {
+				id: 'circle-end',
+				offset: [-2, 0, -3],
+				nodes: [[0, 0, 0], 'ib rb ob lb']
+			},
+			color: c(),
+			marbles: [{ type: 'ball', start: 0 }],
+			instruments: [{ type: 'sun', beat: 4 }]
+		},
+		{
+			rail: {
+				id: 'circle-start-ping',
+				offset: [1, 0, -3],
+				nodes: [[0, 0, 0], 'ib rb ob lb']
+			},
+			color: c(),
+			marbles: [{ type: 'ball', start: 0, mode: 'ping-pong' }],
+			instruments: [{ type: 'sun', beat: 0 }]
+		},
+		{
+			rail: {
+				id: 'circle-end-ping',
+				offset: [3, 0, -3],
+				nodes: [[0, 0, 0], 'ib rb ob lb']
+			},
+			color: c(),
+			marbles: [{ type: 'ball', start: 0, mode: 'ping-pong' }],
+			instruments: [{ type: 'sun', beat: 4 }]
 		}
 	]
 }
