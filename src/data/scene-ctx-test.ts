@@ -48,8 +48,13 @@ export const scene: SceneConfig = {
 						console.log('Reversing all marbles!')
 						// Reverse ALL marbles in the scene
 						ctx.scene.marbles.forEach((_m) => {
-							// _m.state.reverse()
+							_m.state.reverse()
 						})
+
+						const otherMarble = ctx.scene.marbles.find(
+							(x) => x.marble.config.resolvedRail.id === 'target-other'
+						)
+						console.log('Other marble at: ', otherMarble?.marble.currentBeat)
 					}
 				}
 			]
@@ -71,11 +76,12 @@ export const scene: SceneConfig = {
 					actionHandler(ctx) {
 						// Find marble 0 (on first rail) and speed it up
 						const targetMarble = ctx.scene.marbles[0]
+
 						if (targetMarble) {
-							console.log('Speeding up marble 0')
+							console.log('Other: speeding up marble 0')
 							targetMarble.state.speed = targetMarble.state.speed * 1.5
 
-							if (targetMarble.state.speed > 8) {
+							if (targetMarble.state.speed > 4) {
 								targetMarble.state.speed = 1
 							}
 						}
@@ -125,16 +131,16 @@ export const scene: SceneConfig = {
 				{
 					type: 'spiral',
 					beat: 2,
-					actionHandler(ctx) {
+					actionHandler(_ctx) {
 						// Toggle this instrument's active state - should fire once, then never again
 						console.log('Toggling instrument active to false (should fire once only)')
-						ctx.instrument.state.active = false
+						// _ctx.instrument.state.active = false
 					}
 				},
 				{
 					type: 'cone',
 					beat: 4,
-					active: false, // Start inactive - should never fire
+					// active: false, // Start inactive - should never fire
 					actionHandler(_ctx) {
 						console.log('ERROR: This should NOT fire (instrument is inactive)')
 					}

@@ -375,45 +375,44 @@ function checkInstrumentTriggers(
 
 			// Check if instrument is at or very close to jump target (within 0.01 beats)
 			if (Math.abs(instrument.beat - jumpBeat) < 0.01) {
-				// Prevent re-trigger if already triggered
-				if (
-					marble.runtime.lastTriggeredBeat === instrument.beat &&
-					marble.runtime.lastTriggeredDirection === marble.direction
-				) {
-					continue
-				}
-
 				// Trigger this instrument
-				if (triggerHandler) {
+				if (triggerHandler && sceneCtx) {
+					// Find entities
+					const marbleEntity = sceneCtx.marbles[marbleIndex]
+					const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
+					const railEntity = sceneCtx.rails.find((re) => re.id === railId)
+
+					// Skip if instrument is inactive
+					if (!instrumentEntity || !instrumentEntity.activity.value) {
+						continue
+					}
+
+					// Prevent re-trigger if already triggered in same direction
+					if (
+						marble.runtime.lastTriggeredBeat === instrument.beat &&
+						marble.runtime.lastTriggeredDirection === marble.direction
+					) {
+						continue
+					}
+
+					// Set trigger tracking
 					marble.runtime.lastTriggeredBeat = instrument.beat
 					marble.runtime.lastTriggeredDirection = marble.direction
 
-					if (sceneCtx) {
-						// Find entities
-						const marbleEntity = sceneCtx.marbles[marbleIndex]
-						const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
-						const railEntity = sceneCtx.rails.find((re) => re.id === railId)
-
-						// Skip if instrument is inactive
-						if (!instrumentEntity || !instrumentEntity.activity.value) {
-							continue
-						}
-
-						if (marbleEntity && railEntity) {
-							triggerHandler({
-								railId,
-								marbleIndex,
-								beat: instrument.beat,
-								globalBeat,
-								marbleBeat: jumpBeat,
-								direction: marble.direction,
-								marble: marbleEntity,
-								instrument: instrumentEntity,
-								rail: railEntity,
-								scene: sceneCtx,
-								midiState: midiState ?? null
-							})
-						}
+					if (marbleEntity && railEntity) {
+						triggerHandler({
+							railId,
+							marbleIndex,
+							beat: instrument.beat,
+							globalBeat,
+							marbleBeat: jumpBeat,
+							direction: marble.direction,
+							marble: marbleEntity,
+							instrument: instrumentEntity,
+							rail: railEntity,
+							scene: sceneCtx,
+							midiState: midiState ?? null
+						})
 					}
 				}
 			}
@@ -658,13 +657,20 @@ export function updateMarble(
 		}
 	}
 
-	// Clear lastTriggered if marble moved far enough away (allow re-trigger after loop/jump)
-	if (
-		marble.runtime.lastTriggeredBeat !== undefined &&
-		Math.abs(rawBeat - marble.runtime.lastTriggeredBeat) > 1.5
-	) {
-		marble.runtime.lastTriggeredBeat = undefined
-		marble.runtime.lastTriggeredDirection = undefined
+	// Clear lastTriggered if marble moved away in current direction (direction-aware)
+	// Forward: clear when we've moved past the triggered beat
+	// Backward: clear when we've moved before the triggered beat
+	const epsilon = 0.1
+	if (marble.runtime.lastTriggeredBeat !== undefined) {
+		const delta = rawBeat - marble.runtime.lastTriggeredBeat
+		const movedAway =
+			(marble.direction === 'forward' && delta > epsilon) ||
+			(marble.direction === 'backward' && delta < -epsilon)
+
+		if (movedAway) {
+			marble.runtime.lastTriggeredBeat = undefined
+			marble.runtime.lastTriggeredDirection = undefined
+		}
 	}
 
 	// Check for instrument triggers before updating beat
