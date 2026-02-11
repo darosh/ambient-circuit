@@ -134,7 +134,7 @@ export const scene: SceneConfig = {
 					beat: 3,
 					actionHandler(ctx) {
 						ctx.marble.state.speed = 2
-						
+
 						if (ctx.instrument.state.spinning) {
 							ctx.marble.state.reverse()
 							ctx.instrument.state.spinning = false
