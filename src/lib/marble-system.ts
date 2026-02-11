@@ -265,6 +265,47 @@ function checkInstrumentTriggers(
 	// Determine marble's current path
 	const marblePath: number[] = marble.branchIndex !== null ? [marble.branchIndex] : []
 
+	// Check for jump trigger first (from previous frame's jump)
+	if (marble.runtime.jumpedToBeat !== undefined) {
+		const jumpBeat = marble.runtime.jumpedToBeat
+		marble.runtime.jumpedToBeat = undefined // clear flag
+
+		for (const instrument of instruments) {
+			// Only check instruments on marble's path
+			if (!pathsMatch(marblePath, instrument.path)) continue
+
+			// Check if instrument is at or very close to jump target (within 0.01 beats)
+			if (Math.abs(instrument.beat - jumpBeat) < 0.01) {
+				// Prevent re-trigger if already triggered
+				if (
+					marble.runtime.lastTriggeredBeat === instrument.beat &&
+					marble.runtime.lastTriggeredDirection === marble.direction
+				) {
+					continue
+				}
+
+				// Trigger this instrument
+				if (triggerHandler) {
+					marble.runtime.lastTriggeredBeat = instrument.beat
+					marble.runtime.lastTriggeredDirection = marble.direction
+
+					triggerHandler({
+						railId,
+						marbleIndex,
+						beat: instrument.beat,
+						globalBeat,
+						marbleBeat: jumpBeat,
+						direction: marble.direction,
+						instrument,
+						marble,
+						state: new MarbleState(marble, jumpBeat),
+						midiState: midiState ?? null
+					})
+				}
+			}
+		}
+	}
+
 	// Check direction-aware crossing
 	for (const instrument of instruments) {
 		// Only check instruments on the marble's current path
@@ -518,8 +559,10 @@ export function updateMarble(
 
 	// Apply manual beat override if set by trigger handler
 	if (marble.runtime.targetBeat !== undefined) {
-		marble.currentBeat = marble.runtime.targetBeat
-		marble.previousBeat = marble.runtime.targetBeat // prevent false crossing
+		const target = marble.runtime.targetBeat
+		marble.currentBeat = target
+		marble.previousBeat = target // prevent false crossings
+		marble.runtime.jumpedToBeat = target // check for instruments at this beat next frame
 		marble.runtime.targetBeat = undefined // clear for next frame
 	}
 

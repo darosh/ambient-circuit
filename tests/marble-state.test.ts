@@ -285,7 +285,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		expect(reverseCount).toBe(2) // no additional triggers
 	})
 
-	it('shiftBeat helper moves marble correctly', () => {
+	it('beat jump triggers instrument at target', () => {
 		const rail = createTestRail()
 		const config: MarbleConfig = {
 			resolvedRail: rail,
@@ -297,14 +297,21 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		}
 		const marble = createMarble(config)
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
-		const instruments: Instrument[] = [{ type: 'sun', beat: 2 }]
+		const instruments: Instrument[] = [
+			{ type: 'sun', beat: 2 },
+			{ type: 'sun', beat: 6 }
+		]
 
+		let triggeredBeats: number[] = []
 		const triggerHandler: TriggerHandler = vi.fn((ctx) => {
-			// Shift forward by 3 beats
-			ctx.state.shiftBeat(3)
+			triggeredBeats.push(ctx.beat)
+			if (ctx.beat === 2) {
+				// Jump to beat 6
+				ctx.state.beat = 6
+			}
 		})
 
-		// Advance incrementally to beat 2
+		// Advance to beat 2
 		advanceTempo(tempo, 1)
 		updateMarble(marble, tempo, instruments, 'test-rail', 0, triggerHandler)
 		advanceTempo(tempo, 1)
@@ -312,12 +319,17 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		advanceTempo(tempo, 0.1)
 		updateMarble(marble, tempo, instruments, 'test-rail', 0, triggerHandler)
 
-		// Verify trigger was called
-		expect(triggerHandler).toHaveBeenCalledTimes(1)
-		expect(triggerHandler).toHaveBeenCalledWith(expect.objectContaining({ beat: 2 }))
+		// Should have triggered beat 2 and jumped to 6
+		expect(triggeredBeats).toContain(2)
+		expect(marble.currentBeat).toBeCloseTo(6, 0)
 
-		// Should be at beat 5 now (2 + 3)
-		expect(marble.currentBeat).toBeCloseTo(5, 0)
-		expect(marble.previousBeat).toBeCloseTo(5, 0)
+		// Advance one more frame - should trigger beat 6 (the jump target) and move forward
+		advanceTempo(tempo, 0.1)
+		updateMarble(marble, tempo, instruments, 'test-rail', 0, triggerHandler)
+
+		expect(triggeredBeats).toContain(6)
+		// Marble should have moved forward after jumping
+		expect(marble.currentBeat).toBeGreaterThan(6)
 	})
+
 })

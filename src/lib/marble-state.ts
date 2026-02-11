@@ -35,14 +35,8 @@ export class MarbleState {
 		return this.marbleBeat ?? this.marble.currentBeat
 	}
 	set beat(value: number) {
-		// Set target beat - will be applied at end of updateMarble
+		// Set target beat - will trigger instruments at target on next frame
 		this.marble.runtime.targetBeat = value
-		// Don't set lastTriggeredBeat - allow triggers at the target position
-	}
-
-	// Relative beat shift
-	shiftBeat(delta: number): void {
-		this.beat = this.beat + delta
 	}
 
 	// Note (runtime override or config default)

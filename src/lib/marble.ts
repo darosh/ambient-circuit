@@ -36,6 +36,7 @@ export interface MarbleRuntime {
 	lastTriggeredBeat?: number // beat that was last triggered
 	lastTriggeredDirection?: MarbleDirection // direction when last triggered
 	targetBeat?: number // if set, overrides computed beat at end of update
+	jumpedToBeat?: number // beat we just jumped to (trigger instruments here next frame)
 }
 
 export interface Marble {
