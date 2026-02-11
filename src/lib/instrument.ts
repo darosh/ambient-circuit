@@ -1,4 +1,5 @@
 import type { MarbleDirection } from './marble'
+import { TriggerHandler } from './scene'
 
 export type InstrumentSignal = { intensity: number }
 
@@ -7,6 +8,7 @@ export type InstrumentTriggerContext = {
 	marbleIndex: number
 	beat: number
 	globalBeat: number
+	marbleBeat: number // marble's computed beat for this frame
 	direction: MarbleDirection
 }
 
@@ -32,6 +34,7 @@ type InstrumentBase = {
 	midiVelocity?: number
 	/** Impact signal — set intensity=1 in triggerHandler, InstrumentView decays it */
 	signal?: InstrumentSignal
+	actionHandler?: TriggerHandler
 }
 
 export type PolyInstrument = InstrumentBase & {

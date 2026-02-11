@@ -30,8 +30,17 @@ export interface MarbleConfig {
 	rounds?: number // For coil type (default 3)
 }
 
+export interface MarbleRuntime {
+	speed?: number // overrides config.speed
+	note?: number // overrides config.note
+	lastTriggeredBeat?: number // beat that was last triggered
+	lastTriggeredDirection?: MarbleDirection // direction when last triggered
+	targetBeat?: number // if set, overrides computed beat at end of update
+}
+
 export interface Marble {
 	config: MarbleConfig
+	runtime: MarbleRuntime
 	currentBeat: number // float for sub-beat positioning
 	previousBeat: number // previous beat to detect crossings
 	direction: MarbleDirection
@@ -47,6 +56,7 @@ export interface Marble {
 export function createMarble(config: MarbleConfig): Marble {
 	return {
 		config,
+		runtime: {},
 		currentBeat: config.startBeat,
 		previousBeat: config.startBeat,
 		direction: config.direction,

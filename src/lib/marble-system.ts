@@ -3,6 +3,7 @@ import type { TempoState } from './tempo'
 import type { Instrument } from './instrument'
 import type { TriggerHandler } from './scene'
 import type { MidiState } from './midi'
+import { MarbleState } from './marble-state'
 import {
 	BeatPosition,
 	buildRailCurve,
@@ -246,6 +247,7 @@ function checkInstrumentTriggers(
 	marble: Marble,
 	previousBeat: number,
 	currentBeat: number,
+	marbleBeat: number,
 	instruments: Instrument[],
 	railId: string,
 	marbleIndex: number,
@@ -257,9 +259,8 @@ function checkInstrumentTriggers(
 
 	const beatDelta = currentBeat - previousBeat
 
-	// Skip triggering if beat jumped too far (indicates loop/wrap)
-	// Allow up to 1 beat of movement per frame (generous for high BPM)
-	if (Math.abs(beatDelta) > 1) return
+	// Skip if beat delta is unreasonably large (>100 indicates bug or initialization)
+	if (Math.abs(beatDelta) > 100) return
 
 	// Determine marble's current path
 	const marblePath: number[] = marble.branchIndex !== null ? [marble.branchIndex] : []
@@ -284,14 +285,27 @@ function checkInstrumentTriggers(
 		}
 
 		if (triggered && triggerHandler) {
+			// Prevent immediate re-trigger in same direction at same beat
+			// Use actual beat (not floored) to support fractional positions like 7.3, 7.4, 7.5
+			if (
+				marble.runtime.lastTriggeredBeat === instrument.beat &&
+				marble.runtime.lastTriggeredDirection === marble.direction
+			) {
+				continue
+			}
+			marble.runtime.lastTriggeredBeat = instrument.beat
+			marble.runtime.lastTriggeredDirection = marble.direction
+
 			triggerHandler({
 				railId,
 				marbleIndex,
 				beat: instrument.beat,
 				globalBeat,
+				marbleBeat,
 				direction: marble.direction,
 				instrument,
 				marble,
+				state: new MarbleState(marble, marbleBeat),
 				midiState: midiState ?? null
 			})
 		}
@@ -312,7 +326,7 @@ export function updateMarble(
 	midiState?: MidiState | null
 ): void {
 	const { resolvedRail, sequenceMode, easing, startBeat } = marble.config
-	const speed = marble.config.speed ?? 1
+	const speed = marble.runtime.speed ?? marble.config.speed ?? 1
 
 	// Calculate delta from last update
 	const globalBeat = tempo.currentBeat + tempo.beatProgress
@@ -402,8 +416,10 @@ export function updateMarble(
 			rawBeat = minBeat + (excess % beatRange)
 			if (rawBeat < minBeat) rawBeat += beatRange
 
-			// Reset branch when looping back
+			// Reset branch and trigger state when looping back
 			marble.branchIndex = null
+			marble.runtime.lastTriggeredBeat = undefined
+			marble.runtime.lastTriggeredDirection = undefined
 
 			// Re-wrap with main rail range after reset
 			const mainPoints = getCurrentPathPoints(marble)
@@ -425,8 +441,10 @@ export function updateMarble(
 			rawBeat = maxBeat - (deficit % beatRange)
 			if (rawBeat > maxBeat) rawBeat -= beatRange
 
-			// Reset branch when looping back
+			// Reset branch and trigger state when looping back
 			marble.branchIndex = null
+			marble.runtime.lastTriggeredBeat = undefined
+			marble.runtime.lastTriggeredDirection = undefined
 
 			// Re-wrap with main rail range after reset
 			const mainPoints = getCurrentPathPoints(marble)
@@ -452,6 +470,9 @@ export function updateMarble(
 				marble.direction = 'backward'
 				// Clamp to range
 				if (rawBeat < minBeat) rawBeat = minBeat
+				// Clear trigger state when bouncing
+				marble.runtime.lastTriggeredBeat = undefined
+				marble.runtime.lastTriggeredDirection = undefined
 			}
 		} else {
 			if (rawBeat < minBeat) {
@@ -461,8 +482,20 @@ export function updateMarble(
 				marble.direction = 'forward'
 				// Clamp to range
 				if (rawBeat > maxBeat) rawBeat = maxBeat
+				// Clear trigger state when bouncing
+				marble.runtime.lastTriggeredBeat = undefined
+				marble.runtime.lastTriggeredDirection = undefined
 			}
 		}
+	}
+
+	// Clear lastTriggered if marble moved far enough away (allow re-trigger after loop/jump)
+	if (
+		marble.runtime.lastTriggeredBeat !== undefined &&
+		Math.abs(rawBeat - marble.runtime.lastTriggeredBeat) > 1.5
+	) {
+		marble.runtime.lastTriggeredBeat = undefined
+		marble.runtime.lastTriggeredDirection = undefined
 	}
 
 	// Check for instrument triggers before updating beat
@@ -470,6 +503,7 @@ export function updateMarble(
 		marble,
 		marble.currentBeat,
 		rawBeat,
+		rawBeat, // marbleBeat: the computed beat for this frame
 		instruments,
 		railId,
 		marbleIndex,
@@ -478,13 +512,21 @@ export function updateMarble(
 		midiState
 	)
 
+	// Update beat
 	marble.previousBeat = marble.currentBeat
 	marble.currentBeat = rawBeat
+
+	// Apply manual beat override if set by trigger handler
+	if (marble.runtime.targetBeat !== undefined) {
+		marble.currentBeat = marble.runtime.targetBeat
+		marble.previousBeat = marble.runtime.targetBeat // prevent false crossing
+		marble.runtime.targetBeat = undefined // clear for next frame
+	}
 
 	// Get final points with correct branch state
 	const points = getCurrentPathPoints(marble)
 	const beatPositions = computeBeatPositions(points)
-	calculateMarblePosition(marble, rawBeat, beatPositions, points, easing)
+	calculateMarblePosition(marble, marble.currentBeat, beatPositions, points, easing)
 }
 
 export function updateMarbles(
