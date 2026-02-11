@@ -116,6 +116,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Timer cleanup pattern via destroy phase
   - [x] Cross-entity manipulation (reverse all marbles, target specific entities)
   - [x] Test scenes: scene-ctx-test, scene-global-beat
+- [ ] Reset global beat on scene change 
 - [ ] Non-linear sequencing - advanced
   - [x] Change instrument params in TriggerHandler
   - [ ] Marble collisions: `bouncer: true` reverses on collision
