@@ -2,7 +2,7 @@
 	import { T, useTask } from '@threlte/core'
 	import type { Instrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
-	import { getBeatTransform, getPointsForPath } from '../lib/video/rail-geometry'
+	import { getBeatTransform, getPointsForPath } from '../lib/rail-curve'
 	import {
 		MeshStandardMaterial,
 		CurvePath,

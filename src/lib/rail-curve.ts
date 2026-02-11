@@ -1,5 +1,5 @@
 import { Vector3, CubicBezierCurve3 } from 'three/webgpu'
-import type { ResolvedPoint, ResolvedRail, Vec3 } from '../rail'
+import type { ResolvedPoint, ResolvedRail, Vec3 } from './rail'
 
 /** Interpolated points per curved segment */
 const CURVE_SEGMENTS = 12
@@ -131,7 +131,7 @@ export function getPointsForPath(rail: ResolvedRail, path?: number[]): ResolvedP
 	}
 
 	const firstSplit = rail.splits[0]
-	const splitIdx = rail.points.findIndex((p) => p.beat === firstSplit.beat)
+	const splitIdx = rail.points.findIndex((p: ResolvedPoint) => p.beat === firstSplit.beat)
 
 	// Include point before split for proper tangent computation
 	const startIdx = Math.max(0, splitIdx - 1)

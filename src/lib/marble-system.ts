@@ -10,7 +10,7 @@ import {
 	computeBeatPositions,
 	buildSegmentCurve,
 	enhanceBeatPositionsWithPolylineIndices
-} from './video/rail-geometry'
+} from './rail-curve'
 import { easingFunctions } from './easing'
 import { Vector3 } from 'three/webgpu'
 import { ResolvedPoint, ResolvedSplit } from './rail'

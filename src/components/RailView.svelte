@@ -4,7 +4,7 @@
 	import type { Rail, ResolvedPoint } from '../lib/rail'
 	import type { Instrument } from '../lib/instrument'
 	import { resolveRail } from '../lib/rail-resolve'
-	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/video/rail-geometry'
+	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/rail-curve'
 	import {
 		type BufferGeometry,
 		CurvePath,
