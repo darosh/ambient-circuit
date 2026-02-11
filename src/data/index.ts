@@ -7,6 +7,7 @@ import { scene as sceneRails } from './scene-rails'
 import { scene as sceneOrientation } from './scene-orientation'
 import { scene as sceneStructure } from './scene-structure'
 import { scene as sceneCrossing } from './scene-crossing'
+import { scene as sceneLogic } from './scene-logic'
 
 export const scenes: SceneConfig[] = [
 	sceneTest,
@@ -15,5 +16,6 @@ export const scenes: SceneConfig[] = [
 	sceneMarbles,
 	sceneRails,
 	sceneOrientation,
+	sceneLogic,
 	sceneCrossing
 ]

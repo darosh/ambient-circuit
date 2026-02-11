@@ -95,22 +95,35 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] 'spiral' (Archimedean spiral, `rounds` and `counterCW` params, non-uniform sampling for detail)
   - [x] 'cone' (3D conical spiral, `rounds`, `counterCW`, `align` [center/tip/back], `point` [forward/backward])
   - [x] 'arrow' (7 shape variants via `kind` prop: plain/play/fwd/rec/stop/step/pause)
-  - [x] 'sun' (12-sided inner circle + configurable rays with `brightness` param) 
-- [ ] Extend marble logic: `bouncer: true` will reverse direction on collision of two marbles and call bounceHandler with bouncer and affected marble as ctx
+  - [x] 'sun' (12-sided inner circle + configurable rays with `brightness` param)
+- [x] Non-linear sequencing - runtime marble modification
+  - [x] `MarbleState` API via `ctx.state` in instrument handlers
+  - [x] Speed modification: `ctx.state.speed = 2` (runtime override)
+  - [x] Direction reversal: `ctx.state.reverse()` (prevents re-trigger oscillation)
+  - [x] Beat positioning: `ctx.state.beat = 6` or `ctx.state.shiftBeat(3)`
+  - [x] Note modification: `ctx.state.note = 72`
+  - [x] Re-trigger prevention (lastTriggeredBeat + direction tracking)
+  - [x] Auto-clear on loop/bounce (fixes short rails < 1.5 beat range)
+  - [x] Fractional beat support (7.3, 7.4, 7.5 trigger independently)
+  - [x] Demo scene (scene-logic) with 6 examples
+- [ ] Non-linear sequencing - advanced
+  - [ ] Change instrument params in TriggerHandler
+  - [ ] Marble collisions: `bouncer: true` reverses on collision
+  - [ ] Multi-marble interaction patterns
 - [ ] Visual polishing, WebGPU, TSL
-  - [ ] rails
-  - [ ] marbles
-  - [ ] instruments
+  - [x] rails
+  - [x] marbles
+  - [x] instruments
   - [ ] feedback (lightning effects on collision)
-  - [ ] complex circuit
 - [ ] Audio instruments triggering (Tone.js)
 - [ ] `FX`, audio processing
 - [ ] RNBO `FX` audio processing
 
 **Next Steps:**
 
-1. Visual polishing
-2. Complex circuit definition
+1. Fix: Beat jump doesn't trigger jumped-to instrument
+2. Instrument runtime modification (color, type, params)
+3. Marble runtime modification (type, params, color)
 
 **Blocked/Questions:**
 
