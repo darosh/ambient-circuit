@@ -11,6 +11,7 @@ import { scene as sceneLogic } from './scene-logic'
 import { scene as sceneCtxTest } from './scene-ctx-test'
 import { scene as sceneReverse } from './scene-reverse'
 import { scene as sceneGlobalBeat } from './scene-global-beat'
+import { scene as sceneActiveVisible } from './scene-active-visible'
 
 export const scenes: SceneConfig[] = [
 	sceneTest,
@@ -23,5 +24,6 @@ export const scenes: SceneConfig[] = [
 	sceneCtxTest,
 	sceneReverse,
 	sceneGlobalBeat,
+	sceneActiveVisible,
 	sceneCrossing
 ]
