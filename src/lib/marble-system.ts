@@ -2,7 +2,6 @@ import type { Marble } from './marble'
 import type { TempoState } from './tempo'
 import type { Instrument } from './instrument'
 import type { TriggerHandler, GlobalBeatHandler } from './scene'
-import type { MidiState } from './midi/midi'
 import type { SceneCtx } from './scene-ctx'
 import {
 	BeatPosition,
@@ -481,7 +480,7 @@ function checkInstrumentTriggers(
 					marble: marbleEntity,
 					instrument: instrumentEntity,
 					rail: railEntity,
-					scene: sceneCtx,
+					scene: sceneCtx
 				})
 
 				// Clear trigger context

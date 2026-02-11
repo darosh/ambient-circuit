@@ -14,11 +14,11 @@ const STORAGE_KEY = 'ambient-circuit-midi-port'
 
 let midiState: MidiState
 
-export function getMidiState () {
+export function getMidiState() {
 	return midiState
 }
 
-export function setMidiState (midiState_: MidiState) {
+export function setMidiState(midiState_: MidiState) {
 	midiState = midiState_
 }
 

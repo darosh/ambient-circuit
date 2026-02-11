@@ -1,4 +1,4 @@
 # TODO (no AI)
 
-- [ ] global handler factory
-- [ ] refactor MIDI
+- [x] global handler factory
+- [x] refactor MIDI

@@ -4,9 +4,6 @@ import { colors } from './colors'
 let ci = 0
 const c = () => colors[ci++ % colors.length]
 
-// Store timer IDs for cleanup
-const timers: number[] = []
-
 export const scene: SceneConfig = {
 	id: 'scene-active-visible',
 	bpm: 120,
