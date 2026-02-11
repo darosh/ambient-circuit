@@ -116,7 +116,6 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Timer cleanup pattern via destroy phase
   - [x] Cross-entity manipulation (reverse all marbles, target specific entities)
   - [x] Test scenes: scene-ctx-test, scene-global-beat
-- [ ] Reset global beat on scene change 
 - [ ] Non-linear sequencing - advanced
   - [x] Change instrument params in TriggerHandler
   - [ ] Marble collisions: `bouncer: true` reverses on collision
@@ -135,15 +134,17 @@ Create a "marble-machine-inspired" music sequencer where:
 **Next Steps:**
 
 1. Fix: Beat jump doesn't trigger jumped-to instrument (middle arrow not triggered on way back)
-2. Active state enforcement (Phase 2.2): Skip inactive instruments/marbles in triggers
-3. Rail switching API (Phase 3): Teleport marbles between rails with validation
-4. Marble collisions (Phase 4): Bouncer marbles with collision detection
+2. Fix: We need single source of truth handling of default values, not this: ```return this.instrument.runtime!.spinning ?? typed.spinning ?? true```
+3. Fix: Instrument on last and first beat is never triggered, in both sequencing modes
+4. Fix: `visible` prop missing in `InstrumentBase`
+5. Active state enforcement (Phase 2.2): Skip inactive instruments/marbles in triggers
+6. Rail switching API (Phase 3): Teleport marbles between rails with validation
+7. Marble collisions (Phase 4): Bouncer marbles with collision detection
 
-**Blocked/Questions/Problems:**
+**Blocked/Questions:**
 
-1. We need single source of truth handling of default values, not this: ```return this.instrument.runtime!.spinning ?? typed.spinning ?? true```
-2. Instrument on last and first beat is never triggered, in both sequencing modes
-3. `visible` prop missing in `InstrumentBase`
+- None currently
+
 ---
 
 ## Tech Stack

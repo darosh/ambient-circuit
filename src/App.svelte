@@ -47,6 +47,8 @@
 
 	$effect(() => {
 		tempo.config.bpm = activeScene.bpm
+		tempo.beatProgress = 0
+		tempo.currentBeat = 0
 	})
 
 	// Lazy init MIDI when enabled
