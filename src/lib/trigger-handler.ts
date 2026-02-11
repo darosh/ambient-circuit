@@ -1,4 +1,4 @@
-import { sendMidiNote } from './midi'
+import { sendMidiNote } from './midi/midi'
 import { TriggerContext } from './scene'
 
 export function triggerHandler(ctx: TriggerContext) {

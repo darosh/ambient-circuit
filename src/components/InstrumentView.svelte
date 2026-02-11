@@ -2,7 +2,7 @@
 	import { T, useTask } from '@threlte/core'
 	import type { Instrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
-	import { getBeatTransform, getPointsForPath } from '../lib/rail-geometry'
+	import { getBeatTransform, getPointsForPath } from '../lib/video/rail-geometry'
 	import {
 		MeshStandardMaterial,
 		CurvePath,
@@ -16,7 +16,7 @@
 	import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 	import { easeOutQuart, easeInBounce } from '../lib/easing'
 	import { makeInstrumentMaterial } from '../lib/config'
-	import { buildTubeGeometry } from '../lib/tube-geometry'
+	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import { lerp } from 'three/src/math/MathUtils.js'
 
 	// Geometry segment multipliers

@@ -9,7 +9,7 @@
 	import { createMarble } from '../lib/marble'
 	import { updateMarbles, fireGlobalBeatInit, fireGlobalBeatDestroy } from '../lib/marble-system'
 	import { resolveRail } from '../lib/rail-resolve'
-	import type { MidiState } from '../lib/midi'
+	import type { MidiState } from '../lib/midi/midi'
 	import type { SceneConfig } from '../lib/scene'
 	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
 	import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'

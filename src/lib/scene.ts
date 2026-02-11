@@ -1,5 +1,5 @@
 import type { InstrumentTriggerContext } from './instrument'
-import type { MidiState } from './midi'
+import type { MidiState } from './midi/midi'
 import type { RailData } from './rail-data'
 import type { SceneCtx, MarbleEntity, InstrumentEntity, RailEntity } from './scene-ctx'
 import { Vector3Tuple } from 'three/webgpu'

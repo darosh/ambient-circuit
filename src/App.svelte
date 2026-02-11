@@ -5,7 +5,7 @@
 	import { createTempoState } from './lib/tempo'
 	import { easingNames } from './lib/easing'
 	import { scenes } from './data'
-	import { initMidi, setMidiPort, type MidiState } from './lib/midi'
+	import { initMidi, setMidiPort, type MidiState } from './lib/midi/midi'
 	import { WebGPURenderer } from 'three/webgpu'
 	// import * as THREE from 'three/webgpu'
 

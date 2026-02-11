@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { Vector3 } from 'three'
 import type { ResolvedPoint } from '../src/lib/rail'
-import { computeBeatPositions, buildSegmentCurve } from '../src/lib/rail-geometry'
+import { computeBeatPositions, buildSegmentCurve } from '../src/lib/video/rail-geometry'
 
 function pt(
 	p: [number, number, number],

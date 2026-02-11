@@ -13,7 +13,7 @@
 	} from 'three/webgpu'
 	import { makeMarbleMaterial } from '../lib/config'
 	import { easeOutQuart } from '../lib/easing'
-	import { buildTubeGeometry } from '../lib/tube-geometry'
+	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { ResolvedRail } from '../lib/rail'
 
 	// Geometry constants

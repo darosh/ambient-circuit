@@ -2,7 +2,7 @@ import type { Marble } from './marble'
 import type { TempoState } from './tempo'
 import type { Instrument } from './instrument'
 import type { TriggerHandler, GlobalBeatHandler } from './scene'
-import type { MidiState } from './midi'
+import type { MidiState } from './midi/midi'
 import type { SceneCtx } from './scene-ctx'
 import {
 	BeatPosition,
@@ -10,7 +10,7 @@ import {
 	computeBeatPositions,
 	buildSegmentCurve,
 	enhanceBeatPositionsWithPolylineIndices
-} from './rail-geometry'
+} from './video/rail-geometry'
 import { easingFunctions } from './easing'
 import { Vector3 } from 'three/webgpu'
 import { ResolvedPoint, ResolvedSplit } from './rail'
