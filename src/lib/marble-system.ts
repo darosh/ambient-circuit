@@ -1,8 +1,9 @@
 import type { Marble } from './marble'
 import type { TempoState } from './tempo'
 import type { Instrument } from './instrument'
-import type { TriggerHandler } from './scene'
+import type { TriggerHandler, GlobalBeatHandler } from './scene'
 import type { MidiState } from './midi'
+import type { SceneCtx, HandlerCtx } from './scene-ctx'
 import { MarbleState } from './marble-state'
 import { InstrumentState } from './instrument-state'
 import {
@@ -15,6 +16,10 @@ import {
 import { easingFunctions } from './easing'
 import { Vector3 } from 'three/webgpu'
 import { ResolvedPoint, ResolvedSplit } from './rail'
+
+// Module-level state for global beat tracking
+let prevGlobalBeat = -1
+let prevIsPlaying = false
 
 /**
  * Find closest point index on polyline to a target position.
@@ -48,6 +53,100 @@ function selectBranch(marble: Marble, split: ResolvedSplit): number {
 		}
 	}
 	return 0
+}
+
+/**
+ * Check if global beat changed and fire handler.
+ * Fires on play state change or tick transitions (resolution configurable).
+ */
+export function checkGlobalBeatTrigger(
+	tempo: TempoState,
+	sceneCtx: SceneCtx,
+	globalHandler?: GlobalBeatHandler,
+	resolution: number = 8
+): void {
+	if (!globalHandler) return
+
+	const globalBeat = tempo.currentBeat + tempo.beatProgress
+	const isPlaying = tempo.isPlaying
+
+	// Fire on play state change
+	if (isPlaying !== prevIsPlaying) {
+		globalHandler({
+			scene: sceneCtx,
+			beat: globalBeat,
+			prevBeat: prevGlobalBeat,
+			isPlaying,
+			phase: isPlaying ? 'play' : 'pause'
+		})
+		prevIsPlaying = isPlaying
+		prevGlobalBeat = globalBeat
+		return
+	}
+
+	// Fire on fractional beat change (resolution configurable: 8 = eighth, 16 = sixteenth)
+	if (isPlaying) {
+		const currTick = Math.floor(globalBeat * resolution)
+		const prevTick = Math.floor(prevGlobalBeat * resolution)
+
+		if (currTick !== prevTick) {
+			globalHandler({
+				scene: sceneCtx,
+				beat: globalBeat,
+				prevBeat: prevGlobalBeat,
+				isPlaying,
+				phase: 'tick'
+			})
+		}
+	}
+
+	prevGlobalBeat = globalBeat
+}
+
+/**
+ * Fire global handler on scene init
+ */
+export function fireGlobalBeatInit(
+	tempo: TempoState,
+	sceneCtx: SceneCtx,
+	globalHandler?: GlobalBeatHandler
+): void {
+	if (!globalHandler) return
+
+	const globalBeat = tempo.currentBeat + tempo.beatProgress
+
+	globalHandler({
+		scene: sceneCtx,
+		beat: globalBeat,
+		prevBeat: -1,
+		isPlaying: tempo.isPlaying,
+		phase: 'init'
+	})
+
+	// Initialize tracking state
+	prevGlobalBeat = globalBeat
+	prevIsPlaying = tempo.isPlaying
+}
+
+/**
+ * Fire global handler on scene destroy
+ */
+export function fireGlobalBeatDestroy(
+	tempo: TempoState,
+	sceneCtx: SceneCtx,
+	globalHandler?: GlobalBeatHandler
+): void {
+	if (!globalHandler) return
+
+	const globalBeat = tempo.currentBeat + tempo.beatProgress
+
+	globalHandler({
+		scene: sceneCtx,
+		beat: globalBeat,
+		prevBeat: prevGlobalBeat,
+		isPlaying: tempo.isPlaying,
+		phase: 'destroy'
+	})
 }
 
 /**
@@ -254,7 +353,8 @@ function checkInstrumentTriggers(
 	marbleIndex: number,
 	globalBeat: number,
 	triggerHandler?: TriggerHandler,
-	midiState?: MidiState | null
+	midiState?: MidiState | null,
+	sceneCtx?: SceneCtx
 ): void {
 	if (instruments.length === 0) return
 
@@ -290,6 +390,27 @@ function checkInstrumentTriggers(
 					marble.runtime.lastTriggeredBeat = instrument.beat
 					marble.runtime.lastTriggeredDirection = marble.direction
 
+					// Build context for handler
+					const marbleState = new MarbleState(marble, jumpBeat)
+					const instrumentState = new InstrumentState(instrument)
+
+					// Build handler context (if sceneCtx available)
+					let handlerCtx: HandlerCtx | undefined
+					if (sceneCtx) {
+						const marbleEntity = sceneCtx.marbles[marbleIndex]
+						const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
+						const railEntity = sceneCtx.rails.find((re) => re.id === railId)
+
+						if (marbleEntity && instrumentEntity && railEntity) {
+							handlerCtx = {
+								scene: sceneCtx,
+								marble: marbleEntity,
+								instrument: instrumentEntity,
+								rail: railEntity
+							}
+						}
+					}
+
 					triggerHandler({
 						railId,
 						marbleIndex,
@@ -299,9 +420,11 @@ function checkInstrumentTriggers(
 						direction: marble.direction,
 						instrument,
 						marble,
-						state: new MarbleState(marble, jumpBeat),
-						instrumentState: new InstrumentState(instrument),
-						midiState: midiState ?? null
+						state: marbleState,
+						instrumentState,
+						midiState: midiState ?? null,
+						scene: sceneCtx!,
+						ctx: handlerCtx!
 					})
 				}
 			}
@@ -339,6 +462,27 @@ function checkInstrumentTriggers(
 			marble.runtime.lastTriggeredBeat = instrument.beat
 			marble.runtime.lastTriggeredDirection = marble.direction
 
+			// Build context for handler
+			const marbleState = new MarbleState(marble, marbleBeat)
+			const instrumentState = new InstrumentState(instrument)
+
+			// Build handler context (if sceneCtx available)
+			let handlerCtx: HandlerCtx | undefined
+			if (sceneCtx) {
+				const marbleEntity = sceneCtx.marbles[marbleIndex]
+				const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
+				const railEntity = sceneCtx.rails.find((re) => re.id === railId)
+
+				if (marbleEntity && instrumentEntity && railEntity) {
+					handlerCtx = {
+						scene: sceneCtx,
+						marble: marbleEntity,
+						instrument: instrumentEntity,
+						rail: railEntity
+					}
+				}
+			}
+
 			triggerHandler({
 				railId,
 				marbleIndex,
@@ -348,9 +492,11 @@ function checkInstrumentTriggers(
 				direction: marble.direction,
 				instrument,
 				marble,
-				state: new MarbleState(marble, marbleBeat),
-				instrumentState: new InstrumentState(instrument),
-				midiState: midiState ?? null
+				state: marbleState,
+				instrumentState,
+				midiState: midiState ?? null,
+				scene: sceneCtx!,
+				ctx: handlerCtx!
 			})
 		}
 	}
@@ -367,7 +513,8 @@ export function updateMarble(
 	railId: string = '',
 	marbleIndex: number = 0,
 	triggerHandler?: TriggerHandler,
-	midiState?: MidiState | null
+	midiState?: MidiState | null,
+	sceneCtx?: SceneCtx
 ): void {
 	const { resolvedRail, sequenceMode, easing, startBeat } = marble.config
 	const speed = marble.runtime.speed ?? marble.config.speed ?? 1
@@ -553,7 +700,8 @@ export function updateMarble(
 		marbleIndex,
 		globalBeat,
 		triggerHandler,
-		midiState
+		midiState,
+		sceneCtx
 	)
 
 	// Update beat
@@ -581,11 +729,20 @@ export function updateMarbles(
 	instrumentsPerRail: Instrument[][] = [],
 	railIds: string[] = [],
 	triggerHandler?: TriggerHandler,
-	midiState?: MidiState | null
+	midiState?: MidiState | null,
+	sceneCtx?: SceneCtx,
+	globalHandler?: GlobalBeatHandler,
+	globalBeatResolution?: number
 ): void {
+	// Fire global beat handler first (before marble updates)
+	if (sceneCtx && globalHandler) {
+		checkGlobalBeatTrigger(tempo, sceneCtx, globalHandler, globalBeatResolution)
+	}
+
+	// Update each marble
 	for (let i = 0; i < marbles.length; i++) {
 		const instruments = instrumentsPerRail[i] || []
 		const railId = railIds[i] || ''
-		updateMarble(marbles[i], tempo, instruments, railId, i, triggerHandler, midiState)
+		updateMarble(marbles[i], tempo, instruments, railId, i, triggerHandler, midiState, sceneCtx)
 	}
 }

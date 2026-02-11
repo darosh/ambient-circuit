@@ -42,6 +42,7 @@
 	let { marble = $bindable(), rail, color, wireframe = false, fxMarbles = true }: Props = $props()
 
 	const effectiveColor = $derived(marble.runtime.color ?? color)
+	const effectiveVisible = $derived(marble.runtime.visible ?? true)
 
 	const fx = $derived(makeMarbleMaterial(effectiveColor))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color: effectiveColor }))
@@ -196,18 +197,20 @@
 	})
 </script>
 
-{#if type === 'ball'}
-	<T.Mesh
-		position={[marble.position.x, marble.position.y, marble.position.z]}
-		material={fxMarbles ? fx.mat : plainMaterial}
-	>
-		<T.SphereGeometry args={[BALL_RADIUS, BALL_WIDTH_SEGMENTS, BALL_HEIGHT_SEGMENTS]} />
-	</T.Mesh>
-{:else if geometry}
-	<T.Mesh
-		position={[marble.position.x, marble.position.y, marble.position.z]}
-		{rotation}
-		{geometry}
-		material={fxMarbles ? fx.mat : plainMaterial}
-	/>
+{#if effectiveVisible}
+	{#if type === 'ball'}
+		<T.Mesh
+			position={[marble.position.x, marble.position.y, marble.position.z]}
+			material={fxMarbles ? fx.mat : plainMaterial}
+		>
+			<T.SphereGeometry args={[BALL_RADIUS, BALL_WIDTH_SEGMENTS, BALL_HEIGHT_SEGMENTS]} />
+		</T.Mesh>
+	{:else if geometry}
+		<T.Mesh
+			position={[marble.position.x, marble.position.y, marble.position.z]}
+			{rotation}
+			{geometry}
+			material={fxMarbles ? fx.mat : plainMaterial}
+		/>
+	{/if}
 {/if}

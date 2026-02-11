@@ -7,7 +7,9 @@ import type { Marble, MarbleDirection } from './marble'
 export class MarbleState {
 	constructor(
 		private marble: Marble,
-		private marbleBeat?: number
+		private marbleBeat?: number,
+		private visibility?: { value: boolean },
+		private activity?: { value: boolean }
 	) {}
 
 	// Speed (runtime override or config default)
@@ -79,5 +81,22 @@ export class MarbleState {
 	}
 	set color(value: string | undefined) {
 		this.marble.runtime.color = value
+	}
+
+	// Visibility/activity (async-safe via refs)
+	get visible(): boolean {
+		return this.visibility?.value ?? true
+	}
+	set visible(v: boolean) {
+		if (this.visibility) this.visibility.value = v
+		// Also store in runtime for View access
+		this.marble.runtime.visible = v
+	}
+
+	get active(): boolean {
+		return this.activity?.value ?? true
+	}
+	set active(v: boolean) {
+		if (this.activity) this.activity.value = v
 	}
 }

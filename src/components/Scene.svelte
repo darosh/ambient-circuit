@@ -1,16 +1,18 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	import { untrack } from 'svelte'
+	import { untrack, onMount, onDestroy } from 'svelte'
 	import { OrbitControls } from '@threlte/extras'
 	import RailView from './RailView.svelte'
 	import MarbleView from './MarbleView.svelte'
 	import Bloom from './Bloom.svelte'
 	import { createTempoState, updateTempo, type TempoState } from '../lib/tempo'
 	import { createMarble } from '../lib/marble'
-	import { updateMarbles } from '../lib/marble-system'
+	import { updateMarbles, fireGlobalBeatInit, fireGlobalBeatDestroy } from '../lib/marble-system'
 	import { resolveRail } from '../lib/rail-resolve'
 	import type { MidiState } from '../lib/midi'
 	import type { SceneConfig } from '../lib/scene'
+	import type { SceneCtx } from '../lib/scene-ctx'
+	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
 	import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 	import { useLoader } from '@threlte/core'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
@@ -137,6 +139,26 @@
 		railVisibility = rails.map(() => true)
 	}
 
+	// Create scene context once at mount (non-reactive to avoid loops)
+	const sceneCtx = (() => {
+		const ctx = createSceneCtx(marbles, rails, marbleRailIndices, tempo)
+		return ctx
+	})()
+
+	// Fire init handler on mount
+	onMount(() => {
+		if (scene.globalBeatHandler) {
+			fireGlobalBeatInit(tempo, sceneCtx, scene.globalBeatHandler)
+		}
+	})
+
+	// Fire destroy handler on unmount
+	onDestroy(() => {
+		if (scene.globalBeatHandler) {
+			fireGlobalBeatDestroy(tempo, sceneCtx, scene.globalBeatHandler)
+		}
+	})
+
 	// FPS tracking
 	if (fps === undefined) fps = 0
 	let frames = 0
@@ -155,6 +177,11 @@
 
 		updateTempo(tempo, delta * 1000)
 
+		// Update scene context (beat/play state)
+		if (sceneCtx) {
+			updateSceneCtx(sceneCtx, tempo)
+		}
+
 		// Update easing based on prop
 		for (const marble of marbles) {
 			marble.config.easing = easing || 'linear'
@@ -168,7 +195,10 @@
 			instrumentsPerMarble,
 			railIdPerMarble,
 			scene.triggerHandler,
-			midiState
+			midiState,
+			sceneCtx,
+			scene.globalBeatHandler,
+			scene.globalBeatResolution
 		)
 	})
 </script>

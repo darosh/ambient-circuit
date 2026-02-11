@@ -17,6 +17,7 @@ export interface InstrumentRuntime {
 	pulse?: boolean
 	active?: boolean
 	rays?: number
+	visible?: boolean
 }
 
 export type InstrumentTriggerContext = {

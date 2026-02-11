@@ -42,6 +42,7 @@ export interface MarbleRuntime {
 	sides?: number // overrides config.sides (for poly type)
 	rounds?: number // overrides config.rounds (for coil type)
 	color?: string // hex color override (e.g. '#ff0000')
+	visible?: boolean // visibility override
 }
 
 export interface Marble {

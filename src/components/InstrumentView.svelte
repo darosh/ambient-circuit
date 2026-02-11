@@ -78,6 +78,7 @@
 
 	const fx = $derived(makeInstrumentMaterial(effectiveColor, effectiveType !== 'heart'))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color: effectiveColor }))
+	const effectiveVisible = $derived(instrument.runtime?.visible ?? true)
 
 	$effect(() => {
 		fx.mat.wireframe = wireframe
@@ -720,7 +721,7 @@
 	})
 </script>
 
-{#if transform}
+{#if transform && effectiveVisible}
 	<T.Mesh {position} {rotation} {geometry} material={fxInstruments ? fx.mat : plainMaterial} />
 	{#if innerGeometry}
 		<T.Mesh

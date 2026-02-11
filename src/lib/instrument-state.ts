@@ -5,7 +5,11 @@ import type { Instrument } from './instrument'
  * Handles runtime overrides automatically.
  */
 export class InstrumentState {
-	constructor(private instrument: Instrument) {
+	constructor(
+		private instrument: Instrument,
+		private visibility?: { value: boolean },
+		private activity?: { value: boolean }
+	) {
 		// Initialize runtime if not present
 		if (!this.instrument.runtime) {
 			this.instrument.runtime = {}
@@ -129,4 +133,21 @@ export class InstrumentState {
 		this.instrument.runtime!.rays = value
 	}
 	/* eslint-enable @typescript-eslint/no-explicit-any */
+
+	// Visibility/activity (async-safe via refs)
+	get visible(): boolean {
+		return this.visibility?.value ?? true
+	}
+	set visible(v: boolean) {
+		if (this.visibility) this.visibility.value = v
+		// Also store in runtime for View access
+		this.instrument.runtime!.visible = v
+	}
+
+	get activityState(): boolean {
+		return this.activity?.value ?? true
+	}
+	set activityState(v: boolean) {
+		if (this.activity) this.activity.value = v
+	}
 }
