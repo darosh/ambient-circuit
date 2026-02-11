@@ -55,7 +55,7 @@ export const scene: SceneConfig = {
 		// Simple rail with instrument at downbeats
 		{
 			rail: {
-				id: 'test-global',
+				id: 'downbeats',
 				offset: [-4, 0, 0],
 				nodes: [[0, 0, 0], 'r r r r r r r r']
 			},
@@ -65,6 +65,21 @@ export const scene: SceneConfig = {
 				{ type: 'sun', beat: 0 },
 				{ type: 'sun', beat: 4 },
 				{ type: 'sun', beat: 8 }
+			]
+		},
+		// Simple rail with instrument at half beats
+		{
+			rail: {
+				id: 'half-beats',
+				offset: [-4, 0, 1],
+				nodes: [[0, 0, 0], 'r r r r r r r r']
+			},
+			color: c(),
+			marbles: [{ type: 'ball', start: 0 }],
+			instruments: [
+				{ type: 'sun', beat: 0.5 },
+				{ type: 'sun', beat: 4 },
+				{ type: 'sun', beat: 7.5 }
 			]
 		}
 	]

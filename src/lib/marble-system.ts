@@ -394,7 +394,12 @@ function checkInstrumentTriggers(
 						const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
 						const railEntity = sceneCtx.rails.find((re) => re.id === railId)
 
-						if (marbleEntity && instrumentEntity && railEntity) {
+						// Skip if instrument is inactive
+						if (!instrumentEntity || !instrumentEntity.activity.value) {
+							continue
+						}
+
+						if (marbleEntity && railEntity) {
 							triggerHandler({
 								railId,
 								marbleIndex,
@@ -435,6 +440,16 @@ function checkInstrumentTriggers(
 		}
 
 		if (triggered && triggerHandler && sceneCtx) {
+			// Find entities
+			const marbleEntity = sceneCtx.marbles[marbleIndex]
+			const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
+			const railEntity = sceneCtx.rails.find((re) => re.id === railId)
+
+			// Skip if instrument is inactive
+			if (!instrumentEntity || !instrumentEntity.activity.value) {
+				continue
+			}
+
 			// Prevent immediate re-trigger in same direction at same beat
 			// Use actual beat (not floored) to support fractional positions like 7.3, 7.4, 7.5
 			if (
@@ -446,12 +461,7 @@ function checkInstrumentTriggers(
 			marble.runtime.lastTriggeredBeat = instrument.beat
 			marble.runtime.lastTriggeredDirection = marble.direction
 
-			// Find entities
-			const marbleEntity = sceneCtx.marbles[marbleIndex]
-			const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
-			const railEntity = sceneCtx.rails.find((re) => re.id === railId)
-
-			if (marbleEntity && instrumentEntity && railEntity) {
+			if (marbleEntity && railEntity) {
 				triggerHandler({
 					railId,
 					marbleIndex,

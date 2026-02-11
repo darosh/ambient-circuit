@@ -131,13 +131,13 @@ export const scene: SceneConfig = {
 			},
 			color: c(),
 			instruments: [
-				{ type: 'cone', beat: 0.5, rounds: 1, active: false },
-				{ type: 'cone', beat: 1.5, rounds: 2, active: false },
-				{ type: 'cone', beat: 2.5, rounds: 3, active: false },
-				{ type: 'cone', beat: 3.5, rounds: 4, active: false },
-				{ type: 'cone', beat: 4.5, rounds: 5, active: false },
-				{ type: 'cone', beat: 5.5, rounds: 6, active: false },
-				{ type: 'cone', beat: 6.5, rounds: 7, active: false }
+				{ type: 'cone', beat: 0.5, rounds: 1, spinning: false },
+				{ type: 'cone', beat: 1.5, rounds: 2, spinning: false },
+				{ type: 'cone', beat: 2.5, rounds: 3, spinning: false },
+				{ type: 'cone', beat: 3.5, rounds: 4, spinning: false },
+				{ type: 'cone', beat: 4.5, rounds: 5, spinning: false },
+				{ type: 'cone', beat: 5.5, rounds: 6, spinning: false },
+				{ type: 'cone', beat: 6.5, rounds: 7, spinning: false }
 			]
 		},
 		{
@@ -147,10 +147,10 @@ export const scene: SceneConfig = {
 			},
 			color: c(),
 			instruments: [
-				{ type: 'spiral', beat: 0.5, rounds: 1, active: false },
-				{ type: 'spiral', beat: 1.5, rounds: 2, active: false },
-				{ type: 'spiral', beat: 2.5, rounds: 3, active: false },
-				{ type: 'spiral', beat: 3.5, rounds: 4, active: false }
+				{ type: 'spiral', beat: 0.5, rounds: 1, spinning: false },
+				{ type: 'spiral', beat: 1.5, rounds: 2, spinning: false },
+				{ type: 'spiral', beat: 2.5, rounds: 3, spinning: false },
+				{ type: 'spiral', beat: 3.5, rounds: 4, spinning: false }
 			]
 		},
 		{

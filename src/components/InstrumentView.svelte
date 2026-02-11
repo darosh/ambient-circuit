@@ -604,10 +604,10 @@
 
 	const activeRotationEnabled = $derived.by(() => {
 		if (instrument.type === 'spiral') {
-			return instrument.active ?? true
+			return instrument.spinning ?? true
 		}
 		if (instrument.type === 'cone') {
-			return instrument.active ?? true
+			return instrument.spinning ?? true
 		}
 		return false
 	})

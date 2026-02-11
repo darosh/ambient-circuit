@@ -34,7 +34,7 @@ export function createSceneCtx(
 		const instruments = rails[i].instruments || []
 		for (const inst of instruments) {
 			const visRef = { value: true }
-			const actRef = { value: true }
+			const actRef = { value: inst.active ?? true }
 			instrumentEntities.push({
 				id: instIdx++,
 				instrument: inst,

@@ -47,8 +47,8 @@ export const scene: SceneConfig = {
 					actionHandler(ctx) {
 						console.log('Reversing all marbles!')
 						// Reverse ALL marbles in the scene
-						ctx.scene.marbles.forEach((m) => {
-							m.state.reverse()
+						ctx.scene.marbles.forEach((_m) => {
+							// _m.state.reverse()
 						})
 					}
 				}
@@ -62,7 +62,7 @@ export const scene: SceneConfig = {
 				nodes: [[0, 0, 0], 'r r r r r r']
 			},
 			color: c(),
-			marbles: [{ type: 'poly', sides: 4, start: 0 }],
+			marbles: [{ type: 'poly', sides: 4, start: 0, mode: 'ping-pong' }],
 			instruments: [
 				{
 					type: 'arrow',
@@ -73,7 +73,11 @@ export const scene: SceneConfig = {
 						const targetMarble = ctx.scene.marbles[0]
 						if (targetMarble) {
 							console.log('Speeding up marble 0')
-							targetMarble.state.speed = targetMarble.state.speed * 2
+							targetMarble.state.speed = targetMarble.state.speed * 1.5
+
+							if (targetMarble.state.speed > 8) {
+								targetMarble.state.speed = 1
+							}
 						}
 					}
 				}
@@ -102,7 +106,7 @@ export const scene: SceneConfig = {
 							ctx.scene.instruments.forEach((inst) => {
 								inst.state.visible = true
 							})
-						}, 200)
+						}, 300)
 						timers.push(timer)
 					}
 				}
@@ -122,16 +126,17 @@ export const scene: SceneConfig = {
 					type: 'spiral',
 					beat: 2,
 					actionHandler(ctx) {
-						// Toggle this instrument's active state
-						console.log('Toggling instrument active:', !ctx.instrument.state.activityState)
-						ctx.instrument.state.activityState = !ctx.instrument.state.activityState
+						// Toggle this instrument's active state - should fire once, then never again
+						console.log('Toggling instrument active to false (should fire once only)')
+						ctx.instrument.state.active = false
 					}
 				},
 				{
 					type: 'cone',
 					beat: 4,
+					active: false, // Start inactive - should never fire
 					actionHandler(_ctx) {
-						console.log('This should NOT fire when inactive')
+						console.log('ERROR: This should NOT fire (instrument is inactive)')
 					}
 				}
 			]

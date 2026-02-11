@@ -115,13 +115,13 @@ export class InstrumentState {
 		this.instrument.runtime!.pulse = value
 	}
 
-	// Active (for spiral, cone)
-	get active(): boolean | undefined {
+	// Spinning (for spiral, cone)
+	get spinning(): boolean | undefined {
 		const typed = this.instrument as any
-		return this.instrument.runtime!.active ?? typed.active
+		return this.instrument.runtime!.spinning ?? typed.spinning
 	}
-	set active(value: boolean | undefined) {
-		this.instrument.runtime!.active = value
+	set spinning(value: boolean | undefined) {
+		this.instrument.runtime!.spinning = value
 	}
 
 	// Rays (for sun)
@@ -144,10 +144,10 @@ export class InstrumentState {
 		this.instrument.runtime!.visible = v
 	}
 
-	get activityState(): boolean {
+	get active(): boolean {
 		return this.activity?.value ?? true
 	}
-	set activityState(v: boolean) {
+	set active(v: boolean) {
 		if (this.activity) this.activity.value = v
 	}
 }

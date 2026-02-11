@@ -15,7 +15,7 @@ export interface InstrumentRuntime {
 	kind?: 'plain' | 'play' | 'fwd' | 'rec' | 'stop' | 'step' | 'pause'
 	angle?: number
 	pulse?: boolean
-	active?: boolean
+	spinning?: boolean
 	rays?: number
 	visible?: boolean
 }
@@ -41,6 +41,8 @@ type InstrumentBase = {
 	path?: number[]
 	/** Color of the instrument */
 	color?: string
+	/** Functional on/off state for trigger detection (default true) */
+	active?: boolean
 	/** MIDI channel (1-16), default 1 */
 	midiChannel?: number
 	/** MIDI note (0-127), default 60 (C4) */
@@ -95,7 +97,7 @@ type SpiralInstrument = InstrumentBase & {
 	/** Counter-clockwise spiral direction (default false) */
 	counterCW?: boolean
 	/** Continuous rotation (default true) */
-	active?: boolean
+	spinning?: boolean
 }
 
 type ConeInstrument = InstrumentBase & {
@@ -109,7 +111,7 @@ type ConeInstrument = InstrumentBase & {
 	/** Cone tip pointing direction along rail (default 'forward') */
 	point?: 'forward' | 'backward'
 	/** Continuous rotation (default true) */
-	active?: boolean
+	spinning?: boolean
 }
 
 type ArrowInstrument = InstrumentBase & {
