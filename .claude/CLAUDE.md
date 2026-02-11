@@ -140,6 +140,7 @@ Create a "marble-machine-inspired" music sequencer where:
 5. Active state enforcement (Phase 2.2): Skip inactive instruments/marbles in triggers
 6. Rail switching API (Phase 3): Teleport marbles between rails with validation
 7. Marble collisions (Phase 4): Bouncer marbles with collision detection
+8. Fix skipped `tests/marble-state.test.ts`
 
 **Blocked/Questions:**
 
