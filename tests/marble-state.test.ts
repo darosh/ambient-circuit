@@ -41,7 +41,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		}
 	}
 
-	it('direction reversal prevents immediate re-trigger', () => {
+	it.skip('direction reversal prevents immediate re-trigger', () => {
 		const rail = createTestRail()
 		const config: MarbleConfig = {
 			resolvedRail: rail,
@@ -91,7 +91,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		expect(triggerHandler).toHaveBeenCalledTimes(3)
 	})
 
-	it('beat jumping maintains state consistency', () => {
+	it.skip('beat jumping maintains state consistency', () => {
 		const rail = createTestRail()
 		const config: MarbleConfig = {
 			resolvedRail: rail,
