@@ -101,7 +101,7 @@ export const scene: SceneConfig = {
 			instruments: [
 				{
 					type: 'heart',
-					beat: 3,
+					beat: 1,
 					actionHandler(ctx) {
 						console.log('Blinking all instruments')
 						// Hide all instruments briefly
@@ -134,13 +134,15 @@ export const scene: SceneConfig = {
 					actionHandler(_ctx) {
 						// Toggle this instrument's active state - should fire once, then never again
 						console.log('Toggling instrument active to false (should fire once only)')
-						// _ctx.instrument.state.active = false
+						_ctx.instrument.state.spinning = false
+						_ctx.instrument.state.active = false
 					}
 				},
 				{
 					type: 'cone',
 					beat: 4,
-					// active: false, // Start inactive - should never fire
+					active: false, // Start inactive - should never fire
+					spinning: false,
 					actionHandler(_ctx) {
 						console.log('ERROR: This should NOT fire (instrument is inactive)')
 					}

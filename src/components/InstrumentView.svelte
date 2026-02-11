@@ -602,12 +602,13 @@
 	let impactBoostSpeed = $state(0)
 	let bounceOffset = $state(0)
 
+	const effectiveSpinning = $derived(instrument.runtime?.spinning ?? (instrument as any).spinning)
 	const activeRotationEnabled = $derived.by(() => {
 		if (instrument.type === 'spiral') {
-			return instrument.spinning ?? true
+			return effectiveSpinning ?? true
 		}
 		if (instrument.type === 'cone') {
-			return instrument.spinning ?? true
+			return effectiveSpinning ?? true
 		}
 		return false
 	})
