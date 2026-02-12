@@ -64,9 +64,9 @@ Create a "marble-machine-inspired" music sequencer where:
 - [x] Beat index visualization on rails (arc-length based)
 - [x] Global tempo system (BPM, play/pause, beat counter, spacebar toggle)
 - [x] `Marbles` on rails, tempo-synced movement
-- [x] Arc-length-based beat positioning (marbles hit beats accurately)
-- [x] Marble movement matches visualization exactly (arc-length interpolation on rail polyline)
-- [x] Context-aware marble positioning (beat-to-polyline mapping handles mid-path position duplicates)
+- [x] Direct segment interpolation (marble position from beat via control points)
+- [x] Sparse beat support (any beat spacing: 2, 16, fractional, etc.)
+- [x] Marble movement matches visualization exactly (curve interpolation)
 - [x] Easing system (31 functions via maath + custom: quad, elastic, bounce, back)
 - [x] Sequence modes: looping (forward/backward), ping-pong (smooth bouncing)
 - [x] Direction tracking: forward/backward with proper wrapping
@@ -179,7 +179,7 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/tempo.ts          - Global tempo/beat system (BPM, play/pause)
 /src/lib/marble.ts         - Marble types (config, state, direction, easing)
 /src/lib/marble-state.ts   - MarbleState API (safe mutations with visible/active)
-/src/lib/marble-system.ts  - Marble movement logic (arc-length + curve following)
+/src/lib/marble-system.ts  - Marble movement logic (direct segment interpolation)
 /src/lib/instrument.ts     - Instrument type with MIDI properties
 /src/lib/instrument-state.ts - InstrumentState API (safe mutations with visible/active)
 /src/lib/rail-state.ts     - RailState API (safe mutations with visible/active)
