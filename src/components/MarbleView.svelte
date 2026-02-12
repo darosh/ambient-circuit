@@ -2,7 +2,6 @@
 	import { T, useTask } from '@threlte/core'
 	import type { Marble } from '../lib/marble'
 	import {
-		MeshStandardMaterial,
 		CurvePath,
 		LineCurve3,
 		QuadraticBezierCurve3,
@@ -12,6 +11,7 @@
 		Matrix4
 	} from 'three/webgpu'
 	import { makeMarbleMaterial } from '../lib/config'
+	import { createStandardMaterial } from '../lib/video/material-standard'
 	import { easeOutQuart } from '../lib/easing'
 	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { ResolvedRail } from '../lib/rail'
@@ -64,7 +64,7 @@
 	})
 
 	const fx = $derived(makeMarbleMaterial(effectiveColor))
-	const plainMaterial = $derived(new MeshStandardMaterial({ color: effectiveColor }))
+	const plainMaterial = $derived(createStandardMaterial(effectiveColor))
 
 	$effect(() => {
 		fx.mat.wireframe = wireframe

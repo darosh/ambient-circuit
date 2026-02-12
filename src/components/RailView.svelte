@@ -14,12 +14,12 @@
 		Group,
 		LineCurve3,
 		Matrix4,
-		MeshStandardMaterial,
 		Quaternion,
 		Vector3
 	} from 'three/webgpu'
 	import InstrumentView from './InstrumentView.svelte'
 	import { makeRailMaterial } from '../lib/config'
+	import { createStandardMaterial } from '../lib/video/material-standard'
 	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 
@@ -78,7 +78,7 @@
 	const resolved = $derived(resolveRail(rail))
 	// Always create both materials - switching avoids WebGPU state issues on toggle
 	const fxMaterial = $derived(makeRailMaterial(color).mat)
-	const plainMaterial = $derived(new MeshStandardMaterial({ color }))
+	const plainMaterial = $derived(createStandardMaterial(color))
 
 	// Runtime render transform
 	let renderMatrix = $state(new Matrix4())

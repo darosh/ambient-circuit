@@ -28,10 +28,46 @@ const toSkewedUv = Fn(([uvCoord, skew]: any[]) => {
 }) as (...args: any[]) => any
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
+// Material cache: key = `${color}_${intensity}_${transparent}`
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const materialCache = new Map<string, { mat: MeshBasicNodeMaterial; impactIntensity: any }>()
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
+function getMaterialCacheKey(
+	hexColor: string,
+	initialIntensity: number,
+	transparent: boolean
+): string {
+	return `${hexColor}_${initialIntensity}_${transparent}`
+}
+
 /**
- * Create a glowing noise-based rail material (WebGPU/TSL).
+ * Create a glowing noise-based rail material (WebGPU/TSL) with memoization.
  */
 export function createRailMaterial(hexColor: string, initialIntensity = 0.7, transparent = true) {
+	const key = getMaterialCacheKey(hexColor, initialIntensity, transparent)
+	const cached = materialCache.get(key)
+	if (cached) return cached
+
+	const material = buildRailMaterial(hexColor, initialIntensity, transparent)
+	materialCache.set(key, material)
+	return material
+}
+
+/**
+ * Clear material cache (call on cleanup)
+ */
+export function clearRailMaterialCache(): void {
+	for (const { mat } of materialCache.values()) {
+		mat.dispose()
+	}
+	materialCache.clear()
+}
+
+/**
+ * Build rail material (internal, not cached)
+ */
+function buildRailMaterial(hexColor: string, initialIntensity: number, transparent: boolean) {
 	const emissiveColor = uniform(color(hexColor))
 	const impactIntensity = uniform(0.0)
 
