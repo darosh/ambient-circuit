@@ -207,6 +207,16 @@
 		return meshes
 	})
 
+	// Dispose geometries when meshes change
+	$effect(() => {
+		const current = [...mainMeshes, ...branchMeshes]
+		return () => {
+			for (const mesh of current) {
+				mesh.geometry.dispose()
+			}
+		}
+	})
+
 	const allMeshes = $derived([...mainMeshes, ...branchMeshes])
 
 	const railNamePosition = $derived.by(() => {
