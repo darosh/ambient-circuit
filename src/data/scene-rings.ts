@@ -122,9 +122,18 @@ export const scene: SceneConfig = {
 				{ beat: 3.5, type: 'star', sides: 7 }
 			],
 			color: colors[1],
+			marbles: [{ speed: 0.2 }, { speed: 0.2, direction: 'backward', start: 1 }],
 			render: (time) => {
-				const scale = 1 + Math.sin((time * Math.PI * 2) / 42) * 0.125
-				return new Matrix4().makeScale(scale, scale, scale)
+				// const scale = 1 + Math.sin((time * Math.PI * 2) / 42) * 0.125
+				// return new Matrix4().makeScale(scale, scale, scale)
+				const r = new Matrix4().makeRotationAxis(
+					new Vector3(0, 1, 0.25).normalize(),
+					MathUtils.DEG2RAD * time * 12
+				)
+
+				return new Matrix4()
+					.makeRotationAxis(new Vector3(1, 2, 0).normalize(), MathUtils.DEG2RAD * 12.5)
+					.multiply(r)
 			}
 		},
 		{
@@ -144,6 +153,7 @@ export const scene: SceneConfig = {
 				{ beat: 2.5, type: 'star', sides: 7 },
 				{ beat: 3.5, type: 'star', sides: 7 }
 			],
+			marbles: [{ speed: 0.333 }, { speed: 0.5, start: 1 }, { speed: 0.666, start: 2 }],
 			render: () => {
 				const time = performance.now() * 0.001
 				const rotation = time * Math.PI * 0.125
