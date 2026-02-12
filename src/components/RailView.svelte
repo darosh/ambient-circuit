@@ -35,6 +35,7 @@
 		font?: Font
 		tempo?: TempoState
 		sceneCtx?: SceneCtx
+		renderPlayOnly?: boolean
 	}
 
 	let {
@@ -48,7 +49,8 @@
 		fxInstruments = true,
 		font,
 		tempo,
-		sceneCtx
+		sceneCtx,
+		renderPlayOnly = false
 	}: Props = $props()
 
 	const rail = $derived(railData.rail)
@@ -299,7 +301,7 @@
 
 	useTask((delta) => {
 		// Update render matrix
-		if (render && tempo && sceneCtx) {
+		if (render && tempo && sceneCtx && (!renderPlayOnly || tempo.isPlaying)) {
 			renderMatrix = render(tempo.currentBeat + tempo.beatProgress, tempo, delta, sceneCtx)
 
 			// Store in runtime for marble access

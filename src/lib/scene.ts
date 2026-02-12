@@ -39,4 +39,5 @@ export type SceneConfig = {
 	camera?: Vector3Tuple
 	target?: Vector3Tuple
 	polar?: boolean
+	renderPlayOnly?: boolean
 }

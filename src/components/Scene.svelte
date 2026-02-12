@@ -245,6 +245,7 @@
 			{font}
 			{tempo}
 			{sceneCtx}
+			renderPlayOnly={scene.renderPlayOnly}
 		/>
 	{/if}
 {/each}
