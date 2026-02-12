@@ -70,6 +70,11 @@
 		return path.curves.length > 0 ? path : null
 	}
 
+	function isScaled(v: Vector3) {
+		// Return true if scale is meaningful (NOT near identity)
+		return !(v.x < 1.001 && v.x > 0.999 && v.y < 1.001 && v.y > 0.999 && v.z < 1.001 && v.z > 0.999)
+	}
+
 	const resolved = $derived(resolveRail(rail))
 	// Always create both materials - switching avoids WebGPU state issues on toggle
 	const fxMaterial = $derived(makeRailMaterial(color).mat)
@@ -80,14 +85,19 @@
 
 	// Extract position/rotation for group, scale for geometry
 	const renderTransform = $derived.by(() => {
-		if (!render) return null
+		if (!(render && (!renderPlayOnly || tempo?.isPlaying))) return null
 
 		const position = new Vector3()
 		const rotation = new Euler()
-		const scale = new Vector3()
+		let scale: Vector3 | null = new Vector3()
+
 		const quaternion = new Quaternion()
 		renderMatrix.decompose(position, quaternion, scale)
 		rotation.setFromQuaternion(quaternion)
+
+		if (!isScaled(scale)) {
+			scale = null
+		}
 
 		return {
 			position: position.toArray(),
@@ -98,27 +108,28 @@
 
 	// Apply scale to rail points for geometry (not instruments)
 	const displayPoints = $derived.by(() => {
-		if (!renderTransform) return resolved.points
+		if (!renderTransform?.scale) return resolved.points
 
-		const scale = renderTransform.scale
+		const { x, y, z } = renderTransform.scale
+
 		return resolved.points.map((pt) => ({
 			...pt,
-			p: [pt.p[0] * scale.x, pt.p[1] * scale.y, pt.p[2] * scale.z] as ResolvedPoint['p']
+			p: [pt.p[0] * x, pt.p[1] * y, pt.p[2] * z] as ResolvedPoint['p']
 		}))
 	})
 
 	const displaySplits = $derived.by(() => {
-		if (!renderTransform) return resolved.splits
+		if (!renderTransform?.scale) return resolved.splits
 
-		const scale = renderTransform.scale
+		const { x, y, z } = renderTransform.scale
 		return resolved.splits.map((split) => ({
 			...split,
-			p: [split.p[0] * scale.x, split.p[1] * scale.y, split.p[2] * scale.z] as typeof split.p,
+			p: [split.p[0] * x, split.p[1] * y, split.p[2] * z] as typeof split.p,
 			branches: split.branches.map((branch) => ({
 				...branch,
 				points: branch.points.map((pt) => ({
 					...pt,
-					p: [pt.p[0] * scale.x, pt.p[1] * scale.y, pt.p[2] * scale.z] as ResolvedPoint['p']
+					p: [pt.p[0] * x, pt.p[1] * y, pt.p[2] * z] as ResolvedPoint['p']
 				}))
 			}))
 		}))
