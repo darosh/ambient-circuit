@@ -3,15 +3,13 @@ import { color3 as colors } from './colors'
 import { triggerHandler } from '../lib/trigger-handler'
 import { Matrix4, Vector3, MathUtils } from 'three/webgpu'
 
-// let ci = 0
-// const c = () => colors[ci++ % colors.length]
-
 export const scene: SceneConfig = {
 	id: 'scene-rings',
 	bpm: 120,
 	polar: true,
 	camera: [9.5, 4.5, 8.5],
 	target: [0, 0.75, 0],
+	// renderPlayOnly: true,
 	triggerHandler,
 	rails: [
 		{
@@ -170,6 +168,31 @@ export const scene: SceneConfig = {
 				{ beat: 3.5, type: 'star', sides: 7 }
 			],
 			color: colors[0]
+		},
+		{
+			rail: {
+				id: 'r.8',
+				// offset: [-0.75, 3.5, 0],
+				transform: (v) => {
+					return v
+						.applyAxisAngle(new Vector3(1, 0, 0), MathUtils.DEG2RAD * -45)
+						.add(new Vector3(-0.5, 2.5, 0))
+				},
+				nodes: [
+					{ p: [0, 0, 0], round: 'both' },
+					{ p: [0.5, 0, 0.5], round: 'both' },
+					{ p: [1, 0, 0], round: 'both' },
+					{ p: [0.5, 0, -0.5], round: 'both' },
+					{ p: [0, 0, 0], round: 'both' }
+				]
+			},
+			instruments: [{ beat: 2, type: 'star', sides: 7 }],
+			color: colors[1],
+			render: () => {
+				const time = performance.now() * 0.001
+				const rotation = time * Math.PI * 0.125
+				return new Matrix4().makeRotationAxis(new Vector3(0, 1, -1).normalize(), rotation)
+			}
 		}
 	]
 }
