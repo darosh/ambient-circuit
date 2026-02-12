@@ -1,32 +1,19 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import type { Marble } from '../lib/marble'
-	import {
-		CurvePath,
-		LineCurve3,
-		QuadraticBezierCurve3,
-		TubeGeometry,
-		Vector3,
-		Euler,
-		Matrix4
-	} from 'three/webgpu'
+	import { Vector3, Euler, Matrix4 } from 'three/webgpu'
 	import { makeMarbleMaterial } from '../lib/config'
 	import { createStandardMaterial } from '../lib/video/material-standard'
 	import { easeOutQuart } from '../lib/easing'
-	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { ResolvedRail } from '../lib/rail'
 	import type { RailData } from '../lib/rail-data'
-
-	// Geometry constants
-	const MARBLE_WIDTH = 0.06
-	const MARBLE_SIZE = 0.2
-	const MARBLE_CORNER_RADIUS = 0.02
-	const MARBLE_RADIAL_SEGMENTS = 8
-	const MARBLE_CLOSED_SEGMENTS = 12
-	const COIL_SEGMENTS_PER_ROUND = 16
-	const BALL_RADIUS = 0.12
-	const BALL_WIDTH_SEGMENTS = 16
-	const BALL_HEIGHT_SEGMENTS = 16
+	import {
+		createMarbleGeometry,
+		BALL_RADIUS,
+		BALL_WIDTH_SEGMENTS,
+		BALL_HEIGHT_SEGMENTS,
+		type MarbleType
+	} from '../lib/video/marble-geometry'
 
 	// Animation constants
 	const TANGENT_VERTICAL_THRESHOLD = 0.9
@@ -75,81 +62,13 @@
 	const sides = $derived(marble.runtime.sides ?? marble.config.sides ?? 6)
 	const rounds = $derived(marble.runtime.rounds ?? marble.config.rounds ?? 3)
 
-	// Create geometry based on type
+	// Create memoized geometry based on type
 	const geometry = $derived.by(() => {
-		if (type === 'ball') {
-			return null // use declarative geometry in template
-		}
-
-		const width = MARBLE_WIDTH
-		const size = MARBLE_SIZE
-		const cr = MARBLE_CORNER_RADIUS
-
-		if (type === 'poly') {
-			const n = sides
-			const r = size / (1 + Math.cos(Math.PI / n))
-			const curves: import('three').Curve<Vector3>[] = []
-			const verts: Vector3[] = []
-
-			for (let i = 0; i < n; i++) {
-				const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + Math.PI / n
-				verts.push(new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, 0))
-			}
-
-			for (let i = 0; i < n; i++) {
-				const curr = verts[i]
-				const next = verts[(i + 1) % n]
-				const prev = verts[(i - 1 + n) % n]
-
-				const inDir = new Vector3().subVectors(curr, prev).normalize()
-				const outDir = new Vector3().subVectors(next, curr).normalize()
-
-				const arcStart = curr.clone().addScaledVector(inDir, -cr)
-				const arcEnd = curr.clone().addScaledVector(outDir, cr)
-				const nextArcStart = next.clone().addScaledVector(outDir, -cr)
-
-				if (cr > 0) {
-					curves.push(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
-				}
-				curves.push(new LineCurve3(arcEnd, nextArcStart))
-			}
-
-			return buildTubeGeometry(
-				curves,
-				width / 2,
-				MARBLE_RADIAL_SEGMENTS,
-				MARBLE_CLOSED_SEGMENTS,
-				true
-			)
-		} else if (type === 'coil') {
-			const path = new CurvePath<Vector3>()
-			const r = size / 2
-			const length = width * 3 * rounds
-
-			for (let i = 0; i < rounds * COIL_SEGMENTS_PER_ROUND; i++) {
-				const t = i / (rounds * COIL_SEGMENTS_PER_ROUND)
-				const angle = t * rounds * Math.PI * 2
-				const z = t * length - length / 2
-
-				const curr = new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, z)
-				const nextT = (i + 1) / (rounds * COIL_SEGMENTS_PER_ROUND)
-				const nextAngle = nextT * rounds * Math.PI * 2
-				const nextZ = nextT * length - length / 2
-				const next = new Vector3(Math.cos(nextAngle) * r, Math.sin(nextAngle) * r, nextZ)
-
-				path.add(new LineCurve3(curr, next))
-			}
-
-			return new TubeGeometry(
-				path as unknown as import('three').Curve<Vector3>,
-				rounds * COIL_SEGMENTS_PER_ROUND,
-				width / 2,
-				MARBLE_RADIAL_SEGMENTS,
-				false
-			)
-		}
-
-		return null
+		return createMarbleGeometry({
+			type: type as MarbleType,
+			sides,
+			rounds
+		})
 	})
 
 	const IMPACT_DURATION = 0.3
