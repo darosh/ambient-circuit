@@ -248,6 +248,7 @@ function checkInstrumentTriggers(
 	previousBeat: number,
 	currentBeat: number,
 	marbleBeat: number,
+	direction: 'forward' | 'backward',
 	instruments: Instrument[],
 	railId: string,
 	marbleIndex: number,
@@ -334,9 +335,9 @@ function checkInstrumentTriggers(
 
 		let triggered = false
 
-		if (marble.direction === 'forward') {
+		if (direction === 'forward') {
 			// Forward: trigger if instrument is between previous and current
-			if (instrument.beat > previousBeat && instrument.beat <= currentBeat) {
+			if (instrument.beat >= previousBeat && instrument.beat <= currentBeat) {
 				triggered = true
 			}
 		} else {
@@ -489,12 +490,17 @@ export function updateMarble(
 		}
 	}
 
+	// Preserve unwrapped beat and direction for trigger detection before wrapping modifies them
+	const unwrappedBeat = rawBeat
+	const unwrappedDirection = marble.direction
+
 	// Wrap/ping-pong
 	if (sequenceMode === 'looping') {
 		// Wrap forward: if PAST maxBeat
 		if (rawBeat > maxBeat) {
 			const excess = rawBeat - maxBeat
-			rawBeat = minBeat + (excess % beatRange)
+			const wrappedBeat = minBeat + (excess % beatRange)
+			rawBeat = wrappedBeat
 			if (rawBeat < minBeat) rawBeat += beatRange
 
 			// Reset branch and trigger state when looping back
@@ -515,11 +521,30 @@ export function updateMarble(
 					if (rawBeat < mainMin) rawBeat += mainRange
 				}
 			}
+
+			// Check instruments in wrapped portion (minBeat to wrapped position)
+			// This catches instruments at minBeat when looping forward
+			if (tempo.isPlaying && triggerHandler && sceneCtx && wrappedBeat > minBeat) {
+				checkInstrumentTriggers(
+					marble,
+					minBeat,
+					wrappedBeat,
+					wrappedBeat,
+					unwrappedDirection,
+					instruments,
+					railId,
+					marbleIndex,
+					globalBeat,
+					triggerHandler,
+					sceneCtx
+				)
+			}
 		}
 		// Wrap backward: if BEFORE minBeat
 		else if (rawBeat < minBeat) {
 			const deficit = minBeat - rawBeat
-			rawBeat = maxBeat - (deficit % beatRange)
+			const wrappedBeat = maxBeat - (deficit % beatRange)
+			rawBeat = wrappedBeat
 			if (rawBeat > maxBeat) rawBeat -= beatRange
 
 			// Reset branch and trigger state when looping back
@@ -539,6 +564,24 @@ export function updateMarble(
 					rawBeat = mainMax - (mainDeficit % mainRange)
 					if (rawBeat > mainMax) rawBeat -= mainRange
 				}
+			}
+
+			// Check instruments in wrapped portion (wrapped position to maxBeat)
+			// This catches instruments at maxBeat when looping backward
+			if (tempo.isPlaying && triggerHandler && sceneCtx && wrappedBeat < maxBeat) {
+				checkInstrumentTriggers(
+					marble,
+					wrappedBeat,
+					maxBeat,
+					wrappedBeat,
+					unwrappedDirection,
+					instruments,
+					railId,
+					marbleIndex,
+					globalBeat,
+					triggerHandler,
+					sceneCtx
+				)
 			}
 		}
 	} else {
@@ -571,18 +614,23 @@ export function updateMarble(
 	}
 
 	// Check for instrument triggers before updating beat
-	checkInstrumentTriggers(
-		marble,
-		marble.currentBeat,
-		rawBeat,
-		rawBeat, // marbleBeat: the computed beat for this frame
-		instruments,
-		railId,
-		marbleIndex,
-		globalBeat,
-		triggerHandler,
-		sceneCtx
-	)
+	// Skip if not playing or if marble hasn't moved (prevents triggering on first frame when paused)
+	const hasMoved = marble.currentBeat !== unwrappedBeat
+	if (tempo.isPlaying && hasMoved) {
+		checkInstrumentTriggers(
+			marble,
+			marble.currentBeat,
+			unwrappedBeat,
+			unwrappedBeat, // marbleBeat: the computed beat for this frame
+			unwrappedDirection,
+			instruments,
+			railId,
+			marbleIndex,
+			globalBeat,
+			triggerHandler,
+			sceneCtx
+		)
+	}
 
 	// Update beat
 	marble.previousBeat = marble.currentBeat

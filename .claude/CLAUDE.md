@@ -116,6 +116,11 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Timer cleanup pattern via destroy phase
   - [x] Cross-entity manipulation (reverse all marbles, target specific entities)
   - [x] Test scenes: scene-ctx-test, scene-global-beat
+  - [x] Rail rendering control via RailData.render property
+  - [x] Rail transform operations via Rail.transform (three.js Object3D transforms)
+  - [x] Beat jump instrument triggering (marble state changes trigger instruments correctly)
+  - [x] Boundary beat triggering (first/last beat instruments work in both looping and ping-pong modes)
+  - [x] Play state enforcement (instruments only trigger when tempo.isPlaying is true)
 - [ ] Non-linear sequencing - advanced
   - [x] Change instrument params in TriggerHandler
   - [ ] Marble collisions: `bouncer: true` reverses on collision
@@ -133,17 +138,12 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Next Steps:**
 
-1. Rail `transform` function in `SceneConfig` for complex astrolabe rotations
-2. Nodes transform operations (rotate, scale), for use in `SceneConfig.nodes`
-3. Fix: Beat jump doesn't trigger jumped-to instrument (middle arrow not triggered on way back)
-4. Fix: We need single source of truth handling of default values, not this: ```return this.instrument.runtime!.spinning ?? typed.spinning ?? true```
-5. Fix: Instrument on last and first beat is never triggered, in both sequencing modes
-6. Fix: `visible` prop missing in `InstrumentBase`
-7. Fix: missing `type` prop in `InstrumentState`
-8. Active state enforcement (Phase 2.2): Skip inactive instruments/marbles in triggers
-9. Rail switching API (Phase 3): Teleport marbles between rails with validation
-10. Marble collisions (Phase 4): Bouncer marbles with collision detection
-11. Fix skipped `tests/marble-state.test.ts`
+1. Fix: `visible` prop missing in `InstrumentBase`
+2. Fix: missing `type` prop in `InstrumentState`
+3. Active state enforcement (Phase 2.2): Skip inactive instruments/marbles in triggers
+4. Rail switching API (Phase 3): Teleport marbles between rails with validation
+5. Marble collisions (Phase 4): Bouncer marbles with collision detection
+6. Fix skipped `tests/marble-state.test.ts`
 
 **Blocked/Questions:**
 

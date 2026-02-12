@@ -1,9 +1,13 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { createMarble } from '../src/lib/marble'
 import { updateMarble } from '../src/lib/marble-system'
 import { createTempoState } from '../src/lib/tempo'
 import { computeBeatPositions } from '../src/lib/rail-curve'
+import { resolveRail } from '../src/lib/rail-resolve'
 import type { ResolvedRail } from '../src/lib/rail'
+import type { RailData } from '../src/lib/rail-data'
+import type { TriggerHandler } from '../src/lib/scene'
+import { createSceneCtx } from '../src/lib/scene-ctx-factory'
 
 describe('marble-system', () => {
 	const testRail: ResolvedRail = {
@@ -192,5 +196,374 @@ describe('marble-system', () => {
 		expect(marble.position.x).toBeLessThan(6.0)
 
 		// Should not throw errors at any point
+	})
+
+	it('triggers instruments at first beat (beat 0) in looping mode', () => {
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
+		tempo.isPlaying = true
+
+		const railData: RailData = {
+			rail: {
+				id: 'test',
+				nodes: [
+					[0, 0, 0],
+					[1, 0, 0],
+					[2, 0, 0],
+					[3, 0, 0]
+				]
+			},
+			color: '#ff0000',
+			instruments: [
+				{
+					beat: 0,
+					sides: 3,
+					actionHandler: vi.fn()
+				}
+			]
+		}
+
+		const resolvedRail = resolveRail(railData.rail)
+
+		const marble = createMarble({
+			resolvedRail,
+			startBeat: 0,
+			direction: 'forward',
+			sequenceMode: 'looping',
+			easing: 'linear'
+		})
+
+		const triggerHandler: TriggerHandler = (ctx) => {
+			ctx.instrument.instrument.actionHandler?.(ctx)
+		}
+
+		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo)
+
+		// First update at beat 0 - marble initializes but doesn't trigger yet
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+		expect(railData.instruments![0].actionHandler).not.toHaveBeenCalled()
+
+		// Advance slightly - now marble crosses beat 0 and triggers
+		tempo.beatProgress = 0.1
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+
+		// Should trigger at beat 0
+		expect(railData.instruments![0].actionHandler).toHaveBeenCalledTimes(1)
+	})
+
+	it('triggers instruments at last beat (beat 3) in looping mode', () => {
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
+		tempo.isPlaying = true
+
+		const railData: RailData = {
+			rail: {
+				id: 'test',
+				nodes: [
+					[0, 0, 0],
+					[1, 0, 0],
+					[2, 0, 0],
+					[3, 0, 0]
+				]
+			},
+			color: '#ff0000',
+			instruments: [
+				{
+					beat: 3,
+					sides: 3,
+					actionHandler: vi.fn()
+				}
+			]
+		}
+
+		const resolvedRail = resolveRail(railData.rail)
+
+		const marble = createMarble({
+			resolvedRail,
+			startBeat: 0,
+			direction: 'forward',
+			sequenceMode: 'looping',
+			easing: 'linear'
+		})
+
+		const triggerHandler: TriggerHandler = (ctx) => {
+			ctx.instrument.instrument.actionHandler?.(ctx)
+		}
+
+		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo)
+
+		// Advance to just before beat 3
+		tempo.currentBeat = 2
+		tempo.beatProgress = 0.9
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+		expect(railData.instruments![0].actionHandler).not.toHaveBeenCalled()
+
+		// Advance past beat 3 to trigger
+		tempo.currentBeat = 3
+		tempo.beatProgress = 0.1
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+
+		// Should trigger at beat 3
+		expect(railData.instruments![0].actionHandler).toHaveBeenCalledTimes(1)
+	})
+
+	it('triggers instruments at last beat in ping-pong mode', () => {
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
+		tempo.isPlaying = true
+
+		const railData: RailData = {
+			rail: {
+				id: 'test',
+				nodes: [
+					[0, 0, 0],
+					[1, 0, 0],
+					[2, 0, 0],
+					[3, 0, 0]
+				]
+			},
+			color: '#ff0000',
+			instruments: [
+				{
+					beat: 3,
+					sides: 3,
+					actionHandler: vi.fn()
+				}
+			]
+		}
+
+		const resolvedRail = resolveRail(railData.rail)
+
+		const marble = createMarble({
+			resolvedRail,
+			startBeat: 0,
+			direction: 'forward',
+			sequenceMode: 'ping-pong',
+			easing: 'linear'
+		})
+
+		const triggerHandler: TriggerHandler = (ctx) => {
+			ctx.instrument.instrument.actionHandler?.(ctx)
+		}
+
+		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo)
+
+		// Advance to just before beat 3
+		tempo.currentBeat = 2
+		tempo.beatProgress = 0.9
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+		expect(railData.instruments![0].actionHandler).not.toHaveBeenCalled()
+
+		// Advance past beat 3 to trigger
+		tempo.currentBeat = 3
+		tempo.beatProgress = 0.1
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+
+		// Should trigger at beat 3
+		expect(railData.instruments![0].actionHandler).toHaveBeenCalledTimes(1)
+	})
+
+	it('triggers instruments at first and last beats in ping-pong mode', () => {
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
+		tempo.isPlaying = true
+
+		const railData: RailData = {
+			rail: {
+				id: 'test',
+				nodes: [
+					[0, 0, 0],
+					[1, 0, 0],
+					[2, 0, 0],
+					[3, 0, 0]
+				]
+			},
+			color: '#ff0000',
+			instruments: [
+				{
+					beat: 0,
+					sides: 3,
+					actionHandler: vi.fn()
+				},
+				{
+					beat: 3,
+					sides: 4,
+					actionHandler: vi.fn()
+				}
+			]
+		}
+
+		const resolvedRail = resolveRail(railData.rail)
+
+		const marble = createMarble({
+			resolvedRail,
+			startBeat: 0,
+			direction: 'forward',
+			sequenceMode: 'ping-pong',
+			easing: 'linear'
+		})
+
+		const triggerHandler: TriggerHandler = (ctx) => {
+			ctx.instrument.instrument.actionHandler?.(ctx)
+		}
+
+		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo)
+
+		// First update at beat 0 - marble initializes
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+		expect(marble.currentBeat).toBeCloseTo(0, 1)
+		expect(railData.instruments![0].actionHandler).not.toHaveBeenCalled()
+
+		// Advance slightly - marble crosses beat 0 and triggers
+		tempo.beatProgress = 0.1
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+		expect(railData.instruments![0].actionHandler).toHaveBeenCalledTimes(1)
+		expect(railData.instruments![1].actionHandler).not.toHaveBeenCalled()
+
+		// Advance to just before beat 3
+		tempo.currentBeat = 2
+		tempo.beatProgress = 0.9
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+		expect(marble.currentBeat).toBeCloseTo(2.9, 1)
+
+		// Advance past beat 3 - should trigger beat 3
+		tempo.currentBeat = 3
+		tempo.beatProgress = 0.1
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+		expect(railData.instruments![0].actionHandler).toHaveBeenCalledTimes(1)
+		expect(railData.instruments![1].actionHandler).toHaveBeenCalledTimes(1)
+
+		// Bounce back - should be in backward direction (now moving backward while globalBeat continues forward)
+		tempo.currentBeat = 3
+		tempo.beatProgress = 0.2
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+		expect(marble.direction).toBe('backward')
+
+		// Continue forward in global time - marble moves backward along rail
+		tempo.currentBeat = 4
+		tempo.beatProgress = 0
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+		expect(marble.direction).toBe('backward')
+
+		tempo.currentBeat = 5
+		tempo.beatProgress = 0
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+		expect(marble.direction).toBe('backward')
+
+		// Marble should cross beat 0 backward and trigger it
+		tempo.currentBeat = 6
+		tempo.beatProgress = 0
+		updateMarble(
+			marble,
+			tempo,
+			sceneCtx.instruments.map((ie) => ie.instrument),
+			'test',
+			0,
+			triggerHandler,
+			sceneCtx
+		)
+
+		// Should have triggered beat 0 twice (once forward, once backward)
+		expect(railData.instruments![0].actionHandler).toHaveBeenCalledTimes(2)
 	})
 })
