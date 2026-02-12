@@ -2,8 +2,8 @@ import type { SceneConfig } from '../lib/scene'
 import { color3 as colors } from './colors'
 import { triggerHandler } from '../lib/trigger-handler'
 
-let ci = 0
-const c = () => colors[ci++ % colors.length]
+// let ci = 0
+// const c = () => colors[ci++ % colors.length]
 
 export const scene: SceneConfig = {
 	id: 'scene-rings',

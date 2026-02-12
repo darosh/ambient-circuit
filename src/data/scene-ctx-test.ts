@@ -33,9 +33,9 @@ export const scene: SceneConfig = {
 							_m.state.reverse()
 						})
 
-						const otherMarble = ctx.scene.marbles.find(
-							(x) => x.marble.config.resolvedRail.id === 'target-other'
-						)
+						// const otherMarble = ctx.scene.marbles.find(
+						// 	(x) => x.marble.config.resolvedRail.id === 'target-other'
+						// )
 						// console.log('Other marble at: ', otherMarble?.marble.currentBeat)
 					}
 				}

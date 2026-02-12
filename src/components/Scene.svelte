@@ -223,18 +223,12 @@
 <T.AmbientLight intensity={0.4} />
 
 {#if showGrid}
-{#if !scene.polar}
-	<T.GridHelper
-		position.y={-0.01}
-		args={[10,10,0x777777,0x777777]}
-	/>
-{/if}
-{#if scene.polar}
-	<T.PolarGridHelper
-		position.y={-0.01}
-		args={[5,24,10, 64, 0x777777,0x777777]}
-	/>
-{/if}
+	{#if !scene.polar}
+		<T.GridHelper position.y={-0.01} args={[10, 10, 0x777777, 0x777777]} />
+	{/if}
+	{#if scene.polar}
+		<T.PolarGridHelper position.y={-0.01} args={[5, 24, 10, 64, 0x777777, 0x777777]} />
+	{/if}
 {/if}
 
 {#each rails as railData, railIndex (railIndex)}

@@ -15,7 +15,7 @@
 		side: DoubleSide
 	})
 	floorMaterial.colorNode = reflection.mul(0.1)
-	floorMaterial.emissiveNode = reflection.mul(0.1)
+	// floorMaterial.emissiveNode = reflection.mul(0.1)
 </script>
 
 <T.Mesh material={floorMaterial} position={[0, 0, 0]} receiveShadow={true}>

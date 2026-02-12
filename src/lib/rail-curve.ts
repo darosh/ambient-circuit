@@ -100,7 +100,13 @@ export function buildRailCurve(points: ResolvedPoint[]): Vector3[] {
 	for (let i = 0; i < n - 1; i++) {
 		const bezier = buildSegmentCurve(points, i)
 		if (!bezier) {
-			result.push(toV3(points[i + 1].p))
+			// Straight segment - subdivide for smooth interpolation
+			const p0 = toV3(points[i].p)
+			const p1 = toV3(points[i + 1].p)
+			for (let j = 1; j <= CURVE_SEGMENTS; j++) {
+				const t = j / CURVE_SEGMENTS
+				result.push(new Vector3().lerpVectors(p0, p1, t))
+			}
 		} else {
 			const pts = bezier.getPoints(CURVE_SEGMENTS)
 			for (let j = 1; j < pts.length; j++) {
@@ -230,45 +236,6 @@ export type BeatPosition = {
  * sequence. Points may have fractional beats (geometric-only control points);
  * only integer beats are emitted, arc-length-interpolated on curved segments.
  */
-/**
- * Enhance beat positions with polyline indices for context-aware marble positioning.
- * This avoids ambiguity when multiple points share the same position.
- */
-export function enhanceBeatPositionsWithPolylineIndices(
-	beatPositions: BeatPosition[],
-	polyline: Vector3[]
-): BeatPosition[] {
-	if (beatPositions.length === 0) return beatPositions
-
-	const enhanced: BeatPosition[] = []
-	let searchStartIdx = 0
-
-	for (const bp of beatPositions) {
-		// Search from last found index forward (beats are sequential)
-		let minDist = Infinity
-		let minIdx = searchStartIdx
-
-		for (let i = searchStartIdx; i < polyline.length; i++) {
-			const dist = polyline[i].distanceToSquared(bp.position)
-			if (dist < minDist) {
-				minDist = dist
-				minIdx = i
-			}
-			// Early exit if we found exact match
-			if (dist < 1e-12) break
-		}
-
-		enhanced.push({
-			...bp,
-			polylineIndex: minIdx
-		})
-
-		searchStartIdx = minIdx
-	}
-
-	return enhanced
-}
-
 export function computeBeatPositions(points: ResolvedPoint[]): BeatPosition[] {
 	if (points.length === 0) return []
 	if (points.length === 1) {

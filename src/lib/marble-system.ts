@@ -3,13 +3,7 @@ import type { TempoState } from './tempo'
 import type { Instrument } from './instrument'
 import type { TriggerHandler, GlobalBeatHandler } from './scene'
 import type { SceneCtx } from './scene-ctx'
-import {
-	BeatPosition,
-	buildRailCurve,
-	computeBeatPositions,
-	buildSegmentCurve,
-	enhanceBeatPositionsWithPolylineIndices
-} from './rail-curve'
+import { computeBeatPositions, buildSegmentCurve } from './rail-curve'
 import { easingFunctions } from './easing'
 import { Vector3 } from 'three/webgpu'
 import { ResolvedPoint, ResolvedSplit } from './rail'
@@ -17,22 +11,6 @@ import { ResolvedPoint, ResolvedSplit } from './rail'
 // Module-level state for global beat tracking
 let prevGlobalBeat = -1
 let prevIsPlaying = false
-
-/**
- * Find closest point index on polyline to a target position.
- */
-function findClosestPointIndex(polyline: Vector3[], target: Vector3): number {
-	let minDist = Infinity
-	let minIndex = 0
-	for (let i = 0; i < polyline.length; i++) {
-		const dist = polyline[i].distanceToSquared(target)
-		if (dist < minDist) {
-			minDist = dist
-			minIndex = i
-		}
-	}
-	return minIndex
-}
 
 /**
  * Select branch for marble at split using weighted round-robin.
@@ -176,30 +154,32 @@ function getCurrentPathPoints(marble: Marble): ResolvedPoint[] {
 function calculateMarblePosition(
 	marble: Marble,
 	rawBeat: number,
-	beatPositions: BeatPosition[],
 	points: ResolvedPoint[],
 	easing: string
 ): void {
-	if (beatPositions.length === 0) {
-		marble.position = points[0] ? new Vector3(...points[0].p) : new Vector3()
+	if (points.length === 0) {
+		marble.position = new Vector3()
 		marble.tangent = new Vector3(1, 0, 0)
 		return
 	}
 
-	// Find integer beat segment
-	let beatIndex = 0
-	for (let i = 0; i < beatPositions.length - 1; i++) {
-		if (rawBeat >= beatPositions[i].beat && rawBeat <= beatPositions[i + 1].beat) {
-			beatIndex = i
+	// Find which segment (pair of control points) contains this beat
+	let segmentIndex = 0
+	for (let i = 0; i < points.length - 1; i++) {
+		if (rawBeat >= points[i].beat && rawBeat <= points[i + 1].beat) {
+			segmentIndex = i
 			break
 		}
 	}
+	// Clamp to valid segment range
+	segmentIndex = Math.max(0, Math.min(segmentIndex, points.length - 2))
 
-	const bp0 = beatPositions[beatIndex]
-	const bp1 = beatPositions[Math.min(beatIndex + 1, beatPositions.length - 1)]
+	const p0 = points[segmentIndex]
+	const p1 = points[segmentIndex + 1]
 
-	// Interpolation factor (0-1) between integer beats
-	let t = bp1.beat > bp0.beat ? (rawBeat - bp0.beat) / (bp1.beat - bp0.beat) : 0
+	// Calculate t (0-1) within this segment based on beat values
+	const beatRange = p1.beat - p0.beat
+	let t = beatRange > 0 ? (rawBeat - p0.beat) / beatRange : 0
 	t = Math.max(0, Math.min(1, t))
 
 	// Apply easing
@@ -207,17 +187,20 @@ function calculateMarblePosition(
 	let easedT = easingFn(t)
 	easedT = Math.max(0, Math.min(1, easedT))
 
-	// Compute tangent from curve (before arc-length interpolation)
-	const curve = buildSegmentCurve(points, beatIndex)
-	let newTangent: Vector3
+	// Get position and tangent from segment curve
+	const curve = buildSegmentCurve(points, segmentIndex)
 	if (curve) {
-		newTangent = curve.getTangentAt(easedT).normalize()
+		// Curved segment - use Bezier
+		marble.position = curve.getPoint(easedT)
+		marble.tangent = curve.getTangent(easedT).normalize()
 	} else {
-		// Straight segment - use direction from p0 to p1
-		const dir = new Vector3()
-			.subVectors(new Vector3(...points[beatIndex + 1].p), new Vector3(...points[beatIndex].p))
-			.normalize()
-		newTangent = dir.lengthSq() > 0 ? dir : new Vector3(1, 0, 0)
+		// Straight segment - linear interpolation
+		const pos0 = new Vector3(...p0.p)
+		const pos1 = new Vector3(...p1.p)
+		marble.position = new Vector3().lerpVectors(pos0, pos1, easedT)
+
+		const dir = new Vector3().subVectors(pos1, pos0).normalize()
+		marble.tangent = dir.lengthSq() > 0 ? dir : new Vector3(1, 0, 0)
 	}
 
 	// Parallel transport: rotate previous up vector to stay perpendicular to new tangent
@@ -225,104 +208,24 @@ function calculateMarblePosition(
 	const prevUp = new Vector3(marble.up.x, marble.up.y, marble.up.z)
 
 	// If tangent changed significantly, update up vector via parallel transport
-	if (prevTangent.dot(newTangent) < 0.9999) {
+	if (prevTangent.dot(marble.tangent) < 0.9999) {
 		// Compute rotation axis and angle between old and new tangent
-		const axis = new Vector3().crossVectors(prevTangent, newTangent)
+		const axis = new Vector3().crossVectors(prevTangent, marble.tangent)
 		const axisLen = axis.length()
 
 		if (axisLen > 0.0001) {
 			// Rotate up vector around axis
 			axis.normalize()
-			const angle = Math.acos(Math.max(-1, Math.min(1, prevTangent.dot(newTangent))))
+			const angle = Math.acos(Math.max(-1, Math.min(1, prevTangent.dot(marble.tangent))))
 			const newUp = prevUp.clone().applyAxisAngle(axis, angle)
 
 			// Ensure up is perpendicular to tangent
-			const proj = newUp.clone().multiplyScalar(newUp.dot(newTangent))
+			const proj = newUp.clone().multiplyScalar(newUp.dot(marble.tangent))
 			newUp.sub(proj).normalize()
 
 			marble.up = newUp
 		}
 	}
-
-	marble.tangent = newTangent
-
-	// Build rail polyline once
-	const railPolyline = buildRailCurve(points)
-
-	// Enhance beat positions with polyline indices for context-aware lookup
-	// This resolves ambiguity when multiple points share the same position
-	let effectiveBp0 = bp0
-	let effectiveBp1 = bp1
-	if (bp0.polylineIndex === undefined || bp1.polylineIndex === undefined) {
-		const enhancedBeatPositions = enhanceBeatPositionsWithPolylineIndices(
-			beatPositions,
-			railPolyline
-		)
-		effectiveBp0 = enhancedBeatPositions[beatIndex] || bp0
-		effectiveBp1 =
-			enhancedBeatPositions[Math.min(beatIndex + 1, enhancedBeatPositions.length - 1)] || bp1
-	}
-
-	// Use polyline indices if available (context-aware), fallback to position search
-	const idx0 =
-		effectiveBp0.polylineIndex ?? findClosestPointIndex(railPolyline, effectiveBp0.position)
-	const idx1 =
-		effectiveBp1.polylineIndex ?? findClosestPointIndex(railPolyline, effectiveBp1.position)
-
-	// Extract curve segment between beat positions
-	const segmentPoints: Vector3[] = []
-	if (idx1 >= idx0) {
-		for (let i = idx0; i <= idx1; i++) {
-			segmentPoints.push(railPolyline[i])
-		}
-	} else {
-		// Wrapped around
-		for (let i = idx0; i < railPolyline.length; i++) {
-			segmentPoints.push(railPolyline[i])
-		}
-		for (let i = 0; i <= idx1; i++) {
-			segmentPoints.push(railPolyline[i])
-		}
-	}
-
-	// Interpolate along segment polyline (arc-length based)
-	if (segmentPoints.length < 2) {
-		marble.position = bp0.position.clone()
-		marble.tangent = new Vector3(1, 0, 0)
-		return
-	}
-
-	// Calculate total arc length
-	let totalLength = 0
-	const segmentLengths: number[] = []
-	for (let i = 0; i < segmentPoints.length - 1; i++) {
-		const len = segmentPoints[i].distanceTo(segmentPoints[i + 1])
-		segmentLengths.push(len)
-		totalLength += len
-	}
-
-	if (totalLength === 0) {
-		marble.position = segmentPoints[0].clone()
-		marble.tangent = new Vector3(1, 0, 0)
-		return
-	}
-
-	// Find position at easedT along arc length
-	const targetDist = easedT * totalLength
-	let accumulatedDist = 0
-
-	for (let i = 0; i < segmentLengths.length; i++) {
-		const segLen = segmentLengths[i]
-		if (accumulatedDist + segLen >= targetDist) {
-			const localT = (targetDist - accumulatedDist) / segLen
-			marble.position = new Vector3().lerpVectors(segmentPoints[i], segmentPoints[i + 1], localT)
-			return
-		}
-		accumulatedDist += segLen
-	}
-
-	// Fallback to last point
-	marble.position = segmentPoints[segmentPoints.length - 1].clone()
 }
 
 /**
@@ -581,8 +484,7 @@ export function updateMarble(
 
 			// Get final points and calculate position
 			const points = getCurrentPathPoints(marble)
-			const beatPositions = computeBeatPositions(points)
-			calculateMarblePosition(marble, rawBeat, beatPositions, points, easing)
+			calculateMarblePosition(marble, rawBeat, points, easing)
 			return
 		}
 	}
@@ -697,8 +599,7 @@ export function updateMarble(
 
 	// Get final points with correct branch state
 	const points = getCurrentPathPoints(marble)
-	const beatPositions = computeBeatPositions(points)
-	calculateMarblePosition(marble, marble.currentBeat, beatPositions, points, easing)
+	calculateMarblePosition(marble, marble.currentBeat, points, easing)
 }
 
 export function updateMarbles(

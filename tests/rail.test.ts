@@ -72,7 +72,7 @@ describe('resolveRail', () => {
 		const r = resolveRail(rail)
 		expect(r.points.map((p) => p.beat)).toEqual([0, 4, 5])
 	})
-	
+
 	it('explicit beat override two points', () => {
 		const rail: Rail = {
 			id: 'jump',

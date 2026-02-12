@@ -24,9 +24,17 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'line-16',
+				id: 'line-sparse-2',
 				offset: [-3, 0, 0],
 				nodes: [[0, 0, 0], { p: [6, 0, 0], beat: 2 }]
+			},
+			color: c()
+		},
+		{
+			rail: {
+				id: 'line-sparse-16',
+				offset: [-3, 0, -1],
+				nodes: [[0, 0, 0], { p: [6, 0, 0], beat: 16 }]
 			},
 			color: c()
 		}
