@@ -1,6 +1,6 @@
 import type { SceneConfig } from '../lib/scene'
 import { colors } from './colors'
-import { globalHandlerFactory } from '../lib/trigger-handler'
+import { globalHandlerFactory, triggerHandler } from '../lib/trigger-handler'
 
 let ci = 0
 const c = () => colors[ci++ % colors.length]
@@ -11,18 +11,7 @@ export const scene: SceneConfig = {
 	id: 'scene-reverse',
 	bpm: 120,
 	globalBeatHandler: globalHandlerFactory(),
-	triggerHandler(ctx) {
-		// console.log('TRIGGER', ctx.railId, ctx.beat, ctx.marbleBeat)
-
-		// Signal visual feedback
-		ctx.instrument.instrument.signal!.intensity = 1
-		ctx.marble.marble.signal.intensity = 1
-
-		// Execute instrument action if present
-		if (ctx.instrument.instrument.actionHandler) {
-			ctx.instrument.instrument.actionHandler(ctx)
-		}
-	},
+	triggerHandler,
 	rails: [
 		// Example 1: Reverse all marbles
 		{
