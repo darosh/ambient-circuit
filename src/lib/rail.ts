@@ -1,3 +1,5 @@
+import type { Matrix4, Vector3 } from 'three/webgpu'
+
 /** 3D position */
 export type Vec3 = [x: number, y: number, z: number]
 export type Vec3Curve =
@@ -52,7 +54,7 @@ export type Rail = {
 	/** Rotation around tangent in degrees. Default: 90 */
 	tilt?: number
 	/** Transform applied during rail resolution (Matrix4 or function) */
-	transform?: unknown // Matrix4 | ((v: Vector3) => Vector3)
+	transform?: Matrix4 | ((v: Vector3) => Vector3)
 	nodes: RailDef
 }
 

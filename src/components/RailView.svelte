@@ -260,12 +260,7 @@
 	useTask((delta) => {
 		// Update render matrix
 		if (render && tempo && sceneCtx) {
-			renderMatrix = render({
-				delta,
-				beat: tempo.currentBeat,
-				tempo,
-				ctx: sceneCtx
-			}) as Matrix4
+			renderMatrix = render(tempo.currentBeat + tempo.beatProgress, tempo, delta, sceneCtx)
 
 			// Store in runtime for marble access
 			if (railData.runtime) {

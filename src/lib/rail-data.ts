@@ -3,6 +3,7 @@ import type { Rail } from './rail'
 import type { Instrument } from './instrument'
 import type { SceneCtx } from './scene-ctx'
 import type { TempoState } from './tempo'
+import type { Matrix4 } from 'three/webgpu'
 
 type MarbleDataBase = {
 	direction?: MarbleDirection
@@ -33,13 +34,6 @@ export type RailRuntime = {
 	renderMatrix?: unknown // Matrix4
 }
 
-export type RenderContext = {
-	delta: number
-	beat: number
-	tempo: TempoState
-	ctx: SceneCtx
-}
-
 export type RailData = {
 	rail: Rail
 	color: string
@@ -47,5 +41,5 @@ export type RailData = {
 	instruments?: Instrument[]
 	runtime?: RailRuntime
 	/** Runtime animation function returning Matrix4 transform */
-	render?: (ctx: RenderContext) => unknown // Matrix4
+	render?: (beat: number, tempo: TempoState, delta: number, ctx: SceneCtx) => Matrix4
 }
