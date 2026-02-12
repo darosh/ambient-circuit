@@ -16,7 +16,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'r.1',
-				offset: [-1, 0, 0],
+				offset: [-1, -1, 0],
 				nodes: [
 					{ p: [0, 0, 0], round: 'both' },
 					{ p: [1, 0, 1], round: 'both' },
@@ -38,7 +38,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'r.2',
-				offset: [-0.75, 0, 0],
+				offset: [-0.75, 0.5, 0],
 				nodes: [
 					{ p: [0, 0, 0], round: 'both' },
 					{ p: [0.5, 0, 0.5], round: 'both' },
@@ -53,19 +53,19 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'r.4',
-				offset: [1.75, 0, 0],
+				offset: [1.75, .5, 0],
 				nodes: [
 					{ p: [0, 0, 0], round: 'both' },
 					{ p: [0.5, 0, 0.5], round: 'both' },
 					{ p: [1, 0, 0], round: 'both' },
 					{ p: [0.5, 0, -0.5], round: 'both' },
-					{ p: [0, 0, 0], round: 'both', beat: 7 }
+					{ p: [0, 0, 0], round: 'both', beat: 4 }
 				]
 			},
-			instruments: [{ beat: 2, type: 'star', sides: 7 }],
+			instruments: [{ beat: 3, type: 'star', sides: 7 }],
 			marbles: [
 				{ start: 0, speed: 1 },
-				{ start: 2, speed: 2 }
+				{ start: 1, speed: 1.5 }
 			],
 			color: colors[0]
 		},
