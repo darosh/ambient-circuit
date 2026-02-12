@@ -10,7 +10,7 @@ export const scene: SceneConfig = {
 	id: 'scene-rings',
 	bpm: 120,
 	polar: true,
-	camera: [7.5, 4.5, 7.5],
+	camera: [9.5, 4.5, 8.5],
 	target: [0, 0.75, 0],
 	triggerHandler,
 	rails: [
@@ -73,6 +73,11 @@ export const scene: SceneConfig = {
 				{ start: 0, speed: 1 },
 				{ start: 1, speed: 1.5 }
 			],
+			render: (_ctx) => {
+				const time = performance.now() * 0.0007
+				const rotation = time * Math.PI * 0.5
+				return new Matrix4().makeRotationY(rotation)
+			},
 			color: colors[0]
 		},
 		{

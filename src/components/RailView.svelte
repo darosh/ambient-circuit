@@ -76,6 +76,7 @@
 	// Runtime render transform
 	let renderMatrix = $state(new Matrix4())
 
+	// Extract position/rotation for group, scale for geometry
 	const renderTransform = $derived.by(() => {
 		if (!render) return null
 
@@ -89,7 +90,46 @@
 		return {
 			position: position.toArray(),
 			rotation: [rotation.x, rotation.y, rotation.z] as [number, number, number],
-			scale: scale.toArray()
+			scale
+		}
+	})
+
+	// Apply scale to rail points for geometry (not instruments)
+	const displayPoints = $derived.by(() => {
+		if (!renderTransform) return resolved.points
+
+		const scale = renderTransform.scale
+		return resolved.points.map((pt) => ({
+			...pt,
+			p: [pt.p[0] * scale.x, pt.p[1] * scale.y, pt.p[2] * scale.z] as ResolvedPoint['p']
+		}))
+	})
+
+	const displaySplits = $derived.by(() => {
+		if (!renderTransform) return resolved.splits
+
+		const scale = renderTransform.scale
+		return resolved.splits.map((split) => ({
+			...split,
+			p: [split.p[0] * scale.x, split.p[1] * scale.y, split.p[2] * scale.z] as typeof split.p,
+			branches: split.branches.map((branch) => ({
+				...branch,
+				points: branch.points.map((pt) => ({
+					...pt,
+					p: [pt.p[0] * scale.x, pt.p[1] * scale.y, pt.p[2] * scale.z] as ResolvedPoint['p']
+				}))
+			}))
+		}))
+	})
+
+	// Create display rail with scaled points for instrument positioning
+	const displayResolved = $derived.by(() => {
+		if (!renderTransform) return resolved
+
+		return {
+			...resolved,
+			points: displayPoints,
+			splits: displaySplits
 		}
 	})
 
@@ -125,7 +165,7 @@
 	}
 
 	const mainMeshes = $derived.by(() => {
-		const pts = resolved.points
+		const pts = displayPoints
 		const first = pts[0]?.p
 		const last = pts[pts.length - 1]?.p
 		const closed =
@@ -140,9 +180,9 @@
 
 	const branchMeshes = $derived.by(() => {
 		const meshes: Array<{ geometry: BufferGeometry; opacity: number }> = []
-		for (const s of resolved.splits) {
-			const splitIdx = resolved.points.findIndex((p) => p.beat === s.beat)
-			const prev = splitIdx > 0 ? resolved.points[splitIdx - 1] : null
+		for (const s of displaySplits) {
+			const splitIdx = displayPoints.findIndex((p) => p.beat === s.beat)
+			const prev = splitIdx > 0 ? displayPoints[splitIdx - 1] : null
 			for (const b of s.branches) {
 				const pts: ResolvedPoint[] = prev
 					? [prev, { p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
@@ -157,18 +197,18 @@
 	const allMeshes = $derived([...mainMeshes, ...branchMeshes])
 
 	const railNamePosition = $derived.by(() => {
-		if (!showNames || resolved.points.length === 0) return null
+		if (!showNames || displayPoints.length === 0) return null
 		let minX = Infinity,
 			maxX = -Infinity
 		let maxY = -Infinity
 		let minZ = Infinity
-		for (const pt of resolved.points) {
+		for (const pt of displayPoints) {
 			if (pt.p[0] < minX) minX = pt.p[0]
 			if (pt.p[0] > maxX) maxX = pt.p[0]
 			if (pt.p[1] > maxY) maxY = pt.p[1]
 			if (pt.p[2] < minZ) minZ = pt.p[2]
 		}
-		for (const split of resolved.splits) {
+		for (const split of displaySplits) {
 			for (const branch of split.branches) {
 				for (const pt of branch.points) {
 					if (pt.p[0] < minX) minX = pt.p[0]
@@ -279,23 +319,19 @@
 </script>
 
 {#if renderTransform}
-	<T.Group
-		position={renderTransform.position}
-		rotation={renderTransform.rotation}
-		scale={renderTransform.scale}
-	>
+	<T.Group position={renderTransform.position} rotation={renderTransform.rotation}>
 		{#each allMeshes as { geometry }, idx (idx)}
 			<T.Mesh {geometry} material={fxRails ? fxMaterial : plainMaterial} />
 		{/each}
 
 		{#if showPoints}
-			{#each resolved.points as pt, ptIndex (ptIndex)}
+			{#each displayPoints as pt, ptIndex (ptIndex)}
 				<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
 					<T.SphereGeometry args={[0.04, 8, 8]} />
 					<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
 				</T.Mesh>
 			{/each}
-			{#each resolved.splits as split, splitIndex (splitIndex)}
+			{#each displaySplits as split, splitIndex (splitIndex)}
 				{#each split.branches as branch, branchIndex (branchIndex)}
 					{#each branch.points as pt, ptIndex (ptIndex)}
 						<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
@@ -369,7 +405,7 @@
 				{color}
 				size={0.5}
 				{instrument}
-				rail={resolved}
+				rail={displayResolved}
 				bind:signal={instrument.signal}
 				{fxInstruments}
 				{wireframe}
@@ -382,13 +418,13 @@
 	{/each}
 
 	{#if showPoints}
-		{#each resolved.points as pt, ptIndex (ptIndex)}
+		{#each displayPoints as pt, ptIndex (ptIndex)}
 			<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
 				<T.SphereGeometry args={[0.04, 8, 8]} />
 				<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
 			</T.Mesh>
 		{/each}
-		{#each resolved.splits as split, splitIndex (splitIndex)}
+		{#each displaySplits as split, splitIndex (splitIndex)}
 			{#each split.branches as branch, branchIndex (branchIndex)}
 				{#each branch.points as pt, ptIndex (ptIndex)}
 					<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
