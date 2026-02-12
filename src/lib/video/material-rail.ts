@@ -67,7 +67,11 @@ export function clearRailMaterialCache(): void {
 /**
  * Build rail material (internal, not cached)
  */
-function buildRailMaterial(hexColor: string, initialIntensity: number, transparent: boolean) {
+export function buildRailMaterial(
+	hexColor: string,
+	initialIntensity: number = 0.7,
+	transparent: boolean = true
+) {
 	const emissiveColor = uniform(color(hexColor))
 	const impactIntensity = uniform(0.0)
 
