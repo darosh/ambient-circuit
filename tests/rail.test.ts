@@ -73,6 +73,21 @@ describe('resolveRail', () => {
 		expect(r.points.map((p) => p.beat)).toEqual([0, 4, 5])
 	})
 
+	it('explicit beat on last point interpolates from start', () => {
+		const rail: Rail = {
+			id: 'circle',
+			nodes: [
+				{ p: [0, 0, 0], round: 'both' },
+				{ p: [0.5, 0, 0.5], round: 'both' },
+				{ p: [1, 0, 0], round: 'both' },
+				{ p: [0.5, 0, -0.5], round: 'both' },
+				{ p: [0, 0, 0], round: 'both', beat: 4 }
+			]
+		}
+		const r = resolveRail(rail)
+		expect(r.points.map((p) => p.beat)).toEqual([0, 1, 2, 3, 4])
+	})
+
 	it('explicit beat override two points', () => {
 		const rail: Rail = {
 			id: 'jump',

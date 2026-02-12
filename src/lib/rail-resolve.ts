@@ -107,9 +107,11 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 
 	// Interpolate beats for geometric-only points
 	if (hasExplicitBeats && anchors.length > 0) {
-		// Before first anchor: same beat
-		for (let i = 0; i < anchors[0]; i++) {
-			points[i].beat = points[anchors[0]].beat
+		// Before first anchor: interpolate from startBeat
+		const firstAnchorIdx = anchors[0]
+		const firstAnchorBeat = points[firstAnchorIdx].beat
+		for (let i = 0; i < firstAnchorIdx; i++) {
+			points[i].beat = startBeat + ((firstAnchorBeat - startBeat) * i) / firstAnchorIdx
 		}
 		// Between consecutive anchors: linear interpolation
 		for (let a = 0; a < anchors.length - 1; a++) {
