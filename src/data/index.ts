@@ -12,18 +12,20 @@ import { scene as sceneCtxTest } from './scene-ctx-test'
 import { scene as sceneReverse } from './scene-reverse'
 import { scene as sceneGlobalBeat } from './scene-global-beat'
 import { scene as sceneActiveVisible } from './scene-active-visible'
+import { scene as sceneRings } from './scene-rings'
 
 export const scenes: SceneConfig[] = [
 	sceneTest,
 	sceneStructure,
+	sceneRings,
 	sceneInstruments,
-	sceneMarbles,
-	sceneRails,
 	sceneOrientation,
 	sceneLogic,
+	sceneActiveVisible,
+	sceneMarbles,
 	sceneCtxTest,
 	sceneReverse,
 	sceneGlobalBeat,
-	sceneActiveVisible,
+	sceneRails,
 	sceneCrossing
 ]
