@@ -243,6 +243,8 @@
 			{fxRails}
 			{fxInstruments}
 			{font}
+			{tempo}
+			{sceneCtx}
 		/>
 	{/if}
 {/each}
@@ -252,6 +254,7 @@
 		<MarbleView
 			bind:marble={marbles[idx]}
 			rail={resolvedRails[marbleRailIndices[idx]]}
+			railData={rails[marbleRailIndices[idx]]}
 			color={rails[marbleRailIndices[idx]].color || '#ffffff'}
 			{wireframe}
 			{fxMarbles}

@@ -1,6 +1,7 @@
 import type { SceneConfig } from '../lib/scene'
 import { color3 as colors } from './colors'
 import { triggerHandler } from '../lib/trigger-handler'
+import { Matrix4, Vector3 } from 'three/webgpu'
 
 // let ci = 0
 // const c = () => colors[ci++ % colors.length]
@@ -33,7 +34,13 @@ export const scene: SceneConfig = {
 				{ start: 0, speed: 1 },
 				{ start: 2, speed: 2 }
 			],
-			color: colors[0]
+			color: colors[0],
+			render: (_ctx) => {
+				// Example C: Spinning using performance.now()
+				const time = performance.now() * 0.001
+				const rotation = time * Math.PI * 0.5 // 90° per second
+				return new Matrix4().makeRotationY(rotation)
+			}
 		},
 		{
 			rail: {
@@ -53,7 +60,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'r.4',
-				offset: [1.75, .5, 0],
+				offset: [1.75, 0.5, 0],
 				nodes: [
 					{ p: [0, 0, 0], round: 'both' },
 					{ p: [0.5, 0, 0.5], round: 'both' },
@@ -73,6 +80,11 @@ export const scene: SceneConfig = {
 			rail: {
 				id: 'r.3',
 				offset: [-1.25, 0, 0],
+				transform: (v: Vector3) => {
+					v.multiplyScalar(1.2) // 20% larger
+					v.applyAxisAngle(new Vector3(0, 1, 0), Math.PI / 6) // 30° Y rotation
+					return v
+				},
 				nodes: [
 					{ p: [0, 0, 0], round: 'both' },
 					{ p: [1.5, 0, 1.5], round: 'both' },
@@ -103,12 +115,18 @@ export const scene: SceneConfig = {
 				{ beat: 2.5, type: 'star', sides: 7 },
 				{ beat: 3.5, type: 'star', sides: 7 }
 			],
-			color: colors[1]
+			color: colors[1],
+			render: (ctx) => {
+				// Example D: Pulsing using global beat
+				const scale = 1 + Math.sin(ctx.tempo.beatProgress * Math.PI * 2) * 0.1 // ±10% pulse per beat
+				return new Matrix4().makeScale(scale, scale, scale)
+			}
 		},
 		{
 			rail: {
 				id: 'r.6',
 				offset: [0, -2, -1],
+				transform: new Matrix4().makeRotationX(Math.PI / 4), // 45° X rotation
 				nodes: [
 					{ p: [0, 0, 0], round: 'both' },
 					{ p: [0, 2, 2], round: 'both' },

@@ -21,7 +21,7 @@
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
-	
+
 	const buttonBackgroundColor = 'hsl(230, 7%, 10%)'
 	const customizedTheme: Theme = {
 		...ThemeUtils.presets.translucent,

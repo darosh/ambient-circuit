@@ -51,6 +51,8 @@ export type Rail = {
 	offset?: Vec3
 	/** Rotation around tangent in degrees. Default: 90 */
 	tilt?: number
+	/** Transform applied during rail resolution (Matrix4 or function) */
+	transform?: unknown // Matrix4 | ((v: Vector3) => Vector3)
 	nodes: RailDef
 }
 

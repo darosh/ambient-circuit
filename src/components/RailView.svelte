@@ -3,14 +3,19 @@
 	import { Text3DGeometry, Align, Suspense } from '@threlte/extras'
 	import type { ResolvedPoint } from '../lib/rail'
 	import type { RailData } from '../lib/rail-data'
+	import type { SceneCtx } from '../lib/scene-ctx'
+	import type { TempoState } from '../lib/tempo'
 	import { resolveRail } from '../lib/rail-resolve'
 	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/rail-curve'
 	import {
 		type BufferGeometry,
 		CurvePath,
+		Euler,
 		Group,
 		LineCurve3,
+		Matrix4,
 		MeshStandardMaterial,
+		Quaternion,
 		Vector3
 	} from 'three/webgpu'
 	import InstrumentView from './InstrumentView.svelte'
@@ -28,6 +33,8 @@
 		fxRails?: boolean
 		fxInstruments?: boolean
 		font?: Font
+		tempo?: TempoState
+		sceneCtx?: SceneCtx
 	}
 
 	let {
@@ -39,12 +46,15 @@
 		wireframe = false,
 		fxRails = true,
 		fxInstruments = true,
-		font
+		font,
+		tempo,
+		sceneCtx
 	}: Props = $props()
 
 	const rail = $derived(railData.rail)
 	const color = $derived(railData.runtime?.color ?? railData.color)
 	const instruments = $derived(railData.instruments ?? [])
+	const render = $derived(railData.render)
 
 	function buildCurvePath(points: ResolvedPoint[], skipFirst = 0): CurvePath<Vector3> | null {
 		const path = new CurvePath<Vector3>()
@@ -62,6 +72,26 @@
 	// Always create both materials - switching avoids WebGPU state issues on toggle
 	const fxMaterial = $derived(makeRailMaterial(color).mat)
 	const plainMaterial = $derived(new MeshStandardMaterial({ color }))
+
+	// Runtime render transform
+	let renderMatrix = $state(new Matrix4())
+
+	const renderTransform = $derived.by(() => {
+		if (!render) return null
+
+		const position = new Vector3()
+		const rotation = new Euler()
+		const scale = new Vector3()
+		const quaternion = new Quaternion()
+		renderMatrix.decompose(position, quaternion, scale)
+		rotation.setFromQuaternion(quaternion)
+
+		return {
+			position: position.toArray(),
+			rotation: [rotation.x, rotation.y, rotation.z] as [number, number, number],
+			scale: scale.toArray()
+		}
+	})
 
 	$effect(() => {
 		fxMaterial.wireframe = wireframe
@@ -227,7 +257,23 @@
 		setTimeout(() => requestAnimationFrame(renderBatch), 0)
 	})
 
-	useTask(() => {
+	useTask((delta) => {
+		// Update render matrix
+		if (render && tempo && sceneCtx) {
+			renderMatrix = render({
+				delta,
+				beat: tempo.currentBeat,
+				tempo,
+				ctx: sceneCtx
+			}) as Matrix4
+
+			// Store in runtime for marble access
+			if (railData.runtime) {
+				railData.runtime.renderMatrix = renderMatrix
+			}
+		}
+
+		// Billboard text to camera
 		if (!camera.current) return
 		const rot = camera.current.quaternion
 		if (nameGroup) nameGroup.quaternion.copy(rot)
@@ -237,43 +283,168 @@
 	})
 </script>
 
-{#each allMeshes as { geometry }, idx (idx)}
-	<T.Mesh {geometry} material={fxRails ? fxMaterial : plainMaterial} />
-{/each}
+{#if renderTransform}
+	<T.Group
+		position={renderTransform.position}
+		rotation={renderTransform.rotation}
+		scale={renderTransform.scale}
+	>
+		{#each allMeshes as { geometry }, idx (idx)}
+			<T.Mesh {geometry} material={fxRails ? fxMaterial : plainMaterial} />
+		{/each}
 
-{#if showPoints}
-	{#each resolved.points as pt, ptIndex (ptIndex)}
-		<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
-			<T.SphereGeometry args={[0.04, 8, 8]} />
-			<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
-		</T.Mesh>
-	{/each}
-	{#each resolved.splits as split, splitIndex (splitIndex)}
-		{#each split.branches as branch, branchIndex (branchIndex)}
-			{#each branch.points as pt, ptIndex (ptIndex)}
+		{#if showPoints}
+			{#each resolved.points as pt, ptIndex (ptIndex)}
 				<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
 					<T.SphereGeometry args={[0.04, 8, 8]} />
 					<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
 				</T.Mesh>
 			{/each}
-		{/each}
-	{/each}
-{/if}
+			{#each resolved.splits as split, splitIndex (splitIndex)}
+				{#each split.branches as branch, branchIndex (branchIndex)}
+					{#each branch.points as pt, ptIndex (ptIndex)}
+						<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
+							<T.SphereGeometry args={[0.04, 8, 8]} />
+							<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
+						</T.Mesh>
+					{/each}
+				{/each}
+			{/each}
+		{/if}
 
-{#if showBeats}
-	{#each visibleBeats as bp, bpIndex (bpIndex)}
-		{@const isDownbeat = bp.beat === resolved.beatOffset}
+		{#if showBeats}
+			{#each visibleBeats as bp, bpIndex (bpIndex)}
+				{@const isDownbeat = bp.beat === resolved.beatOffset}
+				<T.Group
+					bind:ref={beatGroups[bpIndex]}
+					position={[
+						bp.position.x + 0.2,
+						bp.position.y + (isDownbeat ? -0.25 : 0.2),
+						bp.position.z
+					]}
+				>
+					<Suspense>
+						<Align>
+							{#snippet children({ align })}
+								<T.Mesh>
+									<Text3DGeometry
+										text={bp.beat.toString()}
+										size={isDownbeat ? 0.2 : 0.2}
+										depth={0.01}
+										bevelEnabled={false}
+										{font}
+										oncreate={align}
+									/>
+									<T.MeshBasicMaterial {color} />
+								</T.Mesh>
+							{/snippet}
+						</Align>
+					</Suspense>
+				</T.Group>
+			{/each}
+		{/if}
+
+		{#if showNameDeferred && railNamePosition}
+			<T.Group
+				bind:ref={nameGroup}
+				position={[railNamePosition.x, railNamePosition.y, railNamePosition.z]}
+			>
+				<Suspense>
+					<Align>
+						{#snippet children({ align })}
+							<T.Mesh>
+								<Text3DGeometry
+									text={rail.id.toUpperCase()}
+									size={0.26}
+									depth={0.01}
+									bevelEnabled={false}
+									{font}
+									oncreate={align}
+								/>
+								<T.MeshBasicMaterial {color} />
+							</T.Mesh>
+						{/snippet}
+					</Align>
+				</Suspense>
+			</T.Group>
+		{/if}
+
+		{#each visibleInstruments as instrument, idx (idx)}
+			<InstrumentView
+				{color}
+				size={0.5}
+				{instrument}
+				rail={resolved}
+				bind:signal={instrument.signal}
+				{fxInstruments}
+				{wireframe}
+			/>
+		{/each}
+	</T.Group>
+{:else}
+	{#each allMeshes as { geometry }, idx (idx)}
+		<T.Mesh {geometry} material={fxRails ? fxMaterial : plainMaterial} />
+	{/each}
+
+	{#if showPoints}
+		{#each resolved.points as pt, ptIndex (ptIndex)}
+			<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
+				<T.SphereGeometry args={[0.04, 8, 8]} />
+				<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
+			</T.Mesh>
+		{/each}
+		{#each resolved.splits as split, splitIndex (splitIndex)}
+			{#each split.branches as branch, branchIndex (branchIndex)}
+				{#each branch.points as pt, ptIndex (ptIndex)}
+					<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
+						<T.SphereGeometry args={[0.04, 8, 8]} />
+						<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
+					</T.Mesh>
+				{/each}
+			{/each}
+		{/each}
+	{/if}
+
+	{#if showBeats}
+		{#each visibleBeats as bp, bpIndex (bpIndex)}
+			{@const isDownbeat = bp.beat === resolved.beatOffset}
+			<T.Group
+				bind:ref={beatGroups[bpIndex]}
+				position={[bp.position.x + 0.2, bp.position.y + (isDownbeat ? -0.25 : 0.2), bp.position.z]}
+			>
+				<Suspense>
+					<Align>
+						{#snippet children({ align })}
+							<T.Mesh>
+								<Text3DGeometry
+									text={bp.beat.toString()}
+									size={isDownbeat ? 0.2 : 0.2}
+									depth={0.01}
+									bevelEnabled={false}
+									{font}
+									oncreate={align}
+								/>
+								<T.MeshBasicMaterial {color} />
+							</T.Mesh>
+						{/snippet}
+					</Align>
+				</Suspense>
+			</T.Group>
+		{/each}
+	{/if}
+
+	{#if showNameDeferred && railNamePosition}
 		<T.Group
-			bind:ref={beatGroups[bpIndex]}
-			position={[bp.position.x + 0.2, bp.position.y + (isDownbeat ? -0.25 : 0.2), bp.position.z]}
+			bind:ref={nameGroup}
+			position={[railNamePosition.x, railNamePosition.y, railNamePosition.z]}
 		>
 			<Suspense>
 				<Align>
 					{#snippet children({ align })}
 						<T.Mesh>
 							<Text3DGeometry
-								text={bp.beat.toString()}
-								size={isDownbeat ? 0.2 : 0.2}
+								text={rail.id.toUpperCase()}
+								size={0.26}
 								depth={0.01}
 								bevelEnabled={false}
 								{font}
@@ -285,42 +456,17 @@
 				</Align>
 			</Suspense>
 		</T.Group>
+	{/if}
+
+	{#each visibleInstruments as instrument, idx (idx)}
+		<InstrumentView
+			{color}
+			size={0.5}
+			{instrument}
+			rail={resolved}
+			bind:signal={instrument.signal}
+			{fxInstruments}
+			{wireframe}
+		/>
 	{/each}
 {/if}
-
-{#if showNameDeferred && railNamePosition}
-	<T.Group
-		bind:ref={nameGroup}
-		position={[railNamePosition.x, railNamePosition.y, railNamePosition.z]}
-	>
-		<Suspense>
-			<Align>
-				{#snippet children({ align })}
-					<T.Mesh>
-						<Text3DGeometry
-							text={rail.id.toUpperCase()}
-							size={0.26}
-							depth={0.01}
-							bevelEnabled={false}
-							{font}
-							oncreate={align}
-						/>
-						<T.MeshBasicMaterial {color} />
-					</T.Mesh>
-				{/snippet}
-			</Align>
-		</Suspense>
-	</T.Group>
-{/if}
-
-{#each visibleInstruments as instrument, idx (idx)}
-	<InstrumentView
-		{color}
-		size={0.5}
-		{instrument}
-		rail={resolved}
-		bind:signal={instrument.signal}
-		{fxInstruments}
-		{wireframe}
-	/>
-{/each}

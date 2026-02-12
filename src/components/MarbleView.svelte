@@ -15,6 +15,7 @@
 	import { easeOutQuart } from '../lib/easing'
 	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { ResolvedRail } from '../lib/rail'
+	import type { RailData } from '../lib/rail-data'
 
 	// Geometry constants
 	const MARBLE_WIDTH = 0.06
@@ -34,15 +35,33 @@
 	type Props = {
 		marble: Marble
 		rail: ResolvedRail
+		railData: RailData
 		color: string
 		wireframe?: boolean
 		fxMarbles?: boolean
 	}
 
-	let { marble = $bindable(), rail, color, wireframe = false, fxMarbles = true }: Props = $props()
+	let {
+		marble = $bindable(),
+		rail,
+		railData,
+		color,
+		wireframe = false,
+		fxMarbles = true
+	}: Props = $props()
 
 	const effectiveColor = $derived(marble.runtime.color ?? color)
 	const effectiveVisible = $derived(marble.runtime.visible ?? true)
+
+	// Apply rail render transform to marble position
+	const transformedPosition = $derived.by(() => {
+		const basePos = new Vector3(marble.position.x, marble.position.y, marble.position.z)
+		const matrix = railData.runtime?.renderMatrix as Matrix4 | undefined
+		if (matrix) {
+			basePos.applyMatrix4(matrix)
+		}
+		return basePos
+	})
 
 	const fx = $derived(makeMarbleMaterial(effectiveColor))
 	const plainMaterial = $derived(new MeshStandardMaterial({ color: effectiveColor }))
@@ -200,14 +219,14 @@
 {#if effectiveVisible}
 	{#if type === 'ball'}
 		<T.Mesh
-			position={[marble.position.x, marble.position.y, marble.position.z]}
+			position={[transformedPosition.x, transformedPosition.y, transformedPosition.z]}
 			material={fxMarbles ? fx.mat : plainMaterial}
 		>
 			<T.SphereGeometry args={[BALL_RADIUS, BALL_WIDTH_SEGMENTS, BALL_HEIGHT_SEGMENTS]} />
 		</T.Mesh>
 	{:else if geometry}
 		<T.Mesh
-			position={[marble.position.x, marble.position.y, marble.position.z]}
+			position={[transformedPosition.x, transformedPosition.y, transformedPosition.z]}
 			{rotation}
 			{geometry}
 			material={fxMarbles ? fx.mat : plainMaterial}

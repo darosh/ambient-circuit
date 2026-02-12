@@ -12,7 +12,7 @@ import {
 } from './rail'
 import { isVec3, isSplit, isPointFull, isPathString } from './rail'
 import { expandPathString } from './rail-path'
-import { Vector3 } from 'three/webgpu'
+import { Vector3, Matrix4 } from 'three/webgpu'
 
 function flattenNodes(nodes: RailDef): Array<Exclude<RailNode, string>> {
 	const out: Array<Exclude<RailNode, string>> = []
@@ -134,6 +134,28 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 }
 
 /**
+ * Apply transform to points (Matrix4 or function)
+ */
+function applyTransform<T extends { p: Vec3 }>(
+	points: T[],
+	transform: Matrix4 | ((v: Vector3) => Vector3)
+): T[] {
+	if (transform instanceof Matrix4) {
+		return points.map((pt) => {
+			const v = new Vector3().fromArray(pt.p)
+			v.applyMatrix4(transform)
+			return { ...pt, p: v.toArray() as Vec3 }
+		})
+	} else {
+		return points.map((pt) => {
+			const v = new Vector3().fromArray(pt.p)
+			const transformed = transform(v)
+			return { ...pt, p: transformed.toArray() as Vec3 }
+		})
+	}
+}
+
+/**
  * Validate that no mid-path points share the same position.
  * Only allows first == last for closed loops.
  * Exported for testing only - not enforced in production.
@@ -195,12 +217,28 @@ export function resolveRail(rail: Rail): ResolvedRail {
 		}))
 	}))
 
+	// Apply transform if provided
+	const transformedPoints = rail.transform
+		? applyTransform(offsetPoints, rail.transform as Matrix4 | ((v: Vector3) => Vector3))
+		: offsetPoints
+
+	const transformedSplits = rail.transform
+		? offsetSplits.map((s) => ({
+				...s,
+				p: applyTransform([{ p: s.p }], rail.transform as Matrix4 | ((v: Vector3) => Vector3))[0].p,
+				branches: s.branches.map((b) => ({
+					...b,
+					points: applyTransform(b.points, rail.transform as Matrix4 | ((v: Vector3) => Vector3))
+				}))
+			}))
+		: offsetSplits
+
 	return {
 		id: rail.id,
 		beatOffset,
 		reverse: rail.reverse ?? false,
 		tilt: rail.tilt ?? 90,
-		points: offsetPoints,
-		splits: offsetSplits
+		points: transformedPoints,
+		splits: transformedSplits
 	}
 }
