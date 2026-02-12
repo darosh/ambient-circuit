@@ -72,6 +72,15 @@ describe('resolveRail', () => {
 		const r = resolveRail(rail)
 		expect(r.points.map((p) => p.beat)).toEqual([0, 4, 5])
 	})
+	
+	it('explicit beat override two points', () => {
+		const rail: Rail = {
+			id: 'jump',
+			nodes: [[0, 0, 0], { p: [1, 0, 0], beat: 4 }]
+		}
+		const r = resolveRail(rail)
+		expect(r.points.map((p) => p.beat)).toEqual([0, 4])
+	})
 
 	it('split: resolves branches with correct beats', () => {
 		const rail: Rail = {
