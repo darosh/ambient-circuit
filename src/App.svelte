@@ -1,4 +1,5 @@
 <script lang="ts">
+	// import { Inspector } from 'three/addons/inspector/Inspector.js'
 	import { Canvas } from '@threlte/core'
 	import {
 		ThemeUtils,
@@ -20,7 +21,7 @@
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
-
+	
 	const buttonBackgroundColor = 'hsl(230, 7%, 10%)'
 	const customizedTheme: Theme = {
 		...ThemeUtils.presets.translucent,
@@ -221,6 +222,7 @@
 			forceWebGL: false
 		})
 
+		// renderer.inspector = new Inspector()
 		renderer.dispose = () => {}
 
 		return renderer
