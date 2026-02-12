@@ -1,8 +1,6 @@
-import { buildRailMaterial, createRailMaterial } from './video/material-rail'
-// import { createMarbleMaterial } from './video/material-marble'
-// import { createInstrumentMaterial } from './video/material-instrument'
+import { createRailMaterial } from './video/material-rail'
 
 export const makeRailMaterial = createRailMaterial
-export const makeMarbleMaterial = (c: string) => buildRailMaterial(c, 0.51)
+export const makeMarbleMaterial = (c: string) => createRailMaterial(c, 0.51)
 export const makeInstrumentMaterial = (c: string, transparent = true) =>
-	buildRailMaterial(c, 0.51, transparent)
+	createRailMaterial(c, 0.51, transparent)

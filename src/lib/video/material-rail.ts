@@ -67,7 +67,7 @@ export function clearRailMaterialCache(): void {
 /**
  * Build rail material (internal, not cached)
  */
-export function buildRailMaterial(
+function buildRailMaterial(
 	hexColor: string,
 	initialIntensity: number = 0.7,
 	transparent: boolean = true
