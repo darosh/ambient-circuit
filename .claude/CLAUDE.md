@@ -137,10 +137,11 @@ Create a "marble-machine-inspired" music sequencer where:
 2. Fix: We need single source of truth handling of default values, not this: ```return this.instrument.runtime!.spinning ?? typed.spinning ?? true```
 3. Fix: Instrument on last and first beat is never triggered, in both sequencing modes
 4. Fix: `visible` prop missing in `InstrumentBase`
-5. Active state enforcement (Phase 2.2): Skip inactive instruments/marbles in triggers
-6. Rail switching API (Phase 3): Teleport marbles between rails with validation
-7. Marble collisions (Phase 4): Bouncer marbles with collision detection
-8. Fix skipped `tests/marble-state.test.ts`
+5. Fix: missing `type` prop in `InstrumentState`
+6. Active state enforcement (Phase 2.2): Skip inactive instruments/marbles in triggers
+7. Rail switching API (Phase 3): Teleport marbles between rails with validation
+8. Marble collisions (Phase 4): Bouncer marbles with collision detection
+9. Fix skipped `tests/marble-state.test.ts`
 
 **Blocked/Questions:**
 

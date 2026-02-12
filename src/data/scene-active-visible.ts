@@ -91,6 +91,27 @@ export const scene: SceneConfig = {
 					}
 				}
 			]
+		},
+		{
+			rail: {
+				id: 'swap',
+				offset: [-0.5, 0, 0],
+				nodes: [[0, 0, 0], 'ib rb ob lb']
+			},
+			color: c(),
+			marbles: [{ type: 'ball', start: 0 }],
+			instruments: [
+				{
+					beat: 2.5,
+					type: 'arrow',
+					kind: 'rec',
+					actionHandler(ctx) {
+						// ctx.instrument.state.type = 'sun'
+						ctx.instrument.state.kind = ctx.instrument.state.kind === 'rec' ? 'stop' : 'rec'
+						ctx.marble.state.type = ctx.marble.state.type === 'coil' ? 'poly' : 'coil'
+					}
+				}
+			]
 		}
 	]
 }
