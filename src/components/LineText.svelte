@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onDestroy } from 'svelte'
 	import { T, extend } from '@threlte/core'
 	import { Line2NodeMaterial, Color } from 'three/webgpu'
 	import { Line2 } from 'three/addons/lines/webgpu/Line2.js'
@@ -27,6 +28,12 @@
 		}
 
 		material = getTextMaterial(color, width)
+	})
+
+	onDestroy(() => {
+		for (const geometry of lines) {
+			geometry.dispose()
+		}
 	})
 </script>
 
