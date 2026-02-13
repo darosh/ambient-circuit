@@ -218,8 +218,14 @@
 	createRenderer={(canvas) => {
 		const renderer = new WebGPURenderer({
 			canvas,
+
+			// antialias: false,
 			antialias: true,
-			forceWebGL: false
+			forceWebGL: false,
+			alpha: false,
+			depth: false,
+			samples: 2
+			// outputBufferType: UnsignedByteType
 		})
 
 		// renderer.inspector = new Inspector()

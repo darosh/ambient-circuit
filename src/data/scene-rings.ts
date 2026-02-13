@@ -14,7 +14,7 @@ export const scene: SceneConfig = {
 	rails: [
 		{
 			rail: {
-				id: 'r.1',
+				id: 'x*1',
 				offset: [-1, -1, 0],
 				nodes: [
 					{ p: [0, 0, 0], round: 'both' },
@@ -41,7 +41,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'r.2',
+				id: 'y*2',
 				offset: [-0.75, 0.5, 0],
 				nodes: [
 					{ p: [0, 0, 0], round: 'both' },
@@ -56,7 +56,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'r.4',
+				id: 'x*4',
 				offset: [1.75, 0.5, 0],
 				nodes: [
 					{ p: [0, 0, 0], round: 'both' },
@@ -80,7 +80,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'r.3',
+				id: 'y*3',
 				offset: [-1.25, 0, 0],
 				transform: (v: Vector3) => {
 					v.applyAxisAngle(new Vector3(0, 0, 1), MathUtils.DEG2RAD * -12.5)
@@ -107,7 +107,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'r.5',
+				id: 'y*5',
 				offset: [-3.25, 0, 0],
 				nodes: [
 					{ p: [0, 0, 0], round: 'both' },
@@ -138,7 +138,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'r.6',
+				id: 'x*6',
 				offset: [0, -2, -1],
 				transform: new Matrix4().makeRotationX(Math.PI / 4),
 				nodes: [
@@ -163,7 +163,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'r.7',
+				id: 'x*7',
 				offset: [-2, 1, 0],
 				nodes: [
 					{ p: [0, 0, 0], round: 'both' },
@@ -181,7 +181,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'r.8',
+				id: 'y*8',
 				// offset: [-0.75, 3.5, 0],
 				transform: (v) => {
 					return v

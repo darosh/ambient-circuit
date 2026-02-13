@@ -11,11 +11,6 @@
 	import { resolveRail } from '../lib/rail-resolve'
 	import type { SceneConfig } from '../lib/scene'
 	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
-	import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
-	import { useLoader } from '@threlte/core'
-	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
-
-	export const font = <Font>(<unknown>useLoader(FontLoader).load('./outfit-medium-regular.json'))
 
 	let {
 		scene,
@@ -242,7 +237,6 @@
 			{wireframe}
 			{fxRails}
 			{fxInstruments}
-			{font}
 			{tempo}
 			{sceneCtx}
 			renderPlayOnly={scene.renderPlayOnly}

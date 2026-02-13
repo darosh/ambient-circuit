@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useThrelte, useTask } from '@threlte/core'
-	import { Text3DGeometry, Align, Suspense } from '@threlte/extras'
+	import { Align } from '@threlte/extras'
 	import type { ResolvedPoint } from '../lib/rail'
 	import type { RailData } from '../lib/rail-data'
 	import type { SceneCtx } from '../lib/scene-ctx'
@@ -22,6 +22,7 @@
 	import { createStandardMaterial } from '../lib/video/material-standard'
 	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
+	import LineText from './LineText.svelte'
 
 	type Props = {
 		railData: RailData
@@ -47,11 +48,15 @@
 		wireframe = false,
 		fxRails = true,
 		fxInstruments = true,
-		font,
 		tempo,
 		sceneCtx,
 		renderPlayOnly = false
 	}: Props = $props()
+
+	const BEAT_TEXT_WIDTH = 2
+	const BEAT_TEXT_SIZE = 0.2
+	const RAIL_TEXT_WIDTH = 4
+	const RAIL_TEXT_SIZE = 0.2
 
 	const rail = $derived(railData.rail)
 	const color = $derived(railData.runtime?.color ?? railData.color)
@@ -102,7 +107,8 @@
 		return {
 			position: position.toArray(),
 			rotation: [rotation.x, rotation.y, rotation.z] as [number, number, number],
-			scale
+			scale,
+			quaternion
 		}
 	})
 
@@ -242,7 +248,7 @@
 			}
 		}
 		const midX = (minX + maxX) / 2
-		return new Vector3(midX, maxY + 0.5, minZ)
+		return new Vector3(midX, maxY + 0.4, minZ - 0.3)
 	})
 
 	const { camera } = useThrelte()
@@ -342,6 +348,47 @@
 </script>
 
 {#if renderTransform}
+	{#if showBeats}
+		{#each visibleBeats as bp, bpIndex (bpIndex)}
+			{@const isDownbeat = bp.beat === resolved.beatOffset}
+			<T.Group
+				bind:ref={beatGroups[bpIndex]}
+				position={bp.position
+					.clone()
+					.applyQuaternion(renderTransform.quaternion)
+					.add(new Vector3(0.2, isDownbeat ? -0.2 : 0.2, 0))
+					.toArray()}
+			>
+				<Align>
+					<LineText
+						text={bp.beat.toString()}
+						{color}
+						spacing={1}
+						size={BEAT_TEXT_SIZE}
+						width={BEAT_TEXT_WIDTH}
+					/>
+				</Align>
+			</T.Group>
+		{/each}
+	{/if}
+
+	{#if showNameDeferred && railNamePosition}
+		<T.Group
+			bind:ref={nameGroup}
+			position={railNamePosition.clone().applyQuaternion(renderTransform.quaternion).toArray()}
+		>
+			<Align>
+				<LineText
+					text={rail.id.toUpperCase()}
+					{color}
+					size={RAIL_TEXT_SIZE}
+					width={RAIL_TEXT_WIDTH}
+					spacing={2}
+				/>
+			</Align>
+		</T.Group>
+	{/if}
+
 	<T.Group position={renderTransform.position} rotation={renderTransform.rotation}>
 		{#each allMeshes as { geometry }, idx (idx)}
 			<T.Mesh {geometry} material={fxRails ? fxMaterial : plainMaterial} />
@@ -364,63 +411,6 @@
 					{/each}
 				{/each}
 			{/each}
-		{/if}
-
-		{#if showBeats}
-			{#each visibleBeats as bp, bpIndex (bpIndex)}
-				{@const isDownbeat = bp.beat === resolved.beatOffset}
-				<T.Group
-					bind:ref={beatGroups[bpIndex]}
-					position={[
-						bp.position.x + 0.2,
-						bp.position.y + (isDownbeat ? -0.25 : 0.2),
-						bp.position.z
-					]}
-				>
-					<Suspense>
-						<Align>
-							{#snippet children({ align })}
-								<T.Mesh>
-									<Text3DGeometry
-										text={bp.beat.toString()}
-										size={isDownbeat ? 0.2 : 0.2}
-										depth={0.01}
-										bevelEnabled={false}
-										{font}
-										oncreate={align}
-									/>
-									<T.MeshBasicMaterial {color} />
-								</T.Mesh>
-							{/snippet}
-						</Align>
-					</Suspense>
-				</T.Group>
-			{/each}
-		{/if}
-
-		{#if showNameDeferred && railNamePosition}
-			<T.Group
-				bind:ref={nameGroup}
-				position={[railNamePosition.x, railNamePosition.y, railNamePosition.z]}
-			>
-				<Suspense>
-					<Align>
-						{#snippet children({ align })}
-							<T.Mesh>
-								<Text3DGeometry
-									text={rail.id.toUpperCase()}
-									size={0.26}
-									depth={0.01}
-									bevelEnabled={false}
-									{font}
-									oncreate={align}
-								/>
-								<T.MeshBasicMaterial {color} />
-							</T.Mesh>
-						{/snippet}
-					</Align>
-				</Suspense>
-			</T.Group>
 		{/if}
 
 		{#each visibleInstruments as instrument, idx (idx)}
@@ -464,25 +454,17 @@
 			{@const isDownbeat = bp.beat === resolved.beatOffset}
 			<T.Group
 				bind:ref={beatGroups[bpIndex]}
-				position={[bp.position.x + 0.2, bp.position.y + (isDownbeat ? -0.25 : 0.2), bp.position.z]}
+				position={[bp.position.x + 0.2, bp.position.y + (isDownbeat ? -0.2 : 0.2), bp.position.z]}
 			>
-				<Suspense>
-					<Align>
-						{#snippet children({ align })}
-							<T.Mesh>
-								<Text3DGeometry
-									text={bp.beat.toString()}
-									size={isDownbeat ? 0.2 : 0.2}
-									depth={0.01}
-									bevelEnabled={false}
-									{font}
-									oncreate={align}
-								/>
-								<T.MeshBasicMaterial {color} />
-							</T.Mesh>
-						{/snippet}
-					</Align>
-				</Suspense>
+				<Align>
+					<LineText
+						text={bp.beat.toString()}
+						{color}
+						size={BEAT_TEXT_SIZE}
+						spacing={1}
+						width={BEAT_TEXT_WIDTH}
+					/>
+				</Align>
 			</T.Group>
 		{/each}
 	{/if}
@@ -492,23 +474,15 @@
 			bind:ref={nameGroup}
 			position={[railNamePosition.x, railNamePosition.y, railNamePosition.z]}
 		>
-			<Suspense>
-				<Align>
-					{#snippet children({ align })}
-						<T.Mesh>
-							<Text3DGeometry
-								text={rail.id.toUpperCase()}
-								size={0.26}
-								depth={0.01}
-								bevelEnabled={false}
-								{font}
-								oncreate={align}
-							/>
-							<T.MeshBasicMaterial {color} />
-						</T.Mesh>
-					{/snippet}
-				</Align>
-			</Suspense>
+			<Align>
+				<LineText
+					text={rail.id.toUpperCase()}
+					{color}
+					size={RAIL_TEXT_SIZE}
+					width={RAIL_TEXT_WIDTH}
+					spacing={2}
+				/>
+			</Align>
 		</T.Group>
 	{/if}
 

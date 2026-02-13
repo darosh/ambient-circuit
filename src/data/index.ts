@@ -14,6 +14,7 @@ import { scene as sceneGlobalBeat } from './scene-global-beat'
 import { scene as sceneActiveVisible } from './scene-active-visible'
 import { scene as sceneRings } from './scene-rings'
 import { scene as sceneBeats } from './scene-beats'
+import { scene as sceneFont } from './scene-font'
 
 export const scenes: SceneConfig[] = [
 	sceneTest,
@@ -29,5 +30,6 @@ export const scenes: SceneConfig[] = [
 	sceneGlobalBeat,
 	sceneRails,
 	sceneCrossing,
-	sceneBeats
+	sceneBeats,
+	sceneFont
 ]
