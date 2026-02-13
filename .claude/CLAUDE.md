@@ -51,7 +51,7 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Phase:** Marbles & sequencing
 
-**Last Updated:** 2026-02-10
+**Last Updated:** 2026-02-13
 
 **What Works:**
 
@@ -121,11 +121,18 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Beat jump instrument triggering (marble state changes trigger instruments correctly)
   - [x] Boundary beat triggering (first/last beat instruments work in both looping and ping-pong modes)
   - [x] Play state enforcement (instruments only trigger when tempo.isPlaying is true)
+- [x] Runtime property system - visibility/activity/state
+  - [x] InstrumentBase `visible` prop for initial state
+  - [x] InstrumentState `type` getter/setter (change visual type at runtime)
+  - [x] MarbleDataBase `easing` config support
+  - [x] MarbleState `easing` runtime override
+  - [x] Active state enforcement (skip inactive marbles in triggers)
+  - [x] Scene-level easing prop with runtime override support
+  - [x] Demo scene (scene-easing) with runtime easing changes
 - [ ] Non-linear sequencing - advanced
   - [x] Change instrument params in TriggerHandler
   - [ ] Marble collisions: `bouncer: true` reverses on collision
   - [ ] Multi-marble interaction patterns
-  - [ ] Active state enforcement (skip inactive instruments/marbles)
   - [ ] Rail switching API (teleport between rails)
 - [ ] Visual polishing, WebGPU, TSL
   - [x] rails
@@ -138,12 +145,10 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Next Steps:**
 
-1. Fix: `visible` prop missing in `InstrumentBase`
-2. Fix: missing `type` prop in `InstrumentState`
-3. Active state enforcement (Phase 2.2): Skip inactive instruments/marbles in triggers
-4. Rail switching API (Phase 3): Teleport marbles between rails with validation
-5. Marble collisions (Phase 4): Bouncer marbles with collision detection
-6. Fix skipped `tests/marble-state.test.ts`
+1. Optimize color changes: Apply uniform pattern to InstrumentView and RailView (see Development Guidelines)
+2. Rail switching API (Phase 3): Teleport marbles between rails with validation
+3. Marble collisions (Phase 4): Bouncer marbles with collision detection
+4. Fix skipped `tests/marble-state.test.ts`
 
 **Blocked/Questions:**
 
@@ -306,6 +311,39 @@ globalBeatHandler(ctx) {
 - Handlers close over `midiState` and `marbles` for runtime access
 - `createRails(midiState, marbles)` generates rails with MIDI-enabled handlers
 - marble-system.ts triggers handlers, no MIDI logic in core system
+
+### Material Color Updates
+
+**Pattern for runtime color changes:**
+
+When colors can change at runtime (via `ctx.*.state.color = '#ff0000'`), use uniform updates instead of recreating materials:
+
+```typescript
+// GOOD - MarbleView pattern (✅ implemented)
+const fx = makeMarbleMaterial(effectiveColor)  // create once
+$effect(() => {
+  fx.emissiveColor.value = new Color(effectiveColor)  // update uniform
+})
+
+// BAD - recreates material on every color change
+const fx = $derived(makeInstrumentMaterial(effectiveColor))
+```
+
+**Status:**
+- ✅ MarbleView: uses uniform pattern
+- ❌ InstrumentView: needs conversion (line 60-61)
+- ❌ RailView: needs conversion (line 86-87)
+
+**Why:**
+- Avoids WebGPU material compilation overhead
+- Prevents memory leaks from undisposed materials
+- Enables smooth color transitions
+
+**Implementation:**
+1. Remove `$derived()` wrapper from material creation
+2. Create material once (not reactive)
+3. Add `$effect()` to update `emissiveColor.value` uniform when color changes
+4. Pattern applies to: `makeMarbleMaterial`, `makeInstrumentMaterial`, `makeRailMaterial` (already returns uniforms)
 
 ### For Claude Code
 
