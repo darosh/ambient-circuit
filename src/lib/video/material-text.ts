@@ -38,7 +38,10 @@ export function getTextMaterial(color: string, width: number): LineMat {
 		const outerFade = max(uv().y.smoothstep(0.5, 1), uv().y.oneMinus().smoothstep(0, 0.9))
 		const m = emissiveColor.mul(outerFade)
 		const emissiveColorLuminance = luminance(m.mul(2))
-		return vec4(min(m.mul(3), 1.5).div(emissiveColorLuminance).mul(outerFade), outerFade.min(1))
+		return vec4(
+			min(m.mul(3), 1.5).div(emissiveColorLuminance).mul(outerFade),
+			outerFade.min(1) //.mul(max(.7, fract(time.mul(33))))
+		)
 	})()
 
 	return { mat, emissiveColor }
