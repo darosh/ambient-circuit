@@ -88,49 +88,92 @@ export function getTextGeometryCached(text: string, spacing: number) {
 	return geometry
 }
 
+type BoundingBox = {
+	min: Vector3
+	max: Vector3
+}
+
+function getBoundingBox(points: Vector3[]): BoundingBox {
+	const min = new Vector3(Infinity, Infinity, Infinity)
+	const max = new Vector3(-Infinity, -Infinity, -Infinity)
+
+	for (const p of points) {
+		if (p.x < min.x) min.x = p.x
+		if (p.y < min.y) min.y = p.y
+		if (p.z < min.z) min.z = p.z
+
+		if (p.x > max.x) max.x = p.x
+		if (p.y > max.y) max.y = p.y
+		if (p.z > max.z) max.z = p.z
+	}
+
+	return { min, max }
+}
+
 export function getTextGeometry(text: string, spacing: number) {
-	let x = 0
+	let cursorX = 0
 
-	return text.split('').map((t) => {
-		const isNumber = /[0-9]/.test(t)
-		const isDash = t === '-'
-		const isDot = t === '.'
+	return text.split('').map((char) => {
+		const isNumber = /[0-9]/.test(char)
+		const isDash = char === '-'
+		const isDot = char === '.'
 
-		const n = isNumber ? Number.parseInt(t, 10) : t.charCodeAt(0) - 'A'.charCodeAt(0)
-		const path = isNumber ? NUMBERS[n] : MISC[t] ? MISC[t] : LETTERS[n] || UNKNOWN
+		const n = isNumber ? Number.parseInt(char, 10) : char.charCodeAt(0) - 'A'.charCodeAt(0)
 
-		const points = isDash
-			? DASH.map((x) => x.clone())
-			: [new Vector3(0, 0, 0), ...(<Vec3[]>expandPathString(path)).map((x) => new Vector3(...x))]
+		const path = isNumber ? NUMBERS[n] : MISC[char] ? MISC[char] : LETTERS[n] || UNKNOWN
 
-		const geometry = new LineGeometry()
-		geometry.setFromPoints(points)
-		geometry.computeBoundingBox()
-		const m = isDash ? 1 : 1 / (geometry.boundingBox!.max.y - geometry.boundingBox!.min.y || 1)
+		// ---- Build points once ----
+
+		let points: Vector3[]
+
+		if (isDash) {
+			points = DASH.map((p) => p.clone())
+		} else {
+			const expanded = expandPathString(path) as Vec3[]
+
+			points = new Array(expanded.length + 1)
+			points[0] = new Vector3(0, 0, 0)
+
+			for (let i = 0; i < expanded.length; i++) {
+				const e = expanded[i]
+				points[i + 1] = new Vector3(e[0], e[1], e[2])
+			}
+		}
+
+		// ---- Normalize ----
+
+		const { min, max } = getBoundingBox(points)
+
+		// Remove trailing point for dot
+		if (isDot) {
+			points.pop()
+		}
+
+		const height = max.y - min.y || 1
+		const scale = isDash ? 1 : 1 / height
 
 		const shift = isDash
 			? new Vector3(0, -0.5, 0)
 			: isNumber && n === 1
 				? new Vector3(-0.2, 0, 0)
-				: geometry.boundingBox!.min
+				: min
 
-		const normalized = points.map((p) => {
-			return p
-				.sub(shift)
-				.multiplyScalar(m)
-				.add(new Vector3(x, 0, 0))
-		})
-
-		geometry.setFromPoints(normalized)
-		geometry.computeBoundingBox()
-
-		x = geometry.boundingBox!.max.x + spacing * (isDash ? 0.15 : isNumber && n === 1 ? 0.2 : 0.15)
-
-		if (isDot) {
-			points.pop()
-			geometry.setFromPoints(points)
-			geometry.computeBoundingBox()
+		for (const p of points) {
+			p.sub(shift)
+			p.multiplyScalar(scale)
+			p.x += cursorX
 		}
+
+		// ---- Final bounding box (no geometry compute) ----
+
+		const finalBox = getBoundingBox(points)
+
+		cursorX = finalBox.max.x + spacing * (isDash ? 0.15 : isNumber && n === 1 ? 0.2 : 0.15)
+
+		// ---- Create geometry once ----
+
+		const geometry = new LineGeometry()
+		geometry.setFromPoints(points)
 
 		return geometry
 	})
