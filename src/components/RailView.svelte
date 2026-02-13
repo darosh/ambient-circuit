@@ -19,12 +19,13 @@
 		Vector3
 	} from 'three/webgpu'
 	import InstrumentView from './InstrumentView.svelte'
-	import { buildRailMaterial } from '../lib/video/material-rail'
 	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 	import LineText from './LineText.svelte'
-	import { onDestroy } from 'svelte'
-	import { MeshStandardMaterial } from 'three/webgpu'
+	import { onDestroy, untrack } from 'svelte'
+	import { makeStandardMaterial } from '../lib/video/material-standard'
+	import { makeRailMaterial } from '../lib/config'
+	import { Material } from 'three'
 
 	type Props = {
 		railData: RailData
@@ -84,13 +85,19 @@
 
 	const resolved = $derived(resolveRail(rail))
 	// Create materials once, update uniforms on color change
-	const fxMaterialObj = buildRailMaterial(color, 0.7, true)
-	const fxMaterial = fxMaterialObj.mat
-	const plainMaterial = new MeshStandardMaterial({ color })
+	const fxMaterialObj = makeRailMaterial(
+		untrack(() => color),
+		0.7,
+		true
+	)
+	const plainMaterial = $derived(!fxRails ? makeStandardMaterial(untrack(() => color)) : null)
 
 	$effect(() => {
 		fxMaterialObj.emissiveColor.value = new Color(color)
-		plainMaterial.color = new Color(color)
+
+		if (plainMaterial) {
+			plainMaterial.color = new Color(color)
+		}
 	})
 
 	// Runtime render transform
@@ -161,8 +168,11 @@
 	})
 
 	$effect(() => {
-		fxMaterial.wireframe = wireframe
-		plainMaterial.wireframe = wireframe
+		fxMaterialObj.mat.wireframe = wireframe
+
+		if (plainMaterial) {
+			plainMaterial.wireframe = wireframe
+		}
 	})
 	const beatPositions = $derived.by(() => {
 		if (!showBeats) return []
@@ -356,10 +366,17 @@
 
 	onDestroy(() => {
 		const current = [...mainMeshes, ...branchMeshes]
-		return () => {
-			for (const mesh of current) {
-				mesh.geometry.dispose()
-			}
+
+		for (const mesh of current) {
+			mesh.geometry.dispose()
+		}
+
+		if (fxMaterialObj) {
+			fxMaterialObj.mat.dispose()
+		}
+
+		if (plainMaterial) {
+			plainMaterial.dispose()
 		}
 	})
 </script>
@@ -408,7 +425,7 @@
 
 	<T.Group position={renderTransform.position} rotation={renderTransform.rotation}>
 		{#each allMeshes as { geometry }, idx (idx)}
-			<T.Mesh {geometry} material={fxRails ? fxMaterial : plainMaterial} />
+			<T.Mesh {geometry} material={<Material>(fxRails ? fxMaterialObj.mat : plainMaterial)} />
 		{/each}
 
 		{#if showPoints}
@@ -444,7 +461,7 @@
 	</T.Group>
 {:else}
 	{#each allMeshes as { geometry }, idx (idx)}
-		<T.Mesh {geometry} material={fxRails ? fxMaterial : plainMaterial} />
+		<T.Mesh {geometry} material={<Material>(fxRails ? fxMaterialObj.mat : plainMaterial)} />
 	{/each}
 
 	{#if showPoints}

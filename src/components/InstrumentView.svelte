@@ -3,7 +3,7 @@
 	import type { Instrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-curve'
-	import { Vector3, Euler, Matrix4, Color, MeshStandardMaterial } from 'three/webgpu'
+	import { Vector3, Euler, Matrix4, Color } from 'three/webgpu'
 	import { easeOutQuart, easeInBounce } from '../lib/easing'
 	import { makeInstrumentMaterial } from '../lib/config'
 	import {
@@ -11,6 +11,9 @@
 		createInstrumentFillGeometry,
 		type InstrumentType
 	} from '../lib/video/instrument-geometry'
+	import { onDestroy, untrack } from 'svelte'
+	import { makeStandardMaterial } from '../lib/video/material-standard'
+	import { Material } from 'three'
 
 	type Props = {
 		instrument: Instrument
@@ -56,18 +59,34 @@
 	const effectiveRays = $derived(instrument.runtime?.rays ?? (instrument as any).rays)
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
-	const fx = makeInstrumentMaterial(effectiveColor, effectiveType !== 'heart')
-	const plainMaterial = new MeshStandardMaterial({ color: effectiveColor })
+	const isTransparent = $derived(effectiveType !== 'heart')
+	const fx = makeInstrumentMaterial(
+		untrack(() => effectiveColor),
+		untrack(() => isTransparent)
+	)
+	const plainMaterial = $derived(
+		fxInstruments ? makeStandardMaterial(untrack(() => effectiveColor)) : null
+	)
 	const effectiveVisible = $derived(instrument.runtime?.visible ?? true)
 
 	$effect(() => {
 		fx.emissiveColor.value = new Color(effectiveColor)
-		plainMaterial.color = new Color(effectiveColor)
+
+		if (plainMaterial) {
+			plainMaterial.color = new Color(effectiveColor)
+		}
 	})
 
 	$effect(() => {
 		fx.mat.wireframe = wireframe
-		plainMaterial.wireframe = wireframe
+
+		if (plainMaterial) {
+			plainMaterial.wireframe = wireframe
+		}
+	})
+
+	$effect(() => {
+		fx.mat.transparent = isTransparent
 	})
 
 	// Get points for the instrument's path
@@ -237,16 +256,31 @@
 			}
 		}
 	})
+
+	onDestroy(() => {
+		if (fx) {
+			fx.mat.dispose()
+		}
+
+		if (plainMaterial) {
+			plainMaterial.dispose()
+		}
+	})
 </script>
 
 {#if transform && effectiveVisible}
-	<T.Mesh {position} {rotation} {geometry} material={fxInstruments ? fx.mat : plainMaterial} />
+	<T.Mesh
+		{position}
+		{rotation}
+		{geometry}
+		material={<Material>(fxInstruments ? fx.mat : plainMaterial)}
+	/>
 	{#if innerGeometry}
 		<T.Mesh
 			{position}
 			{rotation}
 			geometry={innerGeometry}
-			material={fxInstruments ? fx.mat : plainMaterial}
+			material={<Material>(fxInstruments ? fx.mat : plainMaterial)}
 		/>
 	{/if}
 {/if}

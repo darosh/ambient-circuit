@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
+	import { onDestroy, untrack } from 'svelte'
 	import type { Marble } from '../lib/marble'
-	import { Vector3, Euler, Matrix4, Color, MeshStandardMaterial } from 'three/webgpu'
+	import { Vector3, Euler, Matrix4, Color } from 'three/webgpu'
 	import { makeMarbleMaterial } from '../lib/config'
 	import { easeOutQuart } from '../lib/easing'
 	import type { ResolvedRail } from '../lib/rail'
@@ -13,6 +14,8 @@
 		BALL_HEIGHT_SEGMENTS,
 		type MarbleType
 	} from '../lib/video/marble-geometry'
+	import { makeStandardMaterial } from '../lib/video/material-standard'
+	import { Material } from 'three'
 
 	// Animation constants
 	const TANGENT_VERTICAL_THRESHOLD = 0.9
@@ -49,17 +52,29 @@
 		return basePos
 	})
 
-	const fx = makeMarbleMaterial(effectiveColor)
-	const plainMaterial = new MeshStandardMaterial({ color: effectiveColor })
+	const fx = makeMarbleMaterial(untrack(() => effectiveColor))
+	const plainMaterial = $derived(
+		!fxMarbles ? makeStandardMaterial(untrack(() => effectiveColor)) : null
+	)
 
 	$effect(() => {
-		fx.emissiveColor.value = new Color(effectiveColor)
-		plainMaterial.color = new Color(effectiveColor)
+		if (fx) {
+			fx.emissiveColor.value = new Color(effectiveColor)
+		}
+
+		if (plainMaterial) {
+			plainMaterial.color = new Color(effectiveColor)
+		}
 	})
 
 	$effect(() => {
-		fx.mat.wireframe = wireframe
-		plainMaterial.wireframe = wireframe
+		if (fx) {
+			fx.mat.wireframe = wireframe
+		}
+
+		if (plainMaterial) {
+			plainMaterial.wireframe = wireframe
+		}
 	})
 
 	const type = $derived(marble.runtime.type ?? marble.config.type ?? 'ball')
@@ -127,7 +142,7 @@
 			marble.signal.intensity = 0
 		}
 
-		if (impactTime > 0) {
+		if (impactTime > 0 && fx) {
 			impactTime = Math.max(0, impactTime - delta)
 			fx.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION)
 		}
@@ -137,13 +152,23 @@
 			spinAngle += delta * COIL_SPIN_SPEED * Math.PI * 2
 		}
 	})
+
+	onDestroy(() => {
+		if (fx) {
+			fx.mat.dispose()
+		}
+
+		if (plainMaterial) {
+			plainMaterial.dispose()
+		}
+	})
 </script>
 
 {#if effectiveVisible}
 	{#if type === 'ball'}
 		<T.Mesh
 			position={[transformedPosition.x, transformedPosition.y, transformedPosition.z]}
-			material={fxMarbles ? fx.mat : plainMaterial}
+			material={<Material>(fxMarbles ? fx.mat : plainMaterial)}
 		>
 			<T.SphereGeometry args={[BALL_RADIUS, BALL_WIDTH_SEGMENTS, BALL_HEIGHT_SEGMENTS]} />
 		</T.Mesh>
@@ -152,7 +177,7 @@
 			position={[transformedPosition.x, transformedPosition.y, transformedPosition.z]}
 			{rotation}
 			{geometry}
-			material={fxMarbles ? fx.mat : plainMaterial}
+			material={<Material>(fxMarbles ? fx.mat : plainMaterial)}
 		/>
 	{/if}
 {/if}

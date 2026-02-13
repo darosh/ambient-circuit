@@ -168,7 +168,7 @@ export const scene: SceneConfig = {
 					active: true,
 					visible: false,
 					actionHandler() {
-						console.log('invisible trigger')
+						// console.log('invisible trigger')
 					}
 				},
 				{ type: 'cone', beat: 5.5, rounds: 5, active: true },

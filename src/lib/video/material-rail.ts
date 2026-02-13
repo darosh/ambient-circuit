@@ -44,7 +44,11 @@ function getMaterialCacheKey(
 /**
  * Create a glowing noise-based rail material (WebGPU/TSL) with memoization.
  */
-export function createRailMaterial(hexColor: string, initialIntensity = 0.7, transparent = true) {
+export function createRailMaterialCached(
+	hexColor: string,
+	initialIntensity = 0.7,
+	transparent = true
+) {
 	const key = getMaterialCacheKey(hexColor, initialIntensity, transparent)
 	const cached = materialCache.get(key)
 	if (cached) return cached
