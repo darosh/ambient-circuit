@@ -18,6 +18,8 @@
 	import { scenes } from './data'
 	import { initMidi, setMidiPort, type MidiState, setMidiState } from './lib/midi/midi'
 	import { WebGPURenderer } from 'three/webgpu'
+	import { clearMarbleGeometryCache } from './lib/video/marble-geometry'
+	import { clearInstrumentGeometryCache } from './lib/video/instrument-geometry'
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
@@ -65,6 +67,8 @@
 
 	$effect(() => {
 		window.location.hash = sceneId
+		clearMarbleGeometryCache()
+		clearInstrumentGeometryCache()
 	})
 
 	$effect(() => {
