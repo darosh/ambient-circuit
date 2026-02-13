@@ -9,6 +9,7 @@
 	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/rail-curve'
 	import {
 		type BufferGeometry,
+		Color,
 		CurvePath,
 		Euler,
 		Group,
@@ -18,7 +19,7 @@
 		Vector3
 	} from 'three/webgpu'
 	import InstrumentView from './InstrumentView.svelte'
-	import { makeRailMaterial } from '../lib/config'
+	import { buildRailMaterial } from '../lib/video/material-rail'
 	import { createStandardMaterial } from '../lib/video/material-standard'
 	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
@@ -82,9 +83,14 @@
 	}
 
 	const resolved = $derived(resolveRail(rail))
-	// Always create both materials - switching avoids WebGPU state issues on toggle
-	const fxMaterial = $derived(makeRailMaterial(color).mat)
+	// Create fx material once, update uniform on color change
+	const fxMaterialObj = buildRailMaterial(color, 0.7, true)
+	const fxMaterial = fxMaterialObj.mat
 	const plainMaterial = $derived(createStandardMaterial(color))
+
+	$effect(() => {
+		fxMaterialObj.emissiveColor.value = new Color(color)
+	})
 
 	// Runtime render transform
 	let renderMatrix = $state(new Matrix4())

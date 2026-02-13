@@ -145,8 +145,7 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Next Steps:**
 
-1. Optimize color changes: Apply uniform pattern to InstrumentView and RailView (see Development Guidelines)
-2. Rail switching API (Phase 3): Teleport marbles between rails with validation
+1. Rail switching API (Phase 3): Teleport marbles between rails with validation
 3. Marble collisions (Phase 4): Bouncer marbles with collision detection
 4. Fix skipped `tests/marble-state.test.ts`
 
@@ -331,8 +330,8 @@ const fx = $derived(makeInstrumentMaterial(effectiveColor))
 
 **Status:**
 - ✅ MarbleView: uses uniform pattern
-- ❌ InstrumentView: needs conversion (line 60-61)
-- ❌ RailView: needs conversion (line 86-87)
+- ✅ InstrumentView: uses uniform pattern
+- ✅ RailView: uses uniform pattern
 
 **Why:**
 - Avoids WebGPU material compilation overhead

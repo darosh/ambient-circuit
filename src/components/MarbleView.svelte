@@ -51,12 +51,11 @@
 	})
 
 	const fx = makeMarbleMaterial(effectiveColor)
+	const plainMaterial = $derived(createStandardMaterial(effectiveColor))
 
 	$effect(() => {
 		fx.emissiveColor.value = new Color(effectiveColor)
 	})
-
-	const plainMaterial = $derived(createStandardMaterial(effectiveColor))
 
 	$effect(() => {
 		fx.mat.wireframe = wireframe
