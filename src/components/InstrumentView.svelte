@@ -3,10 +3,9 @@
 	import type { Instrument } from '../lib/instrument'
 	import type { ResolvedRail } from '../lib/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-curve'
-	import { Vector3, Euler, Matrix4, Color } from 'three/webgpu'
+	import { Vector3, Euler, Matrix4, Color, MeshStandardMaterial } from 'three/webgpu'
 	import { easeOutQuart, easeInBounce } from '../lib/easing'
 	import { makeInstrumentMaterial } from '../lib/config'
-	import { createStandardMaterial } from '../lib/video/material-standard'
 	import {
 		createInstrumentGeometry,
 		createInstrumentFillGeometry,
@@ -58,11 +57,12 @@
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
 	const fx = makeInstrumentMaterial(effectiveColor, effectiveType !== 'heart')
-	const plainMaterial = $derived(createStandardMaterial(effectiveColor))
+	const plainMaterial = new MeshStandardMaterial({ color: effectiveColor })
 	const effectiveVisible = $derived(instrument.runtime?.visible ?? true)
 
 	$effect(() => {
 		fx.emissiveColor.value = new Color(effectiveColor)
+		plainMaterial.color = new Color(effectiveColor)
 	})
 
 	$effect(() => {

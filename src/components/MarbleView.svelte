@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import type { Marble } from '../lib/marble'
-	import { Vector3, Euler, Matrix4, Color } from 'three/webgpu'
+	import { Vector3, Euler, Matrix4, Color, MeshStandardMaterial } from 'three/webgpu'
 	import { makeMarbleMaterial } from '../lib/config'
-	import { createStandardMaterial } from '../lib/video/material-standard'
 	import { easeOutQuart } from '../lib/easing'
 	import type { ResolvedRail } from '../lib/rail'
 	import type { RailData } from '../lib/rail-data'
@@ -51,10 +50,11 @@
 	})
 
 	const fx = makeMarbleMaterial(effectiveColor)
-	const plainMaterial = $derived(createStandardMaterial(effectiveColor))
+	const plainMaterial = new MeshStandardMaterial({ color: effectiveColor })
 
 	$effect(() => {
 		fx.emissiveColor.value = new Color(effectiveColor)
+		plainMaterial.color = new Color(effectiveColor)
 	})
 
 	$effect(() => {

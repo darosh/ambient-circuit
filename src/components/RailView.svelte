@@ -20,11 +20,11 @@
 	} from 'three/webgpu'
 	import InstrumentView from './InstrumentView.svelte'
 	import { buildRailMaterial } from '../lib/video/material-rail'
-	import { createStandardMaterial } from '../lib/video/material-standard'
 	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 	import LineText from './LineText.svelte'
 	import { onDestroy } from 'svelte'
+	import { MeshStandardMaterial } from 'three/webgpu'
 
 	type Props = {
 		railData: RailData
@@ -83,13 +83,14 @@
 	}
 
 	const resolved = $derived(resolveRail(rail))
-	// Create fx material once, update uniform on color change
+	// Create materials once, update uniforms on color change
 	const fxMaterialObj = buildRailMaterial(color, 0.7, true)
 	const fxMaterial = fxMaterialObj.mat
-	const plainMaterial = $derived(createStandardMaterial(color))
+	const plainMaterial = new MeshStandardMaterial({ color })
 
 	$effect(() => {
 		fxMaterialObj.emissiveColor.value = new Color(color)
+		plainMaterial.color = new Color(color)
 	})
 
 	// Runtime render transform
