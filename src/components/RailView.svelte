@@ -23,6 +23,7 @@
 	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 	import LineText from './LineText.svelte'
+	import { onDestroy } from 'svelte'
 
 	type Props = {
 		railData: RailData
@@ -343,6 +344,15 @@
 		if (nameGroup) nameGroup.quaternion.copy(rot)
 		for (const group of beatGroups) {
 			if (group) group.quaternion.copy(rot)
+		}
+	})
+
+	onDestroy(() => {
+		const current = [...mainMeshes, ...branchMeshes]
+		return () => {
+			for (const mesh of current) {
+				mesh.geometry.dispose()
+			}
 		}
 	})
 </script>
