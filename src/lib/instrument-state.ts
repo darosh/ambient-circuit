@@ -132,6 +132,15 @@ export class InstrumentState {
 	set rays(value: number | undefined) {
 		this.instrument.runtime!.rays = value
 	}
+
+	// Type (can be changed at runtime for visual variety)
+	get type(): string | undefined {
+		const typed = this.instrument as any
+		return this.instrument.runtime!.type ?? typed.type
+	}
+	set type(value: string | undefined) {
+		this.instrument.runtime!.type = value
+	}
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
 	// Visibility/activity (async-safe via refs)

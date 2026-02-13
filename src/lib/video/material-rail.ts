@@ -122,5 +122,5 @@ export function buildRailMaterial(
 		)
 	})()
 
-	return { mat, impactIntensity }
+	return { mat, impactIntensity, emissiveColor }
 }

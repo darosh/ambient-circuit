@@ -4,6 +4,7 @@ import { TriggerHandler } from './scene'
 export type InstrumentSignal = { intensity: number }
 
 export interface InstrumentRuntime {
+	type?: string
 	color?: string
 	sides?: number
 	rounds?: number
@@ -43,6 +44,8 @@ type InstrumentBase = {
 	color?: string
 	/** Functional on/off state for trigger detection (default true) */
 	active?: boolean
+	/** Visual visibility (default true) */
+	visible?: boolean
 	/** MIDI channel (1-16), default 1 */
 	midiChannel?: number
 	/** MIDI note (0-127), default 60 (C4) */

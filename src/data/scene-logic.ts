@@ -19,7 +19,7 @@ export const scene: SceneConfig = {
 				nodes: [[0, 0, 0], 'r r r r r r r r']
 			},
 			color: c(),
-			marbles: [{ type: 'ball', start: 0 }],
+			marbles: [{ type: 'ball', start: 0, easing: 'easeInOutQuad' }],
 			instruments: [
 				{
 					type: 'sun',
@@ -27,6 +27,13 @@ export const scene: SceneConfig = {
 					actionHandler(ctx) {
 						// Reverse direction (prevents immediate re-trigger)
 						ctx.marble.state.reverse()
+						ctx.marble.state.easing =
+							ctx.marble.state.easing === 'easeInOutQuad' ? 'linear' : 'easeInOutQuad'
+						ctx.scene.marbles[6].state.easing = ctx.marble.state.easing
+
+						ctx.instrument.state.rounds = 5
+						ctx.instrument.state.type = ctx.instrument.state.type === 'sun' ? 'cone' : 'sun'
+						// console.log('TYPE', ctx.instrument.state.type)
 					}
 				}
 			]
@@ -257,9 +264,6 @@ export const scene: SceneConfig = {
 					actionHandler(ctx) {
 						ctx.rail.state.color = c()
 						ctx.marble.state.color = ctx.rail.state.color
-						ctx.scene.instruments
-							.filter((i) => i.railId === ctx.railId)
-							.forEach((i) => i.state.color === ctx.rail.state.color)
 					}
 				},
 				{
@@ -268,9 +272,6 @@ export const scene: SceneConfig = {
 					actionHandler(ctx) {
 						ctx.rail.state.color = c()
 						ctx.marble.state.color = ctx.rail.state.color
-						ctx.scene.instruments
-							.filter((i) => i.railId === ctx.railId)
-							.forEach((i) => i.state.color === ctx.rail.state.color)
 					}
 				},
 				{
@@ -279,9 +280,6 @@ export const scene: SceneConfig = {
 					actionHandler(ctx) {
 						ctx.rail.state.color = c()
 						ctx.marble.state.color = ctx.rail.state.color
-						ctx.scene.instruments
-							.filter((i) => i.railId === ctx.railId)
-							.forEach((i) => i.state.color === ctx.rail.state.color)
 					}
 				}
 			]

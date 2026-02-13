@@ -99,6 +99,13 @@ export class MarbleState {
 		this.marble.runtime.color = value
 	}
 
+	get easing(): import('./marble').EasingMode {
+		return this.marble.runtime.easing ?? this.marble.config.easing
+	}
+	set easing(value: import('./marble').EasingMode) {
+		this.marble.runtime.easing = value
+	}
+
 	// Visibility/activity (async-safe via refs)
 	get visible(): boolean {
 		return this.visibility?.value ?? true

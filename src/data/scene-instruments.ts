@@ -160,6 +160,17 @@ export const scene: SceneConfig = {
 			},
 			color: c(),
 			instruments: [
+				{ type: 'cone', beat: 3.5, rounds: 5, active: false, visible: true },
+				{
+					type: 'cone',
+					beat: 4.5,
+					rounds: 5,
+					active: true,
+					visible: false,
+					actionHandler() {
+						console.log('invisible trigger')
+					}
+				},
 				{ type: 'cone', beat: 5.5, rounds: 5, active: true },
 				{ type: 'spiral', beat: 7.5, rounds: 3, active: true }
 			]

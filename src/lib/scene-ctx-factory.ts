@@ -33,8 +33,13 @@ export function createSceneCtx(
 	for (let i = 0; i < rails.length; i++) {
 		const instruments = rails[i].instruments || []
 		for (const inst of instruments) {
-			const visRef = { value: true }
+			const visRef = { value: inst.visible ?? true }
 			const actRef = { value: inst.active ?? true }
+			// Initialize runtime.visible from config
+			if (!inst.runtime) inst.runtime = {}
+			if (inst.runtime.visible === undefined) {
+				inst.runtime.visible = inst.visible ?? true
+			}
 			instrumentEntities.push({
 				id: instIdx++,
 				instrument: inst,

@@ -284,6 +284,11 @@ function checkInstrumentTriggers(
 					const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
 					const railEntity = sceneCtx.rails.find((re) => re.id === railId)
 
+					// Skip if marble is inactive
+					if (!marbleEntity.activity.value) {
+						continue
+					}
+
 					// Skip if instrument is inactive
 					if (!instrumentEntity || !instrumentEntity.activity.value) {
 						continue
@@ -353,6 +358,11 @@ function checkInstrumentTriggers(
 			const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
 			const railEntity = sceneCtx.rails.find((re) => re.id === railId)
 
+			// Skip if marble is inactive
+			if (!marbleEntity.activity.value) {
+				continue
+			}
+
 			// Skip if instrument is inactive
 			if (!instrumentEntity || !instrumentEntity.activity.value) {
 				continue
@@ -408,8 +418,9 @@ export function updateMarble(
 	triggerHandler?: TriggerHandler,
 	sceneCtx?: SceneCtx
 ): void {
-	const { resolvedRail, sequenceMode, easing, startBeat } = marble.config
+	const { resolvedRail, sequenceMode, startBeat } = marble.config
 	const speed = marble.runtime.speed ?? marble.config.speed ?? 1
+	const easing = marble.runtime.easing ?? marble.config.easing
 
 	// Calculate delta from last update
 	const globalBeat = tempo.currentBeat + tempo.beatProgress

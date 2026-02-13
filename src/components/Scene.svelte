@@ -116,7 +116,7 @@
 						startBeat: m.start ?? 0,
 						direction: m.direction ?? 'forward',
 						sequenceMode: m.mode ?? 'looping',
-						easing: easing || 'linear',
+						easing: m.easing ?? (easing || 'linear'),
 						speed: m.speed ?? 1,
 						note: m.note,
 						type: m.type,
@@ -181,9 +181,11 @@
 			updateSceneCtx(sceneCtx, tempo)
 		}
 
-		// Update easing based on prop
+		// Update easing based on prop (respect runtime overrides)
 		for (const marble of marbles) {
-			marble.config.easing = easing || 'linear'
+			if (!marble.runtime.easing) {
+				marble.config.easing = marble.config.easing || easing || 'linear'
+			}
 		}
 
 		const instrumentsPerMarble = marbleRailIndices.map((i) => rails[i].instruments || [])

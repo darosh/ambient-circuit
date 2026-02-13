@@ -39,7 +39,7 @@
 
 	// Derived values for visual properties (runtime overrides config)
 	const effectiveColor = $derived(instrument.runtime?.color ?? instrument.color ?? color)
-	const effectiveType = $derived(instrument.type ?? 'poly')
+	const effectiveType = $derived(instrument.runtime?.type ?? instrument.type ?? 'poly')
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	const effectiveSides = $derived(instrument.runtime?.sides ?? (instrument as any).sides)
 	const effectiveRounds = $derived(instrument.runtime?.rounds ?? (instrument as any).rounds)
