@@ -6,6 +6,7 @@ export const scene: SceneConfig = {
 	id: 'scene-font',
 	bpm: 120,
 	globalBeatHandler: globalHandlerFactory(),
+	camera: [0, 6, 10],
 	triggerHandler,
 	rails: [
 		{

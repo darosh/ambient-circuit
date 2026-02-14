@@ -55,7 +55,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'chaos',
-				nodes: [[-3, 0, 0], 'r r r o o r r r']
+				nodes: [[-1.5, 0, 0], 'r r r orb ol l l l ilb ir']
 			},
 			color: c(),
 			marbles: [
