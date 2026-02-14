@@ -12,21 +12,21 @@ export const scene: SceneConfig = {
 	bounceHandler: (ctx) => {
 		// Flash both marbles white on collision
 		ctx.marble1.state.color = '#ff0000'
-		ctx.marble2.state.color = '#0000ff'
+		ctx.marble2.state.color = '#ff0000'
 		setTimeout(() => {
 			ctx.marble1.state.color = undefined
 			ctx.marble2.state.color = undefined
 		}, 200)
 	},
 	bouncerOnlyMode: false, // Mixed mode: if EITHER is bouncer, both affected
-	camera: [0, 4, 8],
-	target: [0, 0, 0],
+	camera: [0, 11, 8],
+	target: [0, 1, 0],
 	rails: [
 		// Simple rail with bouncer marbles
 		{
 			rail: {
-				id: 'bouncer-demo',
-				nodes: [[-3, 0, 0], 'r r r r r r']
+				id: 'two-bouncers',
+				nodes: [[-3, 0, -1], 'r r r r r r']
 			},
 			color: c(),
 			marbles: [
@@ -39,15 +39,15 @@ export const scene: SceneConfig = {
 		// Rail with mixed bouncer and non-bouncer (both affected if EITHER is bouncer)
 		{
 			rail: {
-				id: 'mixed',
-				nodes: [[-3, 0, 1], 'r r r r r r']
+				id: 'one-bouncer',
+				nodes: [[-3, 0, -2], 'r r r r r r']
 			},
 			color: c(),
 			marbles: [
 				// Bouncer marble - will affect non-bouncer on collision
-				{ start: 1, speed: 0.6, direction: 'forward', bouncer: true, type: 'poly', sides: 3 },
+				{ start: 1, speed: 1.5, direction: 'forward', bouncer: true, type: 'poly', sides: 3 },
 				// Non-bouncer marble - will still bounce when hit by bouncer
-				{ start: 4, speed: 0.5, direction: 'backward', bouncer: false, type: 'ball' }
+				{ start: 4, speed: 0.5, direction: 'forward', bouncer: false, type: 'ball' }
 			]
 		},
 
@@ -55,7 +55,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'chaos',
-				nodes: [[-3, 0, 2], 'r r r r r r r r']
+				nodes: [[-3, 0, 0], 'r r r o o r r r']
 			},
 			color: c(),
 			marbles: [
@@ -69,8 +69,8 @@ export const scene: SceneConfig = {
 		// Ping-pong rail with bouncer
 		{
 			rail: {
-				id: 'pingpong',
-				nodes: [[-3, 0, -1], 'r r r r']
+				id: 'ping-pong',
+				nodes: [[-2, 0, -3], 'r r r r']
 			},
 			color: c(),
 			marbles: [
