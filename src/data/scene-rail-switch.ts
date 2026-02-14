@@ -4,7 +4,7 @@ import { triggerHandler } from '../lib/trigger-handler'
 
 export const scene: SceneConfig = {
 	id: 'scene-rail-switch',
-	bpm: 120,
+	bpm: 40,
 	triggerHandler,
 	rails: [
 		// Pattern 1: Ping-pong between 2 rails (rail-a / rail-b)
@@ -81,7 +81,7 @@ export const scene: SceneConfig = {
 					}
 				}
 			],
-			marbles: [{ start: 0, type: 'coil', rounds: 4 }]
+			marbles: [{ start: .5, type: 'coil', rounds: 4, speed: .25 }]
 		},
 		{
 			rail: {
