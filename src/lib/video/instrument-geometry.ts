@@ -604,31 +604,62 @@ function buildEaterGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	const arcStartAngle = -Math.PI / 2 + mouthHalfAngle
 	const arcEndAngle = arcStartAngle + (Math.PI * 2 - angleRad)
 
-	// Build arc segments (32 segments)
-	const segments = 32
-	for (let i = 0; i < segments; i++) {
-		const t1 = i / segments
-		const t2 = (i + 1) / segments
-		const a1 = arcStartAngle + (arcEndAngle - arcStartAngle) * t1
-		const a2 = arcStartAngle + (arcEndAngle - arcStartAngle) * t2
-		const p1 = new Vector3(Math.cos(a1) * radius, Math.sin(a1) * radius, 0)
-		const p2 = new Vector3(Math.cos(a2) * radius, Math.sin(a2) * radius, 0)
+	// Build vertices: center + arc points (pac-man/pizza slice shape)
+	const cr = cornerRadius
+	const center = new Vector3(0, 0, 0)
 
-		// Add corner rounding at mouth edges for first/last segment
-		if (cornerRadius > 0 && (i === 0 || i === segments - 1)) {
-			const ctrl = p1.clone().lerp(p2, 0.5)
-			path.add(new QuadraticBezierCurve3(p1, ctrl, p2))
-		} else {
-			path.add(new LineCurve3(p1, p2))
-		}
+	const verts: Vector3[] = []
+
+	// Arc vertices (clockwise from start to end)
+	const arcSegments = 32
+	for (let i = 0; i <= arcSegments; i++) {
+		const t = i / arcSegments
+		const a = arcStartAngle + (arcEndAngle - arcStartAngle) * t
+		verts.push(new Vector3(Math.cos(a) * radius, Math.sin(a) * radius, 0))
 	}
+
+	// Close back to center (creating pizza slice shape)
+	// Path: arc_end → center → arc_start (closed loop)
+	const vertCount = verts.length
+
+	for (let i = 0; i < vertCount; i++) {
+		const curr = verts[i]
+		const next = i === vertCount - 1 ? center : verts[i + 1]
+		const prev = i === 0 ? center : verts[i - 1]
+
+		const inDir = new Vector3().subVectors(curr, prev).normalize()
+		const outDir = new Vector3().subVectors(next, curr).normalize()
+
+		const arcStart = curr.clone().addScaledVector(inDir, -cr)
+		const arcEnd = curr.clone().addScaledVector(outDir, cr)
+		const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+		if (cr > 0 && i > 0 && i < vertCount - 1) {
+			// Round corners along the arc
+			path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+		}
+		path.add(new LineCurve3(arcEnd, nextArcStart))
+	}
+
+	// Final segments: center → arc_start
+	const centerToStart = verts[0]
+	const centerInDir = new Vector3().subVectors(center, verts[vertCount - 1]).normalize()
+	const centerOutDir = new Vector3().subVectors(centerToStart, center).normalize()
+	const centerArcStart = center.clone().addScaledVector(centerInDir, -cr)
+	const centerArcEnd = center.clone().addScaledVector(centerOutDir, cr)
+	const startArcStart = centerToStart.clone().addScaledVector(centerOutDir, -cr)
+
+	if (cr > 0) {
+		path.add(new QuadraticBezierCurve3(centerArcStart, center, centerArcEnd))
+	}
+	path.add(new LineCurve3(centerArcEnd, startArcStart))
 
 	return new TubeGeometry(
 		path as unknown as import('three').Curve<Vector3>,
-		segments,
+		arcSegments + 2,
 		width / 2,
 		RADIAL_SEGMENTS,
-		false
+		true
 	)
 }
 

@@ -47,6 +47,14 @@ export const scene: SceneConfig = {
 			},
 			color: c(),
 			marbles: [{ type: 'ball', start: 8 }]
+		},
+		{
+			rail: {
+				id: 'eater',
+				nodes: [[2, 0, 4], 'i i i i i i i i']
+			},
+			color: c(),
+			marbles: [{ type: 'ball', start: 8 }]
 		}
 	]
 }

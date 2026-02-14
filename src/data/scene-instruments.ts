@@ -182,6 +182,7 @@ export const scene: SceneConfig = {
 			},
 			color: c(),
 			instruments: [
+				{ type: 'eater', beat: 3.5, angle: 90 },
 				{ type: 'heart', beat: 5.5, pulse: true },
 				{ type: 'heart', beat: 7.5, pulse: false }
 			]
