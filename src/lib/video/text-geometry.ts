@@ -88,6 +88,15 @@ export function getTextGeometryCached(text: string, spacing: number) {
 	return geometry
 }
 
+export function clearTextGeometryCache(): void {
+	for (const geometries of geometryCache.values()) {
+		for (const geometry of geometries) {
+			geometry.dispose()
+		}
+	}
+	geometryCache.clear()
+}
+
 type BoundingBox = {
 	min: Vector3
 	max: Vector3

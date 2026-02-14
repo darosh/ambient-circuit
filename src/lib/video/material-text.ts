@@ -4,8 +4,8 @@ import type { UniformNode, Color } from 'three/webgpu'
 
 const colorCache = new Map<string, { mat: Line2NodeMaterial; emissiveColor: UniformNode<Color> }>()
 
-export function getTextMaterialCached(color: string, width: number) {
-	const materialKey = `${color}-${width}`
+export function getTextMaterialCached(id: string, color: string, width: number) {
+	const materialKey = `${id}-${width}`
 	let material = colorCache.get(materialKey)
 
 	if (!material) {

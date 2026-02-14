@@ -23,6 +23,7 @@
 		fxRails = true,
 		fxMarbles = true,
 		fxInstruments = true,
+		fxText = true,
 		autoRotate = false,
 		tempo = $bindable(),
 		easing = $bindable(),
@@ -39,6 +40,7 @@
 		fxRails?: boolean
 		fxMarbles?: boolean
 		fxInstruments?: boolean
+		fxText?: boolean
 		autoRotate?: boolean
 		showStats?: boolean
 		tempo?: TempoState
@@ -166,13 +168,14 @@
 	if (fps === undefined) fps = 0
 	let frames = 0
 	let lastTime = performance.now()
+	const fpsInterval = 1000 / 6
 
 	// Update loop
 	useTask((delta) => {
 		// Calculate FPS
 		frames++
 		const now = performance.now()
-		if (now >= lastTime + 1000) {
+		if (now >= lastTime + fpsInterval) {
 			fps = Math.round((frames * 1000) / (now - lastTime))
 			frames = 0
 			lastTime = now
@@ -246,6 +249,7 @@
 {#each rails as railData, railIndex (railIndex)}
 	{#if railVisibility[railIndex]}
 		<RailView
+			id={railIndex.toString()}
 			{railData}
 			width={0.06}
 			{showPoints}
@@ -254,6 +258,7 @@
 			{wireframe}
 			{fxRails}
 			{fxInstruments}
+			{fxText}
 			{tempo}
 			{sceneCtx}
 			renderPlayOnly={scene.renderPlayOnly}

@@ -60,25 +60,28 @@
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
 	const isTransparent = $derived(effectiveType !== 'heart')
-	const fx = makeInstrumentMaterial(
+	const fxMaterial = makeInstrumentMaterial(
 		untrack(() => effectiveColor),
 		untrack(() => isTransparent)
 	)
 	const plainMaterial = $derived(
-		fxInstruments ? makeStandardMaterial(untrack(() => effectiveColor)) : null
+		!fxInstruments ? makeStandardMaterial(untrack(() => effectiveColor)) : null
 	)
 	const effectiveVisible = $derived(instrument.runtime?.visible ?? true)
+	const colorValue = $derived(new Color(effectiveColor))
 
 	$effect(() => {
-		fx.emissiveColor.value = new Color(effectiveColor)
+		if (fxMaterial && !fxMaterial.emissiveColor.value.equals(colorValue)) {
+			fxMaterial.emissiveColor.value = colorValue
+		}
 
-		if (plainMaterial) {
-			plainMaterial.color = new Color(effectiveColor)
+		if (plainMaterial && !plainMaterial.color.equals(colorValue)) {
+			plainMaterial.color = colorValue
 		}
 	})
 
 	$effect(() => {
-		fx.mat.wireframe = wireframe
+		fxMaterial.mat.wireframe = wireframe
 
 		if (plainMaterial) {
 			plainMaterial.wireframe = wireframe
@@ -86,7 +89,7 @@
 	})
 
 	$effect(() => {
-		fx.mat.transparent = isTransparent
+		fxMaterial.mat.transparent = isTransparent
 	})
 
 	// Get points for the instrument's path
@@ -248,7 +251,7 @@
 
 		if (impactTime > 0) {
 			impactTime = Math.max(0, impactTime - delta)
-			fx.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION)
+			fxMaterial.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION)
 
 			// Impact spin for non-pulse types
 			if (!pulseAnimationEnabled) {
@@ -258,8 +261,8 @@
 	})
 
 	onDestroy(() => {
-		if (fx) {
-			fx.mat.dispose()
+		if (fxMaterial) {
+			fxMaterial.mat.dispose()
 		}
 
 		if (plainMaterial) {
@@ -273,14 +276,14 @@
 		{position}
 		{rotation}
 		{geometry}
-		material={<Material>(fxInstruments ? fx.mat : plainMaterial)}
+		material={<Material>(fxInstruments ? fxMaterial.mat : plainMaterial)}
 	/>
 	{#if innerGeometry}
 		<T.Mesh
 			{position}
 			{rotation}
 			geometry={innerGeometry}
-			material={<Material>(fxInstruments ? fx.mat : plainMaterial)}
+			material={<Material>(fxInstruments ? fxMaterial.mat : plainMaterial)}
 		/>
 	{/if}
 {/if}

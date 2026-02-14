@@ -45,6 +45,7 @@
 	let fxRails = $state(true)
 	let fxMarbles = $state(true)
 	let fxInstruments = $state(true)
+	let fxText = $state(true)
 	let autoRotate = $state(false)
 	let fps = $state(0)
 	let tempo = $state(createTempoState())
@@ -175,6 +176,7 @@
 			<Checkbox label="Rails" bind:value={fxRails} />
 			<Checkbox label="Marbles" bind:value={fxMarbles} />
 			<Checkbox label="Instruments" bind:value={fxInstruments} />
+			<Checkbox label="Text" bind:value={fxText} />
 			<Checkbox label="Auto Rotate" bind:value={autoRotate} />
 		</Folder>
 		<Folder title="Debug" expanded={false}>
@@ -250,6 +252,7 @@
 			fxPost={fxPost && !wireframe}
 			fxRails={fxRails && !wireframe}
 			fxMarbles={fxMarbles && !wireframe}
+			fxText={fxText && !wireframe}
 			fxInstruments={fxInstruments && !wireframe}
 			{autoRotate}
 			bind:tempo

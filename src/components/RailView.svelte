@@ -36,10 +36,12 @@
 		wireframe?: boolean
 		fxRails?: boolean
 		fxInstruments?: boolean
+		fxText?: boolean
 		font?: Font
 		tempo?: TempoState
 		sceneCtx?: SceneCtx
 		renderPlayOnly?: boolean
+		id: string
 	}
 
 	let {
@@ -51,9 +53,11 @@
 		wireframe = false,
 		fxRails = true,
 		fxInstruments = true,
+		fxText = true,
 		tempo,
 		sceneCtx,
-		renderPlayOnly = false
+		renderPlayOnly = false,
+		id
 	}: Props = $props()
 
 	const BEAT_TEXT_WIDTH = 2
@@ -395,6 +399,8 @@
 			>
 				<Align>
 					<LineText
+						fx={fxText}
+						{id}
 						text={bp.beat.toString()}
 						{color}
 						spacing={1}
@@ -413,6 +419,8 @@
 		>
 			<Align>
 				<LineText
+					fx={fxText}
+					{id}
 					text={rail.id.toUpperCase()}
 					{color}
 					size={RAIL_TEXT_SIZE}
@@ -492,6 +500,8 @@
 			>
 				<Align>
 					<LineText
+						fx={fxText}
+						{id}
 						text={bp.beat.toString()}
 						{color}
 						size={BEAT_TEXT_SIZE}
@@ -510,6 +520,8 @@
 		>
 			<Align>
 				<LineText
+					fx={fxText}
+					{id}
 					text={rail.id.toUpperCase()}
 					{color}
 					size={RAIL_TEXT_SIZE}
