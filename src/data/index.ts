@@ -16,6 +16,7 @@ import { scene as sceneRings } from './scene-rings'
 import { scene as sceneBeats } from './scene-beats'
 import { scene as sceneFont } from './scene-font'
 import { scene as sceneEasing } from './scene-easing'
+import { scene as sceneRailSwitch } from './scene-rail-switch'
 
 export const scenes: SceneConfig[] = [
 	sceneTest,
@@ -33,5 +34,6 @@ export const scenes: SceneConfig[] = [
 	sceneCrossing,
 	sceneBeats,
 	sceneFont,
-	sceneEasing
+	sceneEasing,
+	sceneRailSwitch
 ]

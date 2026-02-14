@@ -40,6 +40,9 @@ export interface MarbleRuntime {
 	// Trigger context (for mirroring on reverse)
 	inTrigger?: boolean // true while trigger handler is executing
 	triggerBeat?: number // beat that triggered the current handler
+	// Rail switching
+	railId?: string // current rail override
+	targetRailId?: string // deferred switch target
 	// Visual overrides
 	type?: MarbleType // overrides config.type
 	sides?: number // overrides config.sides (for poly type)

@@ -101,11 +101,9 @@
 	const _init = (() => {
 		const ms = []
 		const indices: number[] = []
-		const resolved = []
 		for (let i = 0; i < rails.length; i++) {
 			const { rail, marbles: mds } = rails[i]
 			const resolvedRail = resolveRail(rail)
-			resolved.push(resolvedRail)
 
 			const configs = mds && mds.length > 0 ? mds : mds === false ? [] : [{}]
 
@@ -127,11 +125,10 @@
 				indices.push(i)
 			}
 		}
-		return { ms, indices, resolved }
+		return { ms, indices }
 	})()
 	let marbles = $state(_init.ms)
 	const marbleRailIndices = _init.indices
-	const resolvedRails = _init.resolved
 
 	// Init rail visibility (reset if length mismatch from scene change)
 	if (!railVisibility || railVisibility.length !== rails.length) {
@@ -188,8 +185,15 @@
 			}
 		}
 
-		const instrumentsPerMarble = marbleRailIndices.map((i) => rails[i].instruments || [])
-		const railIdPerMarble = marbleRailIndices.map((i) => rails[i].rail.id)
+		// Compute live rail indices (respects runtime switches)
+		const marbleRailIndicesLive = marbles.map((m, i) => {
+			const currentRailId = m.runtime.railId ?? m.config.resolvedRail.id
+			const railIdx = rails.findIndex((r) => r.rail.id === currentRailId)
+			return railIdx >= 0 ? railIdx : marbleRailIndices[i]
+		})
+
+		const instrumentsPerMarble = marbleRailIndicesLive.map((i) => rails[i].instruments || [])
+		const railIdPerMarble = marbleRailIndicesLive.map((i) => rails[i].rail.id)
 		updateMarbles(
 			marbles,
 			tempo,
@@ -247,12 +251,15 @@
 {/each}
 
 {#each marbles as _m, idx (idx)}
-	{#if railVisibility[marbleRailIndices[idx]]}
+	{@const currentRailId = marbles[idx].runtime.railId ?? marbles[idx].config.resolvedRail.id}
+	{@const railIdx = rails.findIndex((r) => r.rail.id === currentRailId)}
+	{@const railIndex = railIdx >= 0 ? railIdx : marbleRailIndices[idx]}
+	{#if railVisibility[railIndex]}
 		<MarbleView
 			bind:marble={marbles[idx]}
-			rail={resolvedRails[marbleRailIndices[idx]]}
-			railData={rails[marbleRailIndices[idx]]}
-			color={rails[marbleRailIndices[idx]].color || '#ffffff'}
+			rail={marbles[idx].config.resolvedRail}
+			railData={rails[railIndex]}
+			color={rails[railIndex].color || '#ffffff'}
 			{wireframe}
 			{fxMarbles}
 		/>

@@ -5,6 +5,7 @@ import type { SceneCtx, MarbleEntity, InstrumentEntity, RailEntity } from './sce
 import { MarbleState } from './marble-state'
 import { InstrumentState } from './instrument-state'
 import { RailState } from './rail-state'
+import { resolveRail } from './rail-resolve'
 
 /**
  * Create SceneCtx from scene data (called once at mount)
@@ -56,9 +57,14 @@ export function createSceneCtx(
 	const railActRefs = rails.map(() => ({ value: true }))
 
 	const railEntities: RailEntity[] = rails.map((rd, i) => {
-		// Find resolved rail from marble configs
-		const resolvedRail = marbles.find((m) => m.config.resolvedRail.id === rd.rail.id)?.config
+		// Find resolved rail from marble configs, or resolve it if not found
+		let resolvedRail = marbles.find((m) => m.config.resolvedRail.id === rd.rail.id)?.config
 			.resolvedRail
+
+		// If no marble uses this rail, resolve it now
+		if (!resolvedRail) {
+			resolvedRail = resolveRail(rd.rail)
+		}
 
 		return {
 			id: rd.rail.id,

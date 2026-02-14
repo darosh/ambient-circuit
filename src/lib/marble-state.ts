@@ -70,6 +70,20 @@ export class MarbleState {
 		this.direction = this.direction === 'forward' ? 'backward' : 'forward'
 	}
 
+	// Rail switching (deferred to end of update)
+	get railId(): string {
+		return this.marble.runtime.railId ?? this.marble.config.resolvedRail.id
+	}
+	set railId(value: string) {
+		if (value === this.railId) return // no-op if same rail
+		this.marble.runtime.targetRailId = value
+	}
+
+	// Convenience: shift beat by delta
+	shiftBeat(delta: number): void {
+		this.beat = this.beat + delta
+	}
+
 	// Visual properties (runtime overrides)
 	get type() {
 		return this.marble.runtime.type ?? this.marble.config.type ?? 'ball'

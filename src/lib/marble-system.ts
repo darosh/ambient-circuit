@@ -647,7 +647,43 @@ export function updateMarble(
 	marble.previousBeat = marble.currentBeat
 	marble.currentBeat = rawBeat
 
-	// Apply manual beat override if set by trigger handler
+	// Apply rail switch BEFORE beat override (allows ctx.marble.state.railId = 'x'; ctx.marble.state.beat = 5)
+	if (marble.runtime.targetRailId !== undefined) {
+		const targetRailId = marble.runtime.targetRailId
+		marble.runtime.targetRailId = undefined
+
+		// Validate rail exists
+		if (!sceneCtx) {
+			console.warn(`[rail-switch] Cannot switch: sceneCtx not available`)
+		} else {
+			const targetRail = sceneCtx.rails.find((r) => r.id === targetRailId)
+			if (!targetRail) {
+				console.warn(`[rail-switch] Rail "${targetRailId}" not found`)
+			} else {
+				// Perform switch
+				marble.config.resolvedRail = targetRail.resolvedRail
+				marble.runtime.railId = targetRailId
+
+				// Reset rail-specific state
+				const newPoints = targetRail.resolvedRail.points
+				const newMinBeat = newPoints.length > 0 ? newPoints[0].beat : 0
+
+				marble.currentBeat = newMinBeat
+				marble.previousBeat = newMinBeat
+				marble.branchIndex = null
+				marble.routingCounter = 0
+				marble.runtime.lastTriggeredBeat = undefined
+				marble.runtime.lastTriggeredDirection = undefined
+				marble.runtime.jumpedToBeat = undefined
+
+				// Recalculate position on new rail
+				const points = getCurrentPathPoints(marble)
+				calculateMarblePosition(marble, marble.currentBeat, points, easing)
+			}
+		}
+	}
+
+	// Apply manual beat override AFTER rail switch (allows setting beat on new rail)
 	if (marble.runtime.targetBeat !== undefined) {
 		const target = marble.runtime.targetBeat
 		marble.currentBeat = target

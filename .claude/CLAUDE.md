@@ -131,9 +131,16 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Demo scene (scene-easing) with runtime easing changes
 - [ ] Non-linear sequencing - advanced
   - [x] Change instrument params in TriggerHandler
+  - [x] Rail switching API (teleport between rails)
+    - [x] `ctx.marble.state.railId` getter/setter (deferred switch)
+    - [x] Beat reset to target rail minBeat (user can override with `state.beat = N`)
+    - [x] Rail-specific state reset (beat, branch, triggers)
+    - [x] Identity preservation (speed, note, direction, visual props)
+    - [x] Validation (warns on invalid railId, stays on current rail)
+    - [x] Works with beat override (`state.railId = 'x'; state.beat = 5`)
+    - [x] Demo scene (scene-rail-switch) with ping-pong/circular/conditional patterns
   - [ ] Marble collisions: `bouncer: true` reverses on collision
   - [ ] Multi-marble interaction patterns
-  - [ ] Rail switching API (teleport between rails)
 - [ ] Visual polishing, WebGPU, TSL
   - [x] rails
   - [x] marbles
@@ -145,9 +152,9 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Next Steps:**
 
-1. Rail switching API (Phase 3): Teleport marbles between rails with validation
-3. Marble collisions (Phase 4): Bouncer marbles with collision detection
-4. Fix skipped `tests/marble-state.test.ts`
+1. Marble collisions (Phase 4): Bouncer marbles with collision detection
+2. Multi-marble interaction patterns
+3. Fix skipped `tests/marble-state.test.ts`
 
 **Blocked/Questions:**
 
