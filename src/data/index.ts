@@ -18,6 +18,7 @@ import { scene as sceneFont } from './scene-font'
 import { scene as sceneEasing } from './scene-easing'
 import { scene as sceneRailSwitch } from './scene-rail-switch'
 import { scene as sceneCollisions } from './scene-collisions'
+import { scene as sceneSnake } from './scene-snake'
 
 export const scenes: SceneConfig[] = [
 	sceneTest,
@@ -37,5 +38,6 @@ export const scenes: SceneConfig[] = [
 	sceneFont,
 	sceneEasing,
 	sceneRailSwitch,
-	sceneCollisions
+	sceneCollisions,
+	sceneSnake
 ]

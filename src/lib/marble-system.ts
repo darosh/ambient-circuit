@@ -12,6 +12,11 @@ import { ResolvedPoint, ResolvedSplit } from './rail'
 let prevGlobalBeat = -1
 let prevIsPlaying = false
 
+// Snake motion constants
+const SNAKE_AMPLITUDE = .1 // units perpendicular to rail
+const SNAKE_FREQUENCY = 1 // cycles per beat (1.0 = crosses at whole beats)
+const SNAKE_WIGGLE = 0.08
+
 /**
  * Select branch for marble at split using weighted round-robin.
  */
@@ -225,6 +230,24 @@ function calculateMarblePosition(
 
 			marble.up = newUp
 		}
+	}
+
+	// Apply snake motion if enabled
+	if (marble.config.snake) {
+		// Compute perpendicular offset using sine wave
+		const phase = 2 * Math.PI * marble.currentBeat * SNAKE_FREQUENCY
+		const offset = Math.sin(phase) * SNAKE_AMPLITUDE
+
+		// Apply offset perpendicular to tangent (use 'right' vector)
+		const right = new Vector3().crossVectors(marble.up, marble.tangent).normalize()
+		marble.position.addScaledVector(right, offset)
+
+		// Recompute tangent to follow snake path
+		// Derivative of snake path = rail tangent + perpendicular component
+		const derivative = -Math.cos(phase - Math.PI / 2) * SNAKE_FREQUENCY * Math.PI * SNAKE_WIGGLE
+		const snakeTangent = marble.tangent.clone().addScaledVector(right, derivative).normalize()
+
+		marble.tangent = snakeTangent
 	}
 }
 

@@ -125,6 +125,7 @@
 							type: m.type,
 							angle: (<EaterMarbleData>m)?.angle ?? 60,
 							bouncer: m.bouncer ?? false,
+							snake: m.snake ?? false,
 							...('sides' in m ? { sides: m.sides } : {}),
 							...(m.type === 'coil' ? { rounds: m.rounds } : {})
 						},
