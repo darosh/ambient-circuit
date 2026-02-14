@@ -23,6 +23,7 @@ export interface MarbleConfig {
 	direction: MarbleDirection
 	sequenceMode: MarbleSequenceMode
 	easing: EasingMode
+	color?: string
 	speed?: number // Speed multiplier (default 1)
 	note?: number // MIDI note for note mode, undefined for vanilla mode
 	type?: MarbleType // Visual type (default 'ball')
@@ -70,7 +71,9 @@ export interface Marble {
 export function createMarble(config: MarbleConfig): Marble {
 	return {
 		config,
-		runtime: {},
+		runtime: {
+			color: config.color
+		},
 		currentBeat: config.startBeat,
 		previousBeat: config.startBeat,
 		direction: config.direction,

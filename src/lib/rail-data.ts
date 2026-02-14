@@ -12,6 +12,7 @@ type MarbleDataBase = {
 	start?: number
 	note?: number
 	easing?: import('./marble').EasingMode
+	color?: string
 }
 
 type BallMarbleData = MarbleDataBase & {

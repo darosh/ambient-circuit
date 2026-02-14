@@ -115,6 +115,7 @@
 						direction: m.direction ?? 'forward',
 						sequenceMode: m.mode ?? 'looping',
 						easing: m.easing ?? (easing || 'linear'),
+						color: m.color,
 						speed: m.speed ?? 1,
 						note: m.note,
 						type: m.type,
