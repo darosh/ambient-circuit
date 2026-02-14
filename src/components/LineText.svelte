@@ -3,7 +3,7 @@
 	import { T, extend } from '@threlte/core'
 	import { Line2NodeMaterial, Color } from 'three/webgpu'
 	import { Line2 } from 'three/addons/lines/webgpu/Line2.js'
-	import { getTextMaterialCached, type LineMat } from '../lib/video/material-text'
+	import { getTextMaterialCached, type LineMat } from '../lib/video/material-text-line'
 	import { getTextGeometryCached } from '../lib/video/text-geometry'
 	import { createLineMaterialCached } from '../lib/video/material-line'
 

@@ -1,4 +1,4 @@
-import { LineMat } from './material-text'
+import { LineMat } from './material-text-line'
 import { Line2NodeMaterial } from 'three/webgpu'
 import { uniform, color as colorShader } from 'three/tsl'
 import type { UniformNode, Color } from 'three/webgpu'

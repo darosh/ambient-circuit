@@ -30,7 +30,7 @@ type CoilMarbleData = MarbleDataBase & {
 	rounds: number
 }
 
-type EaterMarbleData = MarbleDataBase & {
+export type EaterMarbleData = MarbleDataBase & {
 	type: 'eater'
 	angle: number
 }

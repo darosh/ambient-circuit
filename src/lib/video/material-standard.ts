@@ -6,12 +6,12 @@ const materialCache = new Map<string, MeshStandardMaterial>()
 /**
  * Create a MeshStandardMaterial with color memoization
  */
-export function createStandardMaterialCached(color: string): MeshStandardMaterial {
-	const cached = materialCache.get(color)
+export function createStandardMaterialCached(id: string, color: string): MeshStandardMaterial {
+	const cached = materialCache.get(id)
 	if (cached) return cached
 
 	const material = makeStandardMaterial(color)
-	materialCache.set(color, material)
+	materialCache.set(id, material)
 	return material
 }
 

@@ -2,10 +2,11 @@
 	import { T } from '@threlte/core'
 	import { Color, LineCurve3 } from 'three/webgpu'
 	import type { Material } from 'three'
-	import { createTubeMaterialCached } from '../lib/video/material-text'
+	import { createTubeMaterialCached } from '../lib/video/material-text-tube'
 	import { getTextPathsCached } from '../lib/video/text-geometry'
 	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import { untrack } from 'svelte'
+	import { createStandardMaterialCached } from '../lib/video/material-standard'
 
 	let {
 		text,
@@ -14,6 +15,7 @@
 		width = 0.5,
 		spacing = 1,
 		id,
+		fx = true,
 		...props
 	}: {
 		text: string
@@ -22,6 +24,7 @@
 		width: number
 		spacing: number
 		id: string
+		fx: boolean
 	} = $props()
 
 	const paths = $derived.by(() => getTextPathsCached(text, spacing))
@@ -29,12 +32,18 @@
 		untrack(() => id),
 		untrack(() => color)
 	)
+	const plainMaterial = $derived(!fx ? createStandardMaterialCached(id, color) : null)
+	const useMaterial = $derived(fx ? material?.mat : plainMaterial)
 	const colorValue = $derived(new Color(color))
 
 	// Update uniform instead of recreating material
 	$effect(() => {
 		if (material && !material.emissiveColor.value.equals(colorValue)) {
 			material.emissiveColor.value = colorValue
+		}
+
+		if (plainMaterial && !plainMaterial.color.equals(colorValue)) {
+			plainMaterial.color = colorValue
 		}
 	})
 
@@ -49,9 +58,9 @@
 
 			return buildTubeGeometry(
 				curves,
-				width / 200, // radius matches Line2 semantics
-				8, // radialSegments
-				10, // density
+				width / 50, // radius matches Line2 semantics
+				3, // radialSegments
+				1, // density
 				false // open path
 			)
 		})
@@ -61,7 +70,7 @@
 <T.Group {...props}>
 	<T.Group scale={size}>
 		{#each geometries as geometry, idx (idx)}
-			<T.Mesh {geometry} material={<Material>material.mat} />
+			<T.Mesh {geometry} material={<Material>useMaterial} />
 		{/each}
 	</T.Group>
 </T.Group>

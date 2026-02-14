@@ -11,6 +11,7 @@
 	import { resolveRail } from '../lib/rail-resolve'
 	import type { SceneConfig } from '../lib/scene'
 	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
+	import type { EaterMarbleData } from '../lib/rail-data'
 
 	let {
 		scene,
@@ -122,7 +123,7 @@
 							speed: m.speed ?? 1,
 							note: m.note,
 							type: m.type,
-							angle: m?.angle ?? 60,
+							angle: (<EaterMarbleData>m)?.angle ?? 60,
 							bouncer: m.bouncer ?? false,
 							...('sides' in m ? { sides: m.sides } : {}),
 							...(m.type === 'coil' ? { rounds: m.rounds } : {})
