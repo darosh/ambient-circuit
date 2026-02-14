@@ -14,7 +14,7 @@ type MarbleDataBase = {
 	easing?: import('./marble').EasingMode
 	color?: string
 	bouncer?: boolean
-	snake?: boolean
+	snake?: boolean | number
 }
 
 type BallMarbleData = MarbleDataBase & {

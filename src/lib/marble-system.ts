@@ -7,15 +7,16 @@ import { computeBeatPositions, buildSegmentCurve } from './rail-curve'
 import { easingFunctions } from './easing'
 import { Vector3 } from 'three/webgpu'
 import { ResolvedPoint, ResolvedSplit } from './rail'
+import { smootherstep } from 'three/src/math/MathUtils.js'
 
 // Module-level state for global beat tracking
 let prevGlobalBeat = -1
 let prevIsPlaying = false
 
 // Snake motion constants
-const SNAKE_AMPLITUDE = .1 // units perpendicular to rail
-const SNAKE_FREQUENCY = 1 // cycles per beat (1.0 = crosses at whole beats)
-const SNAKE_WIGGLE = 0.08
+const SNAKE_AMPLITUDE_X = 0.09 // units perpendicular to rail
+const SNAKE_AMPLITUDE_Y = 0.15 // units perpendicular to rail
+const SNAKE_FREQUENCY = 0.5 // cycles per beat (1.0 = crosses at whole beats)
 
 /**
  * Select branch for marble at split using weighted round-robin.
@@ -232,22 +233,34 @@ function calculateMarblePosition(
 		}
 	}
 
-	// Apply snake motion if enabled
 	if (marble.config.snake) {
-		// Compute perpendicular offset using sine wave
-		const phase = 2 * Math.PI * marble.currentBeat * SNAKE_FREQUENCY
-		const offset = Math.sin(phase) * SNAKE_AMPLITUDE
-
-		// Apply offset perpendicular to tangent (use 'right' vector)
+		const phase_x = 2 * Math.PI * (marble.currentBeat * SNAKE_FREQUENCY + 0.25)
+		const phase_y = 2 * Math.PI * (marble.currentBeat * SNAKE_FREQUENCY)
+		const phase_r = 2 * Math.PI * (marble.currentBeat * SNAKE_FREQUENCY + 0.25)
 		const right = new Vector3().crossVectors(marble.up, marble.tangent).normalize()
-		marble.position.addScaledVector(right, offset)
+		const cos = Math.cos(phase_x)
+		const sin = Math.sin(phase_y)
+		const offsetX = cos * SNAKE_AMPLITUDE_X
+		const offsetY = sin * SNAKE_AMPLITUDE_Y
 
-		// Recompute tangent to follow snake path
-		// Derivative of snake path = rail tangent + perpendicular component
-		const derivative = -Math.cos(phase - Math.PI / 2) * SNAKE_FREQUENCY * Math.PI * SNAKE_WIGGLE
-		const snakeTangent = marble.tangent.clone().addScaledVector(right, derivative).normalize()
+		marble.position.addScaledVector(right, offsetX)
+		marble.position.addScaledVector(marble.up, offsetY)
 
-		marble.tangent = snakeTangent
+		// Recompute tangent to follow spiral path
+		// Derivative includes both spiral rotation and envelope modulation
+		// const envelopeDeriv = Math.cos(Math.PI * marble.currentBeat * SNAKE_FREQUENCY) * Math.PI * SNAKE_FREQUENCY
+		// const phaseDeriv = 2 * Math.PI * SNAKE_FREQUENCY
+		// const derivX = (Math.cos(phase) * phaseDeriv * envelope + Math.sin(phase) * envelopeDeriv)
+
+		if (typeof marble.config.snake === 'number') {
+			const derivY = (smootherstep((Math.sin(phase_r) + 1) / 2, 0, 1) - 0.5) * 2
+
+			marble.tangent = marble.tangent
+				.clone()
+				// .addScaledVector(right, derivX)
+				.addScaledVector(marble.up, derivY * marble.config.snake)
+				.normalize()
+		}
 	}
 }
 

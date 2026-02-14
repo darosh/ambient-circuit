@@ -31,7 +31,7 @@ export interface MarbleConfig {
 	rounds?: number // For coil type (default 3)
 	angle?: number // For eater type: mouth opening in degrees (default 60)
 	bouncer?: boolean // Reverses direction on collision with other marbles (default false)
-	snake?: boolean // Sinusoidal oscillation perpendicular to rail (default false)
+	snake?: boolean | number // Sinusoidal oscillation perpendicular to rail (default false)
 }
 
 export interface MarbleRuntime {

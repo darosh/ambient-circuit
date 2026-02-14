@@ -23,24 +23,25 @@ export const scene: SceneConfig = {
 			color: colors[0],
 			marbles: [
 				{ type: 'ball', start: 0, snake: true, speed: 1 },
-				{ type: 'poly', start: 1, snake: true, speed: 1, sides: 6 },
-				{ type: 'coil', start: 2, snake: true, speed: 1, rounds: 3 }
+				{ type: 'ball', start: 0.25, snake: true, speed: 1 },
+				{ type: 'ball', start: 0.5, snake: true, speed: 1 },
+				{ type: 'ball', start: 0.75, snake: true, speed: 1 },
+				{ type: 'ball', start: 1, snake: true, speed: 1 },
+				{ type: 'ball', start: 1.25, snake: true, speed: 1 },
+				{ type: 'ball', start: 1.5, snake: true, speed: 1 }
 			]
 		},
 		{
 			rail: {
-				id: 'straight-snake',
+				id: 'straight-eater',
 				nodes: [[5, 0, 5], { p: [-5, 0, -5], beat: 8 }]
 			},
 			color: colors[1],
-			marbles: [
-				{ type: 'eater', start: 0, snake: true, speed: 0.5, angle: 75 },
-				{ type: 'ball', start: 4, snake: true, speed: 0.25, direction: 'backward' }
-			]
+			marbles: [{ type: 'eater', start: 0, snake: 0.5, speed: 0.5, angle: 75 }]
 		},
 		{
 			rail: {
-				id: 'circle-tilt',
+				id: 'tilted-eater',
 				tilt: 0,
 				offset: [-5, 0, 3],
 				nodes: [
@@ -52,7 +53,7 @@ export const scene: SceneConfig = {
 				]
 			},
 			color: colors[2],
-			marbles: [{ type: 'eater', start: 0, speed: 1, snake: true, angle: 90 }]
+			marbles: [{ type: 'eater', start: 0, speed: 1, snake: 0.5, angle: 90 }]
 		}
 	]
 }
