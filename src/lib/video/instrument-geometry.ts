@@ -594,6 +594,7 @@ function buildSunGeometry(params: InstrumentGeometryParams): BufferGeometry {
 function buildEaterGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	const { size, width, cornerRadius, angle = 60 } = params
 	const radius = size / 2
+	const cr = cornerRadius
 	const path = new CurvePath<Vector3>()
 
 	// Convert degrees to radians
@@ -604,28 +605,33 @@ function buildEaterGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	const arcStartAngle = -Math.PI / 2 + mouthHalfAngle
 	const arcEndAngle = arcStartAngle + (Math.PI * 2 - angleRad)
 
-	// Build vertices: center + arc points (pac-man/pizza slice shape)
-	const cr = cornerRadius
-	const center = new Vector3(0, 0, 0)
+	// Derive density from poly pattern
+	// Poly uses Math.ceil(2 * Math.PI * radius / targetSegmentLength)
+	// For matching poly appearance, calculate segments from angle
+	const fullCircleSegments = 12 // matches poly sides for smooth circle
+	const arcAngle = Math.PI * 2 - angleRad
+	const n = Math.max(3, Math.round((arcAngle / (Math.PI * 2)) * fullCircleSegments))
 
 	const verts: Vector3[] = []
 
-	// Arc vertices (clockwise from start to end)
-	const arcSegments = 32
-	for (let i = 0; i <= arcSegments; i++) {
-		const t = i / arcSegments
+	// Arc vertices - number derived from arc angle proportion
+	for (let i = 0; i < n; i++) {
+		const t = i / (n - 1)
 		const a = arcStartAngle + (arcEndAngle - arcStartAngle) * t
 		verts.push(new Vector3(Math.cos(a) * radius, Math.sin(a) * radius, 0))
 	}
+	
+	console.log({ arcStartAngle, arcEndAngle })
 
-	// Close back to center (creating pizza slice shape)
-	// Path: arc_end → center → arc_start (closed loop)
+	// Add center point to close the pizza slice
+	verts.push(new Vector3(0, 0, 0))
+
+	// Follow poly pattern: loop through all vertices with modulo wrapping
 	const vertCount = verts.length
-
 	for (let i = 0; i < vertCount; i++) {
 		const curr = verts[i]
-		const next = i === vertCount - 1 ? center : verts[i + 1]
-		const prev = i === 0 ? center : verts[i - 1]
+		const next = verts[(i + 1) % vertCount]
+		const prev = verts[(i - 1 + vertCount) % vertCount]
 
 		const inDir = new Vector3().subVectors(curr, prev).normalize()
 		const outDir = new Vector3().subVectors(next, curr).normalize()
@@ -634,29 +640,15 @@ function buildEaterGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		const arcEnd = curr.clone().addScaledVector(outDir, cr)
 		const nextArcStart = next.clone().addScaledVector(outDir, -cr)
 
-		if (cr > 0 && i > 0 && i < vertCount - 1) {
-			// Round corners along the arc
+		if (cr > 0) {
 			path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
 		}
 		path.add(new LineCurve3(arcEnd, nextArcStart))
 	}
 
-	// Final segments: center → arc_start
-	const centerToStart = verts[0]
-	const centerInDir = new Vector3().subVectors(center, verts[vertCount - 1]).normalize()
-	const centerOutDir = new Vector3().subVectors(centerToStart, center).normalize()
-	const centerArcStart = center.clone().addScaledVector(centerInDir, -cr)
-	const centerArcEnd = center.clone().addScaledVector(centerOutDir, cr)
-	const startArcStart = centerToStart.clone().addScaledVector(centerOutDir, -cr)
-
-	if (cr > 0) {
-		path.add(new QuadraticBezierCurve3(centerArcStart, center, centerArcEnd))
-	}
-	path.add(new LineCurve3(centerArcEnd, startArcStart))
-
 	return new TubeGeometry(
 		path as unknown as import('three').Curve<Vector3>,
-		arcSegments + 2,
+		n * TUBULAR_SEGMENTS_POLY,
 		width / 2,
 		RADIAL_SEGMENTS,
 		true
@@ -710,6 +702,6 @@ function buildPolyFillGeometry(
 		n * TUBULAR_SEGMENTS_POLY,
 		width / 2,
 		RADIAL_SEGMENTS,
-		true
+		false
 	)
 }

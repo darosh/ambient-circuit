@@ -9,6 +9,7 @@ export const scene: SceneConfig = {
 	id: 'scene-instruments',
 	bpm: 120,
 	triggerHandler,
+	// target: [5,0,0],
 	rails: [
 		{
 			rail: {
