@@ -8,6 +8,7 @@ const c = () => colors[ci++ % colors.length]
 export const scene: SceneConfig = {
 	id: 'scene-crossing',
 	bpm: 120,
+	camera: [0, 13, 8],
 	triggerHandler,
 	rails: [
 		{

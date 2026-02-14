@@ -10,6 +10,7 @@ const c = () => colors[ci++ % colors.length]
 export const scene: SceneConfig = {
 	id: 'scene-test',
 	bpm: 120,
+	camera: <[number, number, number]>[6.5, 10, 17].map((x) => x * 0.77),
 	triggerHandler,
 	rails: [
 		{

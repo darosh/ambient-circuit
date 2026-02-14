@@ -8,6 +8,7 @@ const c = () => colors[ci++ % colors.length]
 export const scene: SceneConfig = {
 	id: 'scene-beats',
 	bpm: 120,
+	camera: [0, 13, 0],
 	globalBeatHandler: globalHandlerFactory(),
 	triggerHandler,
 	rails: [

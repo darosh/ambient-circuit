@@ -10,6 +10,7 @@ let prev = Date.now()
 export const scene: SceneConfig = {
 	id: 'scene-reverse',
 	bpm: 120,
+	camera: [0, 12, 7],
 	globalBeatHandler: globalHandlerFactory(),
 	triggerHandler,
 	rails: [
@@ -17,7 +18,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'reverse-all',
-				offset: [-3, 0, 2],
+				offset: [-3, 0, 1],
 				nodes: [[0, 0, 0], 'r r r r r r']
 			},
 			color: c(),
@@ -46,7 +47,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'target-other',
-				offset: [-3, 0, 1],
+				offset: [-3, 0, -1],
 				nodes: [[0, 0, 0], 'r r r r r r']
 			},
 			color: c(),

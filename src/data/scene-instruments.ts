@@ -9,7 +9,7 @@ export const scene: SceneConfig = {
 	id: 'scene-instruments',
 	bpm: 120,
 	triggerHandler,
-	camera: [3,16,7],
+	camera: [3, 16, 7],
 	rails: [
 		{
 			rail: {

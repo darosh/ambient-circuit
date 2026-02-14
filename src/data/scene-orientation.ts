@@ -8,6 +8,8 @@ const c = () => colors[ci++ % colors.length]
 export const scene: SceneConfig = {
 	id: 'scene-orientation',
 	bpm: 80,
+	camera: [6, 12, 12],
+	target: [0, 0, 0],
 	triggerHandler,
 	rails: [
 		// Horizontal rail (Z-axis forward)

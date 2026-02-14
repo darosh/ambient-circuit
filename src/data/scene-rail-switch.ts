@@ -5,6 +5,7 @@ import { triggerHandler } from '../lib/trigger-handler'
 export const scene: SceneConfig = {
 	id: 'scene-rail-switch',
 	bpm: 40,
+	camera: [0, 13, 7],
 	triggerHandler,
 	rails: [
 		// Pattern 1: Ping-pong between 2 rails (rail-a / rail-b)

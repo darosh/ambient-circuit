@@ -8,6 +8,7 @@ const c = () => colors[ci++ % colors.length]
 export const scene: SceneConfig = {
 	id: 'scene-global-beat',
 	bpm: 120,
+	camera: [0, 10, 7],
 	globalBeatResolution: 1, // every half beat
 	globalBeatHandler: globalHandlerFactory(function (ctx) {
 		ctx.scene.instruments[0].state.visible = false
