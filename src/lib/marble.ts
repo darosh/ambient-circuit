@@ -15,7 +15,7 @@ export type EasingMode =
 	| 'easeOutExpo'
 	| string
 
-export type MarbleType = 'ball' | 'poly' | 'coil'
+export type MarbleType = 'ball' | 'poly' | 'coil' | 'eater'
 
 export interface MarbleConfig {
 	resolvedRail: ResolvedRail
@@ -29,6 +29,7 @@ export interface MarbleConfig {
 	type?: MarbleType // Visual type (default 'ball')
 	sides?: number // For poly type (default 6)
 	rounds?: number // For coil type (default 3)
+	angle?: number // For eater type: mouth opening in degrees (default 60)
 	bouncer?: boolean // Reverses direction on collision with other marbles (default false)
 }
 
@@ -51,6 +52,7 @@ export interface MarbleRuntime {
 	type?: MarbleType // overrides config.type
 	sides?: number // overrides config.sides (for poly type)
 	rounds?: number // overrides config.rounds (for coil type)
+	angle?: number // overrides config.angle (for eater type)
 	color?: string // hex color override (e.g. '#ff0000')
 	easing?: EasingMode // overrides config.easing
 	visible?: boolean // visibility override

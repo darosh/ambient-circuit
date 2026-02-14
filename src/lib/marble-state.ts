@@ -99,6 +99,13 @@ export class MarbleState {
 		this.marble.runtime.sides = value
 	}
 
+	get angle() {
+		return this.marble.runtime.angle ?? this.marble.config.angle ?? 60
+	}
+	set angle(value: number) {
+		this.marble.runtime.angle = value
+	}
+
 	get rounds() {
 		return this.marble.runtime.rounds ?? this.marble.config.rounds ?? 3
 	}

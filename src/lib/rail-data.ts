@@ -30,7 +30,12 @@ type CoilMarbleData = MarbleDataBase & {
 	rounds: number
 }
 
-export type MarbleData = BallMarbleData | PolyMarbleData | CoilMarbleData
+type EaterMarbleData = MarbleDataBase & {
+	type: 'eater'
+	angle: number
+}
+
+export type MarbleData = BallMarbleData | PolyMarbleData | CoilMarbleData | EaterMarbleData
 
 export type RailRuntime = {
 	color?: string

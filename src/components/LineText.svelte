@@ -30,7 +30,7 @@
 
 	const lines = $derived.by(() => getTextGeometryCached(text, spacing))
 
-	let material  = $state<LineMat | undefined>(undefined)
+	let material = $state<LineMat | undefined>(undefined)
 	const plainMaterial = $derived(!fx ? createLineMaterialCached(id, color, width) : null)
 	const useMaterial = $derived(fx ? material?.mat : plainMaterial?.mat)
 	const colorValue = $derived(new Color(color))

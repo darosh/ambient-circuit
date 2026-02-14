@@ -54,7 +54,7 @@ export const scene: SceneConfig = {
 				nodes: [[2, 0, 4], 'i i i i i i i i']
 			},
 			color: c(),
-			marbles: [{ type: 'ball', start: 8 }]
+			marbles: [{ type: 'eater', start: 8, angle: 75 }]
 		}
 	]
 }

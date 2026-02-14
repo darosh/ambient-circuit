@@ -19,12 +19,13 @@ export const BALL_RADIUS = 0.12
 export const BALL_WIDTH_SEGMENTS = 16
 export const BALL_HEIGHT_SEGMENTS = 16
 
-export type MarbleType = 'ball' | 'poly' | 'coil'
+export type MarbleType = 'ball' | 'poly' | 'coil' | 'eater'
 
 export type MarbleGeometryParams = {
 	type: MarbleType
 	sides?: number
 	rounds?: number
+	angle?: number
 }
 
 // Geometry cache: key = JSON.stringify(params)
@@ -67,13 +68,15 @@ export function clearMarbleGeometryCache(): void {
  * Build marble geometry (internal, not cached)
  */
 function buildMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | null {
-	const { type, sides = 6, rounds = 3 } = params
+	const { type, sides = 6, rounds = 3, angle = 60 } = params
 
 	const width = MARBLE_WIDTH
 	const size = MARBLE_SIZE
 	const cr = MARBLE_CORNER_RADIUS
 
-	if (type === 'poly') {
+	if (type === 'eater') {
+		return buildEaterMarbleGeometry(size, width, cr, angle)
+	} else if (type === 'poly') {
 		const n = sides
 		const r = size / (1 + Math.cos(Math.PI / n))
 		const curves: import('three').Curve<Vector3>[] = []
@@ -138,4 +141,78 @@ function buildMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | nul
 	}
 
 	return null
+}
+
+/**
+ * Build eater (pac-man) marble geometry - pizza slice shape laying on rail
+ */
+function buildEaterMarbleGeometry(
+	size: number,
+	width: number,
+	cr: number,
+	angle: number
+): BufferGeometry {
+	const radius = size
+	const angleRad = (angle * Math.PI) / 180
+	const mouthHalfAngle = angleRad / 2
+
+	// Arc from mouthStart to mouthEnd (full circle minus gap)
+	// Rotated so mouth points in +Z direction (forward along rail)
+	const arcStartAngle = Math.PI / 2 + mouthHalfAngle
+	const arcEndAngle = arcStartAngle + (Math.PI * 2 - angleRad)
+
+	// Derive vertex count from arc angle proportion (matching poly density)
+	const fullCircleSegments = 24
+	const arcAngle = Math.PI * 2 - angleRad
+	const n = Math.max(3, Math.round((arcAngle / (Math.PI * 2)) * fullCircleSegments))
+
+	const verts: Vector3[] = []
+
+	// Arc vertices in XY plane (will be oriented along rail)
+	for (let i = 0; i < n; i++) {
+		const t = i / (n - 1)
+		const a = arcStartAngle + (arcEndAngle - arcStartAngle) * t
+		verts.push(new Vector3(0, Math.cos(a) * radius, Math.sin(a) * radius))
+	}
+
+	// Add center point to close the pizza slice
+	verts.push(new Vector3(0, 0, 0))
+
+	// Build path with corner rounding (same as poly pattern)
+	const curves: import('three').Curve<Vector3>[] = []
+	const vertCount = verts.length
+
+	for (let i = 0; i < vertCount; i++) {
+		const curr = verts[i]
+		const next = verts[(i + 1) % vertCount]
+		const prev = verts[(i - 1 + vertCount) % vertCount]
+
+		const inDir = new Vector3().subVectors(curr, prev).normalize()
+		const outDir = new Vector3().subVectors(next, curr).normalize()
+
+		const arcStart = curr.clone().addScaledVector(inDir, -cr)
+		const arcEnd = curr.clone().addScaledVector(outDir, cr)
+		const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+		if (cr > 0) {
+			curves.push(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+		}
+		curves.push(new LineCurve3(arcEnd, nextArcStart))
+	}
+
+	const curvePath = new CurvePath<Vector3>()
+
+	for (const c of curves) {
+		curvePath.add(c)
+	}
+
+	return new TubeGeometry(
+		curvePath,
+		MARBLE_CLOSED_SEGMENTS * 4,
+		width / 2,
+		MARBLE_RADIAL_SEGMENTS,
+		true
+	)
+
+	// return buildTubeGeometry(curves, width / 2, MARBLE_RADIAL_SEGMENTS, MARBLE_CLOSED_SEGMENTS, true)
 }
