@@ -60,7 +60,7 @@ export const scene: SceneConfig = {
 			color: c(),
 			marbles: [
 				{ start: 0, speed: 0.4, direction: 'forward', bouncer: true, type: 'coil', rounds: 2 },
-				{ start: 2, speed: 0.6, direction: 'forward', bouncer: true, type: 'poly', sides: 12 },
+				{ start: 2, speed: 0.6, direction: 'forward', bouncer: true, type: 'poly', sides: 4 },
 				{ start: 4, speed: 0.5, direction: 'backward', bouncer: true, type: 'poly', sides: 12 },
 				{ start: 6, speed: 0.7, direction: 'backward', bouncer: true, type: 'ball' }
 			]
