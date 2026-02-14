@@ -11,14 +11,14 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	bounceHandler: (ctx) => {
 		// Flash both marbles white on collision
-		ctx.marble1.state.color = '#ffffff'
-		ctx.marble2.state.color = '#ffffff'
+		ctx.marble1.state.color = '#ff0000'
+		ctx.marble2.state.color = '#0000ff'
 		setTimeout(() => {
 			ctx.marble1.state.color = undefined
 			ctx.marble2.state.color = undefined
-		}, 100)
+		}, 200)
 	},
-	bouncerOnlyMode: false, // Mixed mode: some bouncers, some not
+	bouncerOnlyMode: false, // Mixed mode: if EITHER is bouncer, both affected
 	camera: [0, 4, 8],
 	target: [0, 0, 0],
 	rails: [
@@ -32,11 +32,11 @@ export const scene: SceneConfig = {
 			marbles: [
 				// Two bouncer marbles starting at opposite ends, moving toward each other
 				{ start: 1, speed: 0.5, direction: 'forward', bouncer: true, type: 'ball' },
-				{ start: 5, speed: 0.5, direction: 'backward', bouncer: false, type: 'ball' }
+				{ start: 5, speed: 0.5, direction: 'backward', bouncer: true, type: 'ball' }
 			]
 		},
 
-		// Rail with mixed bouncer and non-bouncer
+		// Rail with mixed bouncer and non-bouncer (both affected if EITHER is bouncer)
 		{
 			rail: {
 				id: 'mixed',
@@ -44,10 +44,10 @@ export const scene: SceneConfig = {
 			},
 			color: c(),
 			marbles: [
-				// Bouncer marble
+				// Bouncer marble - will affect non-bouncer on collision
 				{ start: 1, speed: 0.6, direction: 'forward', bouncer: true, type: 'poly', sides: 3 },
-				// Non-bouncer marble (will pass through)
-				{ start: 3, speed: 0.3, direction: 'forward', bouncer: false, type: 'ball' }
+				// Non-bouncer marble - will still bounce when hit by bouncer
+				{ start: 4, speed: 0.5, direction: 'backward', bouncer: false, type: 'ball' }
 			]
 		},
 

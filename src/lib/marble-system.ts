@@ -269,9 +269,6 @@ function checkMarbleCollisions(
 	for (let i = 0; i < marbles.length; i++) {
 		const m1 = marbles[i]
 
-		// Skip if not a bouncer (unless bouncerOnlyMode)
-		if (!bouncerOnlyMode && !m1.config.bouncer) continue
-
 		// Skip if recently collided (cooldown to prevent oscillation)
 		if (m1.runtime.lastCollisionTime !== undefined) {
 			if (Math.abs(globalBeat - m1.runtime.lastCollisionTime) < cooldownBeats) {
@@ -282,8 +279,8 @@ function checkMarbleCollisions(
 		for (let j = i + 1; j < marbles.length; j++) {
 			const m2 = marbles[j]
 
-			// Skip if not a bouncer (unless bouncerOnlyMode)
-			if (!bouncerOnlyMode && !m2.config.bouncer) continue
+			// Skip if NEITHER is a bouncer (unless bouncerOnlyMode assumes all are)
+			if (!bouncerOnlyMode && !m1.config.bouncer && !m2.config.bouncer) continue
 
 			// Skip if recently collided
 			if (m2.runtime.lastCollisionTime !== undefined) {
@@ -292,16 +289,13 @@ function checkMarbleCollisions(
 				}
 			}
 
-			// Optimization: skip rail/branch checks in bouncer-only mode
-			if (!bouncerOnlyMode) {
-				// Check if on same rail
-				const rail1 = m1.runtime.railId ?? m1.config.resolvedRail.id
-				const rail2 = m2.runtime.railId ?? m2.config.resolvedRail.id
-				if (rail1 !== rail2) continue
+			// Check if on same rail
+			const rail1 = m1.runtime.railId ?? m1.config.resolvedRail.id
+			const rail2 = m2.runtime.railId ?? m2.config.resolvedRail.id
+			if (rail1 !== rail2) continue
 
-				// Check if on same branch
-				if (m1.branchIndex !== m2.branchIndex) continue
-			}
+			// Check if on same branch
+			if (m1.branchIndex !== m2.branchIndex) continue
 
 			// Beat-based collision: check if beat intervals overlap
 			const overlap = beatsOverlap(m1.previousBeat, m1.currentBeat, m2.previousBeat, m2.currentBeat)

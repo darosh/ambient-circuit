@@ -114,7 +114,7 @@ describe('marble collisions', () => {
 		expect(m2.direction).toBe(initialDir2)
 	})
 
-	it('mixed bouncer and non-bouncer: only bouncer reverses', () => {
+	it('mixed bouncer and non-bouncer: both reverse if either is bouncer', () => {
 		const rail: Rail = {
 			id: 'test',
 			nodes: [[0, 0, 0], 'r r r r r r']
@@ -161,10 +161,9 @@ describe('marble collisions', () => {
 
 			// Check if bouncer marble signaled collision
 			if (m1.signal.intensity === 1) {
-				// Bouncer should have reversed
+				// Both should have reversed (either is bouncer = both affected)
 				expect(m1.direction).not.toBe(initialDir1)
-				// Non-bouncer should maintain direction
-				expect(m2.direction).toBe(initialDir2)
+				expect(m2.direction).not.toBe(initialDir2)
 				return
 			}
 		}
