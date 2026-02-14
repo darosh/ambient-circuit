@@ -9,6 +9,16 @@ export const scene: SceneConfig = {
 	id: 'scene-collisions',
 	bpm: 90,
 	triggerHandler,
+	bounceHandler: (ctx) => {
+		// Flash both marbles white on collision
+		ctx.marble1.state.color = '#ffffff'
+		ctx.marble2.state.color = '#ffffff'
+		setTimeout(() => {
+			ctx.marble1.state.color = undefined
+			ctx.marble2.state.color = undefined
+		}, 100)
+	},
+	bouncerOnlyMode: false, // Mixed mode: some bouncers, some not
 	camera: [0, 4, 8],
 	target: [0, 0, 0],
 	rails: [
@@ -22,7 +32,7 @@ export const scene: SceneConfig = {
 			marbles: [
 				// Two bouncer marbles starting at opposite ends, moving toward each other
 				{ start: 1, speed: 0.5, direction: 'forward', bouncer: true, type: 'ball' },
-				{ start: 5, speed: 0.5, direction: 'backward', bouncer: true, type: 'ball' }
+				{ start: 5, speed: 0.5, direction: 'backward', bouncer: false, type: 'ball' }
 			]
 		},
 

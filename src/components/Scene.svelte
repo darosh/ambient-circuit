@@ -204,7 +204,9 @@
 			scene.triggerHandler,
 			sceneCtx,
 			scene.globalBeatHandler,
-			scene.globalBeatResolution
+			scene.globalBeatResolution,
+			scene.bounceHandler,
+			scene.bouncerOnlyMode
 		)
 	})
 </script>

@@ -140,11 +140,15 @@ Create a "marble-machine-inspired" music sequencer where:
     - [x] Works with beat override (`state.railId = 'x'; state.beat = 5`)
     - [x] Demo scene (scene-rail-switch) with ping-pong/circular/conditional patterns
   - [x] Marble collisions: `bouncer: true` reverses on collision
-    - [x] Collision detection (distance-based on same rail/branch)
+    - [x] Beat-based interval collision detection (handles high speeds correctly)
     - [x] Bouncer property in MarbleConfig
     - [x] Cooldown period to prevent oscillation
     - [x] Signal intensity on collision
-    - [x] Demo scene (scene-collisions) with 4 examples
+    - [x] Same-direction logic (only trailing marble reverses)
+    - [x] Opposite-direction logic (both reverse)
+    - [x] BounceHandler in SceneConfig (custom collision response)
+    - [x] bouncerOnlyMode optimization flag
+    - [x] Demo scene (scene-collisions) with 4 examples + bounce flash
     - [x] Test suite with 5 test cases
   - [ ] Multi-marble interaction patterns
 - [ ] Visual polishing, WebGPU, TSL

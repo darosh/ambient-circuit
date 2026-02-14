@@ -28,16 +28,33 @@ export type GlobalBeatContext = {
 
 export type GlobalBeatHandler = (ctx: GlobalBeatContext) => void
 
+/**
+ * Bounce handler context (fired when two marbles collide)
+ */
+export type BounceContext = {
+	scene: SceneCtx
+	marble1: MarbleEntity
+	marble2: MarbleEntity
+	rail: RailEntity
+	beat: number // collision beat position
+	globalBeat: number
+}
+
+export type BounceHandler = (ctx: BounceContext) => void
+
 export type SceneConfig = {
 	id: string
 	bpm: number
 	rails: RailData[]
 	triggerHandler?: TriggerHandler
 	globalBeatHandler?: GlobalBeatHandler
+	bounceHandler?: BounceHandler
 	/** Beat resolution for global handler (default 8 = eighth notes, 16 = sixteenth notes) */
 	globalBeatResolution?: number
 	camera?: Vector3Tuple
 	target?: Vector3Tuple
 	polar?: boolean
 	renderPlayOnly?: boolean
+	/** Optimize collision checks (assumes all marbles are bouncers, skips rail/branch matching) */
+	bouncerOnlyMode?: boolean
 }

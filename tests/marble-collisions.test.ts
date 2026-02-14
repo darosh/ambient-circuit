@@ -35,7 +35,7 @@ describe('marble collisions', () => {
 		})
 
 		const marbles = [m1, m2]
-		const tempo = createTempoState(120)
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
 		// Update marbles to initial positions
@@ -93,7 +93,7 @@ describe('marble collisions', () => {
 		})
 
 		const marbles = [m1, m2]
-		const tempo = createTempoState(120)
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
 		// Update marbles to initial positions
@@ -144,7 +144,7 @@ describe('marble collisions', () => {
 		})
 
 		const marbles = [m1, m2]
-		const tempo = createTempoState(120)
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
 		// Update marbles to initial positions
@@ -201,7 +201,7 @@ describe('marble collisions', () => {
 		})
 
 		const marbles = [m1, m2]
-		const tempo = createTempoState(120)
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
 		// Update marbles to initial positions
@@ -261,7 +261,7 @@ describe('marble collisions', () => {
 		})
 
 		const marbles = [m1, m2]
-		const tempo = createTempoState(120)
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
 		// Store initial directions

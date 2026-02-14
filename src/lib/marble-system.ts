@@ -241,21 +241,36 @@ function pathsMatch(marblePath: number[], instrumentPath?: number[]): boolean {
 }
 
 /**
- * Check for marble collisions and reverse bouncer marbles.
- * Collision occurs when two marbles are within threshold distance on same rail/branch.
+ * Check if two beat intervals overlap (handles forward/backward motion).
+ */
+function beatsOverlap(prev1: number, curr1: number, prev2: number, curr2: number): boolean {
+	const min1 = Math.min(prev1, curr1)
+	const max1 = Math.max(prev1, curr1)
+	const min2 = Math.min(prev2, curr2)
+	const max2 = Math.max(prev2, curr2)
+
+	return max1 >= min2 && max2 >= min1
+}
+
+/**
+ * Check for marble collisions using beat-based interval detection.
+ * More robust than spatial checks - handles high speeds correctly.
  */
 function checkMarbleCollisions(
 	marbles: Marble[],
+	railIds: string[],
 	globalBeat: number,
-	collisionThreshold: number = 0.2,
+	sceneCtx?: SceneCtx,
+	bounceHandler?: import('./scene').BounceHandler,
+	bouncerOnlyMode: boolean = false,
 	cooldownBeats: number = 0.5
 ): void {
 	// Check all pairs of marbles
 	for (let i = 0; i < marbles.length; i++) {
 		const m1 = marbles[i]
 
-		// Skip if not a bouncer
-		if (!m1.config.bouncer) continue
+		// Skip if not a bouncer (unless bouncerOnlyMode)
+		if (!bouncerOnlyMode && !m1.config.bouncer) continue
 
 		// Skip if recently collided (cooldown to prevent oscillation)
 		if (m1.runtime.lastCollisionTime !== undefined) {
@@ -267,39 +282,107 @@ function checkMarbleCollisions(
 		for (let j = i + 1; j < marbles.length; j++) {
 			const m2 = marbles[j]
 
-			// Check if on same rail
-			const rail1 = m1.runtime.railId ?? m1.config.resolvedRail.id
-			const rail2 = m2.runtime.railId ?? m2.config.resolvedRail.id
-			if (rail1 !== rail2) continue
+			// Skip if not a bouncer (unless bouncerOnlyMode)
+			if (!bouncerOnlyMode && !m2.config.bouncer) continue
 
-			// Check if on same branch
-			if (m1.branchIndex !== m2.branchIndex) continue
+			// Skip if recently collided
+			if (m2.runtime.lastCollisionTime !== undefined) {
+				if (Math.abs(globalBeat - m2.runtime.lastCollisionTime) < cooldownBeats) {
+					continue
+				}
+			}
 
-			// Check distance
-			const dx = m1.position.x - m2.position.x
-			const dy = m1.position.y - m2.position.y
-			const dz = m1.position.z - m2.position.z
-			const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+			// Optimization: skip rail/branch checks in bouncer-only mode
+			if (!bouncerOnlyMode) {
+				// Check if on same rail
+				const rail1 = m1.runtime.railId ?? m1.config.resolvedRail.id
+				const rail2 = m2.runtime.railId ?? m2.config.resolvedRail.id
+				if (rail1 !== rail2) continue
 
-			if (dist < collisionThreshold) {
+				// Check if on same branch
+				if (m1.branchIndex !== m2.branchIndex) continue
+			}
+
+			// Beat-based collision: check if beat intervals overlap
+			const overlap = beatsOverlap(m1.previousBeat, m1.currentBeat, m2.previousBeat, m2.currentBeat)
+
+			if (overlap) {
 				// Collision detected!
+				const collisionBeat = (m1.currentBeat + m2.currentBeat) / 2
 
-				// Reverse m1 if bouncer
-				if (m1.config.bouncer) {
+				// Determine collision response based on directions
+				const sameDirection = m1.direction === m2.direction
+
+				if (sameDirection) {
+					// Same direction: only trailing marble reverses
+					// (faster marble or one behind in direction of travel)
+					if (m1.direction === 'forward') {
+						// Forward: lower beat is trailing
+						if (m1.currentBeat < m2.currentBeat) {
+							// m1 is behind, reverse it
+							m1.direction = 'backward'
+							m1.runtime.lastCollisionTime = globalBeat
+							m1.runtime.lastTriggeredBeat = undefined
+							m1.runtime.lastTriggeredDirection = undefined
+							m1.signal.intensity = 1
+						} else {
+							// m2 is behind, reverse it
+							m2.direction = 'backward'
+							m2.runtime.lastCollisionTime = globalBeat
+							m2.runtime.lastTriggeredBeat = undefined
+							m2.runtime.lastTriggeredDirection = undefined
+							m2.signal.intensity = 1
+						}
+					} else {
+						// Backward: higher beat is trailing
+						if (m1.currentBeat > m2.currentBeat) {
+							// m1 is behind, reverse it
+							m1.direction = 'forward'
+							m1.runtime.lastCollisionTime = globalBeat
+							m1.runtime.lastTriggeredBeat = undefined
+							m1.runtime.lastTriggeredDirection = undefined
+							m1.signal.intensity = 1
+						} else {
+							// m2 is behind, reverse it
+							m2.direction = 'forward'
+							m2.runtime.lastCollisionTime = globalBeat
+							m2.runtime.lastTriggeredBeat = undefined
+							m2.runtime.lastTriggeredDirection = undefined
+							m2.signal.intensity = 1
+						}
+					}
+				} else {
+					// Opposite directions: both reverse
 					m1.direction = m1.direction === 'forward' ? 'backward' : 'forward'
 					m1.runtime.lastCollisionTime = globalBeat
 					m1.runtime.lastTriggeredBeat = undefined
 					m1.runtime.lastTriggeredDirection = undefined
 					m1.signal.intensity = 1
-				}
 
-				// Reverse m2 if bouncer
-				if (m2.config.bouncer) {
 					m2.direction = m2.direction === 'forward' ? 'backward' : 'forward'
 					m2.runtime.lastCollisionTime = globalBeat
 					m2.runtime.lastTriggeredBeat = undefined
 					m2.runtime.lastTriggeredDirection = undefined
 					m2.signal.intensity = 1
+				}
+
+				// Fire bounce handler if provided
+				if (bounceHandler && sceneCtx) {
+					const marbleEntity1 = sceneCtx.marbles[i]
+					const marbleEntity2 = sceneCtx.marbles[j]
+					const railId = railIds[i] || railIds[j]
+					const railEntity = sceneCtx.rails.find((r) => r.id === railId)
+
+					if (marbleEntity1 && marbleEntity2 && railEntity) {
+						bounceHandler({
+							scene: sceneCtx,
+							marble1: marbleEntity1,
+							marble2: marbleEntity2,
+							rail: railEntity,
+							beat: collisionBeat,
+							globalBeat
+						})
+					}
 				}
 			}
 		}
@@ -771,7 +854,9 @@ export function updateMarbles(
 	triggerHandler?: TriggerHandler,
 	sceneCtx?: SceneCtx,
 	globalHandler?: GlobalBeatHandler,
-	globalBeatResolution?: number
+	globalBeatResolution?: number,
+	bounceHandler?: import('./scene').BounceHandler,
+	bouncerOnlyMode?: boolean
 ): void {
 	// Fire global beat handler first (before marble updates)
 	if (sceneCtx && globalHandler) {
@@ -787,5 +872,12 @@ export function updateMarbles(
 
 	// Check for marble collisions (after all positions updated)
 	const globalBeat = tempo.currentBeat + tempo.beatProgress
-	checkMarbleCollisions(marbles, globalBeat)
+	checkMarbleCollisions(
+		marbles,
+		railIds,
+		globalBeat,
+		sceneCtx,
+		bounceHandler,
+		bouncerOnlyMode ?? false
+	)
 }
