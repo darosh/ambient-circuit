@@ -81,7 +81,7 @@ export const scene: SceneConfig = {
 					}
 				}
 			],
-			marbles: [{ start: .5, type: 'coil', rounds: 4, speed: .25 }]
+			marbles: [{ start: 0.5, type: 'coil', rounds: 4, speed: 0.25 }]
 		},
 		{
 			rail: {
