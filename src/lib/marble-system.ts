@@ -263,7 +263,8 @@ function checkMarbleCollisions(
 	sceneCtx?: SceneCtx,
 	bounceHandler?: import('./scene').BounceHandler,
 	bouncerOnlyMode: boolean = false,
-	cooldownBeats: number = 0.5
+	cooldownBeats: number = 0.5,
+	wrapThreshold: number = 5 // Skip collision if beat delta > threshold (indicates wrap)
 ): void {
 	// Check all pairs of marbles
 	for (let i = 0; i < marbles.length; i++) {
@@ -275,6 +276,10 @@ function checkMarbleCollisions(
 				continue
 			}
 		}
+
+		// Skip if marble just wrapped (large beat delta indicates loop/wrap)
+		const m1Delta = Math.abs(m1.currentBeat - m1.previousBeat)
+		if (m1Delta > wrapThreshold) continue
 
 		for (let j = i + 1; j < marbles.length; j++) {
 			const m2 = marbles[j]
@@ -288,6 +293,10 @@ function checkMarbleCollisions(
 					continue
 				}
 			}
+
+			// Skip if marble just wrapped
+			const m2Delta = Math.abs(m2.currentBeat - m2.previousBeat)
+			if (m2Delta > wrapThreshold) continue
 
 			// Check if on same rail
 			const rail1 = m1.runtime.railId ?? m1.config.resolvedRail.id
