@@ -45,7 +45,7 @@ export const scene: SceneConfig = {
 		// Example 2: Target another marble
 		{
 			rail: {
-				id: 'target-other',
+				id: 'speed-up&down-bottom',
 				offset: [-3, 0, 1],
 				nodes: [[0, 0, 0], 'r r r r r r']
 			},
@@ -95,7 +95,7 @@ export const scene: SceneConfig = {
 							ctx.scene.instruments.forEach((inst) => {
 								inst.state.visible = true
 							})
-						}, 300)
+						}, 50)
 					}
 				}
 			]
@@ -103,30 +103,27 @@ export const scene: SceneConfig = {
 		// Example 4: Toggle active state (disables instrument triggers when inactive)
 		{
 			rail: {
-				id: 'toggle-active',
+				id: 'toggle-spinning',
 				offset: [-3, 0, -1],
 				nodes: [[0, 0, 0], 'r r r r r r']
 			},
 			color: c(),
-			marbles: [{ type: 'ball', start: 0 }],
+			marbles: [{ type: 'ball', start: 0, speed: 2 }],
 			instruments: [
 				{
 					type: 'spiral',
 					beat: 2,
+					spinning: false,
 					actionHandler(_ctx) {
-						// Toggle this instrument's active state - should fire once, then never again
-						// console.log('Toggling instrument active to false (should fire once only)')
-						_ctx.instrument.state.spinning = false
-						_ctx.instrument.state.active = false
+						_ctx.instrument.state.spinning = !_ctx.instrument.state.spinning
 					}
 				},
 				{
 					type: 'cone',
 					beat: 4,
-					active: false, // Start inactive - should never fire
-					spinning: false,
+					spinning: false, // Start inactive - should never fire
 					actionHandler(_ctx) {
-						console.log('ERROR: This should NOT fire (instrument is inactive)')
+						_ctx.instrument.state.spinning = !_ctx.instrument.state.spinning
 					}
 				}
 			]
