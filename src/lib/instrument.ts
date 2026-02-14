@@ -136,6 +136,12 @@ type SunInstrument = InstrumentBase & {
 	brightness?: number
 }
 
+type EaterInstrument = InstrumentBase & {
+	type: 'eater'
+	/** Mouth opening angle in degrees (default 60) */
+	angle?: number
+}
+
 export type Instrument =
 	| PolyInstrument
 	| StarInstrument
@@ -146,3 +152,4 @@ export type Instrument =
 	| ConeInstrument
 	| ArrowInstrument
 	| SunInstrument
+	| EaterInstrument

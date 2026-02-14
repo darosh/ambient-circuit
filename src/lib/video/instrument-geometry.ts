@@ -33,6 +33,7 @@ export type InstrumentType =
 	| 'cone'
 	| 'arrow'
 	| 'sun'
+	| 'eater'
 
 export type ArrowKind = 'plain' | 'play' | 'fwd' | 'rec' | 'stop' | 'step' | 'pause'
 
@@ -125,6 +126,8 @@ function buildInstrumentGeometry(params: InstrumentGeometryParams): BufferGeomet
 		return buildArrowGeometry(params)
 	} else if (type === 'sun') {
 		return buildSunGeometry(params)
+	} else if (type === 'eater') {
+		return buildEaterGeometry(params)
 	}
 
 	// Fallback: simple circle
@@ -586,6 +589,47 @@ function buildSunGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	}
 
 	return mainGeometry
+}
+
+function buildEaterGeometry(params: InstrumentGeometryParams): BufferGeometry {
+	const { size, width, cornerRadius, angle = 60 } = params
+	const radius = size / 2
+	const path = new CurvePath<Vector3>()
+
+	// Convert degrees to radians
+	const angleRad = (angle * Math.PI) / 180
+	const mouthHalfAngle = angleRad / 2
+
+	// Arc from mouthStart to mouthEnd (full circle minus gap)
+	const arcStartAngle = -Math.PI / 2 + mouthHalfAngle
+	const arcEndAngle = arcStartAngle + (Math.PI * 2 - angleRad)
+
+	// Build arc segments (32 segments)
+	const segments = 32
+	for (let i = 0; i < segments; i++) {
+		const t1 = i / segments
+		const t2 = (i + 1) / segments
+		const a1 = arcStartAngle + (arcEndAngle - arcStartAngle) * t1
+		const a2 = arcStartAngle + (arcEndAngle - arcStartAngle) * t2
+		const p1 = new Vector3(Math.cos(a1) * radius, Math.sin(a1) * radius, 0)
+		const p2 = new Vector3(Math.cos(a2) * radius, Math.sin(a2) * radius, 0)
+
+		// Add corner rounding at mouth edges for first/last segment
+		if (cornerRadius > 0 && (i === 0 || i === segments - 1)) {
+			const ctrl = p1.clone().lerp(p2, 0.5)
+			path.add(new QuadraticBezierCurve3(p1, ctrl, p2))
+		} else {
+			path.add(new LineCurve3(p1, p2))
+		}
+	}
+
+	return new TubeGeometry(
+		path as unknown as import('three').Curve<Vector3>,
+		segments,
+		width / 2,
+		RADIAL_SEGMENTS,
+		false
+	)
 }
 
 function buildPolyFillGeometry(

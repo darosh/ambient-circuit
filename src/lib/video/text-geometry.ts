@@ -70,6 +70,7 @@ const MISC: Record<string, string> = {
 }
 
 const geometryCache = new Map<string, BufferGeometry[]>()
+const pathCache = new Map<string, Vector3[][]>()
 
 export function getTextGeometryCached(text: string, spacing: number) {
 	if (!text) {
@@ -88,6 +89,23 @@ export function getTextGeometryCached(text: string, spacing: number) {
 	return geometry
 }
 
+export function getTextPathsCached(text: string, spacing: number): Vector3[][] {
+	if (!text) {
+		return []
+	}
+
+	const key = `paths_${text}_${spacing}`
+	const cached = pathCache.get(key)
+
+	if (cached) return cached
+
+	const paths = getTextPaths(text, spacing)
+
+	pathCache.set(key, paths)
+
+	return paths
+}
+
 export function clearTextGeometryCache(): void {
 	for (const geometries of geometryCache.values()) {
 		for (const geometry of geometries) {
@@ -95,6 +113,7 @@ export function clearTextGeometryCache(): void {
 		}
 	}
 	geometryCache.clear()
+	pathCache.clear()
 }
 
 type BoundingBox = {
@@ -119,65 +138,86 @@ function getBoundingBox(points: Vector3[]): BoundingBox {
 	return { min, max }
 }
 
+function buildCharacterPoints(
+	char: string,
+	cursorX: number,
+	spacing: number
+): { points: Vector3[]; newCursorX: number } {
+	const isNumber = /[0-9]/.test(char)
+	const isDash = char === '-'
+	const isDot = char === '.'
+
+	const n = isNumber ? Number.parseInt(char, 10) : char.charCodeAt(0) - 'A'.charCodeAt(0)
+
+	const path = isNumber ? NUMBERS[n] : MISC[char] ? MISC[char] : LETTERS[n] || UNKNOWN
+
+	// ---- Build points once ----
+
+	let points: Vector3[]
+
+	if (isDash) {
+		points = DASH.map((p) => p.clone())
+	} else {
+		const expanded = expandPathString(path) as Vec3[]
+
+		points = new Array(expanded.length + 1)
+		points[0] = new Vector3(0, 0, 0)
+
+		for (let i = 0; i < expanded.length; i++) {
+			const e = expanded[i]
+			points[i + 1] = new Vector3(e[0], e[1], e[2])
+		}
+	}
+
+	// ---- Normalize ----
+
+	const { min, max } = getBoundingBox(points)
+
+	// Remove trailing point for dot
+	if (isDot) {
+		points.pop()
+	}
+
+	const height = max.y - min.y || 1
+	const scale = isDash ? 1 : 1 / height
+
+	const shift = isDash
+		? new Vector3(0, -0.5, 0)
+		: isNumber && n === 1
+			? new Vector3(-0.2, 0, 0)
+			: min
+
+	for (const p of points) {
+		p.sub(shift)
+		p.multiplyScalar(scale)
+		p.x += cursorX
+	}
+
+	// ---- Final bounding box (no geometry compute) ----
+
+	const finalBox = getBoundingBox(points)
+
+	const newCursorX = finalBox.max.x + spacing * (isDash ? 0.15 : isNumber && n === 1 ? 0.2 : 0.15)
+
+	return { points, newCursorX }
+}
+
+export function getTextPaths(text: string, spacing: number): Vector3[][] {
+	let cursorX = 0
+
+	return text.split('').map((char) => {
+		const { points, newCursorX } = buildCharacterPoints(char, cursorX, spacing)
+		cursorX = newCursorX
+		return points
+	})
+}
+
 export function getTextGeometry(text: string, spacing: number) {
 	let cursorX = 0
 
 	return text.split('').map((char) => {
-		const isNumber = /[0-9]/.test(char)
-		const isDash = char === '-'
-		const isDot = char === '.'
-
-		const n = isNumber ? Number.parseInt(char, 10) : char.charCodeAt(0) - 'A'.charCodeAt(0)
-
-		const path = isNumber ? NUMBERS[n] : MISC[char] ? MISC[char] : LETTERS[n] || UNKNOWN
-
-		// ---- Build points once ----
-
-		let points: Vector3[]
-
-		if (isDash) {
-			points = DASH.map((p) => p.clone())
-		} else {
-			const expanded = expandPathString(path) as Vec3[]
-
-			points = new Array(expanded.length + 1)
-			points[0] = new Vector3(0, 0, 0)
-
-			for (let i = 0; i < expanded.length; i++) {
-				const e = expanded[i]
-				points[i + 1] = new Vector3(e[0], e[1], e[2])
-			}
-		}
-
-		// ---- Normalize ----
-
-		const { min, max } = getBoundingBox(points)
-
-		// Remove trailing point for dot
-		if (isDot) {
-			points.pop()
-		}
-
-		const height = max.y - min.y || 1
-		const scale = isDash ? 1 : 1 / height
-
-		const shift = isDash
-			? new Vector3(0, -0.5, 0)
-			: isNumber && n === 1
-				? new Vector3(-0.2, 0, 0)
-				: min
-
-		for (const p of points) {
-			p.sub(shift)
-			p.multiplyScalar(scale)
-			p.x += cursorX
-		}
-
-		// ---- Final bounding box (no geometry compute) ----
-
-		const finalBox = getBoundingBox(points)
-
-		cursorX = finalBox.max.x + spacing * (isDash ? 0.15 : isNumber && n === 1 ? 0.2 : 0.15)
+		const { points, newCursorX } = buildCharacterPoints(char, cursorX, spacing)
+		cursorX = newCursorX
 
 		// ---- Create geometry once ----
 

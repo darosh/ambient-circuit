@@ -4,7 +4,7 @@
 	import type { ResolvedRail } from '../lib/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-curve'
 	import { Vector3, Euler, Matrix4, Color } from 'three/webgpu'
-	import { easeOutQuart, easeInBounce } from '../lib/easing'
+	import { easeOutQuart, easeInBounce, easeOutBack } from '../lib/easing'
 	import { makeInstrumentMaterial } from '../lib/config'
 	import {
 		createInstrumentGeometry,
@@ -131,6 +131,7 @@
 	const IMPACT_BOOST_SPEED = 3 // additional rotations/sec on impact
 	const IMPACT_BOOST_DECAY = 0.6 // seconds to decay boost
 	const BOUNCE_AMPLITUDE = 0.2 // units
+	const SNAP_DURATION = 0.15 // seconds
 
 	let spinAngle = $state(0)
 	let impactTime = 0
@@ -138,6 +139,9 @@
 	let activeRotation = $state(0)
 	let impactBoostSpeed = $state(0)
 	let bounceOffset = $state(0)
+	let snapTime = $state(0)
+	let snapStartAngle = 0
+	let snapTargetAngle = 0
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	const effectiveSpinning = $derived(instrument.runtime?.spinning ?? (instrument as any).spinning)
@@ -182,7 +186,7 @@
 		const type = instrument.type || 'poly'
 		if (type === 'poly' || type === 'star' || type === 'heart') {
 			m.multiply(new Matrix4().makeRotationZ(-Math.PI / 2))
-		} else if (type === 'cross' || type === 'whirl' || type === 'sun') {
+		} else if (type === 'cross' || type === 'whirl' || type === 'sun' || type === 'eater') {
 			m.multiply(new Matrix4().makeRotationZ(Math.PI / 2))
 		} else if (type === 'cone' || type === 'spiral') {
 			m.multiply(new Matrix4().makeRotationZ(-Math.PI))
@@ -226,6 +230,7 @@
 			impactBaseAngle = spinAngle
 			impactTime = IMPACT_DURATION
 			impactBoostSpeed = IMPACT_BOOST_SPEED
+			snapTime = 0 // Cancel snap
 			signal.intensity = 0
 		}
 
@@ -257,6 +262,26 @@
 			if (!pulseAnimationEnabled) {
 				spinAngle = impactBaseAngle + easeOutQuart(1 - impactTime / IMPACT_DURATION) * Math.PI * 2
 			}
+		}
+
+		// Detect misalignment when impact completes and trigger snap
+		if (impactTime === 0 && !activeRotationEnabled && !pulseAnimationEnabled && snapTime === 0) {
+			const normalized = ((spinAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2)
+			const alignmentError = Math.min(normalized, Math.PI * 2 - normalized)
+
+			if (alignmentError > 0.01) {
+				snapStartAngle = spinAngle
+				snapTargetAngle = Math.round(spinAngle / (Math.PI * 2)) * Math.PI * 2
+				snapTime = SNAP_DURATION
+			}
+		}
+
+		// Animate snap
+		if (snapTime > 0 && !activeRotationEnabled && !pulseAnimationEnabled) {
+			snapTime = Math.max(0, snapTime - delta)
+			const progress = 1 - snapTime / SNAP_DURATION
+			const eased = easeOutBack(progress)
+			spinAngle = snapStartAngle + (snapTargetAngle - snapStartAngle) * eased
 		}
 	})
 

@@ -133,6 +133,15 @@ export class InstrumentState {
 		this.instrument.runtime!.rays = value
 	}
 
+	// MouthAngle (for eater, alias for angle with more descriptive name)
+	get mouthAngle(): number | undefined {
+		const typed = this.instrument as any
+		return this.instrument.runtime!.angle ?? typed.angle
+	}
+	set mouthAngle(value: number | undefined) {
+		this.instrument.runtime!.angle = value
+	}
+
 	// Type (can be changed at runtime for visual variety)
 	get type(): string | undefined {
 		const typed = this.instrument as any
