@@ -10,7 +10,7 @@ const globalBeatHandler = globalHandlerFactory()
 export const scene: SceneConfig = {
 	id: 'scene-ctx-test',
 	bpm: 120,
-	camera: [0, 13, 6],
+	camera: [0, 13, 0],
 	globalBeatHandler,
 	triggerHandler,
 	rails: [
