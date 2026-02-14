@@ -139,7 +139,13 @@ Create a "marble-machine-inspired" music sequencer where:
     - [x] Validation (warns on invalid railId, stays on current rail)
     - [x] Works with beat override (`state.railId = 'x'; state.beat = 5`)
     - [x] Demo scene (scene-rail-switch) with ping-pong/circular/conditional patterns
-  - [ ] Marble collisions: `bouncer: true` reverses on collision
+  - [x] Marble collisions: `bouncer: true` reverses on collision
+    - [x] Collision detection (distance-based on same rail/branch)
+    - [x] Bouncer property in MarbleConfig
+    - [x] Cooldown period to prevent oscillation
+    - [x] Signal intensity on collision
+    - [x] Demo scene (scene-collisions) with 4 examples
+    - [x] Test suite with 5 test cases
   - [ ] Multi-marble interaction patterns
 - [ ] Visual polishing, WebGPU, TSL
   - [x] rails
@@ -152,9 +158,9 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Next Steps:**
 
-1. Marble collisions (Phase 4): Bouncer marbles with collision detection
-2. Multi-marble interaction patterns
-3. Fix skipped `tests/marble-state.test.ts`
+1. Multi-marble interaction patterns
+2. Fix skipped `tests/marble-state.test.ts`
+3. Visual polishing and effects
 
 **Blocked/Questions:**
 

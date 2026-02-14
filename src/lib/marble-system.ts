@@ -241,6 +241,72 @@ function pathsMatch(marblePath: number[], instrumentPath?: number[]): boolean {
 }
 
 /**
+ * Check for marble collisions and reverse bouncer marbles.
+ * Collision occurs when two marbles are within threshold distance on same rail/branch.
+ */
+function checkMarbleCollisions(
+	marbles: Marble[],
+	globalBeat: number,
+	collisionThreshold: number = 0.2,
+	cooldownBeats: number = 0.5
+): void {
+	// Check all pairs of marbles
+	for (let i = 0; i < marbles.length; i++) {
+		const m1 = marbles[i]
+
+		// Skip if not a bouncer
+		if (!m1.config.bouncer) continue
+
+		// Skip if recently collided (cooldown to prevent oscillation)
+		if (m1.runtime.lastCollisionTime !== undefined) {
+			if (Math.abs(globalBeat - m1.runtime.lastCollisionTime) < cooldownBeats) {
+				continue
+			}
+		}
+
+		for (let j = i + 1; j < marbles.length; j++) {
+			const m2 = marbles[j]
+
+			// Check if on same rail
+			const rail1 = m1.runtime.railId ?? m1.config.resolvedRail.id
+			const rail2 = m2.runtime.railId ?? m2.config.resolvedRail.id
+			if (rail1 !== rail2) continue
+
+			// Check if on same branch
+			if (m1.branchIndex !== m2.branchIndex) continue
+
+			// Check distance
+			const dx = m1.position.x - m2.position.x
+			const dy = m1.position.y - m2.position.y
+			const dz = m1.position.z - m2.position.z
+			const dist = Math.sqrt(dx * dx + dy * dy + dz * dz)
+
+			if (dist < collisionThreshold) {
+				// Collision detected!
+
+				// Reverse m1 if bouncer
+				if (m1.config.bouncer) {
+					m1.direction = m1.direction === 'forward' ? 'backward' : 'forward'
+					m1.runtime.lastCollisionTime = globalBeat
+					m1.runtime.lastTriggeredBeat = undefined
+					m1.runtime.lastTriggeredDirection = undefined
+					m1.signal.intensity = 1
+				}
+
+				// Reverse m2 if bouncer
+				if (m2.config.bouncer) {
+					m2.direction = m2.direction === 'forward' ? 'backward' : 'forward'
+					m2.runtime.lastCollisionTime = globalBeat
+					m2.runtime.lastTriggeredBeat = undefined
+					m2.runtime.lastTriggeredDirection = undefined
+					m2.signal.intensity = 1
+				}
+			}
+		}
+	}
+}
+
+/**
  * Check if marble crossed any instruments and fire triggers.
  */
 function checkInstrumentTriggers(
@@ -718,4 +784,8 @@ export function updateMarbles(
 		const railId = railIds[i] || ''
 		updateMarble(marbles[i], tempo, instruments, railId, i, triggerHandler, sceneCtx)
 	}
+
+	// Check for marble collisions (after all positions updated)
+	const globalBeat = tempo.currentBeat + tempo.beatProgress
+	checkMarbleCollisions(marbles, globalBeat)
 }

@@ -29,6 +29,7 @@ export interface MarbleConfig {
 	type?: MarbleType // Visual type (default 'ball')
 	sides?: number // For poly type (default 6)
 	rounds?: number // For coil type (default 3)
+	bouncer?: boolean // Reverses direction on collision with other marbles (default false)
 }
 
 export interface MarbleRuntime {
@@ -44,6 +45,8 @@ export interface MarbleRuntime {
 	// Rail switching
 	railId?: string // current rail override
 	targetRailId?: string // deferred switch target
+	// Collision tracking
+	lastCollisionTime?: number // global beat of last collision (prevents oscillation)
 	// Visual overrides
 	type?: MarbleType // overrides config.type
 	sides?: number // overrides config.sides (for poly type)

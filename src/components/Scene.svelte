@@ -119,6 +119,7 @@
 						speed: m.speed ?? 1,
 						note: m.note,
 						type: m.type,
+						bouncer: m.bouncer ?? false,
 						...('sides' in m ? { sides: m.sides } : {}),
 						...(m.type === 'coil' ? { rounds: m.rounds } : {})
 					})
