@@ -266,6 +266,10 @@ function checkMarbleCollisions(
 	cooldownBeats: number = 0.5,
 	wrapThreshold: number = 5 // Skip collision if beat delta > threshold (indicates wrap)
 ): void {
+	if (bouncerOnlyMode) {
+		marbles = marbles.filter((m) => m.config.bouncer)
+	}
+
 	// Check all pairs of marbles
 	for (let i = 0; i < marbles.length; i++) {
 		const m1 = marbles[i]
@@ -283,9 +287,13 @@ function checkMarbleCollisions(
 
 		for (let j = i + 1; j < marbles.length; j++) {
 			const m2 = marbles[j]
+			// Check if on same rail
+			const rail1 = m1.runtime.railId ?? m1.config.resolvedRail.id
+			const rail2 = m2.runtime.railId ?? m2.config.resolvedRail.id
+			if (rail1 !== rail2) continue
 
 			// Skip if NEITHER is a bouncer (unless bouncerOnlyMode assumes all are)
-			if (!bouncerOnlyMode && !m1.config.bouncer && !m2.config.bouncer) continue
+			if (!m1.config.bouncer && !m2.config.bouncer) continue
 
 			// Skip if recently collided
 			if (m2.runtime.lastCollisionTime !== undefined) {
@@ -297,11 +305,6 @@ function checkMarbleCollisions(
 			// Skip if marble just wrapped
 			const m2Delta = Math.abs(m2.currentBeat - m2.previousBeat)
 			if (m2Delta > wrapThreshold) continue
-
-			// Check if on same rail
-			const rail1 = m1.runtime.railId ?? m1.config.resolvedRail.id
-			const rail2 = m2.runtime.railId ?? m2.config.resolvedRail.id
-			if (rail1 !== rail2) continue
 
 			// Check if on same branch
 			if (m1.branchIndex !== m2.branchIndex) continue
@@ -371,8 +374,8 @@ function checkMarbleCollisions(
 
 				// Fire bounce handler if provided
 				if (bounceHandler && sceneCtx) {
-					const marbleEntity1 = sceneCtx.marbles[i]
-					const marbleEntity2 = sceneCtx.marbles[j]
+					const marbleEntity1 = sceneCtx.marbles[m1.index]
+					const marbleEntity2 = sceneCtx.marbles[m2.index]
 					const railId = railIds[i] || railIds[j]
 					const railEntity = sceneCtx.rails.find((r) => r.id === railId)
 
@@ -859,7 +862,8 @@ export function updateMarbles(
 	globalHandler?: GlobalBeatHandler,
 	globalBeatResolution?: number,
 	bounceHandler?: import('./scene').BounceHandler,
-	bouncerOnlyMode?: boolean
+	bouncerOnlyMode?: boolean,
+	noBouncers?: boolean
 ): void {
 	// Fire global beat handler first (before marble updates)
 	if (sceneCtx && globalHandler) {
@@ -874,6 +878,10 @@ export function updateMarbles(
 	}
 
 	// Check for marble collisions (after all positions updated)
+	if (noBouncers) {
+		return
+	}
+
 	const globalBeat = tempo.currentBeat + tempo.beatProgress
 	checkMarbleCollisions(
 		marbles,
@@ -881,6 +889,6 @@ export function updateMarbles(
 		globalBeat,
 		sceneCtx,
 		bounceHandler,
-		bouncerOnlyMode ?? false
+		bouncerOnlyMode ?? true
 	)
 }

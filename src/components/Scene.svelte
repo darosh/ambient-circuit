@@ -109,20 +109,23 @@
 
 			for (const m of configs) {
 				ms.push(
-					createMarble({
-						resolvedRail,
-						startBeat: m.start ?? 0,
-						direction: m.direction ?? 'forward',
-						sequenceMode: m.mode ?? 'looping',
-						easing: m.easing ?? (easing || 'linear'),
-						color: m.color,
-						speed: m.speed ?? 1,
-						note: m.note,
-						type: m.type,
-						bouncer: m.bouncer ?? false,
-						...('sides' in m ? { sides: m.sides } : {}),
-						...(m.type === 'coil' ? { rounds: m.rounds } : {})
-					})
+					createMarble(
+						{
+							resolvedRail,
+							startBeat: m.start ?? 0,
+							direction: m.direction ?? 'forward',
+							sequenceMode: m.mode ?? 'looping',
+							easing: m.easing ?? (easing || 'linear'),
+							color: m.color,
+							speed: m.speed ?? 1,
+							note: m.note,
+							type: m.type,
+							bouncer: m.bouncer ?? false,
+							...('sides' in m ? { sides: m.sides } : {}),
+							...(m.type === 'coil' ? { rounds: m.rounds } : {})
+						},
+						ms.length
+					)
 				)
 				indices.push(i)
 			}
@@ -131,6 +134,8 @@
 	})()
 	let marbles = $state(_init.ms)
 	const marbleRailIndices = _init.indices
+
+	const noBouncers = $derived(!marbles.some((m) => m.config.bouncer))
 
 	// Init rail visibility (reset if length mismatch from scene change)
 	if (!railVisibility || railVisibility.length !== rails.length) {
@@ -196,6 +201,7 @@
 
 		const instrumentsPerMarble = marbleRailIndicesLive.map((i) => rails[i].instruments || [])
 		const railIdPerMarble = marbleRailIndicesLive.map((i) => rails[i].rail.id)
+
 		updateMarbles(
 			marbles,
 			tempo,
@@ -206,7 +212,8 @@
 			scene.globalBeatHandler,
 			scene.globalBeatResolution,
 			scene.bounceHandler,
-			scene.bouncerOnlyMode
+			scene.bouncerOnlyMode,
+			noBouncers
 		)
 	})
 </script>

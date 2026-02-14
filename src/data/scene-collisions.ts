@@ -18,7 +18,7 @@ export const scene: SceneConfig = {
 			ctx.marble2.state.color = undefined
 		}, 200)
 	},
-	bouncerOnlyMode: false, // Mixed mode: if EITHER is bouncer, both affected
+	bouncerOnlyMode: false,
 	camera: [0, 11, 8],
 	target: [0, 1, 0],
 	rails: [

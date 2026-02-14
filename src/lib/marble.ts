@@ -57,6 +57,7 @@ export interface MarbleRuntime {
 }
 
 export interface Marble {
+	index: number
 	config: MarbleConfig
 	runtime: MarbleRuntime
 	currentBeat: number // float for sub-beat positioning
@@ -71,8 +72,9 @@ export interface Marble {
 	signal: { intensity: number } // impact signal, set to 1 on beat crossing
 }
 
-export function createMarble(config: MarbleConfig): Marble {
+export function createMarble(config: MarbleConfig, index = 0): Marble {
 	return {
+		index,
 		config,
 		runtime: {
 			color: config.color
