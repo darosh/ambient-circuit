@@ -43,15 +43,22 @@ Create a "marble-machine-inspired" music sequencer where:
   - visually: portals/rounded lenses around rails, like a lens in a laser beam's path
   - positioned at `Beat` positions
 - `AudioPaths`, `FX` — to be elaborated later; will serve as visualization of audio events and processing
+- `AudioChain` — signal path: generator → fx → analyzer → output. Per-instrument by default, but named chains can be shared across instruments. Exposed via `ctx.instrument.audio` in handlers.
+- `AudioEngine` — two engines sharing one `AudioContext`:
+  - **Tone.js**: instruments, fx, analyzers. Dynamic import: `const Tone = await import('tone')`
+  - **RNBO**: instruments & fx from Max patchers. Load by path: `rnbo.shimmerev` → `./rnbo/rnbo.shimmerev.json` (cached). Tone by name: `new Tone[name]`
+  - Unified param interface across both engines
+- `Marble audio` — marbles can have their own audio chain (independent of instruments). Collision between marbles triggers sound using notes from colliding marbles.
+- `Event log` — global log of trigger/audio events, eventually displayed tracker-style
 - Physics: minimal at start, may be introduced later for specific areas (note bouncing, granular FX)
 
 ---
 
 ## Current Status
 
-**Phase:** Marbles & sequencing
+**Phase:** Audio system
 
-**Last Updated:** 2026-02-13
+**Last Updated:** 2026-02-15
 
 **What Works:**
 
@@ -156,15 +163,41 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] marbles
   - [x] instruments
   - [ ] feedback (lightning effects on collision)
-- [ ] Audio instruments triggering (Tone.js)
-- [ ] `FX`, audio processing
-- [ ] RNBO `FX` audio processing
+- [ ] Audio system
+  - [ ] Shared AudioContext for Tone.js + RNBO
+  - [ ] Audio init: once on first play, not on scene load
+  - [ ] Scene change: stop/disconnect/dispose audio (keep main context + gain), ramp gain down/up
+  - [ ] Scenes without audio config skip audio init entirely
+  - [ ] AudioChain type: generator → fx → analyzer → out
+  - [ ] Per-instrument chains + shared/named chains
+  - [ ] Marble audio chains (own generator, trigger on collision)
+  - [ ] Chain access from SceneCtx: `ctx.instrument.audio`, `ctx.marble.audio`
+  - [ ] Default triggerHandler plays audio automatically (like MIDI)
+  - [ ] RNBO patcher loading with cache (`./rnbo/*.json` from static)
+  - [ ] Tone.js instrument creation by name (`new Tone[name]`)
+  - [ ] Unified param interface across Tone.js and RNBO
+  - [ ] Analyzer access per chain (for visualization)
+- [ ] Audio UI & interaction
+  - [ ] Mouse-over highlight on objects
+  - [ ] Selection with bounding-box corners (smooth transition on change)
+  - [ ] Click instrument/marble → show param sliders for its chain
+  - [ ] Copy-to-clipboard JSON of non-default params `{[paramId]: number}`
+  - [ ] Show analyzer visualization of selected instrument
+  - [ ] Potential UI: threlte `<HUD>`, `<HTML>`, `<View>` (View for selected instrument detail)
+- [ ] Audio visualization
+  - [ ] Global 3D VU meter (prototype first)
+  - [ ] Future: chain representations in separate layer, waveform rays, rail displacement by waveform
+- [ ] Event log system (global trigger/audio events, tracker-style display)
 
 **Next Steps:**
 
-1. Multi-marble interaction patterns
-2. Fix skipped `tests/marble-state.test.ts`
-3. Visual polishing and effects
+1. Audio system core (AudioContext, chain types, init/dispose lifecycle)
+2. Tone.js instrument triggering in default triggerHandler
+3. RNBO fx integration (load patchers, chain with Tone instruments)
+4. Audio UI (selection, param sliders, analyzer viz)
+5. Multi-marble interaction patterns
+6. Fix skipped `tests/marble-state.test.ts`
+7. Visual polishing and effects (lightning on collision)
 
 **Blocked/Questions:**
 
@@ -210,6 +243,8 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/easing.ts         - Easing functions (maath + custom)
 /src/lib/midi/midi.ts      - Web MIDI API wrapper (init, port selection, sendNote)
 /src/lib/rail-data.ts      - Rail definitions with MIDI-enabled onTrigger handlers
+/src/lib/audio/index.ts    - Audio system (RNBO + Tone.js experiments/POC)
+/src/lib/audio/patchers/   - RNBO exported patchers (JSON from Max)
 /src/components/Scene.svelte    - 3D scene with rails, marbles, tempo integration
 /src/components/RailView.svelte - renders Rail as TubeGeometry + debug points/beats
 /tests                     - vitest tests (not colocated)
@@ -328,6 +363,40 @@ globalBeatHandler(ctx) {
 - `createRails(midiState, marbles)` generates rails with MIDI-enabled handlers
 - marble-system.ts triggers handlers, no MIDI logic in core system
 
+### Audio System
+
+**Architecture:**
+
+- Two engines (Tone.js + RNBO) sharing one standard `AudioContext`
+- Audio init: lazy, once on first play — scenes without audio skip entirely
+- Scene change: stop → ramp gain down → disconnect/dispose chains → ramp gain up
+- Main context + master gain persist across scene changes
+
+**Chains:**
+
+- AudioChain: generator → fx[] → analyzer → output (master gain)
+- Per-instrument by default; named chains can be shared across instruments
+- Marbles can have own chain (triggers on collision using marble notes)
+- Accessible in handlers: `ctx.instrument.audio`, `ctx.marble.audio`
+- All chains accessible from `ctx.scene` for cross-entity audio manipulation
+
+**Engines:**
+
+- RNBO: reference by path `rnbo.shimmerev` → loads `./rnbo/rnbo.shimmerev.json` from static (cached)
+- Tone.js: reference by name → `new Tone[name]`; dynamic import required
+- Params unified across engines into common interface
+
+**Integration:**
+
+- Default `triggerHandler` plays audio automatically if chain configured (like MIDI)
+- Note trigger uses marble note → instrument note fallback (same as MIDI)
+- Scene definition stays TS code now, but keep JSON-serializable path open (no closures in chain config)
+
+**Deferred:**
+
+- CV / modulation / param automation — later
+- Complex visualization (waveform rays, rail displacement) — after VU meter prototype
+
 ### Material Color Updates
 
 **Pattern for runtime color changes:**
@@ -370,13 +439,19 @@ const fx = $derived(makeInstrumentMaterial(effectiveColor))
 - Use vitest for library functions
 - Keep marble logic modular (easy to add zone types)
 - Run lint, check and dev before asking for commit
+- Use `vite build --outDir .build-check` when doing build check
+- Use `check`, `lint` and `test` npm scripts when modifying TypeScript types
 
 **DON'T:**
 
 - Read files in `/archive` (obsolete experiments)
 - Use Line2/MeshLine/examples/jsm materials with WebGPU renderer
 - Use `any` without `eslint-disable` — TSL `Fn()` param types require it, wrap with block comments
-
+- Block path to JSON scene serialization (avoid closures in audio chain config)
+- Read RNBO JSON files in `/src/lib/audio/patchers` and `/public/patchers` and `/docs/patchers`
+- Run or commit default build on `/docs` for GitHub Pages
+- Run dev server
+- Read `TODO.md`
 ---
 
 ## References
