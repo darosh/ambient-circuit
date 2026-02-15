@@ -236,22 +236,21 @@ function connectNodes(
 
 function getWebAudioNode(
 	node: ToneAudioNode | Device | AnalyserNode | GainNode,
-	engine: AudioEngine
+	_engine: AudioEngine
 ): AudioNode | null {
 	if (node instanceof GainNode || node instanceof AnalyserNode) return node
 	if (isDevice(node as ToneAudioNode | Device)) return (node as Device).node
-	// Tone.js node — get underlying web audio node
+	// Tone.js node — recurse through .output until we hit a raw AudioNode
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const toneNode = node as any
-	if (toneNode.output) return toneNode.output
-	if (toneNode._gainNode) return toneNode._gainNode
-	if (engine.Tone) {
-		// Try Tone's connect for Tone→Tone connections
-		try {
-			// Return null — handle via Tone connect instead
-		} catch {
-			// ignore
+	let cur: any = node
+	for (let i = 0; i < 10; i++) {
+		if (cur instanceof AudioNode) return cur
+		if (cur._gainNode instanceof AudioNode) return cur._gainNode
+		if (cur.output != null) {
+			cur = cur.output
+			continue
 		}
+		break
 	}
 	return null
 }

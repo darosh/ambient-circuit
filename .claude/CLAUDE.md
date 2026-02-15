@@ -175,9 +175,12 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Default triggerHandler plays audio automatically (like MIDI)
   - [x] RNBO patcher loading with cache (`./rnbo/*.json` from static)
   - [x] Tone.js instrument creation by name (`new Tone[name]`)
+  - [x] RNBO fx in chains (Tone Synth → RNBO shimmerev works)
+  - [x] RNBO as generator (feedback-synth.export)
+  - [x] Tone→RNBO node connection (recursive WebAudioNode extraction)
   - [ ] Unified param interface across Tone.js and RNBO
   - [ ] Analyzer access per chain (for visualization)
-  - [x] Demo scene (scene-audio) with Tone.js Synth triggers
+  - [x] Demo scene (scene-audio) with Tone.js Synth + RNBO fx/generator
 - [ ] Audio UI & interaction
   - [ ] Mouse-over highlight on objects
   - [ ] Selection with bounding-box corners (smooth transition on change)
@@ -192,8 +195,7 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Next Steps:**
 
-1. RNBO fx integration (load patchers, chain with Tone instruments)
-2. Unified param interface across Tone.js and RNBO
+1. Unified param interface across Tone.js and RNBO
 3. Analyzer access per chain (for visualization)
 4. Audio UI (selection, param sliders, analyzer viz)
 5. Multi-marble interaction patterns
