@@ -3,13 +3,16 @@ import type { Device } from '@rnbo/js'
 
 // --- Authored config (JSON-serializable, no closures) ---
 
+export type ParamValue = number | string
+export type ParamMap = Record<string, ParamValue>
+
 export type GeneratorConfig =
-	| { engine: 'tone'; name: string; params?: Record<string, number> }
-	| { engine: 'rnbo'; path: string; params?: Record<string, number> }
+	| { engine: 'tone'; name: string; params?: ParamMap }
+	| { engine: 'rnbo'; path: string; params?: ParamMap }
 
 export type FxConfig =
-	| { engine: 'tone'; name: string; params?: Record<string, number> }
-	| { engine: 'rnbo'; path: string; params?: Record<string, number> }
+	| { engine: 'tone'; name: string; params?: ParamMap }
+	| { engine: 'rnbo'; path: string; params?: ParamMap }
 
 export type AudioChainConfig = {
 	/** Named chain ID (shared across instruments) */
@@ -27,6 +30,12 @@ export type AudioChain = {
 	fx: (ToneAudioNode | Device)[]
 	analyzer: AnalyserNode | null
 	output: GainNode
+	/** Set param on generator by dot-path */
+	setParam(path: string, value: ParamValue): void
+	/** Set param on fx node by index + dot-path */
+	setFxParam(index: number, path: string, value: ParamValue): void
+	/** Get param from generator by dot-path */
+	getParam(path: string): ParamValue | undefined
 }
 
 export type AudioEngine = {

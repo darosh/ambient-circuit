@@ -1,4 +1,11 @@
-import type { AudioEngine, AudioChain, AudioChainConfig, GeneratorConfig, FxConfig } from './types'
+import type {
+	AudioEngine,
+	AudioChain,
+	AudioChainConfig,
+	GeneratorConfig,
+	FxConfig,
+	ParamValue
+} from './types'
 import type { ToneAudioNode } from 'tone'
 import { createDevice, MIDIEvent } from '@rnbo/js'
 import type { Device, MIDIByte } from '@rnbo/js'
@@ -80,7 +87,22 @@ export async function buildChain(
 		connectNodes(nodes[i], nodes[i + 1], engine)
 	}
 
-	const chain: AudioChain = { config, generator, fx, analyzer, output }
+	const chain: AudioChain = {
+		config,
+		generator,
+		fx,
+		analyzer,
+		output,
+		setParam(path, value) {
+			if (chain.generator) setNodeParam(chain.generator, path, value)
+		},
+		setFxParam(index, path, value) {
+			if (chain.fx[index]) setNodeParam(chain.fx[index], path, value)
+		},
+		getParam(path) {
+			return chain.generator ? getNodeParam(chain.generator, path) : undefined
+		}
+	}
 
 	// Register named chains
 	if (config.id) {
@@ -162,6 +184,67 @@ export function disposeScene(engine: AudioEngine): void {
 	engine.instanceChains = []
 }
 
+// --- Param helpers (exported for testing) ---
+
+/**
+ * Unflatten dot-path params: {'a.b': 1, 'a.c': 2, x: 3} → {a: {b: 1, c: 2}, x: 3}
+ */
+export function unflattenParams(flat: Record<string, ParamValue>): Record<string, unknown> {
+	const result: Record<string, unknown> = {}
+	for (const [key, val] of Object.entries(flat)) {
+		const parts = key.split('.')
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		let cur: any = result
+		for (let i = 0; i < parts.length - 1; i++) {
+			if (cur[parts[i]] == null || typeof cur[parts[i]] !== 'object') {
+				cur[parts[i]] = {}
+			}
+			cur = cur[parts[i]]
+		}
+		cur[parts[parts.length - 1]] = val
+	}
+	return result
+}
+
+/**
+ * Set param on a live node by dot-path
+ */
+export function setNodeParam(node: ToneAudioNode | Device, path: string, value: ParamValue): void {
+	if (isDevice(node)) {
+		const p = node.parameters.find((p) => p.name === path || p.id === path)
+		if (p) p.value = value as number
+	} else {
+		// Tone.js: walk dot-path
+		const parts = path.split('.')
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		let cur: any = node
+		for (let i = 0; i < parts.length - 1; i++) {
+			if (cur == null) return
+			cur = cur[parts[i]]
+		}
+		if (cur != null) cur[parts[parts.length - 1]] = value
+	}
+}
+
+/**
+ * Get param from a live node by dot-path
+ */
+export function getNodeParam(node: ToneAudioNode | Device, path: string): ParamValue | undefined {
+	if (isDevice(node)) {
+		const p = node.parameters.find((p) => p.name === path || p.id === path)
+		return p ? p.value : undefined
+	} else {
+		const parts = path.split('.')
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		let cur: any = node
+		for (const part of parts) {
+			if (cur == null) return undefined
+			cur = cur[part]
+		}
+		return cur as ParamValue | undefined
+	}
+}
+
 // --- Internal helpers ---
 
 async function buildNode(
@@ -178,7 +261,7 @@ async function buildNode(
 async function loadRNBO(
 	engine: AudioEngine,
 	path: string,
-	params?: Record<string, number>
+	params?: Record<string, ParamValue>
 ): Promise<Device> {
 	if (!engine.ctx) throw new Error('No AudioContext')
 
@@ -195,7 +278,7 @@ async function loadRNBO(
 	if (params) {
 		for (const [key, val] of Object.entries(params)) {
 			const p = device.parameters.find((p) => p.name === key || p.id === key)
-			if (p) p.value = val
+			if (p) p.value = val as number
 		}
 	}
 
@@ -205,7 +288,7 @@ async function loadRNBO(
 function createToneNode(
 	engine: AudioEngine,
 	name: string,
-	params?: Record<string, number>
+	params?: Record<string, ParamValue>
 ): ToneAudioNode {
 	if (!engine.Tone) throw new Error('Tone.js not loaded')
 
@@ -214,7 +297,8 @@ function createToneNode(
 	const NodeClass = ToneLib[name]
 	if (!NodeClass) throw new Error(`Unknown Tone node: ${name}`)
 
-	const node = params ? new NodeClass(params) : new NodeClass()
+	const opts = params ? unflattenParams(params) : undefined
+	const node = opts ? new NodeClass(opts) : new NodeClass()
 	return node as ToneAudioNode
 }
 

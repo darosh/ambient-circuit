@@ -178,7 +178,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] RNBO fx in chains (Tone Synth → RNBO shimmerev works)
   - [x] RNBO as generator (feedback-synth.export)
   - [x] Tone→RNBO node connection (recursive WebAudioNode extraction)
-  - [ ] Unified param interface across Tone.js and RNBO
+  - [x] Unified param interface across Tone.js and RNBO
   - [ ] Analyzer access per chain (for visualization)
   - [x] Demo scene (scene-audio) with Tone.js Synth + RNBO fx/generator
 - [ ] Audio UI & interaction
@@ -195,10 +195,9 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Next Steps:**
 
-1. Unified param interface across Tone.js and RNBO
-3. Analyzer access per chain (for visualization)
-4. Audio UI (selection, param sliders, analyzer viz)
-5. Multi-marble interaction patterns
+1. Audio UI (selection, param sliders, analyzer viz)
+2. Analyzer access per chain (for visualization)
+3. Multi-marble interaction patterns
 6. Fix skipped `tests/marble-state.test.ts`
 7. Visual polishing and effects (lightning on collision)
 

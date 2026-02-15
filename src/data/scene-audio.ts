@@ -4,7 +4,7 @@ import { triggerHandler } from '../lib/trigger-handler'
 const shimmerev = {
 	engine: 'rnbo' as const,
 	path: 'rnbo.shimmerev',
-	params: { mix: 50, decay: 600, octvol: 100, pitchvol: 100, rev: 80, pitchvol: 100, size: 70, feedback: 30 }
+	params: { mix: 50, decay: 600, octvol: 100, pitchvol: 100, rev: 80, size: 70, feedback: 30 }
 }
 
 export const scene: SceneConfig = {
@@ -25,25 +25,45 @@ export const scene: SceneConfig = {
 					type: 'sun',
 					beat: 1,
 					midiNote: 60,
-					audio: { generator: { engine: 'tone', name: 'Synth' }, fx: [shimmerev] }
+					audio: {
+						generator: {
+							engine: 'tone',
+							name: 'Synth',
+							params: { 'envelope.attack': 0.01, 'envelope.release': 2 }
+						}
+					}
 				},
 				{
 					type: 'sun',
 					beat: 3,
 					midiNote: 64,
-					audio: { generator: { engine: 'tone', name: 'Synth' }, fx: [shimmerev] }
+					audio: {
+						generator: {
+							engine: 'tone',
+							name: 'Synth',
+							params: {
+								'envelope.attack': 0.1,
+								'envelope.sustain': 0.5,
+								'oscillator.type': 'triangle'
+							}
+						}
+					}
 				},
 				{
 					type: 'sun',
 					beat: 5,
 					midiNote: 67,
-					audio: { generator: { engine: 'tone', name: 'Synth' }, fx: [shimmerev] }
+					audio: { generator: { engine: 'tone', name: 'Synth' }, 
+						fx: [shimmerev] 
+					}
 				},
 				{
 					type: 'sun',
 					beat: 7,
 					midiNote: 72,
-					audio: { generator: { engine: 'tone', name: 'Synth' }, fx: [shimmerev] }
+					audio: { generator: { engine: 'tone', name: 'Synth' }, 
+						fx: [shimmerev] 
+					}
 				}
 			]
 		},

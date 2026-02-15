@@ -1,9 +1,20 @@
-export type { AudioChainConfig, AudioChain, AudioEngine, GeneratorConfig, FxConfig } from './types'
+export type {
+	AudioChainConfig,
+	AudioChain,
+	AudioEngine,
+	GeneratorConfig,
+	FxConfig,
+	ParamValue,
+	ParamMap
+} from './types'
 export {
 	createAudioEngine,
 	initAudio,
 	buildChain,
 	triggerChain,
 	disposeChain,
-	disposeScene
+	disposeScene,
+	unflattenParams,
+	setNodeParam,
+	getNodeParam
 } from './engine'
