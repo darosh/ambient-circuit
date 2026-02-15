@@ -17,7 +17,7 @@ export const scene: SceneConfig = {
 		// Example 1: Reverse all marbles
 		{
 			rail: {
-				id: 'reverse-all',
+				id: 'reverse-trigger',
 				offset: [-3, 0, 1],
 				nodes: [[0, 0, 0], 'r r r r r r']
 			},
@@ -46,7 +46,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'target-other',
+				id: 'reverse-target',
 				offset: [-3, 0, -1],
 				nodes: [[0, 0, 0], 'r r r r r r']
 			},
