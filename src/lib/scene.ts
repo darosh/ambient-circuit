@@ -1,5 +1,6 @@
 import type { InstrumentTriggerContext } from './instrument'
 import type { RailData } from './rail-data'
+import type { AudioChainConfig } from './audio/types'
 import type { SceneCtx, MarbleEntity, InstrumentEntity, RailEntity } from './scene-ctx'
 import { Vector3Tuple } from 'three/webgpu'
 
@@ -57,4 +58,8 @@ export type SceneConfig = {
 	renderPlayOnly?: boolean
 	/** Optimize collision checks (assumes all marbles are bouncers, skips rail/branch matching) */
 	bouncerOnlyMode?: boolean
+	/** Audio config: named/shared chains */
+	audio?: {
+		chains?: Record<string, AudioChainConfig>
+	}
 }

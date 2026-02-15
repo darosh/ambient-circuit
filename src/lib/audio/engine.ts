@@ -1,0 +1,272 @@
+import type { AudioEngine, AudioChain, AudioChainConfig, GeneratorConfig, FxConfig } from './types'
+import type { ToneAudioNode } from 'tone'
+import { createDevice, MIDIEvent } from '@rnbo/js'
+import type { Device, MIDIByte } from '@rnbo/js'
+
+/**
+ * Create audio engine (no AudioContext yet — lazy init)
+ */
+export function createAudioEngine(): AudioEngine {
+	return {
+		ctx: null,
+		masterGain: null,
+		Tone: null,
+		chains: new Map(),
+		instanceChains: [],
+		initialized: false,
+		rnboCache: new Map()
+	}
+}
+
+/**
+ * Initialize audio (called once on first play)
+ */
+export async function initAudio(engine: AudioEngine): Promise<void> {
+	if (engine.initialized) return
+
+	const ctx = new AudioContext()
+	engine.ctx = ctx
+
+	// Dynamic import Tone.js and set shared context
+	const Tone = await import('tone')
+	Tone.setContext(ctx)
+	await Tone.start()
+	engine.Tone = Tone
+
+	// Master gain → destination
+	const masterGain = ctx.createGain()
+	masterGain.connect(ctx.destination)
+	engine.masterGain = masterGain
+
+	engine.initialized = true
+}
+
+/**
+ * Build a live AudioChain from config
+ */
+export async function buildChain(
+	engine: AudioEngine,
+	config: AudioChainConfig
+): Promise<AudioChain> {
+	if (!engine.ctx || !engine.masterGain) {
+		throw new Error('Audio engine not initialized')
+	}
+
+	const output = engine.ctx.createGain()
+	output.connect(engine.masterGain)
+
+	let generator: ToneAudioNode | Device | null = null
+	if (config.generator) {
+		generator = await buildNode(engine, config.generator)
+	}
+
+	const fx: (ToneAudioNode | Device)[] = []
+	if (config.fx) {
+		for (const fxConfig of config.fx) {
+			fx.push(await buildNode(engine, fxConfig))
+		}
+	}
+
+	const analyzer = config.analyzer ? engine.ctx.createAnalyser() : null
+
+	// Connect chain: generator → fx[0] → fx[1] → ... → analyzer? → output
+	const nodes: Array<ToneAudioNode | Device | AnalyserNode | GainNode> = []
+	if (generator) nodes.push(generator)
+	for (const f of fx) nodes.push(f)
+	if (analyzer) nodes.push(analyzer)
+	nodes.push(output)
+
+	for (let i = 0; i < nodes.length - 1; i++) {
+		connectNodes(nodes[i], nodes[i + 1], engine)
+	}
+
+	const chain: AudioChain = { config, generator, fx, analyzer, output }
+
+	// Register named chains
+	if (config.id) {
+		engine.chains.set(config.id, chain)
+	}
+	engine.instanceChains.push(chain)
+
+	return chain
+}
+
+/**
+ * Trigger a note on a chain
+ */
+export function triggerChain(
+	chain: AudioChain,
+	note: number,
+	velocity: number,
+	durationMs: number
+): void {
+	if (!chain.generator) return
+
+	if (isDevice(chain.generator)) {
+		// RNBO: send MIDI events
+		const device = chain.generator
+		const midiChannel = 0
+		const vel = Math.min(127, Math.max(0, velocity))
+		const noteOn: [MIDIByte, MIDIByte, MIDIByte] = [
+			(144 + midiChannel) as MIDIByte,
+			note as MIDIByte,
+			vel as MIDIByte
+		]
+		const noteOff: [MIDIByte, MIDIByte, MIDIByte] = [
+			(128 + midiChannel) as MIDIByte,
+			note as MIDIByte,
+			0 as MIDIByte
+		]
+		const now = device.context.currentTime * 1000
+		device.scheduleEvent(new MIDIEvent(now, 0, noteOn))
+		device.scheduleEvent(new MIDIEvent(now + durationMs, 0, noteOff))
+	} else {
+		// Tone.js: triggerAttackRelease
+		const synth = chain.generator
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const s = synth as any
+		if (typeof s.triggerAttackRelease === 'function') {
+			const freq = midiToFreq(note)
+			s.triggerAttackRelease(freq, durationMs / 1000, undefined, velocity / 127)
+		}
+	}
+}
+
+/**
+ * Dispose a single chain (disconnect all nodes)
+ */
+export function disposeChain(chain: AudioChain): void {
+	if (chain.generator) {
+		disposeNode(chain.generator)
+	}
+	for (const f of chain.fx) {
+		disposeNode(f)
+	}
+	if (chain.analyzer) {
+		chain.analyzer.disconnect()
+	}
+	chain.output.disconnect()
+	chain.generator = null
+	chain.fx = []
+	chain.analyzer = null
+}
+
+/**
+ * Dispose all chains for scene change (keep ctx + masterGain alive)
+ */
+export function disposeScene(engine: AudioEngine): void {
+	for (const chain of engine.instanceChains) {
+		disposeChain(chain)
+	}
+	engine.chains.clear()
+	engine.instanceChains = []
+}
+
+// --- Internal helpers ---
+
+async function buildNode(
+	engine: AudioEngine,
+	config: GeneratorConfig | FxConfig
+): Promise<ToneAudioNode | Device> {
+	if (config.engine === 'rnbo') {
+		return await loadRNBO(engine, config.path, config.params)
+	} else {
+		return createToneNode(engine, config.name, config.params)
+	}
+}
+
+async function loadRNBO(
+	engine: AudioEngine,
+	path: string,
+	params?: Record<string, number>
+): Promise<Device> {
+	if (!engine.ctx) throw new Error('No AudioContext')
+
+	let patcher = engine.rnboCache.get(path)
+	if (!patcher) {
+		const resp = await fetch(`/patchers/${path}.json`)
+		patcher = await resp.json()
+		engine.rnboCache.set(path, patcher)
+	}
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const device = await createDevice({ context: engine.ctx, patcher: patcher as any })
+
+	if (params) {
+		for (const [key, val] of Object.entries(params)) {
+			const p = device.parameters.find((p) => p.name === key || p.id === key)
+			if (p) p.value = val
+		}
+	}
+
+	return device
+}
+
+function createToneNode(
+	engine: AudioEngine,
+	name: string,
+	params?: Record<string, number>
+): ToneAudioNode {
+	if (!engine.Tone) throw new Error('Tone.js not loaded')
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const ToneLib = engine.Tone as any
+	const NodeClass = ToneLib[name]
+	if (!NodeClass) throw new Error(`Unknown Tone node: ${name}`)
+
+	const node = params ? new NodeClass(params) : new NodeClass()
+	return node as ToneAudioNode
+}
+
+function isDevice(node: ToneAudioNode | Device): node is Device {
+	return 'scheduleEvent' in node
+}
+
+function connectNodes(
+	from: ToneAudioNode | Device | AnalyserNode | GainNode,
+	to: ToneAudioNode | Device | AnalyserNode | GainNode,
+	engine: AudioEngine
+): void {
+	const fromWeb = getWebAudioNode(from, engine)
+	const toWeb = getWebAudioNode(to, engine)
+	if (fromWeb && toWeb) {
+		fromWeb.connect(toWeb)
+	}
+}
+
+function getWebAudioNode(
+	node: ToneAudioNode | Device | AnalyserNode | GainNode,
+	engine: AudioEngine
+): AudioNode | null {
+	if (node instanceof GainNode || node instanceof AnalyserNode) return node
+	if (isDevice(node as ToneAudioNode | Device)) return (node as Device).node
+	// Tone.js node — get underlying web audio node
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const toneNode = node as any
+	if (toneNode.output) return toneNode.output
+	if (toneNode._gainNode) return toneNode._gainNode
+	if (engine.Tone) {
+		// Try Tone's connect for Tone→Tone connections
+		try {
+			// Return null — handle via Tone connect instead
+		} catch {
+			// ignore
+		}
+	}
+	return null
+}
+
+function disposeNode(node: ToneAudioNode | Device): void {
+	if (isDevice(node)) {
+		node.node.disconnect()
+	} else {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const n = node as any
+		if (typeof n.dispose === 'function') n.dispose()
+		else if (typeof n.disconnect === 'function') n.disconnect()
+	}
+}
+
+function midiToFreq(note: number): number {
+	return 440 * Math.pow(2, (note - 69) / 12)
+}

@@ -5,6 +5,7 @@ import type { ResolvedRail } from './rail'
 import type { MarbleState } from './marble-state'
 import type { InstrumentState } from './instrument-state'
 import type { RailState } from './rail-state'
+import type { AudioChain } from './audio/types'
 
 /**
  * Marble entity with state API and visibility/activity refs
@@ -15,6 +16,7 @@ export type MarbleEntity = {
 	state: MarbleState // pre-built API wrapper
 	visibility: { value: boolean } // ref for async mutations
 	activity: { value: boolean }
+	audio?: AudioChain // live audio chain instance
 }
 
 /**
@@ -27,6 +29,7 @@ export type InstrumentEntity = {
 	railId: string // parent rail ID
 	visibility: { value: boolean }
 	activity: { value: boolean }
+	audio?: AudioChain // live audio chain instance
 }
 
 /**

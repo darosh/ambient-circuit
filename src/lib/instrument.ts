@@ -1,4 +1,5 @@
 import type { MarbleDirection } from './marble'
+import type { AudioChainConfig } from './audio/types'
 import { TriggerHandler } from './scene'
 
 export type InstrumentSignal = { intensity: number }
@@ -57,6 +58,8 @@ type InstrumentBase = {
 	/** Impact signal — set intensity=1 in triggerHandler, InstrumentView decays it */
 	signal?: InstrumentSignal
 	actionHandler?: TriggerHandler
+	/** Audio chain config (triggers sound automatically like MIDI) */
+	audio?: AudioChainConfig
 	/** Runtime state for visual overrides */
 	runtime?: InstrumentRuntime
 }

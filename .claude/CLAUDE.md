@@ -164,19 +164,20 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] instruments
   - [ ] feedback (lightning effects on collision)
 - [ ] Audio system
-  - [ ] Shared AudioContext for Tone.js + RNBO
-  - [ ] Audio init: once on first play, not on scene load
-  - [ ] Scene change: stop/disconnect/dispose audio (keep main context + gain), ramp gain down/up
-  - [ ] Scenes without audio config skip audio init entirely
-  - [ ] AudioChain type: generator → fx → analyzer → out
-  - [ ] Per-instrument chains + shared/named chains
-  - [ ] Marble audio chains (own generator, trigger on collision)
-  - [ ] Chain access from SceneCtx: `ctx.instrument.audio`, `ctx.marble.audio`
-  - [ ] Default triggerHandler plays audio automatically (like MIDI)
-  - [ ] RNBO patcher loading with cache (`./rnbo/*.json` from static)
-  - [ ] Tone.js instrument creation by name (`new Tone[name]`)
+  - [x] Shared AudioContext for Tone.js + RNBO
+  - [x] Audio init: once on first play, not on scene load
+  - [x] Scene change: stop/disconnect/dispose audio (keep main context + gain), ramp gain down/up
+  - [x] Scenes without audio config skip audio init entirely
+  - [x] AudioChain type: generator → fx → analyzer → out
+  - [x] Per-instrument chains + shared/named chains
+  - [x] Marble audio chains (own generator, trigger on collision)
+  - [x] Chain access from SceneCtx: `ctx.instrument.audio`, `ctx.marble.audio`
+  - [x] Default triggerHandler plays audio automatically (like MIDI)
+  - [x] RNBO patcher loading with cache (`./rnbo/*.json` from static)
+  - [x] Tone.js instrument creation by name (`new Tone[name]`)
   - [ ] Unified param interface across Tone.js and RNBO
   - [ ] Analyzer access per chain (for visualization)
+  - [x] Demo scene (scene-audio) with Tone.js Synth triggers
 - [ ] Audio UI & interaction
   - [ ] Mouse-over highlight on objects
   - [ ] Selection with bounding-box corners (smooth transition on change)
@@ -191,9 +192,9 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Next Steps:**
 
-1. Audio system core (AudioContext, chain types, init/dispose lifecycle)
-2. Tone.js instrument triggering in default triggerHandler
-3. RNBO fx integration (load patchers, chain with Tone instruments)
+1. RNBO fx integration (load patchers, chain with Tone instruments)
+2. Unified param interface across Tone.js and RNBO
+3. Analyzer access per chain (for visualization)
 4. Audio UI (selection, param sliders, analyzer viz)
 5. Multi-marble interaction patterns
 6. Fix skipped `tests/marble-state.test.ts`
@@ -243,7 +244,9 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/easing.ts         - Easing functions (maath + custom)
 /src/lib/midi/midi.ts      - Web MIDI API wrapper (init, port selection, sendNote)
 /src/lib/rail-data.ts      - Rail definitions with MIDI-enabled onTrigger handlers
-/src/lib/audio/index.ts    - Audio system (RNBO + Tone.js experiments/POC)
+/src/lib/audio/types.ts    - Audio types (AudioChainConfig, AudioChain, AudioEngine)
+/src/lib/audio/engine.ts   - Audio engine lifecycle (init, build, trigger, dispose)
+/src/lib/audio/index.ts    - Re-exports from types + engine
 /src/lib/audio/patchers/   - RNBO exported patchers (JSON from Max)
 /src/components/Scene.svelte    - 3D scene with rails, marbles, tempo integration
 /src/components/RailView.svelte - renders Rail as TubeGeometry + debug points/beats

@@ -1,4 +1,5 @@
 import { sendMidiNote, getMidiState } from './midi/midi'
+import { triggerChain } from './audio/engine'
 import { GlobalBeatContext, TriggerContext } from './scene'
 
 export function triggerHandler(ctx: TriggerContext) {
@@ -21,6 +22,15 @@ export function triggerHandler(ctx: TriggerContext) {
 		const velocity = ctx.instrument.instrument.midiVelocity ?? 100
 		const length = ctx.instrument.instrument.midiLength ?? 200
 		sendMidiNote(midiState, channel, note, velocity, length)
+	}
+
+	// Audio trigger
+	const chain = ctx.instrument.audio
+	if (chain?.generator) {
+		const note = ctx.marble.marble.config.note ?? ctx.instrument.instrument.midiNote ?? 60
+		const velocity = ctx.instrument.instrument.midiVelocity ?? 100
+		const length = ctx.instrument.instrument.midiLength ?? 200
+		triggerChain(chain, note, velocity, length)
 	}
 }
 

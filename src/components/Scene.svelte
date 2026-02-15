@@ -12,6 +12,8 @@
 	import type { SceneConfig } from '../lib/scene'
 	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
 	import type { EaterMarbleData } from '../lib/rail-data'
+	import { createAudioEngine, initAudio, buildChain, disposeScene } from '../lib/audio/engine'
+	import type { AudioEngine } from '../lib/audio/types'
 
 	let {
 		scene,
@@ -153,6 +155,71 @@
 		return ctx
 	})()
 
+	// Audio engine (lazy init on first play)
+	const audioEngine: AudioEngine = createAudioEngine()
+	let audioInitialized = false
+
+	async function initSceneAudio() {
+		if (audioInitialized) return
+		audioInitialized = true
+
+		await initAudio(audioEngine)
+
+		// Build shared/named chains from scene config
+		if (scene.audio?.chains) {
+			for (const [id, config] of Object.entries(scene.audio.chains)) {
+				await buildChain(audioEngine, { ...config, id })
+			}
+		}
+
+		// Build per-instrument chains
+		for (const ie of sceneCtx.instruments) {
+			if (ie.instrument.audio) {
+				// Use shared chain if referenced by id, otherwise build new
+				if (ie.instrument.audio.id && audioEngine.chains.has(ie.instrument.audio.id)) {
+					ie.audio = audioEngine.chains.get(ie.instrument.audio.id)
+				} else {
+					ie.audio = await buildChain(audioEngine, ie.instrument.audio)
+				}
+			}
+		}
+
+		// Build per-marble chains
+		// (marble audio from rail-data config — stored on MarbleData, need to match by index)
+		let mIdx = 0
+		for (const rd of rails) {
+			const mds =
+				rd.marbles && rd.marbles.length > 0 ? rd.marbles : rd.marbles === false ? [] : [{}]
+			for (const md of mds) {
+				if ('audio' in md && md.audio) {
+					const me = sceneCtx.marbles[mIdx]
+					if (me) {
+						me.audio = await buildChain(audioEngine, md.audio)
+					}
+				}
+				mIdx++
+			}
+		}
+	}
+
+	function hasAudioConfig(): boolean {
+		if (scene.audio?.chains) return true
+		for (const rd of rails) {
+			if (rd.instruments) {
+				for (const ins of rd.instruments) {
+					if (ins.audio) return true
+				}
+			}
+			const mds = rd.marbles
+			if (mds && mds.length > 0) {
+				for (const md of mds) {
+					if ('audio' in md && md.audio) return true
+				}
+			}
+		}
+		return false
+	}
+
 	// Fire init handler on mount
 	onMount(() => {
 		if (scene.globalBeatHandler) {
@@ -165,6 +232,8 @@
 		if (scene.globalBeatHandler) {
 			fireGlobalBeatDestroy(tempo, sceneCtx, scene.globalBeatHandler)
 		}
+		// Dispose audio chains
+		disposeScene(audioEngine)
 	})
 
 	// FPS tracking
@@ -185,6 +254,11 @@
 		}
 
 		updateTempo(tempo, delta * 1000)
+
+		// Lazy audio init on first play
+		if (tempo.isPlaying && !audioInitialized && hasAudioConfig()) {
+			initSceneAudio()
+		}
 
 		// Update scene context (beat/play state)
 		if (sceneCtx) {
