@@ -9,7 +9,8 @@
 		Folder,
 		Monitor,
 		List,
-		Element
+		Element,
+		Button
 	} from 'svelte-tweakpane-ui'
 	import type { Theme } from 'svelte-tweakpane-ui'
 	import Scene from './components/Scene.svelte'
@@ -17,6 +18,8 @@
 	import { easingNames } from './lib/easing'
 	import { scenes } from './data'
 	import { initMidi, setMidiPort, type MidiState, setMidiState } from './lib/midi/midi'
+	import type { SelectedEntity } from './components/Scene.svelte'
+	import type { AudioChain, ParamValue } from './lib/audio/types'
 	import { WebGPURenderer } from 'three/webgpu'
 	import { clearMarbleGeometryCache } from './lib/video/marble-geometry'
 	import { clearInstrumentGeometryCache } from './lib/video/instrument-geometry'
@@ -24,10 +27,10 @@
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
 
-	const buttonBackgroundColor = 'hsl(230, 7%, 10%)'
+	const buttonBackgroundColor = 'hsl(230, 7%, 16%)'
 	const customizedTheme: Theme = {
 		...ThemeUtils.presets.translucent,
-		bladeValueWidth: '100px',
+		bladeValueWidth: '160px',
 		buttonBackgroundColor,
 		buttonBackgroundColorActive: buttonBackgroundColor,
 		buttonBackgroundColorFocus: buttonBackgroundColor,
@@ -58,6 +61,69 @@
 	)
 	let selectedMidiPort = $state<string | null>(null)
 
+	let selectedEntity = $state<SelectedEntity>(null)
+	let selectedAudioChain = $state<AudioChain | undefined>(undefined)
+
+	// Reactive param values for selected chain
+	type ParamInfo = { path: string; value: number; min: number; max: number }
+	let genParamInfos = $state<ParamInfo[]>([])
+	let genParams = $state<Record<string, number>>({})
+	let fxParamInfos = $state<Record<string, ParamInfo[]>>({})
+	let fxParams = $state<Record<string, Record<string, number>>>({})
+
+	// Populate params when selection/chain changes
+	$effect(() => {
+		if (!selectedAudioChain) {
+			genParamInfos = []
+			genParams = {}
+			fxParamInfos = {}
+			fxParams = {}
+			return
+		}
+		const gInfos = selectedAudioChain.listParams()
+		genParamInfos = gInfos
+		const gp: Record<string, number> = {}
+		for (const p of gInfos) {
+			gp[p.path] = p.value
+		}
+		genParams = gp
+
+		const fi: Record<string, ParamInfo[]> = {}
+		const fp: Record<string, Record<string, number>> = {}
+		const fxList = selectedAudioChain.config.fx ?? []
+		for (let i = 0; i < fxList.length; i++) {
+			const fInfos = selectedAudioChain.listFxParams(i)
+			if (fInfos.length > 0) {
+				fi[i.toString()] = fInfos
+				const p: Record<string, number> = {}
+				for (const f of fInfos) {
+					p[f.path] = f.value
+				}
+				fp[i.toString()] = p
+			}
+		}
+		fxParamInfos = fi
+		fxParams = fp
+	})
+
+	// Push generator param changes to audio chain
+	$effect(() => {
+		if (!selectedAudioChain) return
+		for (const [key, val] of Object.entries(genParams)) {
+			selectedAudioChain.setParam(key, val)
+		}
+	})
+
+	// Push fx param changes to audio chain
+	$effect(() => {
+		if (!selectedAudioChain) return
+		for (const [idxStr, params] of Object.entries(fxParams)) {
+			for (const [key, val] of Object.entries(params)) {
+				selectedAudioChain.setFxParam(parseInt(idxStr), key, val)
+			}
+		}
+	})
+
 	let sceneId = $state(window.location.hash.slice(1) || scenes[0].id)
 	let activeScene = $derived(scenes.find((s) => s.id === sceneId) ?? scenes[0])
 	// eslint-disable-next-line svelte/prefer-writable-derived
@@ -70,6 +136,7 @@
 		window.location.hash = sceneId
 		clearMarbleGeometryCache()
 		clearInstrumentGeometryCache()
+		selectedEntity = null
 	})
 
 	$effect(() => {
@@ -159,13 +226,75 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if debugEnabled}
-	<Pane title="Debug" position="fixed" width={200} theme={customizedTheme}>
+	<Pane title="Debug" position="fixed" width={320} theme={customizedTheme}>
 		<List
 			label="Scene"
 			bind:value={sceneId}
 			options={scenes.map((s) => ({ text: s.id.replaceAll('scene-', ''), value: s.id }))}
 		/>
 		<Checkbox label="Play" bind:value={tempo.isPlaying} />
+		{#if selectedEntity}
+			<Folder
+				title={`Selected: ${selectedEntity.type}:${selectedEntity.railIdx}:${selectedEntity.idx}`}
+				expanded={true}
+			>
+				{#if selectedAudioChain}
+					{#if genParamInfos.length > 0}
+						<Folder title="Generator" expanded={true}>
+							{#each genParamInfos as info (info.path)}
+								<Slider
+									label={info.path.split('.').pop() ?? info.path}
+									bind:value={genParams[info.path]}
+									min={info.min}
+									max={info.max}
+								/>
+							{/each}
+							<Button
+								title="Copy params"
+								on:click={() => {
+									if (!selectedAudioChain) return
+									const params: Record<string, ParamValue> = {}
+									for (const [k, v] of Object.entries(genParams)) {
+										params[k] = v
+									}
+									navigator.clipboard.writeText(JSON.stringify(params))
+								}}
+							/>
+						</Folder>
+					{/if}
+					{#each selectedAudioChain.config.fx ?? [] as fxConfig, fxIdx (fxIdx)}
+						{#if fxParamInfos[fxIdx.toString()]}
+							<Folder
+								title={'engine' in fxConfig && fxConfig.engine === 'rnbo'
+									? fxConfig.path
+									: fxConfig.name}
+								expanded={false}
+							>
+								{#each fxParamInfos[fxIdx.toString()] as info (info.path)}
+									<Slider
+										label={info.path.split('.').pop() ?? info.path}
+										bind:value={fxParams[fxIdx.toString()][info.path]}
+										min={info.min}
+										max={info.max}
+									/>
+								{/each}
+								<Button
+									title="Copy params"
+									on:click={() => {
+										if (!selectedAudioChain) return
+										const params: Record<string, ParamValue> = {}
+										for (const [k, v] of Object.entries(fxParams[fxIdx.toString()])) {
+											params[k] = v
+										}
+										navigator.clipboard.writeText(JSON.stringify(params))
+									}}
+								/>
+							</Folder>
+						{/if}
+					{/each}
+				{/if}
+			</Folder>
+		{/if}
 		<Folder title="Tempo" expanded={false}>
 			<Slider label="BPM" bind:value={tempo.config.bpm} min={30} max={300} />
 			<Monitor label="Beat" value={Math.floor(tempo.currentBeat)} />
@@ -259,6 +388,8 @@
 			bind:easing
 			bind:railVisibility
 			bind:fps
+			bind:selectedEntity
+			bind:selectedAudioChain
 		/>
 	{/key}
 </Canvas>

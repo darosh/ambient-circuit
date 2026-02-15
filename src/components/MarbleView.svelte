@@ -28,6 +28,8 @@
 		color: string
 		wireframe?: boolean
 		fxMarbles?: boolean
+		selected?: boolean
+		onselect?: () => void
 	}
 
 	let {
@@ -36,8 +38,12 @@
 		railData,
 		color,
 		wireframe = false,
-		fxMarbles = true
+		fxMarbles = true,
+		selected = false,
+		onselect
 	}: Props = $props()
+
+	let hovered = $state(false)
 
 	const effectiveColor = $derived(marble.runtime.color ?? color)
 	const effectiveVisible = $derived(marble.runtime.visible ?? true)
@@ -138,6 +144,8 @@
 		return [euler.x, euler.y, euler.z]
 	})
 
+	const glowBaseline = $derived(selected ? 0.4 : hovered ? 0.2 : 0)
+
 	useTask((delta) => {
 		if (marble.signal.intensity > 0) {
 			impactTime = IMPACT_DURATION
@@ -146,7 +154,9 @@
 
 		if (impactTime > 0 && fx) {
 			impactTime = Math.max(0, impactTime - delta)
-			fx.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION)
+			fx.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION) + glowBaseline
+		} else if (fx) {
+			fx.impactIntensity.value = glowBaseline
 		}
 
 		// Continuous spinning for coil type
@@ -171,6 +181,16 @@
 		<T.Mesh
 			position={[transformedPosition.x, transformedPosition.y, transformedPosition.z]}
 			material={<Material>(fxMarbles ? fx.mat : plainMaterial)}
+			onclick={(e: Event) => {
+				e.stopPropagation()
+				onselect?.()
+			}}
+			onpointerenter={() => {
+				hovered = true
+			}}
+			onpointerleave={() => {
+				hovered = false
+			}}
 		>
 			<T.SphereGeometry args={[BALL_RADIUS, BALL_WIDTH_SEGMENTS, BALL_HEIGHT_SEGMENTS]} />
 		</T.Mesh>
@@ -180,6 +200,16 @@
 			{rotation}
 			{geometry}
 			material={<Material>(fxMarbles ? fx.mat : plainMaterial)}
+			onclick={(e: Event) => {
+				e.stopPropagation()
+				onselect?.()
+			}}
+			onpointerenter={() => {
+				hovered = true
+			}}
+			onpointerleave={() => {
+				hovered = false
+			}}
 		/>
 	{/if}
 {/if}

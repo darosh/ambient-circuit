@@ -43,6 +43,9 @@
 		sceneCtx?: SceneCtx
 		renderPlayOnly?: boolean
 		id: string
+		railIdx?: number
+		selectedInstrumentIdx?: number | null
+		onSelectInstrument?: (railIdx: number, idx: number) => void
 	}
 
 	let {
@@ -58,7 +61,10 @@
 		tempo,
 		sceneCtx,
 		renderPlayOnly = false,
-		id
+		id,
+		railIdx = 0,
+		selectedInstrumentIdx = null,
+		onSelectInstrument
 	}: Props = $props()
 
 	const BEAT_TEXT_WIDTH = 2
@@ -465,6 +471,8 @@
 				bind:signal={instrument.signal}
 				{fxInstruments}
 				{wireframe}
+				selected={selectedInstrumentIdx === idx}
+				onselect={() => onSelectInstrument?.(railIdx, idx)}
 			/>
 		{/each}
 	</T.Group>
@@ -542,6 +550,8 @@
 			bind:signal={instrument.signal}
 			{fxInstruments}
 			{wireframe}
+			selected={selectedInstrumentIdx === idx}
+			onselect={() => onSelectInstrument?.(railIdx, idx)}
 		/>
 	{/each}
 {/if}

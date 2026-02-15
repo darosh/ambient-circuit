@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import { untrack, onMount, onDestroy } from 'svelte'
-	import { OrbitControls } from '@threlte/extras'
+	import { OrbitControls, interactivity } from '@threlte/extras'
 	import RailView from './RailView.svelte'
 	import MarbleView from './MarbleView.svelte'
 	import Bloom from './Bloom.svelte'
@@ -13,7 +13,15 @@
 	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
 	import type { EaterMarbleData } from '../lib/rail-data'
 	import { createAudioEngine, initAudio, buildChain, disposeScene } from '../lib/audio/engine'
-	import type { AudioEngine } from '../lib/audio/types'
+	import type { AudioEngine, AudioChain } from '../lib/audio/types'
+
+	export type SelectedEntity = {
+		type: 'instrument' | 'marble'
+		railIdx: number
+		idx: number
+	} | null
+
+	interactivity()
 
 	let {
 		scene,
@@ -31,7 +39,9 @@
 		tempo = $bindable(),
 		easing = $bindable(),
 		railVisibility = $bindable(),
-		fps = $bindable()
+		fps = $bindable(),
+		selectedEntity = $bindable<SelectedEntity>(null),
+		selectedAudioChain = $bindable<AudioChain | undefined>(undefined)
 	}: {
 		scene: SceneConfig
 		showGrid?: boolean
@@ -50,6 +60,8 @@
 		easing?: string
 		railVisibility?: boolean[]
 		fps?: number
+		selectedEntity?: SelectedEntity
+		selectedAudioChain?: AudioChain | undefined
 	} = $props()
 
 	// Init tempo state
@@ -154,6 +166,45 @@
 		const ctx = createSceneCtx(marbles, rails, marbleRailIndices, tempo)
 		return ctx
 	})()
+
+	function onSelectInstrument(railIdx: number, idx: number) {
+		selectedEntity = { type: 'instrument', railIdx, idx }
+		// Init audio on first interaction (not just play)
+		if (!audioInitialized && hasAudioConfig()) {
+			initSceneAudio().then(() => {
+				selectedAudioChain = getSelectedAudioChain()
+			})
+		} else {
+			selectedAudioChain = getSelectedAudioChain()
+		}
+	}
+
+	function onSelectMarble(railIdx: number, idx: number) {
+		selectedEntity = { type: 'marble', railIdx, idx }
+		if (!audioInitialized && hasAudioConfig()) {
+			initSceneAudio().then(() => {
+				selectedAudioChain = getSelectedAudioChain()
+			})
+		} else {
+			selectedAudioChain = getSelectedAudioChain()
+		}
+	}
+
+	// Look up selected entity's audio chain (called in update loop for reactivity)
+	function getSelectedAudioChain(): AudioChain | undefined {
+		if (!selectedEntity) return undefined
+		if (selectedEntity.type === 'instrument') {
+			// Compute flat instrument index from railIdx + idx
+			let flatIdx = 0
+			for (let r = 0; r < selectedEntity.railIdx; r++) {
+				flatIdx += (rails[r].instruments ?? []).length
+			}
+			flatIdx += selectedEntity.idx
+			return sceneCtx.instruments[flatIdx]?.audio
+		}
+		// Marble: selectedEntity.idx is already global marble index
+		return sceneCtx.marbles[selectedEntity.idx]?.audio
+	}
 
 	// Audio engine (lazy init on first play)
 	const audioEngine: AudioEngine = createAudioEngine()
@@ -311,6 +362,20 @@
 	/>
 </T.PerspectiveCamera>
 
+<!-- Invisible plane for deselect on miss -->
+<T.Mesh
+	position={[0, 0, 0]}
+	rotation.x={-Math.PI / 2}
+	onclick={() => {
+		selectedEntity = null
+		selectedAudioChain = undefined
+	}}
+	visible={false}
+>
+	<T.PlaneGeometry args={[1000, 1000]} />
+	<T.MeshBasicMaterial />
+</T.Mesh>
+
 <T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />
 <T.AmbientLight intensity={0.4} />
 
@@ -339,6 +404,12 @@
 			{tempo}
 			{sceneCtx}
 			renderPlayOnly={scene.renderPlayOnly}
+			railIdx={railIndex}
+			selectedInstrumentIdx={selectedEntity?.type === 'instrument' &&
+			selectedEntity.railIdx === railIndex
+				? selectedEntity.idx
+				: null}
+			{onSelectInstrument}
 		/>
 	{/if}
 {/each}
@@ -355,6 +426,10 @@
 			color={rails[railIndex].color || '#ffffff'}
 			{wireframe}
 			{fxMarbles}
+			selected={selectedEntity?.type === 'marble' &&
+				selectedEntity.railIdx === railIndex &&
+				selectedEntity.idx === idx}
+			onselect={() => onSelectMarble(railIndex, idx)}
 		/>
 	{/if}
 {/each}

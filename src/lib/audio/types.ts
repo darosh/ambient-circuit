@@ -36,6 +36,10 @@ export type AudioChain = {
 	setFxParam(index: number, path: string, value: ParamValue): void
 	/** Get param from generator by dot-path */
 	getParam(path: string): ParamValue | undefined
+	/** List all generator params as {path, value, min, max} */
+	listParams(): { path: string; value: number; min: number; max: number }[]
+	/** List all fx params for a given fx index */
+	listFxParams(index: number): { path: string; value: number; min: number; max: number }[]
 }
 
 export type AudioEngine = {

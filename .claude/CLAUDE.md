@@ -182,10 +182,14 @@ Create a "marble-machine-inspired" music sequencer where:
   - [ ] Analyzer access per chain (for visualization)
   - [x] Demo scene (scene-audio) with Tone.js Synth + RNBO fx/generator
 - [ ] Audio UI & interaction
-  - [ ] Mouse-over highlight on objects
+  - [x] Mouse-over highlight on objects (hover glow via impactIntensity uniform)
   - [ ] Selection with bounding-box corners (smooth transition on change)
-  - [ ] Click instrument/marble → show param sliders for its chain
-  - [ ] Copy-to-clipboard JSON of non-default params `{[paramId]: number}`
+  - [x] Click instrument/marble → show param sliders for its chain
+  - [x] Copy-to-clipboard JSON of non-default params `{[paramId]: number}`
+  - [x] Audio init on first click (not just play) for immediate param access
+  - [x] Param enumeration from live nodes (Tone.js AudioParams + RNBO device.parameters)
+  - [x] `interactivity()` plugin enabled for raycasting
+  - [ ] Solo selected chain (mute all others)
   - [ ] Show analyzer visualization of selected instrument
   - [ ] Potential UI: threlte `<HUD>`, `<HTML>`, `<View>` (View for selected instrument detail)
 - [ ] Audio visualization
@@ -195,11 +199,10 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Next Steps:**
 
-1. Audio UI (selection, param sliders, analyzer viz)
-2. Analyzer access per chain (for visualization)
-3. Multi-marble interaction patterns
-6. Fix skipped `tests/marble-state.test.ts`
-7. Visual polishing and effects (lightning on collision)
+1. Solo selected chain + analyzer viz per chain
+2. Multi-marble interaction patterns
+3. Fix skipped `tests/marble-state.test.ts`
+4. Visual polishing and effects (lightning on collision)
 
 **Blocked/Questions:**
 

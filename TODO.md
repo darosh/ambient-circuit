@@ -14,4 +14,3 @@
 - [ ] make RNBO karplus-strong synth https://rnbo.cycling74.com/explore/synth-building-blocks-intro
 - [ ] use rails for camera path? or scene path? and keep the camera for user only
 - [ ] remove ovelapping beats from structure
-

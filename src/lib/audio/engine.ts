@@ -4,9 +4,10 @@ import type {
 	AudioChainConfig,
 	GeneratorConfig,
 	FxConfig,
-	ParamValue
+	ParamValue,
+	ParamMap
 } from './types'
-import type { ToneAudioNode } from 'tone'
+import type { ToneAudioNode, Param } from 'tone'
 import { createDevice, MIDIEvent } from '@rnbo/js'
 import type { Device, MIDIByte } from '@rnbo/js'
 
@@ -101,6 +102,16 @@ export async function buildChain(
 		},
 		getParam(path) {
 			return chain.generator ? getNodeParam(chain.generator, path) : undefined
+		},
+		listParams() {
+			return addParamsFromConfig(
+				chain.generator ? listNodeParams(chain.generator) : [],
+				config?.generator?.params ?? {},
+				<ToneAudioNode>chain.generator
+			)
+		},
+		listFxParams(index) {
+			return chain.fx[index] ? listNodeParams(chain.fx[index]) : []
 		}
 	}
 
@@ -186,6 +197,35 @@ export function disposeScene(engine: AudioEngine): void {
 
 // --- Param helpers (exported for testing) ---
 
+export type ParamInfo = { path: string; value: number; min: number; max: number }
+
+export function addParamsFromConfig(
+	paramInfos: ParamInfo[],
+	paramMap: ParamMap,
+	generator: ToneAudioNode
+): ParamInfo[] {
+	const add: ParamInfo[] = []
+
+	for (const [key, value] of Object.entries(paramMap)) {
+		if (!paramInfos.some((x) => x.path === key) && typeof value === 'number') {
+			const param = <Param>(<unknown>getNodeParam(generator, 'key', false))
+
+			add.push({
+				path: key,
+				value,
+				min: param?.minValue ?? 0,
+				max: param?.maxValue ?? 1
+			})
+		}
+	}
+
+	if (add.length) {
+		return [...add, ...paramInfos]
+	}
+
+	return paramInfos
+}
+
 /**
  * Unflatten dot-path params: {'a.b': 1, 'a.c': 2, x: 3} → {a: {b: 1, c: 2}, x: 3}
  */
@@ -222,14 +262,24 @@ export function setNodeParam(node: ToneAudioNode | Device, path: string, value: 
 			if (cur == null) return
 			cur = cur[parts[i]]
 		}
-		if (cur != null) cur[parts[parts.length - 1]] = value
+		if (cur != null) {
+			if (cur[parts[parts.length - 1]]?.value !== undefined) {
+				cur[parts[parts.length - 1]].value = value
+			} else {
+				cur[parts[parts.length - 1]] = value
+			}
+		}
 	}
 }
 
 /**
  * Get param from a live node by dot-path
  */
-export function getNodeParam(node: ToneAudioNode | Device, path: string): ParamValue | undefined {
+export function getNodeParam(
+	node: ToneAudioNode | Device,
+	path: string,
+	forceValue = true
+): ParamValue | undefined {
 	if (isDevice(node)) {
 		const p = node.parameters.find((p) => p.name === path || p.id === path)
 		return p ? p.value : undefined
@@ -241,8 +291,53 @@ export function getNodeParam(node: ToneAudioNode | Device, path: string): ParamV
 			if (cur == null) return undefined
 			cur = cur[part]
 		}
-		return cur as ParamValue | undefined
+
+		if (forceValue) {
+			return (cur?.value ?? cur) as ParamValue | undefined
+		} else {
+			return cur as ParamValue | undefined
+		}
 	}
+}
+
+/**
+ * List all params from a live node
+ */
+function listNodeParams(node: ToneAudioNode | Device): ParamInfo[] {
+	if (isDevice(node)) {
+		return node.parameters.map((p) => ({
+			path: p.name || p.id,
+			value: p.value,
+			min: p.min,
+			max: p.max
+		}))
+	}
+	// Tone.js: enumerate AudioParam-like properties
+	const params: { path: string; value: number; min: number; max: number }[] = []
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const obj = node as any
+	for (const key of Object.keys(obj)) {
+		if (
+			key.startsWith('_') ||
+			key === 'context' ||
+			key === 'input' ||
+			key === 'output' ||
+			key === 'frequency'
+		)
+			continue
+		const val = obj[key]
+		if (
+			val &&
+			typeof val === 'object' &&
+			typeof val.value === 'number' &&
+			'setValueAtTime' in val
+		) {
+			const min = (val.minValue ?? 0 < -1e5) ? -100 : (val.minValue ?? 0)
+			const max = (val.maxValue ?? 0 > 1e5) ? 0 : (val.maxValue ?? 0)
+			params.push({ path: key, value: val.value, min, max })
+		}
+	}
+	return params
 }
 
 // --- Internal helpers ---

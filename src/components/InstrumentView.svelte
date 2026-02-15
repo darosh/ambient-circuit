@@ -25,6 +25,8 @@
 		cornerRadius?: number
 		wireframe?: boolean
 		fxInstruments?: boolean
+		selected?: boolean
+		onselect?: () => void
 	}
 
 	let {
@@ -36,8 +38,12 @@
 		width = 0.06,
 		cornerRadius = 0.075,
 		wireframe = false,
-		fxInstruments = true
+		fxInstruments = true,
+		selected = false,
+		onselect
 	}: Props = $props()
+
+	let hovered = $state(false)
 
 	// Derived values for visual properties (runtime overrides config)
 	const effectiveColor = $derived(instrument.runtime?.color ?? instrument.color ?? color)
@@ -225,6 +231,9 @@
 		return [base.x, base.y, base.z]
 	})
 
+	// Hover/select glow baseline
+	const glowBaseline = $derived(selected ? 0.4 : hovered ? 0.2 : 0)
+
 	useTask((delta) => {
 		if (signal && signal.intensity > 0) {
 			impactBaseAngle = spinAngle
@@ -256,12 +265,17 @@
 
 		if (impactTime > 0) {
 			impactTime = Math.max(0, impactTime - delta)
-			fxMaterial.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION)
+			fxMaterial.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION) + glowBaseline
 
 			// Impact spin for non-pulse types
 			if (!pulseAnimationEnabled) {
 				spinAngle = impactBaseAngle + easeOutQuart(1 - impactTime / IMPACT_DURATION) * Math.PI * 2
 			}
+		}
+
+		// Apply hover/select glow when no impact
+		if (impactTime === 0) {
+			fxMaterial.impactIntensity.value = glowBaseline
 		}
 
 		// Detect misalignment when impact completes and trigger snap
@@ -302,6 +316,16 @@
 		{rotation}
 		{geometry}
 		material={<Material>(fxInstruments ? fxMaterial.mat : plainMaterial)}
+		onclick={(e: Event) => {
+			e.stopPropagation()
+			onselect?.()
+		}}
+		onpointerenter={() => {
+			hovered = true
+		}}
+		onpointerleave={() => {
+			hovered = false
+		}}
 	/>
 	{#if innerGeometry}
 		<T.Mesh

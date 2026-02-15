@@ -29,7 +29,14 @@ export const scene: SceneConfig = {
 						generator: {
 							engine: 'tone',
 							name: 'Synth',
-							params: { 'envelope.attack': 0.01, 'envelope.release': 2 }
+							params: {
+								'envelope.attack': 0.1,
+								'envelope.decay': 0.2,
+								'envelope.sustain': 0.5,
+								'envelope.release': 0.8,
+								volume: -13,
+								'oscillator.type': 'fatsawtooth'
+							}
 						}
 					}
 				},
@@ -43,7 +50,9 @@ export const scene: SceneConfig = {
 							name: 'Synth',
 							params: {
 								'envelope.attack': 0.1,
+								'envelope.decay': 0.2,
 								'envelope.sustain': 0.5,
+								'envelope.release': 0.8,
 								'oscillator.type': 'triangle'
 							}
 						}
@@ -53,17 +62,13 @@ export const scene: SceneConfig = {
 					type: 'sun',
 					beat: 5,
 					midiNote: 67,
-					audio: { generator: { engine: 'tone', name: 'Synth' }, 
-						fx: [shimmerev] 
-					}
+					audio: { generator: { engine: 'tone', name: 'Synth' }, fx: [shimmerev] }
 				},
 				{
 					type: 'sun',
 					beat: 7,
 					midiNote: 72,
-					audio: { generator: { engine: 'tone', name: 'Synth' }, 
-						fx: [shimmerev] 
-					}
+					audio: { generator: { engine: 'tone', name: 'Synth' }, fx: [shimmerev] }
 				}
 			]
 		},
