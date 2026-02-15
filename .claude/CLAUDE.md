@@ -189,8 +189,8 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Audio init on first click (not just play) for immediate param access
   - [x] Param enumeration from live nodes (Tone.js AudioParams + RNBO device.parameters)
   - [x] `interactivity()` plugin enabled for raycasting
-  - [ ] Solo selected chain (mute all others)
-  - [ ] Show analyzer visualization of selected instrument
+  - [x] Solo selected chain (mute all others)
+  - [x] Show analyzer visualization of selected instrument
   - [ ] Potential UI: threlte `<HUD>`, `<HTML>`, `<View>` (View for selected instrument detail)
 - [ ] Audio visualization
   - [ ] Global 3D VU meter (prototype first)
@@ -199,8 +199,7 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Next Steps:**
 
-1. Solo selected chain + analyzer viz per chain
-2. Multi-marble interaction patterns
+1. Multi-marble interaction patterns
 3. Fix skipped `tests/marble-state.test.ts`
 4. Visual polishing and effects (lightning on collision)
 

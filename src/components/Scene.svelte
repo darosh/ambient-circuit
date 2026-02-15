@@ -41,7 +41,8 @@
 		railVisibility = $bindable(),
 		fps = $bindable(),
 		selectedEntity = $bindable<SelectedEntity>(null),
-		selectedAudioChain = $bindable<AudioChain | undefined>(undefined)
+		selectedAudioChain = $bindable<AudioChain | undefined>(undefined),
+		allAudioChains = $bindable<AudioChain[]>([])
 	}: {
 		scene: SceneConfig
 		showGrid?: boolean
@@ -62,6 +63,7 @@
 		fps?: number
 		selectedEntity?: SelectedEntity
 		selectedAudioChain?: AudioChain | undefined
+		allAudioChains?: AudioChain[]
 	} = $props()
 
 	// Init tempo state
@@ -251,6 +253,8 @@
 				mIdx++
 			}
 		}
+
+		allAudioChains = audioEngine.instanceChains
 	}
 
 	function hasAudioConfig(): boolean {
@@ -284,6 +288,7 @@
 			fireGlobalBeatDestroy(tempo, sceneCtx, scene.globalBeatHandler)
 		}
 		// Dispose audio chains
+		allAudioChains = []
 		disposeScene(audioEngine)
 	})
 

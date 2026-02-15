@@ -63,6 +63,10 @@
 
 	let selectedEntity = $state<SelectedEntity>(null)
 	let selectedAudioChain = $state<AudioChain | undefined>(undefined)
+	let allAudioChains = $state<AudioChain[]>([])
+	let soloMode = $state(false)
+	let analyzerCanvas = $state<HTMLCanvasElement | null>(null)
+	let analyzerRafId = 0
 
 	// Reactive param values for selected chain
 	type ParamInfo = { path: string; value: number; min: number; max: number }
@@ -122,6 +126,62 @@
 				selectedAudioChain.setFxParam(parseInt(idxStr), key, val)
 			}
 		}
+	})
+
+	// Solo: mute/unmute chains (compare by output identity to avoid Svelte proxy mismatch)
+	$effect(() => {
+		const selected = selectedAudioChain
+		const solo = soloMode
+		const chains = allAudioChains
+		if (!chains.length) return
+		const selectedOutput = selected?.output
+		const now = chains[0]?.output?.context?.currentTime ?? 0
+		for (const chain of chains) {
+			const target = solo && selectedOutput && chain.output !== selectedOutput ? 0 : 1
+			chain.output.gain.setValueAtTime(chain.output.gain.value, now)
+			chain.output.gain.linearRampToValueAtTime(target, now + 0.1)
+		}
+	})
+
+	// Clear solo when deselected
+	$effect(() => {
+		if (!selectedEntity) soloMode = false
+	})
+
+	// Analyzer visualization
+	$effect(() => {
+		const chain = selectedAudioChain
+		const canvas = analyzerCanvas
+		if (analyzerRafId) {
+			cancelAnimationFrame(analyzerRafId)
+			analyzerRafId = 0
+		}
+		if (!canvas) return
+		const ctx2d = canvas.getContext('2d')
+		if (!ctx2d) return
+		const analyzer = chain?.analyzer
+		if (!analyzer) {
+			ctx2d.clearRect(0, 0, canvas.width, canvas.height)
+			return
+		}
+		analyzer.fftSize = 64
+		const data = new Uint8Array(analyzer.frequencyBinCount)
+		const w = canvas.width
+		const h = canvas.height
+		const barW = w / data.length
+
+		function draw() {
+			analyzer!.getByteFrequencyData(data)
+			ctx2d!.fillStyle = '#1a1a2e'
+			ctx2d!.fillRect(0, 0, w, h)
+			for (let i = 0; i < data.length; i++) {
+				const barH = (data[i] / 255) * h
+				ctx2d!.fillStyle = `hsl(${180 + i * 3}, 80%, ${50 + data[i] / 8}%)`
+				ctx2d!.fillRect(i * barW, h - barH, barW - 1, barH)
+			}
+			analyzerRafId = requestAnimationFrame(draw)
+		}
+		draw()
 	})
 
 	let sceneId = $state(window.location.hash.slice(1) || scenes[0].id)
@@ -239,6 +299,7 @@
 				expanded={true}
 			>
 				{#if selectedAudioChain}
+					<Checkbox label="Solo" bind:value={soloMode} />
 					{#if genParamInfos.length > 0}
 						<Folder title="Generator" expanded={true}>
 							{#each genParamInfos as info (info.path)}
@@ -292,6 +353,14 @@
 							</Folder>
 						{/if}
 					{/each}
+					<Element>
+						<canvas
+							bind:this={analyzerCanvas}
+							width={280}
+							height={80}
+							style="width:100%;height:80px;border-radius:4px;background:#1a1a2e"
+						></canvas>
+					</Element>
 				{/if}
 			</Folder>
 		{/if}
@@ -390,6 +459,7 @@
 			bind:fps
 			bind:selectedEntity
 			bind:selectedAudioChain
+			bind:allAudioChains
 		/>
 	{/key}
 </Canvas>

@@ -75,7 +75,7 @@ export async function buildChain(
 		}
 	}
 
-	const analyzer = config.analyzer ? engine.ctx.createAnalyser() : null
+	const analyzer = engine.ctx.createAnalyser()
 
 	// Connect chain: generator → fx[0] → fx[1] → ... → analyzer? → output
 	const nodes: Array<ToneAudioNode | Device | AnalyserNode | GainNode> = []

@@ -6,3 +6,4 @@ yarn.lock
 .claude/
 docs/
 public/
+.build-check
