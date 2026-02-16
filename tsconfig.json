@@ -10,6 +10,7 @@
 		"strict": true,
 		"moduleResolution": "bundler",
 		"target": "es2015",
+		"module": "ESNext",
 		"lib": ["es2022", "DOM"]
 	},
 	"include": ["src/**/*", "tests/**/*"]
