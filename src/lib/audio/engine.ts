@@ -590,19 +590,45 @@ function listNodeParams(node: ToneAudioNode | Device): ParamInfo[] {
 			key === 'context' ||
 			key === 'input' ||
 			key === 'output' ||
+			key === 'name' ||
+			key === 'onsilence' ||
+			key === 'debug' ||
 			key === 'frequency'
-		)
+		) {
 			continue
+		}
+
 		const val = obj[key]
+
 		if (
 			val &&
 			typeof val === 'object' &&
 			typeof val.value === 'number' &&
 			'setValueAtTime' in val
 		) {
-			const min = (val.minValue ?? 0) < -1e5 ? -100 : (val.minValue ?? 0)
-			const max = (val.maxValue ?? 0) > 1e5 ? 0 : (val.maxValue ?? 0)
+			let min = val.minValue
+			let max = val.maxValue
+
+			if (val.units === 'decibels') {
+				min = min < -1e30 ? -60 : min
+				max = max > 1e30 ? 60 : max
+			} else if (val.units === 'cents') {
+				min = min < -1e30 ? -240 : min
+				max = max > 1e30 ? 240 : max
+			} else if (val.units === 'gain') {
+				min = min < -1e30 ? -60 : min
+				max = max > 1e30 ? 60 : max
+			}
+
 			params.push({ path: key, value: val.value, min, max })
+		} else if (key.includes('envelope')) {
+			params.push({ path: `${key}.attack`, value: val.value, min: 0, max: 2 })
+			params.push({ path: `${key}.decay`, value: val.value, min: 0, max: 2 })
+			params.push({ path: `${key}.sustain`, value: val.value, min: 0, max: 1 })
+			params.push({ path: `${key}.release`, value: val.value, min: 0, max: 5 })
+		} else if (key === 'oscillator') {
+			// params.push({ path: `${key}.harmonicity`, value: val.value, min: 0, max: 12 })
+			// params.push({ path: `${key}.modulationFrequency`, value: val.value, min: 0.1, max: 5 })
 		}
 	}
 	return params
