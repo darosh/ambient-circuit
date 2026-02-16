@@ -483,8 +483,9 @@ const fx = $derived(makeInstrumentMaterial(effectiveColor))
 - Use Line2/MeshLine/examples/jsm materials with WebGPU renderer
 - Use `any` without `eslint-disable` — TSL `Fn()` param types require it, wrap with block comments
 - Block path to JSON scene serialization (avoid closures in audio chain config)
-- Read RNBO JSON files in `/src/lib/audio/patchers` and `/public/patchers` and `/docs/patchers`
+- Read RNBO JSON files and `/public/patchers`
 - Run or commit default build on `/docs` for GitHub Pages
+- Read files in `/docs`
 - Run dev server
 - Read `TODO.md`
 ---
