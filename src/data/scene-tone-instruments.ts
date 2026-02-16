@@ -11,7 +11,11 @@ export const scene: SceneConfig = {
 	camera: [3, 16, 7],
 	audio: {
 		master: {
-			fx: [{ rnbo: 'gigaverb' }, { tone: 'Compressor', params: { threshold: -32 } }]
+			fx: [
+				// { rnbo: 'gigaverb' }, 
+				// { rnbo: 'platereverb' }, 
+				{ tone: 'Compressor', params: { threshold: -32 } }
+			]
 		}
 	},
 	rails: [
