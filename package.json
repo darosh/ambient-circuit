@@ -11,6 +11,7 @@
 		"@threlte/theatre": "^3.1.2",
 		"debug": "^4.4.3",
 		"maath": "^0.10.8",
+		"rambda": "^11.1.0",
 		"svelte-tweakpane-ui": "^1.5.14",
 		"three": "^0.182.0",
 		"tone": "^15.1.22"
