@@ -15,6 +15,7 @@ import type {
 import type { ToneAudioNode, Param } from 'tone'
 import { createDevice, MIDIEvent } from '@rnbo/js'
 import type { Device, MIDIByte } from '@rnbo/js'
+import TONE_DEFAULTS from './tone-defaults'
 
 /**
  * Create audio engine (no AudioContext yet — lazy init)
@@ -246,14 +247,16 @@ export async function buildChain(
 			return addParamsFromConfig(
 				chain.generator ? listNodeParams(chain.generator) : [],
 				config?.generator?.params ?? {},
-				<ToneAudioNode>chain.generator
+				<ToneAudioNode>chain.generator,
+				'tone' in config.generator! ? config?.generator.tone : undefined
 			)
 		},
 		listFxParams(index) {
 			return addParamsFromConfig(
 				chain.fx[index] ? listNodeParams(chain.fx[index]) : [],
 				config?.fx?.[index]?.params ?? {},
-				<ToneAudioNode>chain.fx[index]
+				<ToneAudioNode>chain.fx[index],
+				'tone' in config.fx![index]! ? config.fx![index].tone : undefined
 			)
 		}
 	}
@@ -359,8 +362,14 @@ export function triggerChain(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const s = synth as any
 		if (typeof s.triggerAttackRelease === 'function') {
-			const freq = midiToFreq(note)
-			s.triggerAttackRelease(freq, durationMs / 1000, undefined, velocity / 127)
+			if (note - Math.floor(note) || !note) {
+				// triggerAttackRelease(duration, time?, velocity?):
+				s.triggerAttackRelease(note || durationMs / 1000, undefined, velocity / 127)
+			} else {
+				const freq = midiToFreq(note)
+				// triggerAttackRelease(note, duration, time?, velocity?)
+				s.triggerAttackRelease(freq, durationMs / 1000, undefined, velocity / 127)
+			}
 		}
 	}
 }
@@ -440,11 +449,13 @@ export type ParamInfo = { path: string; value: number; min: number; max: number 
 export function addParamsFromConfig(
 	paramInfos: ParamInfo[],
 	paramMap: ParamMap,
-	generator: ToneAudioNode
+	generator: ToneAudioNode,
+	toneClass: string | undefined
 ): ParamInfo[] {
 	const add: ParamInfo[] = []
+	const defaulted = { ...(toneClass ? (TONE_DEFAULTS[toneClass] ?? {}) : {}), ...paramMap }
 
-	for (const [key, value] of Object.entries(paramMap)) {
+	for (const [key, value] of Object.entries(defaulted)) {
 		if (!paramInfos.some((x) => x.path === key) && typeof value === 'number') {
 			const param = <Param>(<unknown>getNodeParam(generator, 'key', false))
 
@@ -545,7 +556,8 @@ export function listBusFxParams(bus: AudioBus, index: number): ParamInfo[] {
 	return addParamsFromConfig(
 		bus.fx[index] ? listNodeParams(bus.fx[index]) : [],
 		bus.config?.fx?.[index]?.params ?? {},
-		<ToneAudioNode>bus.fx[index]
+		<ToneAudioNode>bus.fx[index],
+		'tone' in bus.config.fx![index] ? bus.config.fx![index].tone : undefined
 	)
 }
 

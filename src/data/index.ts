@@ -20,6 +20,7 @@ import { scene as sceneRailSwitch } from './scene-rail-switch'
 import { scene as sceneCollisions } from './scene-collisions'
 import { scene as sceneSnake } from './scene-snake'
 import { scene as sceneAudio } from './scene-audio'
+import { scene as sceneToneInstruments } from './scene-tone-instruments'
 
 export const scenes: SceneConfig[] = [
 	sceneTest,
@@ -41,5 +42,6 @@ export const scenes: SceneConfig[] = [
 	sceneRailSwitch,
 	sceneCollisions,
 	sceneSnake,
-	sceneAudio
+	sceneAudio,
+	sceneToneInstruments
 ]
