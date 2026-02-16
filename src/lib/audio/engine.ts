@@ -16,6 +16,9 @@ import type { ToneAudioNode, Param } from 'tone'
 import { createDevice, MIDIEvent } from '@rnbo/js'
 import type { Device, MIDIByte } from '@rnbo/js'
 import TONE_DEFAULTS from './tone-defaults'
+import { debug } from 'debug'
+
+const log = debug('audio')
 
 /**
  * Create audio engine (no AudioContext yet — lazy init)
@@ -64,6 +67,8 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 	engine.sharedAnalyzer = new Tone.Analyser('fft', 64) as unknown as ToneAudioNode
 
 	engine.initialized = true
+	
+	log('initialized')
 }
 
 /**
@@ -499,6 +504,8 @@ export function unflattenParams(flat: Record<string, ParamValue>): Record<string
  * Set param on a live node by dot-path
  */
 export function setNodeParam(node: ToneAudioNode | Device, path: string, value: ParamValue): void {
+	log('setting', path, value)
+	
 	if (isDevice(node)) {
 		const p = node.parameters.find((p) => p.name === path || p.id === path)
 		if (p) p.value = value as number
