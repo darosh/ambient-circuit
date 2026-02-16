@@ -195,7 +195,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] `interactivity()` plugin enabled for raycasting
   - [x] Solo selected chain (mute all others)
   - [x] Show analyzer visualization of selected instrument
-  - [ ] Chain/bus selector dropdown in Tweakpane (select chain/bus/master, show params)
+  - [x] Chain/bus selector dropdown in Tweakpane (select chain/bus/master, show params)
   - [ ] Potential UI: threlte `<HUD>`, `<HTML>`, `<View>` (View for selected instrument detail)
 - [ ] Audio visualization
   - [ ] Global 3D VU meter (prototype first)
