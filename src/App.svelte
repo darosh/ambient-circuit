@@ -166,11 +166,24 @@
 	let fxParamInfos = $state<Record<string, ParamInfo[]>>({})
 	let fxParams = $state<Record<string, Record<string, number>>>({})
 
-	// Sync dropdown chain target → selectedAudioChain for param display
+	// Sync entity selection → dropdown target
+	$effect(() => {
+		if (!selectedAudioChain) return
+		const idx = allAudioChains.indexOf(selectedAudioChain)
+		if (idx >= 0) {
+			selectedAudioTarget = `chain:${idx}`
+		}
+	})
+
+	// Sync dropdown target → selectedAudioChain
 	$effect(() => {
 		const chain = getTargetChain()
 		if (chain && chain !== selectedAudioChain) {
 			selectedAudioChain = chain
+		}
+		if (!chain && getTargetBus()) {
+			// Bus selected — clear chain params
+			selectedAudioChain = undefined
 		}
 	})
 
@@ -343,6 +356,16 @@
 		}
 	})
 
+	function copyParams(params: Record<string, number>) {
+		const out: Record<string, ParamValue> = {}
+		for (const [k, v] of Object.entries(params)) out[k] = v
+		navigator.clipboard.writeText(JSON.stringify(out))
+	}
+
+	function fxName(fxConfig: import('./lib/audio/types').FxConfig): string {
+		return 'rnbo' in fxConfig ? fxConfig.rnbo : fxConfig.tone
+	}
+
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.code === 'Space' && e.target === document.body) {
 			e.preventDefault()
@@ -406,11 +429,9 @@
 			options={scenes.map((s) => ({ text: s.id.replaceAll('scene-', ''), value: s.id }))}
 		/>
 		<Checkbox label="Play" bind:value={tempo.isPlaying} />
-		{#if selectedEntity}
-			<Folder
-				title={`Selected: ${selectedEntity.type}:${selectedEntity.railIdx}:${selectedEntity.idx}`}
-				expanded={true}
-			>
+		{#if audioTargetOptions.length > 0}
+			<Folder title="Audio" expanded={true}>
+				<List label="Target" bind:value={selectedAudioTarget} options={audioTargetOptions} />
 				{#if selectedAudioChain}
 					<Checkbox label="Solo" bind:value={soloMode} />
 					{#if genParamInfos.length > 0}
@@ -423,25 +444,12 @@
 									max={info.max}
 								/>
 							{/each}
-							<Button
-								title="Copy params"
-								on:click={() => {
-									if (!selectedAudioChain) return
-									const params: Record<string, ParamValue> = {}
-									for (const [k, v] of Object.entries(genParams)) {
-										params[k] = v
-									}
-									navigator.clipboard.writeText(JSON.stringify(params))
-								}}
-							/>
+							<Button title="Copy params" on:click={() => copyParams(genParams)} />
 						</Folder>
 					{/if}
 					{#each selectedAudioChain.config.fx ?? [] as fxConfig, fxIdx (fxIdx)}
 						{#if fxParamInfos[fxIdx.toString()]}
-							<Folder
-								title={'FX: ' + ('rnbo' in fxConfig ? fxConfig.rnbo : fxConfig.tone)}
-								expanded={false}
-							>
+							<Folder title={'FX: ' + fxName(fxConfig)} expanded={false}>
 								{#each fxParamInfos[fxIdx.toString()] as info (info.path)}
 									<Slider
 										label={info.path.split('.').pop() ?? info.path}
@@ -452,60 +460,20 @@
 								{/each}
 								<Button
 									title="Copy params"
-									on:click={() => {
-										if (!selectedAudioChain) return
-										const params: Record<string, ParamValue> = {}
-										for (const [k, v] of Object.entries(fxParams[fxIdx.toString()])) {
-											params[k] = v
-										}
-										navigator.clipboard.writeText(JSON.stringify(params))
-									}}
+									on:click={() => copyParams(fxParams[fxIdx.toString()])}
 								/>
 							</Folder>
 						{/if}
 					{/each}
-					<WaveformMonitor value={waveData} min={0} max={255} interval={100} />
-				{/if}
-			</Folder>
-		{/if}
-		{#if audioTargetOptions.length > 0}
-			<Folder title="Audio" expanded={false}>
-				<List label="Target" bind:value={selectedAudioTarget} options={audioTargetOptions} />
-				{#if getTargetChain()}
-					{@const chain = getTargetChain()}
-					{#if chain}
-						{#each chain.config.fx ?? [] as fxConfig, fxIdx (fxIdx)}
-							{#if fxParamInfos[fxIdx.toString()]}
-								<Folder
-									title={'FX: ' + ('rnbo' in fxConfig ? fxConfig.rnbo : fxConfig.tone)}
-									expanded={false}
-								>
-									{#each fxParamInfos[fxIdx.toString()] as info (info.path)}
-										<Slider
-											label={info.path.split('.').pop() ?? info.path}
-											bind:value={fxParams[fxIdx.toString()][info.path]}
-											min={info.min}
-											max={info.max}
-										/>
-									{/each}
-								</Folder>
-							{/if}
-						{/each}
-					{/if}
 				{/if}
 				{#if getTargetBus()}
 					{@const bus = getTargetBus()}
 					{#if bus}
 						{#each bus.fx as _fx, fxIdx (fxIdx)}
 							{#if busFxParamInfos[fxIdx.toString()]}
-								{@const fxConfig = bus.config.fx?.[fxIdx]}
 								<Folder
 									title={'FX: ' +
-										(fxConfig
-											? 'rnbo' in fxConfig
-												? fxConfig.rnbo
-												: fxConfig.tone
-											: `fx:${fxIdx}`)}
+										(bus.config.fx?.[fxIdx] ? fxName(bus.config.fx[fxIdx]) : `fx:${fxIdx}`)}
 									expanded={true}
 								>
 									{#each busFxParamInfos[fxIdx.toString()] as info (info.path)}
@@ -518,13 +486,7 @@
 									{/each}
 									<Button
 										title="Copy params"
-										on:click={() => {
-											const params: Record<string, ParamValue> = {}
-											for (const [k, v] of Object.entries(busFxParams[fxIdx.toString()])) {
-												params[k] = v
-											}
-											navigator.clipboard.writeText(JSON.stringify(params))
-										}}
+										on:click={() => copyParams(busFxParams[fxIdx.toString()])}
 									/>
 								</Folder>
 							{/if}
