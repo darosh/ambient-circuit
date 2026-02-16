@@ -179,7 +179,7 @@
 	// Sync dropdown target → selectedAudioChain
 	$effect(() => {
 		const chain = getTargetChain()
-		if (chain && chain !== selectedAudioChain) {
+		if (chain && chain.output !== selectedAudioChain?.output) {
 			selectedAudioChain = chain
 		}
 		if (!chain && getTargetBus()) {
