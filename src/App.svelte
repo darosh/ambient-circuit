@@ -72,7 +72,6 @@
 	let selectedAudioChain = $state<AudioChain | undefined>(undefined)
 	let allAudioChains = $state<AudioChain[]>([])
 	let soloMode = $state(false)
-	let analyzerCanvas = $state<HTMLCanvasElement | null>(null)
 	let analyzerRafId = 0
 
 	// Reactive param values for selected chain
