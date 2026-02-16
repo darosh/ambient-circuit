@@ -20,7 +20,8 @@
 	import { scenes } from './data'
 	import { initMidi, setMidiPort, type MidiState, setMidiState } from './lib/midi/midi'
 	import type { SelectedEntity } from './components/Scene.svelte'
-	import type { AudioChain, ParamValue } from './lib/audio/types'
+	import type { AudioChain, AudioEngine, ParamValue } from './lib/audio/types'
+	import { connectSharedAnalyzer } from './lib/audio/engine'
 	import { WebGPURenderer } from 'three/webgpu'
 	import { clearMarbleGeometryCache } from './lib/video/marble-geometry'
 	import { clearInstrumentGeometryCache } from './lib/video/instrument-geometry'
@@ -72,6 +73,7 @@
 	let selectedAudioChain = $state<AudioChain | undefined>(undefined)
 	let allAudioChains = $state<AudioChain[]>([])
 	let soloMode = $state(false)
+	let audioEngineRef = $state<AudioEngine | null>(null)
 	let analyzerRafId = 0
 
 	// Reactive param values for selected chain
@@ -154,23 +156,42 @@
 		if (!selectedEntity) soloMode = false
 	})
 
-	// Analyzer visualization
+	// Shared analyzer: reconnect when selection changes
 	$effect(() => {
+		const chain = selectedAudioChain
+		const engine = audioEngineRef
+		if (engine) {
+			connectSharedAnalyzer(engine, chain ?? null)
+		}
+	})
+
+	// Analyzer visualization using shared Tone.Analyser
+	$effect(() => {
+		const engine = audioEngineRef
 		const chain = selectedAudioChain
 		if (analyzerRafId) {
 			cancelAnimationFrame(analyzerRafId)
 			analyzerRafId = 0
 		}
-		const analyzer = chain?.analyzer
-		if (!analyzer) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const analyzer = engine?.sharedAnalyzer as any
+		if (!analyzer || !chain) {
+			waveData = []
 			return
 		}
-		analyzer.fftSize = 64
-		const data = new Uint8Array(analyzer.frequencyBinCount)
 
 		function draw() {
-			analyzer!.getByteFrequencyData(data)
-			waveData = Array.from(data)
+			const values = analyzer.getValue()
+			if (values && values.length) {
+				// Tone.Analyser returns Float32Array (dB values for FFT)
+				// Normalize to 0-255 range for WaveformMonitor
+				const arr: number[] = []
+				for (let i = 0; i < values.length; i++) {
+					// FFT values are in dB (-Infinity to 0), map to 0-255
+					arr.push(Math.max(0, Math.min(255, (values[i] + 100) * 2.55)))
+				}
+				waveData = arr
+			}
 			analyzerRafId = requestAnimationFrame(draw)
 		}
 		draw()
@@ -318,10 +339,7 @@
 					{#each selectedAudioChain.config.fx ?? [] as fxConfig, fxIdx (fxIdx)}
 						{#if fxParamInfos[fxIdx.toString()]}
 							<Folder
-								title={'FX: ' +
-									('engine' in fxConfig && fxConfig.engine === 'rnbo'
-										? fxConfig.path
-										: fxConfig.name)}
+								title={'FX: ' + ('rnbo' in fxConfig ? fxConfig.rnbo : fxConfig.tone)}
 								expanded={false}
 							>
 								{#each fxParamInfos[fxIdx.toString()] as info (info.path)}
@@ -446,6 +464,7 @@
 			bind:selectedEntity
 			bind:selectedAudioChain
 			bind:allAudioChains
+			bind:audioEngineRef
 		/>
 	{/key}
 </Canvas>

@@ -179,8 +179,12 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] RNBO as generator (feedback-synth.export)
   - [x] Tone→RNBO node connection (recursive WebAudioNode extraction)
   - [x] Unified param interface across Tone.js and RNBO
-  - [ ] Analyzer access per chain (for visualization)
-  - [x] Demo scene (scene-audio) with Tone.js Synth + RNBO fx/generator
+  - [x] Config shorthand: `{tone: 'Synth'}` / `{rnbo: 'path'}` (replaces `{engine, name/path}`)
+  - [x] Bus system: named buses with fx chains, chain routing via `bus` prop
+  - [x] Master chain: scene-level fx before destination
+  - [x] Shared Tone.Analyser for UI (reconnects on selection change)
+  - [x] Per-chain/bus analyzer config: `boolean | 'fft' | 'waveform' | 'meter'`
+  - [x] Demo scene (scene-audio) with buses + master chain
 - [ ] Audio UI & interaction
   - [x] Mouse-over highlight on objects (hover glow via impactIntensity uniform)
   - [ ] Selection with bounding-box corners (smooth transition on change)
@@ -191,6 +195,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] `interactivity()` plugin enabled for raycasting
   - [x] Solo selected chain (mute all others)
   - [x] Show analyzer visualization of selected instrument
+  - [ ] Chain/bus selector dropdown in Tweakpane (select chain/bus/master, show params)
   - [ ] Potential UI: threlte `<HUD>`, `<HTML>`, `<View>` (View for selected instrument detail)
 - [ ] Audio visualization
   - [ ] Global 3D VU meter (prototype first)
@@ -378,9 +383,29 @@ globalBeatHandler(ctx) {
 - Scene change: stop → ramp gain down → disconnect/dispose chains → ramp gain up
 - Main context + master gain persist across scene changes
 
+**Config shorthand:**
+
+- `{tone: 'Synth', params?: {...}}` for Tone.js nodes
+- `{rnbo: 'rnbo.shimmerev', params?: {...}}` for RNBO patchers
+- Used for both generators and fx
+
+**Routing: chains → buses → master → destination:**
+
+- AudioChain: generator → fx[] → analyzer? → output
+- Chain `bus` prop routes to named bus; otherwise routes to master chain (or masterGain)
+- Buses: named fx chains with input/output GainNodes
+- Master chain: scene-level fx before masterGain (compressor, limiter, etc.)
+- Build order: master → buses → chains (so routing targets exist)
+
+**Analyzers:**
+
+- Per-chain/bus: `analyzer: boolean | 'fft' | 'waveform' | 'meter'` (Tone.Analyser/Meter)
+- Shared analyzer: single `Tone.Analyser` on `AudioEngine.sharedAnalyzer`
+- `connectSharedAnalyzer(engine, chain)` reconnects to selected chain for UI visualization
+- `getWebAudioNode` checks `cur._analysers` array for Tone.Analyser internal nodes
+
 **Chains:**
 
-- AudioChain: generator → fx[] → analyzer → output (master gain)
 - Per-instrument by default; named chains can be shared across instruments
 - Marbles can have own chain (triggers on collision using marble notes)
 - Accessible in handlers: `ctx.instrument.audio`, `ctx.marble.audio`
@@ -388,8 +413,8 @@ globalBeatHandler(ctx) {
 
 **Engines:**
 
-- RNBO: reference by path `rnbo.shimmerev` → loads `./rnbo/rnbo.shimmerev.json` from static (cached)
-- Tone.js: reference by name → `new Tone[name]`; dynamic import required
+- RNBO: `{rnbo: 'path'}` → loads `/patchers/path.json` (cached)
+- Tone.js: `{tone: 'Name'}` → `new Tone[Name]`; dynamic import required
 - Params unified across engines into common interface
 
 **Integration:**

@@ -58,8 +58,10 @@ export type SceneConfig = {
 	renderPlayOnly?: boolean
 	/** Optimize collision checks (assumes all marbles are bouncers, skips rail/branch matching) */
 	bouncerOnlyMode?: boolean
-	/** Audio config: named/shared chains */
+	/** Audio config: named/shared chains, buses, master */
 	audio?: {
 		chains?: Record<string, AudioChainConfig>
+		buses?: Record<string, import('./audio/types').BusConfig>
+		master?: import('./audio/types').MasterConfig
 	}
 }

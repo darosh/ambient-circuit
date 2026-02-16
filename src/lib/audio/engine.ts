@@ -2,10 +2,14 @@ import type {
 	AudioEngine,
 	AudioChain,
 	AudioChainConfig,
+	AudioBus,
+	BusConfig,
+	MasterConfig,
 	GeneratorConfig,
 	FxConfig,
 	ParamValue,
-	ParamMap
+	ParamMap,
+	AnalyzerType
 } from './types'
 import type { ToneAudioNode, Param } from 'tone'
 import { createDevice, MIDIEvent } from '@rnbo/js'
@@ -22,7 +26,10 @@ export function createAudioEngine(): AudioEngine {
 		chains: new Map(),
 		instanceChains: [],
 		initialized: false,
-		rnboCache: new Map()
+		rnboCache: new Map(),
+		buses: new Map(),
+		masterChain: null,
+		sharedAnalyzer: null
 	}
 }
 
@@ -36,6 +43,13 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 	engine.ctx = ctx
 
 	// Dynamic import Tone.js and set shared context
+	
+	if (typeof self === 'object') {
+		(<Record<string, boolean>><unknown>self).TONE_SILENCE_LOGGING = true
+	}
+		
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-expect-error
 	const Tone = await import('tone')
 	Tone.setContext(ctx)
 	await Tone.start()
@@ -46,7 +60,73 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 	masterGain.connect(ctx.destination)
 	engine.masterGain = masterGain
 
+	// Shared analyzer for UI visualization
+	engine.sharedAnalyzer = new Tone.Analyser('fft', 64) as unknown as ToneAudioNode
+
 	engine.initialized = true
+}
+
+/**
+ * Build master chain and buses from scene audio config
+ */
+export async function buildBuses(
+	engine: AudioEngine,
+	config: { buses?: Record<string, BusConfig>; master?: MasterConfig }
+): Promise<void> {
+	if (!engine.ctx || !engine.masterGain) throw new Error('Audio engine not initialized')
+
+	// 1. Build master chain
+	if (config.master) {
+		engine.masterChain = await buildBus(engine, config.master, engine.masterGain)
+	}
+
+	// 2. Build buses → output to master chain input (or masterGain)
+	const busTarget = engine.masterChain ? engine.masterChain.input : engine.masterGain
+	if (config.buses) {
+		for (const [name, busConfig] of Object.entries(config.buses)) {
+			const bus = await buildBus(engine, busConfig, busTarget)
+			engine.buses.set(name, bus)
+		}
+	}
+}
+
+/**
+ * Build a single bus (used for named buses and master chain)
+ */
+async function buildBus(
+	engine: AudioEngine,
+	config: BusConfig,
+	destination: GainNode | AudioNode
+): Promise<AudioBus> {
+	if (!engine.ctx) throw new Error('No AudioContext')
+
+	const input = engine.ctx.createGain()
+	const output = engine.ctx.createGain()
+	output.connect(destination as AudioNode)
+
+	const fx: (ToneAudioNode | Device)[] = []
+	if (config.fx) {
+		for (const fxConfig of config.fx) {
+			fx.push(await buildNode(engine, fxConfig))
+		}
+	}
+
+	let analyzer: ToneAudioNode | null = null
+	if (config.analyzer) {
+		analyzer = await buildAnalyzer(engine, config.analyzer)
+	}
+
+	// Connect: input → fx[0] → ... → analyzer? → output
+	const nodes: Array<ToneAudioNode | Device | GainNode> = [input]
+	for (const f of fx) nodes.push(f)
+	if (analyzer) nodes.push(analyzer)
+	nodes.push(output)
+
+	for (let i = 0; i < nodes.length - 1; i++) {
+		connectNodes(nodes[i], nodes[i + 1], engine)
+	}
+
+	return { config, fx, analyzer, input, output }
 }
 
 /**
@@ -60,8 +140,17 @@ export async function buildChain(
 		throw new Error('Audio engine not initialized')
 	}
 
+	// Determine output destination: bus → master chain → masterGain
+	let destination: AudioNode = engine.masterGain
+	if (config.bus) {
+		const bus = engine.buses.get(config.bus)
+		if (bus) destination = bus.input
+	} else if (engine.masterChain) {
+		destination = engine.masterChain.input
+	}
+
 	const output = engine.ctx.createGain()
-	output.connect(engine.masterGain)
+	output.connect(destination)
 
 	let generator: ToneAudioNode | Device | null = null
 	if (config.generator) {
@@ -75,10 +164,13 @@ export async function buildChain(
 		}
 	}
 
-	const analyzer = engine.ctx.createAnalyser()
+	let analyzer: ToneAudioNode | null = null
+	if (config.analyzer) {
+		analyzer = await buildAnalyzer(engine, config.analyzer)
+	}
 
 	// Connect chain: generator → fx[0] → fx[1] → ... → analyzer? → output
-	const nodes: Array<ToneAudioNode | Device | AnalyserNode | GainNode> = []
+	const nodes: Array<ToneAudioNode | Device | GainNode> = []
 	if (generator) nodes.push(generator)
 	for (const f of fx) nodes.push(f)
 	if (analyzer) nodes.push(analyzer)
@@ -122,6 +214,51 @@ export async function buildChain(
 	engine.instanceChains.push(chain)
 
 	return chain
+}
+
+/**
+ * Build analyzer node from config
+ */
+async function buildAnalyzer(
+	engine: AudioEngine,
+	config: AnalyzerType
+): Promise<ToneAudioNode | null> {
+	if (!config || !engine.Tone) return null
+	const Tone = engine.Tone
+
+	if (config === true || config === 'fft') {
+		return new Tone.Analyser('fft', 64) as unknown as ToneAudioNode
+	} else if (config === 'waveform') {
+		return new Tone.Analyser('waveform', 256) as unknown as ToneAudioNode
+	} else if (config === 'meter') {
+		return new Tone.Meter() as unknown as ToneAudioNode
+	}
+	return null
+}
+
+/**
+ * Connect shared analyzer to a chain's output (for UI visualization)
+ */
+export function connectSharedAnalyzer(
+	engine: AudioEngine,
+	chain: AudioChain | AudioBus | null
+): void {
+	if (!engine.sharedAnalyzer) return
+
+	// Disconnect from previous
+	const webNode = getWebAudioNode(engine.sharedAnalyzer, engine)
+	if (webNode) {
+		try {
+			webNode.disconnect()
+		} catch {
+			// ignore if not connected
+		}
+	}
+
+	if (!chain) return
+
+	// Connect chain output → shared analyzer
+	connectNodes(chain.output, engine.sharedAnalyzer, engine)
 }
 
 /**
@@ -176,7 +313,7 @@ export function disposeChain(chain: AudioChain): void {
 		disposeNode(f)
 	}
 	if (chain.analyzer) {
-		chain.analyzer.disconnect()
+		disposeNode(chain.analyzer)
 	}
 	chain.output.disconnect()
 	chain.generator = null
@@ -185,14 +322,52 @@ export function disposeChain(chain: AudioChain): void {
 }
 
 /**
- * Dispose all chains for scene change (keep ctx + masterGain alive)
+ * Dispose a bus
+ */
+function disposeBus(bus: AudioBus): void {
+	for (const f of bus.fx) {
+		disposeNode(f)
+	}
+	if (bus.analyzer) {
+		disposeNode(bus.analyzer)
+	}
+	bus.input.disconnect()
+	bus.output.disconnect()
+	bus.fx = []
+	bus.analyzer = null
+}
+
+/**
+ * Dispose all chains, buses, master for scene change (keep ctx + masterGain alive)
  */
 export function disposeScene(engine: AudioEngine): void {
+	// Disconnect shared analyzer
+	if (engine.sharedAnalyzer) {
+		const webNode = getWebAudioNode(engine.sharedAnalyzer, engine)
+		if (webNode) {
+			try {
+				webNode.disconnect()
+			} catch {
+				// ignore
+			}
+		}
+	}
+
 	for (const chain of engine.instanceChains) {
 		disposeChain(chain)
 	}
 	engine.chains.clear()
 	engine.instanceChains = []
+
+	for (const bus of engine.buses.values()) {
+		disposeBus(bus)
+	}
+	engine.buses.clear()
+
+	if (engine.masterChain) {
+		disposeBus(engine.masterChain)
+		engine.masterChain = null
+	}
 }
 
 // --- Param helpers (exported for testing) ---
@@ -346,10 +521,10 @@ async function buildNode(
 	engine: AudioEngine,
 	config: GeneratorConfig | FxConfig
 ): Promise<ToneAudioNode | Device> {
-	if (config.engine === 'rnbo') {
-		return await loadRNBO(engine, config.path, config.params)
+	if ('rnbo' in config) {
+		return await loadRNBO(engine, config.rnbo, config.params)
 	} else {
-		return createToneNode(engine, config.name, config.params)
+		return createToneNode(engine, config.tone, config.params)
 	}
 }
 
@@ -419,10 +594,15 @@ function getWebAudioNode(
 ): AudioNode | null {
 	if (node instanceof GainNode || node instanceof AnalyserNode) return node
 	if (isDevice(node as ToneAudioNode | Device)) return (node as Device).node
+
 	// Tone.js node — recurse through .output until we hit a raw AudioNode
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let cur: any = node
 	for (let i = 0; i < 10; i++) {
+		if (cur?._analysers?.length) {
+			return cur._analysers[0]
+		}
+			
 		if (cur instanceof AudioNode) return cur
 		if (cur._gainNode instanceof AudioNode) return cur._gainNode
 		if (cur.output != null) {

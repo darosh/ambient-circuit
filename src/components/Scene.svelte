@@ -12,7 +12,13 @@
 	import type { SceneConfig } from '../lib/scene'
 	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
 	import type { EaterMarbleData } from '../lib/rail-data'
-	import { createAudioEngine, initAudio, buildChain, disposeScene } from '../lib/audio/engine'
+	import {
+		createAudioEngine,
+		initAudio,
+		buildChain,
+		buildBuses,
+		disposeScene
+	} from '../lib/audio/engine'
 	import type { AudioEngine, AudioChain } from '../lib/audio/types'
 
 	export type SelectedEntity = {
@@ -42,7 +48,8 @@
 		fps = $bindable(),
 		selectedEntity = $bindable<SelectedEntity>(null),
 		selectedAudioChain = $bindable<AudioChain | undefined>(undefined),
-		allAudioChains = $bindable<AudioChain[]>([])
+		allAudioChains = $bindable<AudioChain[]>([]),
+		audioEngineRef = $bindable<AudioEngine | null>(null)
 	}: {
 		scene: SceneConfig
 		showGrid?: boolean
@@ -64,6 +71,7 @@
 		selectedEntity?: SelectedEntity
 		selectedAudioChain?: AudioChain | undefined
 		allAudioChains?: AudioChain[]
+		audioEngineRef?: AudioEngine | null
 	} = $props()
 
 	// Init tempo state
@@ -218,6 +226,14 @@
 
 		await initAudio(audioEngine)
 
+		// Build buses and master chain first (chains route to them)
+		if (scene.audio?.buses || scene.audio?.master) {
+			await buildBuses(audioEngine, {
+				buses: scene.audio.buses,
+				master: scene.audio.master
+			})
+		}
+
 		// Build shared/named chains from scene config
 		if (scene.audio?.chains) {
 			for (const [id, config] of Object.entries(scene.audio.chains)) {
@@ -255,6 +271,7 @@
 		}
 
 		allAudioChains = audioEngine.instanceChains
+		audioEngineRef = audioEngine
 	}
 
 	function hasAudioConfig(): boolean {

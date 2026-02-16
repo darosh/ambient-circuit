@@ -6,20 +6,31 @@ import type { Device } from '@rnbo/js'
 export type ParamValue = number | string
 export type ParamMap = Record<string, ParamValue>
 
-export type GeneratorConfig =
-	| { engine: 'tone'; name: string; params?: ParamMap }
-	| { engine: 'rnbo'; path: string; params?: ParamMap }
+export type NodeConfig = { tone: string; params?: ParamMap } | { rnbo: string; params?: ParamMap }
 
-export type FxConfig =
-	| { engine: 'tone'; name: string; params?: ParamMap }
-	| { engine: 'rnbo'; path: string; params?: ParamMap }
+export type GeneratorConfig = NodeConfig
+export type FxConfig = NodeConfig
+
+export type AnalyzerType = boolean | 'fft' | 'waveform' | 'meter'
 
 export type AudioChainConfig = {
 	/** Named chain ID (shared across instruments) */
 	id?: string
 	generator?: GeneratorConfig
 	fx?: FxConfig[]
-	analyzer?: boolean
+	analyzer?: AnalyzerType
+	/** Route to named bus instead of master */
+	bus?: string
+}
+
+export type BusConfig = {
+	fx?: FxConfig[]
+	analyzer?: AnalyzerType
+}
+
+export type MasterConfig = {
+	fx?: FxConfig[]
+	analyzer?: AnalyzerType
 }
 
 // --- Runtime instances ---
@@ -28,7 +39,7 @@ export type AudioChain = {
 	config: AudioChainConfig
 	generator: ToneAudioNode | Device | null
 	fx: (ToneAudioNode | Device)[]
-	analyzer: AnalyserNode | null
+	analyzer: ToneAudioNode | null
 	output: GainNode
 	/** Set param on generator by dot-path */
 	setParam(path: string, value: ParamValue): void
@@ -42,6 +53,14 @@ export type AudioChain = {
 	listFxParams(index: number): { path: string; value: number; min: number; max: number }[]
 }
 
+export type AudioBus = {
+	config: BusConfig
+	fx: (ToneAudioNode | Device)[]
+	analyzer: ToneAudioNode | null
+	input: GainNode
+	output: GainNode
+}
+
 export type AudioEngine = {
 	ctx: AudioContext | null
 	masterGain: GainNode | null
@@ -50,4 +69,7 @@ export type AudioEngine = {
 	instanceChains: AudioChain[]
 	initialized: boolean
 	rnboCache: Map<string, unknown>
+	buses: Map<string, AudioBus>
+	masterChain: AudioBus | null
+	sharedAnalyzer: ToneAudioNode | null
 }

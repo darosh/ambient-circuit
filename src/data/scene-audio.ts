@@ -2,9 +2,6 @@ import type { SceneConfig } from '../lib/scene'
 import { triggerHandler } from '../lib/trigger-handler'
 
 const shimmerev = {
-	engine: 'rnbo' as const,
-	path: 'rnbo.shimmerev',
-	params: { mix: 50, decay: 600, octvol: 100, pitchvol: 100, rev: 80, size: 70, feedback: 30 }
 }
 
 export const scene: SceneConfig = {
@@ -12,6 +9,31 @@ export const scene: SceneConfig = {
 	bpm: 120,
 	camera: [0, 8, 12],
 	triggerHandler,
+	audio: {
+		master: {
+			fx: [{
+				tone: 'Compressor'
+			}]
+		},
+		buses: {
+			reverb: {
+				fx: [
+					{
+						rnbo: 'rnbo.shimmerev',
+						params: {
+							mix: 50,
+							decay: 600,
+							octvol: 100,
+							pitchvol: 100,
+							rev: 80,
+							size: 70,
+							feedback: 30
+						}
+					}
+				]
+			}
+		}
+	},
 	rails: [
 		{
 			rail: {
@@ -27,8 +49,7 @@ export const scene: SceneConfig = {
 					midiNote: 60,
 					audio: {
 						generator: {
-							engine: 'tone',
-							name: 'Synth',
+							tone: 'Synth',
 							params: {
 								'envelope.attack': 0.1,
 								'envelope.decay': 0.2,
@@ -46,8 +67,7 @@ export const scene: SceneConfig = {
 					midiNote: 64,
 					audio: {
 						generator: {
-							engine: 'tone',
-							name: 'Synth',
+							tone: 'Synth',
 							params: {
 								'envelope.attack': 0.1,
 								'envelope.decay': 0.2,
@@ -62,13 +82,13 @@ export const scene: SceneConfig = {
 					type: 'sun',
 					beat: 5,
 					midiNote: 67,
-					audio: { generator: { engine: 'tone', name: 'Synth' }, fx: [shimmerev] }
+					audio: { generator: { tone: 'Synth' }, bus: 'reverb' }
 				},
 				{
 					type: 'sun',
 					beat: 7,
 					midiNote: 72,
-					audio: { generator: { engine: 'tone', name: 'Synth' }, fx: [shimmerev] }
+					audio: { generator: { tone: 'Synth' }, bus: 'reverb' }
 				}
 			]
 		},
@@ -84,13 +104,13 @@ export const scene: SceneConfig = {
 					type: 'spiral',
 					beat: 0,
 					midiNote: 48,
-					audio: { generator: { engine: 'rnbo', path: 'feedback-synth.export' } }
+					audio: { generator: { rnbo: 'feedback-synth.export' }, bus: 'reverb' }
 				},
 				{
 					type: 'spiral',
 					beat: 4,
 					midiNote: 55,
-					audio: { generator: { engine: 'rnbo', path: 'feedback-synth.export' } }
+					audio: { generator: { rnbo: 'feedback-synth.export' }, bus: 'reverb' }
 				}
 			]
 		}
