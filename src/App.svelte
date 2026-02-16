@@ -155,16 +155,12 @@
 		busFxParams = fp
 	})
 
-	// Push bus fx param changes
-	$effect(() => {
+	function handleBusFxParam(fxIdx: number, path: string, value: number) {
+		if (!busFxParams[fxIdx.toString()]) busFxParams[fxIdx.toString()] = {}
+		busFxParams[fxIdx.toString()][path] = value
 		const bus = getTargetBus()
-		if (!bus) return
-		for (const [idxStr, params] of Object.entries(busFxParams)) {
-			for (const [key, val] of Object.entries(params)) {
-				setBusFxParam(bus, parseInt(idxStr), key, val)
-			}
-		}
-	})
+		if (bus) setBusFxParam(bus, fxIdx, path, value)
+	}
 
 	// Reactive param values for selected chain
 	type ParamInfo = { path: string; value: number; min: number; max: number }
@@ -195,23 +191,19 @@
 		}
 	})
 
-	// Push generator param changes to audio chain
-	$effect(() => {
-		if (!selectedAudioChain) return
-		for (const [key, val] of Object.entries(genParams)) {
-			selectedAudioChain.setParam(key, val)
+	function setGenParam(path: string, value: number) {
+		if (genParams[path] === value) {
+			return
 		}
-	})
 
-	// Push fx param changes to audio chain
-	$effect(() => {
-		if (!selectedAudioChain) return
-		for (const [idxStr, params] of Object.entries(fxParams)) {
-			for (const [key, val] of Object.entries(params)) {
-				selectedAudioChain.setFxParam(parseInt(idxStr), key, val)
-			}
-		}
-	})
+		genParams[path] = value
+		selectedAudioChain?.setParam(path, value)
+	}
+	function setFxParam(fxIdx: number, path: string, value: number) {
+		if (!fxParams[fxIdx.toString()]) fxParams[fxIdx.toString()] = {}
+		fxParams[fxIdx.toString()][path] = value
+		selectedAudioChain?.setFxParam(fxIdx, path, value)
+	}
 
 	// Solo: mute/unmute chains (compare by output identity to avoid Svelte proxy mismatch)
 	$effect(() => {
@@ -490,12 +482,13 @@
 									on:change={(e) => applyPreset(genPresetInfo, e.detail.value as string)}
 								/>
 							{/if}
-							{#each genParamInfos as info (info.path)}
+							{#each genParamInfos as info (selectedAudioTarget + info.path)}
 								<Slider
 									label={info.path.split('.').pop() ?? info.path}
-									bind:value={genParams[info.path]}
+									value={genParams[info.path]}
 									min={info.min}
 									max={info.max}
+									on:change={(e) => setGenParam(info.path, e.detail.value)}
 								/>
 							{/each}
 							<Button title="Copy params" on:click={() => copyParams(genParams, genPresetInfo)} />
@@ -514,12 +507,13 @@
 									/>
 								{/if}
 								{#if fxParamInfos[fxIdx.toString()]}
-									{#each fxParamInfos[fxIdx.toString()] as info (info.path)}
+									{#each fxParamInfos[fxIdx.toString()] as info (selectedAudioTarget + fxIdx + info.path)}
 										<Slider
 											label={info.path.split('.').pop() ?? info.path}
-											bind:value={fxParams[fxIdx.toString()][info.path]}
+											value={fxParams[fxIdx.toString()][info.path]}
 											min={info.min}
 											max={info.max}
+											on:change={(e) => setFxParam(fxIdx, info.path, e.detail.value as number)}
 										/>
 									{/each}
 									<Button
@@ -551,12 +545,14 @@
 										/>
 									{/if}
 									{#if busFxParamInfos[fxIdx.toString()]}
-										{#each busFxParamInfos[fxIdx.toString()] as info (info.path)}
+										{#each busFxParamInfos[fxIdx.toString()] as info (selectedAudioTarget + fxIdx + info.path)}
 											<Slider
 												label={info.path.split('.').pop() ?? info.path}
-												bind:value={busFxParams[fxIdx.toString()][info.path]}
+												value={busFxParams[fxIdx.toString()][info.path]}
 												min={info.min}
 												max={info.max}
+												on:change={(e) =>
+													handleBusFxParam(fxIdx, info.path, e.detail.value as number)}
 											/>
 										{/each}
 										<Button

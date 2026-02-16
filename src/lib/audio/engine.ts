@@ -67,7 +67,7 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 	engine.sharedAnalyzer = new Tone.Analyser('fft', 64) as unknown as ToneAudioNode
 
 	engine.initialized = true
-	
+
 	log('initialized')
 }
 
@@ -505,7 +505,7 @@ export function unflattenParams(flat: Record<string, ParamValue>): Record<string
  */
 export function setNodeParam(node: ToneAudioNode | Device, path: string, value: ParamValue): void {
 	log('setting', path, value)
-	
+
 	if (isDevice(node)) {
 		const p = node.parameters.find((p) => p.name === path || p.id === path)
 		if (p) p.value = value as number
@@ -578,6 +578,18 @@ export function setBusFxParam(bus: AudioBus, index: number, path: string, value:
 /**
  * List all params from a live node
  */
+
+function getAllPropertyNames(obj: Record<string, never>): string[] {
+	const props = new Set<string>()
+
+	while (obj) {
+		Object.getOwnPropertyNames(obj).forEach((p) => props.add(p))
+		obj = Object.getPrototypeOf(obj)
+	}
+
+	return [...props]
+}
+
 function listNodeParams(node: ToneAudioNode | Device): ParamInfo[] {
 	if (isDevice(node)) {
 		return node.parameters.map((p) => ({
@@ -591,7 +603,7 @@ function listNodeParams(node: ToneAudioNode | Device): ParamInfo[] {
 	const params: { path: string; value: number; min: number; max: number }[] = []
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const obj = node as any
-	for (const key of Object.keys(obj)) {
+	for (const key of getAllPropertyNames(obj)) {
 		if (
 			key.startsWith('_') ||
 			key === 'context' ||
@@ -600,6 +612,12 @@ function listNodeParams(node: ToneAudioNode | Device): ParamInfo[] {
 			key === 'name' ||
 			key === 'onsilence' ||
 			key === 'debug' ||
+			key === 'numberOfInputs' ||
+			key === 'numberOfOutputs' ||
+			key === 'sampleTime' ||
+			key === 'blockTime' ||
+			key === 'channelCount' ||
+			key === 'reduction' ||
 			key === 'frequency'
 		) {
 			continue
@@ -629,15 +647,21 @@ function listNodeParams(node: ToneAudioNode | Device): ParamInfo[] {
 
 			params.push({ path: key, value: val.value, min, max })
 		} else if (key.includes('envelope')) {
-			params.push({ path: `${key}.attack`, value: val.value, min: 0, max: 2 })
-			params.push({ path: `${key}.decay`, value: val.value, min: 0, max: 2 })
-			params.push({ path: `${key}.sustain`, value: val.value, min: 0, max: 1 })
-			params.push({ path: `${key}.release`, value: val.value, min: 0, max: 5 })
+			params.push({ path: `${key}.attack`, value: val.attack, min: 0, max: 2 })
+			params.push({ path: `${key}.decay`, value: val.decay, min: 0, max: 2 })
+			params.push({ path: `${key}.sustain`, value: val.sustain, min: 0, max: 1 })
+			params.push({ path: `${key}.release`, value: val.release, min: 0, max: 5 })
 		} else if (key === 'oscillator') {
 			// params.push({ path: `${key}.harmonicity`, value: val.value, min: 0, max: 12 })
 			// params.push({ path: `${key}.modulationFrequency`, value: val.value, min: 0.1, max: 5 })
+		} else if (!key.includes('.') && typeof val === 'number') {
+			params.push({ path: key, value: val, min: 0, max: 1 })
+		} else {
+			// log('skipping param', key, val)
 		}
 	}
+
+	log('params', params)
 	return params
 }
 
