@@ -6,4 +6,5 @@ yarn.lock
 .claude/
 docs/
 public/
-.build-check
+.build-check/
+rnbo/
