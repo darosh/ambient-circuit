@@ -20,7 +20,13 @@
 	import { scenes } from './data'
 	import { initMidi, setMidiPort, type MidiState, setMidiState } from './lib/midi/midi'
 	import type { SelectedEntity } from './components/Scene.svelte'
-	import type { AudioChain, AudioBus, AudioEngine, ParamValue } from './lib/audio/types'
+	import type {
+		AudioChain,
+		AudioBus,
+		AudioEngine,
+		ParamValue,
+		NodePresetInfo
+	} from './lib/audio/types'
 	import { connectSharedAnalyzer, listBusFxParams, setBusFxParam } from './lib/audio/engine'
 	import { WebGPURenderer } from 'three/webgpu'
 	import { clearMarbleGeometryCache } from './lib/video/marble-geometry'
@@ -125,8 +131,9 @@
 	let busFxParamInfos = $state<Record<string, ParamInfo[]>>({})
 	let busFxParams = $state<Record<string, Record<string, number>>>({})
 
-	// Populate bus fx params when target changes
+	// Populate bus fx params when target changes or version bumps
 	$effect(() => {
+		const _v = paramVersion
 		const bus = getTargetBus()
 		if (!bus) {
 			busFxParamInfos = {}
@@ -186,41 +193,6 @@
 			// Bus selected — clear chain params
 			selectedAudioChain = undefined
 		}
-	})
-
-	// Populate params when selection/chain changes
-	$effect(() => {
-		if (!selectedAudioChain) {
-			genParamInfos = []
-			genParams = {}
-			fxParamInfos = {}
-			fxParams = {}
-			return
-		}
-		const gInfos = selectedAudioChain.listParams()
-		genParamInfos = gInfos
-		const gp: Record<string, number> = {}
-		for (const p of gInfos) {
-			gp[p.path] = p.value
-		}
-		genParams = gp
-
-		const fi: Record<string, ParamInfo[]> = {}
-		const fp: Record<string, Record<string, number>> = {}
-		const fxList = selectedAudioChain.config.fx ?? []
-		for (let i = 0; i < fxList.length; i++) {
-			const fInfos = selectedAudioChain.listFxParams(i)
-			if (fInfos.length > 0) {
-				fi[i.toString()] = fInfos
-				const p: Record<string, number> = {}
-				for (const f of fInfos) {
-					p[f.path] = f.value
-				}
-				fp[i.toString()] = p
-			}
-		}
-		fxParamInfos = fi
-		fxParams = fp
 	})
 
 	// Push generator param changes to audio chain
@@ -357,9 +329,78 @@
 		}
 	})
 
-	function copyParams(params: Record<string, number>) {
+	// Version counter to force re-read of params after preset change
+	let paramVersion = $state(0)
+
+	function applyPreset(info: NodePresetInfo, name: string) {
+		info.set(name)
+		// Defer param re-read to allow RNBO to propagate values
+		setTimeout(() => {
+			paramVersion++
+		}, 50)
+	}
+
+	// Subscribe to RNBO param changes for live UI sync (chain + bus)
+	$effect(() => {
+		const chain = selectedAudioChain
+		if (chain) {
+			chain.onParamChange = () => {
+				paramVersion++
+			}
+			return () => {
+				chain.onParamChange = null
+			}
+		}
+	})
+	$effect(() => {
+		const bus = getTargetBus()
+		if (bus) {
+			bus.onParamChange = () => {
+				paramVersion++
+			}
+			return () => {
+				bus.onParamChange = null
+			}
+		}
+	})
+
+	// Populate/refresh params on chain change or version bump (preset change)
+	$effect(() => {
+		const _v = paramVersion
+		const chain = selectedAudioChain
+		if (!chain) {
+			genParamInfos = []
+			genParams = {}
+			fxParamInfos = {}
+			fxParams = {}
+			return
+		}
+		const gInfos = chain.listParams()
+		genParamInfos = gInfos
+		const gp: Record<string, number> = {}
+		for (const p of gInfos) gp[p.path] = p.value
+		genParams = gp
+
+		const fi: Record<string, ParamInfo[]> = {}
+		const fp: Record<string, Record<string, number>> = {}
+		const fxList = chain.config.fx ?? []
+		for (let i = 0; i < fxList.length; i++) {
+			const fInfos = chain.listFxParams(i)
+			if (fInfos.length > 0) {
+				fi[i.toString()] = fInfos
+				const p: Record<string, number> = {}
+				for (const f of fInfos) p[f.path] = f.value
+				fp[i.toString()] = p
+			}
+		}
+		fxParamInfos = fi
+		fxParams = fp
+	})
+
+	function copyParams(params: Record<string, number>, presetInfo?: NodePresetInfo) {
 		const out: Record<string, ParamValue> = {}
 		for (const [k, v] of Object.entries(params)) out[k] = v
+		if (presetInfo?.active) out['preset'] = presetInfo.active
 		navigator.clipboard.writeText(JSON.stringify(out))
 	}
 
@@ -438,8 +479,17 @@
 					{#if waveData.length > 0}
 						<WaveformMonitor value={waveData} min={0} max={255} interval={100} />
 					{/if}
-					{#if genParamInfos.length > 0}
+					{#if genParamInfos.length > 0 || selectedAudioChain.nodePresets.has(-1)}
 						<Folder title="Generator" expanded={true}>
+							{@const genPresetInfo = selectedAudioChain.nodePresets.get(-1)}
+							{#if genPresetInfo}
+								<List
+									label="Preset"
+									value={genPresetInfo.active ?? genPresetInfo.names[0]}
+									options={genPresetInfo.names.map((n) => ({ text: n, value: n }))}
+									on:change={(e) => applyPreset(genPresetInfo, e.detail.value as string)}
+								/>
+							{/if}
 							{#each genParamInfos as info (info.path)}
 								<Slider
 									label={info.path.split('.').pop() ?? info.path}
@@ -448,24 +498,35 @@
 									max={info.max}
 								/>
 							{/each}
-							<Button title="Copy params" on:click={() => copyParams(genParams)} />
+							<Button title="Copy params" on:click={() => copyParams(genParams, genPresetInfo)} />
 						</Folder>
 					{/if}
 					{#each selectedAudioChain.config.fx ?? [] as fxConfig, fxIdx (fxIdx)}
-						{#if fxParamInfos[fxIdx.toString()]}
+						{@const fxPresetInfo = selectedAudioChain.nodePresets.get(fxIdx)}
+						{#if fxParamInfos[fxIdx.toString()] || fxPresetInfo}
 							<Folder title={'FX: ' + fxName(fxConfig)} expanded={false}>
-								{#each fxParamInfos[fxIdx.toString()] as info (info.path)}
-									<Slider
-										label={info.path.split('.').pop() ?? info.path}
-										bind:value={fxParams[fxIdx.toString()][info.path]}
-										min={info.min}
-										max={info.max}
+								{#if fxPresetInfo}
+									<List
+										label="Preset"
+										value={fxPresetInfo.active ?? fxPresetInfo.names[0]}
+										options={fxPresetInfo.names.map((n) => ({ text: n, value: n }))}
+										on:change={(e) => applyPreset(fxPresetInfo, e.detail.value as string)}
 									/>
-								{/each}
-								<Button
-									title="Copy params"
-									on:click={() => copyParams(fxParams[fxIdx.toString()])}
-								/>
+								{/if}
+								{#if fxParamInfos[fxIdx.toString()]}
+									{#each fxParamInfos[fxIdx.toString()] as info (info.path)}
+										<Slider
+											label={info.path.split('.').pop() ?? info.path}
+											bind:value={fxParams[fxIdx.toString()][info.path]}
+											min={info.min}
+											max={info.max}
+										/>
+									{/each}
+									<Button
+										title="Copy params"
+										on:click={() => copyParams(fxParams[fxIdx.toString()], fxPresetInfo)}
+									/>
+								{/if}
 							</Folder>
 						{/if}
 					{/each}
@@ -474,24 +535,35 @@
 					{@const bus = getTargetBus()}
 					{#if bus}
 						{#each bus.fx as _fx, fxIdx (fxIdx)}
-							{#if busFxParamInfos[fxIdx.toString()]}
+							{@const busFxPresetInfo = bus.nodePresets.get(fxIdx)}
+							{#if busFxParamInfos[fxIdx.toString()] || busFxPresetInfo}
 								<Folder
 									title={'FX: ' +
 										(bus.config.fx?.[fxIdx] ? fxName(bus.config.fx[fxIdx]) : `fx:${fxIdx}`)}
 									expanded={true}
 								>
-									{#each busFxParamInfos[fxIdx.toString()] as info (info.path)}
-										<Slider
-											label={info.path.split('.').pop() ?? info.path}
-											bind:value={busFxParams[fxIdx.toString()][info.path]}
-											min={info.min}
-											max={info.max}
+									{#if busFxPresetInfo}
+										<List
+											label="Preset"
+											value={busFxPresetInfo.active ?? busFxPresetInfo.names[0]}
+											options={busFxPresetInfo.names.map((n) => ({ text: n, value: n }))}
+											on:change={(e) => applyPreset(busFxPresetInfo, e.detail.value as string)}
 										/>
-									{/each}
-									<Button
-										title="Copy params"
-										on:click={() => copyParams(busFxParams[fxIdx.toString()])}
-									/>
+									{/if}
+									{#if busFxParamInfos[fxIdx.toString()]}
+										{#each busFxParamInfos[fxIdx.toString()] as info (info.path)}
+											<Slider
+												label={info.path.split('.').pop() ?? info.path}
+												bind:value={busFxParams[fxIdx.toString()][info.path]}
+												min={info.min}
+												max={info.max}
+											/>
+										{/each}
+										<Button
+											title="Copy params"
+											on:click={() => copyParams(busFxParams[fxIdx.toString()], busFxPresetInfo)}
+										/>
+									{/if}
 								</Folder>
 							{/if}
 						{/each}

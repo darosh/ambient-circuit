@@ -9,7 +9,8 @@ import type {
 	FxConfig,
 	ParamValue,
 	ParamMap,
-	AnalyzerType
+	AnalyzerType,
+	NodePresetInfo
 } from './types'
 import type { ToneAudioNode, Param } from 'tone'
 import { createDevice, MIDIEvent } from '@rnbo/js'
@@ -105,7 +106,8 @@ async function buildBus(
 	const fx: (ToneAudioNode | Device)[] = []
 	if (config.fx) {
 		for (const fxConfig of config.fx) {
-			fx.push(await buildNode(engine, fxConfig))
+			const result = await buildNode(engine, fxConfig)
+			fx.push(result.node)
 		}
 	}
 
@@ -124,7 +126,29 @@ async function buildBus(
 		connectNodes(nodes[i], nodes[i + 1], engine)
 	}
 
-	return { config, fx, analyzer, input, output }
+	const nodePresets = new Map<number, NodePresetInfo>()
+	if (config.fx) {
+		for (let i = 0; i < config.fx.length; i++) {
+			if ('rnbo' in config.fx[i]) {
+				const fxNode = fx[i]
+				const info = makeNodePresetInfo(engine, config.fx[i] as { rnbo: string }, fxNode)
+				if (info) nodePresets.set(i, info)
+			}
+		}
+	}
+
+	const bus: AudioBus = { config, fx, analyzer, input, output, nodePresets, onParamChange: null }
+
+	// Subscribe RNBO fx to param changes
+	for (const f of fx) {
+		if (isDevice(f)) {
+			f.parameterChangeEvent.subscribe((param) => {
+				if (bus.onParamChange) bus.onParamChange(param.id, param.value)
+			})
+		}
+	}
+
+	return bus
 }
 
 /**
@@ -151,14 +175,18 @@ export async function buildChain(
 	output.connect(destination)
 
 	let generator: ToneAudioNode | Device | null = null
+	let genActivePreset: string | null = null
 	if (config.generator) {
-		generator = await buildNode(engine, config.generator)
+		const result = await buildNode(engine, config.generator)
+		generator = result.node
+		genActivePreset = result.activePreset
 	}
 
 	const fx: (ToneAudioNode | Device)[] = []
 	if (config.fx) {
 		for (const fxConfig of config.fx) {
-			fx.push(await buildNode(engine, fxConfig))
+			const result = await buildNode(engine, fxConfig)
+			fx.push(result.node)
 		}
 	}
 
@@ -178,12 +206,33 @@ export async function buildChain(
 		connectNodes(nodes[i], nodes[i + 1], engine)
 	}
 
+	// Build nodePresets map: -1 = generator, 0+ = fx index
+	const nodePresets = new Map<number, NodePresetInfo>()
+	if (generator && config.generator && 'rnbo' in config.generator) {
+		const info = makeNodePresetInfo(engine, config.generator, generator)
+		if (info) {
+			// Apply initial preset from buildNode result
+			if (genActivePreset) info.active = genActivePreset
+			nodePresets.set(-1, info)
+		}
+	}
+	if (config.fx) {
+		for (let i = 0; i < config.fx.length; i++) {
+			if ('rnbo' in config.fx[i]) {
+				const info = makeNodePresetInfo(engine, config.fx[i] as { rnbo: string }, fx[i])
+				if (info) nodePresets.set(i, info)
+			}
+		}
+	}
+
 	const chain: AudioChain = {
 		config,
 		generator,
 		fx,
 		analyzer,
 		output,
+		nodePresets,
+		onParamChange: null,
 		setParam(path, value) {
 			if (chain.generator) setNodeParam(chain.generator, path, value)
 		},
@@ -207,6 +256,18 @@ export async function buildChain(
 				<ToneAudioNode>chain.fx[index]
 			)
 		}
+	}
+
+	// Subscribe all RNBO nodes to param changes
+	const rnboNodes: (ToneAudioNode | Device)[] = []
+	if (generator && isDevice(generator)) rnboNodes.push(generator)
+	for (const f of fx) {
+		if (isDevice(f)) rnboNodes.push(f)
+	}
+	for (const node of rnboNodes) {
+		;(node as Device).parameterChangeEvent.subscribe((param) => {
+			if (chain.onParamChange) chain.onParamChange(param.id, param.value)
+		})
 	}
 
 	// Register named chains
@@ -537,22 +598,69 @@ function listNodeParams(node: ToneAudioNode | Device): ParamInfo[] {
 
 // --- Internal helpers ---
 
+function makeNodePresetInfo(
+	engine: AudioEngine,
+	config: { rnbo: string },
+	node: ToneAudioNode | Device
+): NodePresetInfo | null {
+	if (!isDevice(node)) return null
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const patcher = engine.rnboCache.get(config.rnbo) as any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const entries: { name: string; preset: any }[] = patcher?.presets ?? []
+	if (entries.length === 0) return null
+	const device = node
+	return {
+		names: entries.map((p) => p.name),
+		active: null,
+		set(name: string) {
+			const entry = entries.find((p) => p.name === name)
+			if (entry) {
+				device.setPreset(entry.preset)
+				this.active = name
+			}
+		}
+	}
+}
+
+type NodeResult = {
+	node: ToneAudioNode | Device
+	presetNames: string[]
+	activePreset: string | null
+}
+
 async function buildNode(
 	engine: AudioEngine,
 	config: GeneratorConfig | FxConfig
-): Promise<ToneAudioNode | Device> {
+): Promise<NodeResult> {
 	if ('rnbo' in config) {
-		return await loadRNBO(engine, config.rnbo, config.params)
+		const result = await loadRNBO(engine, config.rnbo, config.params, config.preset)
+		return {
+			node: result.device,
+			presetNames: result.presetNames,
+			activePreset: result.activePreset
+		}
 	} else {
-		return createToneNode(engine, config.tone, config.params)
+		return {
+			node: createToneNode(engine, config.tone, config.params),
+			presetNames: [],
+			activePreset: null
+		}
 	}
+}
+
+type RNBOResult = {
+	device: Device
+	presetNames: string[]
+	activePreset: string | null
 }
 
 async function loadRNBO(
 	engine: AudioEngine,
 	path: string,
-	params?: Record<string, ParamValue>
-): Promise<Device> {
+	params?: Record<string, ParamValue>,
+	preset?: string
+): Promise<RNBOResult> {
 	if (!engine.ctx) throw new Error('No AudioContext')
 
 	let patcher = engine.rnboCache.get(path)
@@ -565,6 +673,26 @@ async function loadRNBO(
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const device = await createDevice({ context: engine.ctx, patcher: patcher as any })
 
+	// Extract and apply presets
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const patcherObj = patcher as any
+	const presetEntries: { name: string; preset: unknown }[] = patcherObj?.presets ?? []
+	const presetNames = presetEntries.map((p) => p.name)
+	let activePreset: string | null = null
+
+	if (presetEntries.length > 0) {
+		const target =
+			preset ??
+			(presetEntries.find((p) => p.name === 'Default') ? 'Default' : presetEntries[0].name)
+		const entry = presetEntries.find((p) => p.name === target)
+		if (entry) {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			await device.setPreset(entry.preset as any)
+			activePreset = entry.name
+		}
+	}
+
+	// Apply explicit params AFTER preset (overrides)
 	if (params) {
 		for (const [key, val] of Object.entries(params)) {
 			const p = device.parameters.find((p) => p.name === key || p.id === key)
@@ -572,7 +700,7 @@ async function loadRNBO(
 		}
 	}
 
-	return device
+	return { device, presetNames, activePreset }
 }
 
 function createToneNode(

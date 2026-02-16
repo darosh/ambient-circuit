@@ -185,6 +185,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Shared Tone.Analyser for UI (reconnects on selection change)
   - [x] Per-chain/bus analyzer config: `boolean | 'fft' | 'waveform' | 'meter'`
   - [x] Demo scene (scene-audio) with buses + master chain
+  - [x] RNBO preset support: per-node presets (generator + fx), preset dropdown in UI, param refresh on change
 - [ ] Audio UI & interaction
   - [x] Mouse-over highlight on objects (hover glow via impactIntensity uniform)
   - [ ] Selection with bounding-box corners (smooth transition on change)
@@ -386,8 +387,11 @@ globalBeatHandler(ctx) {
 **Config shorthand:**
 
 - `{tone: 'Synth', params?: {...}}` for Tone.js nodes
-- `{rnbo: 'rnbo.shimmerev', params?: {...}}` for RNBO patchers
+- `{rnbo: 'rnbo.shimmerev', params?: {...}, preset?: 'Name'}` for RNBO patchers
 - Used for both generators and fx
+- RNBO presets: `preset` in config selects initial preset (falls back to "Default" → first); `params` override preset values
+- Runtime: `chain.nodePresets` Map (-1=generator, 0+=fx index) with `NodePresetInfo {names, active, set(name)}`
+- Buses also have `nodePresets` for their RNBO fx nodes
 
 **Routing: chains → buses → master → destination:**
 
