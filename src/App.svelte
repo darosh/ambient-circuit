@@ -10,7 +10,8 @@
 		Monitor,
 		List,
 		Element,
-		Button
+		Button,
+		WaveformMonitor
 	} from 'svelte-tweakpane-ui'
 	import type { Theme } from 'svelte-tweakpane-ui'
 	import Scene from './components/Scene.svelte'
@@ -28,6 +29,7 @@
 	// extend(THREE)
 
 	const buttonBackgroundColor = 'hsl(230, 7%, 16%)'
+	const inputBackgroundColor = 'hsl(230, 7%, 24%)'
 	const customizedTheme: Theme = {
 		...ThemeUtils.presets.translucent,
 		bladeValueWidth: '160px',
@@ -35,7 +37,11 @@
 		buttonBackgroundColorActive: buttonBackgroundColor,
 		buttonBackgroundColorFocus: buttonBackgroundColor,
 		buttonBackgroundColorHover: buttonBackgroundColor,
-		buttonForegroundColor: 'hsl(230, 7%, 70%)'
+		buttonForegroundColor: 'hsl(230, 7%, 70%)',
+		inputBackgroundColor,
+		inputBackgroundColorActive: inputBackgroundColor,
+		inputBackgroundColorFocus: inputBackgroundColor,
+		inputBackgroundColorHover: inputBackgroundColor
 	}
 
 	let showGrid = $state(true)
@@ -55,6 +61,7 @@
 	let easing = $state('linear')
 	let midiEnabled = $state(false)
 	let debugEnabled = $state(true)
+	let waveData = $state<number[]>([])
 	let midiState = $state<MidiState | null>(null)
 	let midiPortOptions = $derived(
 		midiState ? midiState.outputs.map((p) => ({ text: p.name, value: p.id })) : []
@@ -151,34 +158,20 @@
 	// Analyzer visualization
 	$effect(() => {
 		const chain = selectedAudioChain
-		const canvas = analyzerCanvas
 		if (analyzerRafId) {
 			cancelAnimationFrame(analyzerRafId)
 			analyzerRafId = 0
 		}
-		if (!canvas) return
-		const ctx2d = canvas.getContext('2d')
-		if (!ctx2d) return
 		const analyzer = chain?.analyzer
 		if (!analyzer) {
-			ctx2d.clearRect(0, 0, canvas.width, canvas.height)
 			return
 		}
 		analyzer.fftSize = 64
 		const data = new Uint8Array(analyzer.frequencyBinCount)
-		const w = canvas.width
-		const h = canvas.height
-		const barW = w / data.length
 
 		function draw() {
 			analyzer!.getByteFrequencyData(data)
-			ctx2d!.fillStyle = '#1a1a2e'
-			ctx2d!.fillRect(0, 0, w, h)
-			for (let i = 0; i < data.length; i++) {
-				const barH = (data[i] / 255) * h
-				ctx2d!.fillStyle = `hsl(${180 + i * 3}, 80%, ${50 + data[i] / 8}%)`
-				ctx2d!.fillRect(i * barW, h - barH, barW - 1, barH)
-			}
+			waveData = Array.from(data)
 			analyzerRafId = requestAnimationFrame(draw)
 		}
 		draw()
@@ -326,9 +319,10 @@
 					{#each selectedAudioChain.config.fx ?? [] as fxConfig, fxIdx (fxIdx)}
 						{#if fxParamInfos[fxIdx.toString()]}
 							<Folder
-								title={'engine' in fxConfig && fxConfig.engine === 'rnbo'
-									? fxConfig.path
-									: fxConfig.name}
+								title={'FX: ' +
+									('engine' in fxConfig && fxConfig.engine === 'rnbo'
+										? fxConfig.path
+										: fxConfig.name)}
 								expanded={false}
 							>
 								{#each fxParamInfos[fxIdx.toString()] as info (info.path)}
@@ -353,14 +347,7 @@
 							</Folder>
 						{/if}
 					{/each}
-					<Element>
-						<canvas
-							bind:this={analyzerCanvas}
-							width={280}
-							height={80}
-							style="width:100%;height:80px;border-radius:4px;background:#1a1a2e"
-						></canvas>
-					</Element>
+					<WaveformMonitor value={waveData} min={0} max={255} interval={100} />
 				{/if}
 			</Folder>
 		{/if}
@@ -483,10 +470,15 @@
 
 	.help {
 		font-family: 'Roboto Mono', 'Source Code Pro', Menlo, Courier, monospace;
-		font-size: 13px;
+		font-size: 12px;
 		font-weight: 500;
 		line-height: 18px;
 		color: #fff;
 		padding: 9px;
+	}
+
+	:global(.tp-dfwv) {
+		overflow-y: scroll;
+		max-height: calc(100vh - 16px);
 	}
 </style>
