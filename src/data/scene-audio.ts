@@ -1,9 +1,6 @@
 import type { SceneConfig } from '../lib/scene'
 import { triggerHandler } from '../lib/trigger-handler'
 
-const shimmerev = {
-}
-
 export const scene: SceneConfig = {
 	id: 'scene-audio',
 	bpm: 120,
@@ -11,9 +8,11 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	audio: {
 		master: {
-			fx: [{
-				tone: 'Compressor'
-			}]
+			fx: [
+				{
+					tone: 'Compressor'
+				}
+			]
 		},
 		buses: {
 			reverb: {

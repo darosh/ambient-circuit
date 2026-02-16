@@ -43,13 +43,11 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 	engine.ctx = ctx
 
 	// Dynamic import Tone.js and set shared context
-	
+
 	if (typeof self === 'object') {
-		(<Record<string, boolean>><unknown>self).TONE_SILENCE_LOGGING = true
+		;(<Record<string, boolean>>(<unknown>self)).TONE_SILENCE_LOGGING = true
 	}
-		
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	// @ts-expect-error
+
 	const Tone = await import('tone')
 	Tone.setContext(ctx)
 	await Tone.start()
@@ -476,6 +474,20 @@ export function getNodeParam(
 }
 
 /**
+ * List fx params for a bus by fx index
+ */
+export function listBusFxParams(bus: AudioBus, index: number): ParamInfo[] {
+	return bus.fx[index] ? listNodeParams(bus.fx[index]) : []
+}
+
+/**
+ * Set fx param on a bus by fx index + path
+ */
+export function setBusFxParam(bus: AudioBus, index: number, path: string, value: ParamValue): void {
+	if (bus.fx[index]) setNodeParam(bus.fx[index], path, value)
+}
+
+/**
  * List all params from a live node
  */
 function listNodeParams(node: ToneAudioNode | Device): ParamInfo[] {
@@ -602,7 +614,7 @@ function getWebAudioNode(
 		if (cur?._analysers?.length) {
 			return cur._analysers[0]
 		}
-			
+
 		if (cur instanceof AudioNode) return cur
 		if (cur._gainNode instanceof AudioNode) return cur._gainNode
 		if (cur.output != null) {

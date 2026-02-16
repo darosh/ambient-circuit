@@ -20,8 +20,8 @@
 	import { scenes } from './data'
 	import { initMidi, setMidiPort, type MidiState, setMidiState } from './lib/midi/midi'
 	import type { SelectedEntity } from './components/Scene.svelte'
-	import type { AudioChain, AudioEngine, ParamValue } from './lib/audio/types'
-	import { connectSharedAnalyzer } from './lib/audio/engine'
+	import type { AudioChain, AudioBus, AudioEngine, ParamValue } from './lib/audio/types'
+	import { connectSharedAnalyzer, listBusFxParams, setBusFxParam } from './lib/audio/engine'
 	import { WebGPURenderer } from 'three/webgpu'
 	import { clearMarbleGeometryCache } from './lib/video/marble-geometry'
 	import { clearInstrumentGeometryCache } from './lib/video/instrument-geometry'
@@ -74,7 +74,90 @@
 	let allAudioChains = $state<AudioChain[]>([])
 	let soloMode = $state(false)
 	let audioEngineRef = $state<AudioEngine | null>(null)
+	let selectedAudioTarget = $state<string>('')
 	let analyzerRafId = 0
+
+	// Build dropdown options for chain/bus/master selector
+	let audioTargetOptions = $derived(
+		(() => {
+			const opts: { text: string; value: string }[] = []
+			if (!audioEngineRef) return opts
+			// Chains (by index, show config id or index)
+			for (let i = 0; i < allAudioChains.length; i++) {
+				const c = allAudioChains[i]
+				const label = c.config.id ?? `chain:${i}`
+				opts.push({ text: label, value: `chain:${i}` })
+			}
+			// Buses
+			for (const name of audioEngineRef.buses.keys()) {
+				opts.push({ text: `bus:${name}`, value: `bus:${name}` })
+			}
+			// Master
+			if (audioEngineRef.masterChain) {
+				opts.push({ text: 'master', value: 'master' })
+			}
+			return opts
+		})()
+	)
+
+	// Resolve selected target to chain or bus
+	function getTargetChain(): AudioChain | null {
+		if (!audioEngineRef || !selectedAudioTarget) return null
+		if (selectedAudioTarget.startsWith('chain:')) {
+			const idx = parseInt(selectedAudioTarget.slice(6))
+			return allAudioChains[idx] ?? null
+		}
+		return null
+	}
+
+	function getTargetBus(): AudioBus | null {
+		if (!audioEngineRef || !selectedAudioTarget) return null
+		if (selectedAudioTarget.startsWith('bus:')) {
+			return audioEngineRef.buses.get(selectedAudioTarget.slice(4)) ?? null
+		}
+		if (selectedAudioTarget === 'master') {
+			return audioEngineRef.masterChain
+		}
+		return null
+	}
+
+	// Bus fx params state
+	let busFxParamInfos = $state<Record<string, ParamInfo[]>>({})
+	let busFxParams = $state<Record<string, Record<string, number>>>({})
+
+	// Populate bus fx params when target changes
+	$effect(() => {
+		const bus = getTargetBus()
+		if (!bus) {
+			busFxParamInfos = {}
+			busFxParams = {}
+			return
+		}
+		const fi: Record<string, ParamInfo[]> = {}
+		const fp: Record<string, Record<string, number>> = {}
+		for (let i = 0; i < bus.fx.length; i++) {
+			const infos = listBusFxParams(bus, i)
+			if (infos.length > 0) {
+				fi[i.toString()] = infos
+				const p: Record<string, number> = {}
+				for (const f of infos) p[f.path] = f.value
+				fp[i.toString()] = p
+			}
+		}
+		busFxParamInfos = fi
+		busFxParams = fp
+	})
+
+	// Push bus fx param changes
+	$effect(() => {
+		const bus = getTargetBus()
+		if (!bus) return
+		for (const [idxStr, params] of Object.entries(busFxParams)) {
+			for (const [key, val] of Object.entries(params)) {
+				setBusFxParam(bus, parseInt(idxStr), key, val)
+			}
+		}
+	})
 
 	// Reactive param values for selected chain
 	type ParamInfo = { path: string; value: number; min: number; max: number }
@@ -82,6 +165,14 @@
 	let genParams = $state<Record<string, number>>({})
 	let fxParamInfos = $state<Record<string, ParamInfo[]>>({})
 	let fxParams = $state<Record<string, Record<string, number>>>({})
+
+	// Sync dropdown chain target → selectedAudioChain for param display
+	$effect(() => {
+		const chain = getTargetChain()
+		if (chain && chain !== selectedAudioChain) {
+			selectedAudioChain = chain
+		}
+	})
 
 	// Populate params when selection/chain changes
 	$effect(() => {
@@ -156,26 +247,35 @@
 		if (!selectedEntity) soloMode = false
 	})
 
-	// Shared analyzer: reconnect when selection changes
+	// Shared analyzer: reconnect when selection changes (entity or target dropdown)
 	$effect(() => {
-		const chain = selectedAudioChain
 		const engine = audioEngineRef
-		if (engine) {
-			connectSharedAnalyzer(engine, chain ?? null)
+		if (!engine) return
+		// Priority: dropdown target > entity selection
+		const targetChain = getTargetChain()
+		const targetBus = getTargetBus()
+		if (targetChain) {
+			connectSharedAnalyzer(engine, targetChain)
+		} else if (targetBus) {
+			connectSharedAnalyzer(engine, targetBus)
+		} else if (selectedAudioChain) {
+			connectSharedAnalyzer(engine, selectedAudioChain)
+		} else {
+			connectSharedAnalyzer(engine, null)
 		}
 	})
 
 	// Analyzer visualization using shared Tone.Analyser
 	$effect(() => {
 		const engine = audioEngineRef
-		const chain = selectedAudioChain
+		const hasTarget = selectedAudioChain || selectedAudioTarget
 		if (analyzerRafId) {
 			cancelAnimationFrame(analyzerRafId)
 			analyzerRafId = 0
 		}
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const analyzer = engine?.sharedAnalyzer as any
-		if (!analyzer || !chain) {
+		if (!analyzer || !hasTarget) {
 			waveData = []
 			return
 		}
@@ -364,6 +464,74 @@
 							</Folder>
 						{/if}
 					{/each}
+					<WaveformMonitor value={waveData} min={0} max={255} interval={100} />
+				{/if}
+			</Folder>
+		{/if}
+		{#if audioTargetOptions.length > 0}
+			<Folder title="Audio" expanded={false}>
+				<List label="Target" bind:value={selectedAudioTarget} options={audioTargetOptions} />
+				{#if getTargetChain()}
+					{@const chain = getTargetChain()}
+					{#if chain}
+						{#each chain.config.fx ?? [] as fxConfig, fxIdx (fxIdx)}
+							{#if fxParamInfos[fxIdx.toString()]}
+								<Folder
+									title={'FX: ' + ('rnbo' in fxConfig ? fxConfig.rnbo : fxConfig.tone)}
+									expanded={false}
+								>
+									{#each fxParamInfos[fxIdx.toString()] as info (info.path)}
+										<Slider
+											label={info.path.split('.').pop() ?? info.path}
+											bind:value={fxParams[fxIdx.toString()][info.path]}
+											min={info.min}
+											max={info.max}
+										/>
+									{/each}
+								</Folder>
+							{/if}
+						{/each}
+					{/if}
+				{/if}
+				{#if getTargetBus()}
+					{@const bus = getTargetBus()}
+					{#if bus}
+						{#each bus.fx as _fx, fxIdx (fxIdx)}
+							{#if busFxParamInfos[fxIdx.toString()]}
+								{@const fxConfig = bus.config.fx?.[fxIdx]}
+								<Folder
+									title={'FX: ' +
+										(fxConfig
+											? 'rnbo' in fxConfig
+												? fxConfig.rnbo
+												: fxConfig.tone
+											: `fx:${fxIdx}`)}
+									expanded={true}
+								>
+									{#each busFxParamInfos[fxIdx.toString()] as info (info.path)}
+										<Slider
+											label={info.path.split('.').pop() ?? info.path}
+											bind:value={busFxParams[fxIdx.toString()][info.path]}
+											min={info.min}
+											max={info.max}
+										/>
+									{/each}
+									<Button
+										title="Copy params"
+										on:click={() => {
+											const params: Record<string, ParamValue> = {}
+											for (const [k, v] of Object.entries(busFxParams[fxIdx.toString()])) {
+												params[k] = v
+											}
+											navigator.clipboard.writeText(JSON.stringify(params))
+										}}
+									/>
+								</Folder>
+							{/if}
+						{/each}
+					{/if}
+				{/if}
+				{#if waveData.length > 0}
 					<WaveformMonitor value={waveData} min={0} max={255} interval={100} />
 				{/if}
 			</Folder>

@@ -20,6 +20,8 @@ export {
 	triggerChain,
 	connectSharedAnalyzer,
 	disposeChain,
+	listBusFxParams,
+	setBusFxParam,
 	disposeScene,
 	unflattenParams,
 	setNodeParam,
