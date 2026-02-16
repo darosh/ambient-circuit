@@ -20,7 +20,7 @@ import {
 } from 'three/tsl'
 
 const textureLoader = new TextureLoader()
-const perlinTexture = textureLoader.load('./rgb-256x256.png')
+const perlinTexture = textureLoader.load('./media/rgb-256x256.png')
 perlinTexture.wrapS = RepeatWrapping
 perlinTexture.wrapT = RepeatWrapping
 
