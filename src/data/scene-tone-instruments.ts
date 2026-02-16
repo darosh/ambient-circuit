@@ -6,9 +6,14 @@ const c = colorFactory()
 
 export const scene: SceneConfig = {
 	id: 'scene-tone-instruments',
-	bpm: 60,
+	bpm: 220,
 	triggerHandler,
 	camera: [3, 16, 7],
+	audio: {
+		master: {
+			fx: [{ tone: 'Compressor', params: { threshold: -32 } }]
+		}
+	},
 	rails: [
 		{
 			color: c(),

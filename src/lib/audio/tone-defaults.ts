@@ -32,5 +32,13 @@ export default <Record<string, Record<string, number>>>{
 	AMSynth: {},
 	FMSynth: {},
 	MembraneSynth: {},
-	MonoSynth: {}
+	MonoSynth: {
+		'envelope.attack': 0.005,
+		'envelope.decay': 0.1,
+		'envelope.sustain': 0.9,
+		'envelope.release': 1,
+		detune: 0,
+		volume: 1,
+		portamento: 0
+	}
 }
