@@ -435,6 +435,9 @@
 				<List label="Target" bind:value={selectedAudioTarget} options={audioTargetOptions} />
 				{#if selectedAudioChain}
 					<Checkbox label="Solo" bind:value={soloMode} />
+					{#if waveData.length > 0}
+						<WaveformMonitor value={waveData} min={0} max={255} interval={100} />
+					{/if}
 					{#if genParamInfos.length > 0}
 						<Folder title="Generator" expanded={true}>
 							{#each genParamInfos as info (info.path)}
@@ -493,9 +496,6 @@
 							{/if}
 						{/each}
 					{/if}
-				{/if}
-				{#if waveData.length > 0}
-					<WaveformMonitor value={waveData} min={0} max={255} interval={100} />
 				{/if}
 			</Folder>
 		{/if}
