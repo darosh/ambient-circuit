@@ -201,7 +201,11 @@ export async function buildChain(
 			)
 		},
 		listFxParams(index) {
-			return chain.fx[index] ? listNodeParams(chain.fx[index]) : []
+			return addParamsFromConfig(
+				chain.fx[index] ? listNodeParams(chain.fx[index]) : [],
+				config?.fx?.[index]?.params ?? {},
+				<ToneAudioNode>chain.fx[index]
+			)
 		}
 	}
 
@@ -477,7 +481,11 @@ export function getNodeParam(
  * List fx params for a bus by fx index
  */
 export function listBusFxParams(bus: AudioBus, index: number): ParamInfo[] {
-	return bus.fx[index] ? listNodeParams(bus.fx[index]) : []
+	return addParamsFromConfig(
+		bus.fx[index] ? listNodeParams(bus.fx[index]) : [],
+		bus.config?.fx?.[index]?.params ?? {},
+		<ToneAudioNode>bus.fx[index]
+	)
 }
 
 /**
@@ -519,8 +527,8 @@ function listNodeParams(node: ToneAudioNode | Device): ParamInfo[] {
 			typeof val.value === 'number' &&
 			'setValueAtTime' in val
 		) {
-			const min = (val.minValue ?? 0 < -1e5) ? -100 : (val.minValue ?? 0)
-			const max = (val.maxValue ?? 0 > 1e5) ? 0 : (val.maxValue ?? 0)
+			const min = (val.minValue ?? 0) < -1e5 ? -100 : (val.minValue ?? 0)
+			const max = (val.maxValue ?? 0) > 1e5 ? 0 : (val.maxValue ?? 0)
 			params.push({ path: key, value: val.value, min, max })
 		}
 	}
