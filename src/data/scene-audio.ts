@@ -18,15 +18,8 @@ export const scene: SceneConfig = {
 			reverb: {
 				fx: [
 					{
-						rnbo: 'rnbo.shimmerev',
+						rnbo: 'gigaverb',
 						params: {
-							mix: 50,
-							decay: 600,
-							octvol: 100,
-							pitchvol: 100,
-							rev: 80,
-							size: 70,
-							feedback: 30
 						}
 					}
 				]
@@ -103,13 +96,13 @@ export const scene: SceneConfig = {
 					type: 'spiral',
 					beat: 0,
 					midiNote: 48,
-					audio: { generator: { rnbo: 'feedback-synth.export' }, bus: 'reverb' }
+					audio: { generator: { rnbo: 'feedback-synth' }, bus: 'reverb' }
 				},
 				{
 					type: 'spiral',
 					beat: 4,
 					midiNote: 55,
-					audio: { generator: { rnbo: 'feedback-synth.export' }, bus: 'reverb' }
+					audio: { generator: { rnbo: 'feedback-synth' }, bus: 'reverb' }
 				}
 			]
 		}
