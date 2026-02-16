@@ -169,7 +169,8 @@
 	// Sync entity selection → dropdown target
 	$effect(() => {
 		if (!selectedAudioChain) return
-		const idx = allAudioChains.indexOf(selectedAudioChain)
+		const output = selectedAudioChain.output
+		const idx = allAudioChains.findIndex((c) => c.output === output)
 		if (idx >= 0) {
 			selectedAudioTarget = `chain:${idx}`
 		}
