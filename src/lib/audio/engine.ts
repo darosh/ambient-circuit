@@ -8,11 +8,10 @@ import type {
 	GeneratorConfig,
 	FxConfig,
 	ParamValue,
-	ParamMap,
 	AnalyzerType,
 	NodePresetInfo
 } from './types'
-import type { ToneAudioNode, Param } from 'tone'
+import type { ToneAudioNode } from 'tone'
 import { createDevice, MIDIEvent } from '@rnbo/js'
 import type { Device, MIDIByte } from '@rnbo/js'
 import TONE_DEFAULTS from './tone-defaults'
@@ -249,20 +248,14 @@ export async function buildChain(
 			return chain.generator ? getNodeParam(chain.generator, path) : undefined
 		},
 		listParams() {
-			return addParamsFromConfig(
-				chain.generator ? listNodeParams(chain.generator) : [],
-				config?.generator?.params ?? {},
-				<ToneAudioNode>chain.generator,
-				'tone' in config.generator! ? config?.generator.tone : undefined
-			)
+			if (!chain.generator) return []
+			const gc = config.generator!
+			return listNodeParams(chain.generator, gc.params, 'tone' in gc ? gc.tone : undefined)
 		},
 		listFxParams(index) {
-			return addParamsFromConfig(
-				chain.fx[index] ? listNodeParams(chain.fx[index]) : [],
-				config?.fx?.[index]?.params ?? {},
-				<ToneAudioNode>chain.fx[index],
-				'tone' in config.fx![index]! ? config.fx![index].tone : undefined
-			)
+			if (!chain.fx[index]) return []
+			const fc = config.fx![index]
+			return listNodeParams(chain.fx[index], fc.params, 'tone' in fc ? fc.tone : undefined)
 		}
 	}
 
@@ -451,36 +444,6 @@ export function disposeScene(engine: AudioEngine): void {
 
 export type ParamInfo = { path: string; value: number; min: number; max: number }
 
-export function addParamsFromConfig(
-	paramInfos: ParamInfo[],
-	paramMap: ParamMap,
-	generator: ToneAudioNode,
-	toneClass: string | undefined
-): ParamInfo[] {
-	const add: ParamInfo[] = []
-	const numberParams = toneClass ? (TONE_DEFAULTS[toneClass] ?? {}) : {}
-	const defaulted = { ...numberParams, ...paramMap }
-
-	for (const [key, value] of Object.entries(defaulted)) {
-		if (!paramInfos.some((x) => x.path === key) && typeof value === 'number') {
-			const param = <Param>(<unknown>getNodeParam(generator, 'key', false))
-
-			add.push({
-				path: key,
-				value,
-				min: param?.minValue ?? 0,
-				max: param?.maxValue ?? 1
-			})
-		}
-	}
-
-	if (add.length) {
-		return [...add, ...paramInfos]
-	}
-
-	return paramInfos
-}
-
 /**
  * Unflatten dot-path params: {'a.b': 1, 'a.c': 2, x: 3} → {a: {b: 1, c: 2}, x: 3}
  */
@@ -561,12 +524,9 @@ export function getNodeParam(
  * List fx params for a bus by fx index
  */
 export function listBusFxParams(bus: AudioBus, index: number): ParamInfo[] {
-	return addParamsFromConfig(
-		bus.fx[index] ? listNodeParams(bus.fx[index]) : [],
-		bus.config?.fx?.[index]?.params ?? {},
-		<ToneAudioNode>bus.fx[index],
-		'tone' in bus.config.fx![index] ? bus.config.fx![index].tone : undefined
-	)
+	if (!bus.fx[index]) return []
+	const fc = bus.config.fx![index]
+	return listNodeParams(bus.fx[index], fc.params, 'tone' in fc ? fc.tone : undefined)
 }
 
 /**
@@ -580,18 +540,11 @@ export function setBusFxParam(bus: AudioBus, index: number, path: string, value:
  * List all params from a live node
  */
 
-function getAllPropertyNames(obj: Record<string, never>): string[] {
-	const props = new Set<string>()
-
-	while (obj) {
-		Object.getOwnPropertyNames(obj).forEach((p) => props.add(p))
-		obj = Object.getPrototypeOf(obj)
-	}
-
-	return [...props]
-}
-
-function listNodeParams(node: ToneAudioNode | Device): ParamInfo[] {
+function listNodeParams(
+	node: ToneAudioNode | Device,
+	configParams?: Record<string, ParamValue>,
+	toneClass?: string
+): ParamInfo[] {
 	if (isDevice(node)) {
 		return node.parameters.map((p) => ({
 			path: p.name || p.id,
@@ -600,66 +553,42 @@ function listNodeParams(node: ToneAudioNode | Device): ParamInfo[] {
 			max: p.max
 		}))
 	}
-	// Tone.js: enumerate AudioParam-like properties
-	const params: { path: string; value: number; min: number; max: number }[] = []
+	// Tone.js: resolve params from known keys (config + defaults)
+	const defaults = toneClass ? (TONE_DEFAULTS[toneClass] ?? {}) : {}
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const obj = node as any
-	for (const key of getAllPropertyNames(obj)) {
-		if (
-			key.startsWith('_') ||
-			key === 'context' ||
-			key === 'input' ||
-			key === 'output' ||
-			key === 'name' ||
-			key === 'onsilence' ||
-			key === 'debug' ||
-			key === 'numberOfInputs' ||
-			key === 'numberOfOutputs' ||
-			key === 'sampleTime' ||
-			key === 'blockTime' ||
-			key === 'channelCount' ||
-			key === 'reduction' ||
-			key === 'frequency'
-		) {
-			continue
-		}
+	const known: Record<string, any> = { ...defaults, ...configParams }
+	const params: ParamInfo[] = []
 
-		const val = obj[key]
+	for (const [path, defaultVal] of Object.entries(known)) {
+		if (typeof defaultVal !== 'number') continue
+		const raw = getNodeParam(node, path, false)
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const param = raw as any
+		const isAudioParam = param && typeof param === 'object' && 'setValueAtTime' in param
+		const value = isAudioParam ? param.value : typeof raw === 'number' ? raw : defaultVal
 
-		if (
-			val &&
-			typeof val === 'object' &&
-			typeof val.value === 'number' &&
-			'setValueAtTime' in val
-		) {
-			let min = val.minValue
-			let max = val.maxValue
+		let min = isAudioParam ? param.minValue : 0
+		let max = isAudioParam ? param.maxValue : 1
 
-			if (val.units === 'decibels') {
-				min = min < -1e30 ? -60 : min
-				max = max > 1e30 ? 60 : max
-			} else if (val.units === 'cents') {
-				min = min < -1e30 ? -240 : min
-				max = max > 1e30 ? 240 : max
-			} else if (val.units === 'gain') {
-				min = min < -1e30 ? -60 : min
-				max = max > 1e30 ? 60 : max
+		if (isAudioParam) {
+			const u = param.units
+			if (u === 'decibels' || u === 'gain') {
+				if (min < -1e30) min = -60
+				if (max > 1e30) max = 60
+			} else if (u === 'cents') {
+				if (min < -1e30) min = -240
+				if (max > 1e30) max = 240
 			}
-
-			params.push({ path: key, value: val.value, min, max })
-		} else if (key.includes('envelope')) {
-			params.push({ path: `${key}.attack`, value: val.attack, min: 0, max: 2 })
-			params.push({ path: `${key}.decay`, value: val.decay, min: 0, max: 2 })
-			params.push({ path: `${key}.sustain`, value: val.sustain, min: 0, max: 1 })
-			params.push({ path: `${key}.release`, value: val.release, min: 0, max: 5 })
-		} else if (key === 'oscillator') {
-			// params.push({ path: `${key}.harmonicity`, value: val.value, min: 0, max: 12 })
-			// params.push({ path: `${key}.modulationFrequency`, value: val.value, min: 0.1, max: 5 })
-		} else if (!key.includes('.') && typeof val === 'number') {
-			params.push({ path: key, value: val, min: 0, max: 1 })
-		} else {
-			// log('skipping param', key, val)
+		} else if (path === 'dampening') {
+			max = 7000
+		} else if (path === 'attackNoise') {
+			min = 0.1
+			max = 20
+		} else if (path.endsWith('.baseFrequency')) {
+			max = 7000
 		}
+
+		params.push({ path, value, min, max })
 	}
 
 	log('params', params)

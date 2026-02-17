@@ -12,8 +12,8 @@ export const scene: SceneConfig = {
 	audio: {
 		master: {
 			fx: [
-				// { rnbo: 'gigaverb' }, 
-				// { rnbo: 'platereverb' }, 
+				{ rnbo: 'gigaverb' },
+				// { rnbo: 'platereverb' },
 				{ tone: 'Compressor', params: { threshold: -32 } }
 			]
 		}
