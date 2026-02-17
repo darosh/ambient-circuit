@@ -44,7 +44,7 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 	if (engine.initialized) return
 
 	engine.ctx = new AudioContext()
-	
+
 	// Dynamic import Tone.js and set shared context
 
 	if (typeof self === 'object') {
@@ -333,7 +333,11 @@ export function connectSharedAnalyzer(
 }
 
 export function genName(chain: AudioChain) {
-	return chain.config.generator ? ('tone' in chain.config.generator ? chain.config.generator.tone : chain.config.generator.rnbo) : undefined
+	return chain.config.generator
+		? 'tone' in chain.config.generator
+			? chain.config.generator.tone
+			: chain.config.generator.rnbo
+		: undefined
 }
 
 export function cfgName(chain: GeneratorConfig | FxConfig) {
@@ -462,7 +466,7 @@ export function disposeScene(engine: AudioEngine): void {
 
 export function soloChain(chains: AudioChain[], selected: AudioChain | undefined) {
 	if (!chains.length) return
-	
+
 	for (const chain of chains) {
 		if (chain.solo) {
 			chain.solo.solo = chain.output === selected?.output
@@ -612,10 +616,10 @@ function listNodeParams(
 		} else if (path === 'dampening') {
 			min = 0.1
 			max = 7000
-		} else if (path === 'resonance' && (defaults[path] > 1)) {
+		} else if (path === 'resonance' && defaults[path] > 1) {
 			max = 7000
-		} else if (path === 'resonance' && (defaults[path] < 1)) {
-			max = .999
+		} else if (path === 'resonance' && defaults[path] < 1) {
+			max = 0.999
 		} else if (path === 'attackNoise') {
 			min = 0.1
 			max = 20
@@ -671,7 +675,7 @@ async function buildNode(
 	config: GeneratorConfig | FxConfig
 ): Promise<NodeResult> {
 	log('build-node', cfgName(config))
-	
+
 	if ('rnbo' in config) {
 		const result = await loadRNBO(engine, config.rnbo, config.params, config.preset)
 		return {
