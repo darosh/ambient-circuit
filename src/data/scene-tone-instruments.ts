@@ -79,8 +79,14 @@ export const scene: SceneConfig = {
 		{
 			color: c(),
 			rail: { id: 'membrane-synth', nodes: [[1, 0, 5], 'i i i i i i i i i i'] },
-			marbles: [{ note: 60 }],
-			instruments: [{ type: 'arrow', beat: 7, audio: { generator: { tone: 'MembraneSynth' } } }]
+			marbles: [{ note: 60 - 36 }],
+			instruments: [
+				{
+					type: 'arrow',
+					beat: 7,
+					audio: { generator: { tone: 'MembraneSynth', params: { pitchDecay: 0.4 } } }
+				}
+			]
 		},
 		{
 			color: c(),
