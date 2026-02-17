@@ -1,4 +1,4 @@
-export default <Record<string, Record<string, number | string | number[]>>>(<unknown>{
+export default <Record<string, Record<string, number>>>(<unknown>{
 	Synth: {
 		volume: 0,
 		detune: 0,
