@@ -458,7 +458,8 @@ export function addParamsFromConfig(
 	toneClass: string | undefined
 ): ParamInfo[] {
 	const add: ParamInfo[] = []
-	const defaulted = { ...(toneClass ? (TONE_DEFAULTS[toneClass] ?? {}) : {}), ...paramMap }
+	const numberParams = toneClass ? (TONE_DEFAULTS[toneClass] ?? {}) : {}
+	const defaulted = { ...numberParams, ...paramMap }
 
 	for (const [key, value] of Object.entries(defaulted)) {
 		if (!paramInfos.some((x) => x.path === key) && typeof value === 'number') {
