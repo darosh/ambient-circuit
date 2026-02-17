@@ -393,10 +393,6 @@
 		navigator.clipboard.writeText(JSON.stringify(out))
 	}
 
-	function fxName(fxConfig: import('./lib/audio/types').FxConfig): string {
-		return 'rnbo' in fxConfig ? fxConfig.rnbo : fxConfig.tone
-	}
-
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.code === 'Space' && e.target === document.body) {
 			e.preventDefault()
@@ -510,7 +506,7 @@
 					{#each selectedAudioChain.config.fx ?? [] as fxConfig, fxIdx (fxIdx)}
 						{@const fxPresetInfo = selectedAudioChain.nodePresets.get(fxIdx)}
 						{#if fxParamInfos[fxIdx.toString()] || fxPresetInfo}
-							<Folder title={'FX: ' + fxName(fxConfig)} expanded={false}>
+							<Folder title={'FX: ' + cfgName(fxConfig)} expanded={false}>
 								{#if fxPresetInfo}
 									<List
 										label="Preset"
@@ -546,7 +542,7 @@
 							{#if busFxParamInfos[fxIdx.toString()] || busFxPresetInfo}
 								<Folder
 									title={'FX: ' +
-										(bus.config.fx?.[fxIdx] ? fxName(bus.config.fx[fxIdx]) : `fx:${fxIdx}`)}
+										(bus.config.fx?.[fxIdx] ? cfgName(bus.config.fx[fxIdx]) : `fx:${fxIdx}`)}
 									expanded={true}
 								>
 									{#if busFxPresetInfo}
@@ -559,7 +555,7 @@
 									{/if}
 									{#if busFxParamInfos[fxIdx.toString()]}
 										<Button
-											title={`Copy ${fxName(bus.config.fx?.[fxIdx])}`}
+											title={`Copy ${cfgName(bus.config.fx?.[fxIdx])}`}
 											on:click={() => copyParams(busFxParams[fxIdx.toString()], busFxPresetInfo)}
 										/>
 										{#each busFxParamInfos[fxIdx.toString()] as info (info.path)}
