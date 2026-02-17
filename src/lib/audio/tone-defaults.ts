@@ -103,5 +103,42 @@ export default <Record<string, Record<string, number | string | number[]>>>(<unk
 		vibratoAmount: 0.5,
 		vibratoRate: 5,
 		harmonicity: 1.5
-	}
+	},
+	Compressor: { attack: 0.003, knee: 30, ratio: 12, release: 0.25, threshold: -24 },
+	Reverb: { wet: 1, decay: 1.5, preDelay: 0.01 },
+	PingPongDelay: { wet: 1, feedback: 0.5, delayTime: 0.25, maxDelay: 1 },
+	Freeverb: { wet: 1, roomSize: 0.7, dampening: 3000 },
+	BitCrusher: { wet: 1, bits: 4 },
+	AutoFilter: {
+		wet: 1,
+		frequency: 1,
+		depth: 1,
+		baseFrequency: 200,
+		octaves: 2.6,
+		'filter.Q': 1
+	},
+	MultibandCompressor: {
+		lowFrequency: 250,
+		highFrequency: 2000,
+		'low.ratio': 6,
+		'low.threshold': -30,
+		'low.release': 0.25,
+		'low.attack': 0.03,
+		'low.knee': 10,
+		'mid.ratio': 3,
+		'mid.threshold': -24,
+		'mid.release': 0.03,
+		'mid.attack': 0.02,
+		'mid.knee': 16,
+		'high.ratio': 3,
+		'high.threshold': -24,
+		'high.release': 0.03,
+		'high.attack': 0.02,
+		'high.knee': 16
+	},
+	OnePoleFilter: { frequency: 880 },
+	EQ3: { high: 0, highFrequency: 2500, low: 0, lowFrequency: 400, mid: 0 },
+	Limiter: { threshold: -12 },
+	Panner: { pan: 0, channelCount: 1 },
+	Solo: {}
 })
