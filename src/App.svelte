@@ -27,7 +27,7 @@
 		ParamValue,
 		NodePresetInfo
 	} from './lib/audio/types'
-	import { connectSharedAnalyzer, listBusFxParams, setBusFxParam } from './lib/audio/engine'
+	import { connectSharedAnalyzer, listBusFxParams, setBusFxParam, soloChain } from './lib/audio/engine'
 	import { WebGPURenderer } from 'three/webgpu'
 	import { clearMarbleGeometryCache } from './lib/video/marble-geometry'
 	import { clearInstrumentGeometryCache } from './lib/video/instrument-geometry'
@@ -207,15 +207,7 @@
 
 	// Solo: use Tone.Solo (all instances auto-coordinate muting)
 	$effect(() => {
-		const selected = selectedAudioChain
-		const solo = soloMode
-		const chains = allAudioChains
-		if (!chains.length) return
-		for (const chain of chains) {
-			if (chain.solo) {
-				chain.solo.solo = solo && chain.output === selected?.output
-			}
-		}
+		soloChain(allAudioChains, soloMode ? selectedAudioChain : undefined)
 	})
 
 	// Clear solo when deselected
@@ -449,6 +441,16 @@
 				scenes[(scenes.findIndex((d) => d.id === sceneId) - 1 + scenes.length) % scenes.length].id
 		}
 	}
+
+	function getShortName (path: string) {
+		const parts = path.split('.')
+		
+		if (parts.length > 1) {
+			return `${parts[0].slice(0, 3)}…${parts.at(-1)}`
+		}
+		
+		return path
+	}
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
@@ -486,7 +488,7 @@
 							<Button title="Copy params" on:click={() => copyParams(genParams, genPresetInfo)} />
 							{#each genParamInfos as info (info.path)}
 								<Slider
-									label={info.path.split('.').pop() ?? info.path}
+									label={getShortName(info.path)}
 									value={genParams[info.path]}
 									min={info.min}
 									max={info.max}
@@ -508,19 +510,16 @@
 									/>
 								{/if}
 								{#if fxParamInfos[fxIdx.toString()]}
+									<Button title="Copy params" on:click={() => copyParams(fxParams[fxIdx.toString()], fxPresetInfo)} />
 									{#each fxParamInfos[fxIdx.toString()] as info (selectedAudioTarget + fxIdx + info.path)}
 										<Slider
-											label={info.path.split('.').pop() ?? info.path}
+											label={getShortName(info.path)}
 											value={fxParams[fxIdx.toString()][info.path]}
 											min={info.min}
 											max={info.max}
 											on:change={(e) => setFxParam(fxIdx, info.path, e.detail.value as number)}
 										/>
 									{/each}
-									<Button
-										title="Copy params"
-										on:click={() => copyParams(fxParams[fxIdx.toString()], fxPresetInfo)}
-									/>
 								{/if}
 							</Folder>
 						{/if}

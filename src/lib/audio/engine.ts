@@ -43,9 +43,8 @@ export function createAudioEngine(): AudioEngine {
 export async function initAudio(engine: AudioEngine): Promise<void> {
 	if (engine.initialized) return
 
-	const ctx = new AudioContext()
-	engine.ctx = ctx
-
+	engine.ctx = new AudioContext()
+	
 	// Dynamic import Tone.js and set shared context
 
 	if (typeof self === 'object') {
@@ -53,13 +52,13 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 	}
 
 	const Tone = await import('tone')
-	Tone.setContext(ctx)
+	Tone.setContext(engine.ctx)
 	await Tone.start()
 	engine.Tone = Tone
 
 	// Master gain → destination
-	const masterGain = ctx.createGain()
-	masterGain.connect(ctx.destination)
+	const masterGain = engine.ctx.createGain()
+	masterGain.connect(engine.ctx.destination)
 	engine.masterGain = masterGain
 
 	// Shared analyzer for UI visualization
@@ -333,6 +332,14 @@ export function connectSharedAnalyzer(
 	connectNodes(chain.output, engine.sharedAnalyzer, engine)
 }
 
+export function genName(chain: AudioChain) {
+	return chain.config.generator ? ('tone' in chain.config.generator ? chain.config.generator.tone : chain.config.generator.rnbo) : undefined
+}
+
+export function cfgName(chain: GeneratorConfig | FxConfig) {
+	return 'tone' in chain ? chain.tone : chain.rnbo
+}
+
 /**
  * Trigger a note on a chain
  */
@@ -370,10 +377,11 @@ export function triggerChain(
 		if (typeof s.triggerAttackRelease === 'function') {
 			if (note - Math.floor(note) || !note) {
 				// triggerAttackRelease(duration, time?, velocity?):
+				log('trigger-perc', genName(chain), note || durationMs / 1000, undefined, velocity / 127)
 				s.triggerAttackRelease(note || durationMs / 1000, undefined, velocity / 127)
 			} else {
 				const freq = midiToFreq(note)
-				// triggerAttackRelease(note, duration, time?, velocity?)
+				log('trigger', genName(chain), freq, durationMs / 1000, undefined, velocity / 127)
 				s.triggerAttackRelease(freq, durationMs / 1000, undefined, velocity / 127)
 			}
 		}
@@ -449,6 +457,16 @@ export function disposeScene(engine: AudioEngine): void {
 	if (engine.masterChain) {
 		disposeBus(engine.masterChain)
 		engine.masterChain = null
+	}
+}
+
+export function soloChain(chains: AudioChain[], selected: AudioChain | undefined) {
+	if (!chains.length) return
+	
+	for (const chain of chains) {
+		if (chain.solo) {
+			chain.solo.solo = chain.output === selected?.output
+		}
 	}
 }
 
@@ -592,11 +610,19 @@ function listNodeParams(
 				if (max > 1e30) max = 240
 			}
 		} else if (path === 'dampening') {
+			min = 0.1
 			max = 7000
+		} else if (path === 'resonance' && (defaults[path] > 1)) {
+			max = 7000
+		} else if (path === 'resonance' && (defaults[path] < 1)) {
+			max = .999
 		} else if (path === 'attackNoise') {
 			min = 0.1
 			max = 20
 		} else if (path.endsWith('.baseFrequency')) {
+			max = 7000
+		} else if (path === 'frequency') {
+			min = 0.1
 			max = 7000
 		}
 
@@ -644,6 +670,8 @@ async function buildNode(
 	engine: AudioEngine,
 	config: GeneratorConfig | FxConfig
 ): Promise<NodeResult> {
+	log('build-node', cfgName(config))
+	
 	if ('rnbo' in config) {
 		const result = await loadRNBO(engine, config.rnbo, config.params, config.preset)
 		return {
@@ -740,14 +768,19 @@ function connectNodes(
 	to: ToneAudioNode | Device | AnalyserNode | GainNode,
 	engine: AudioEngine
 ): void {
-	const fromWeb = getWebAudioNode(from, engine)
-	const toWeb = getWebAudioNode(to, engine)
+	const fromWeb = getOutputNode(from, engine)
+	const toWeb = getInputNode(to, engine)
+
 	if (fromWeb && toWeb) {
+		log('connect', from, '→', to)
 		fromWeb.connect(toWeb)
+	} else {
+		console.error('Connect failed!')
 	}
 }
 
-function getWebAudioNode(
+/** Get the OUTPUT AudioNode (for connecting FROM this node) */
+function getOutputNode(
 	node: ToneAudioNode | Device | AnalyserNode | GainNode,
 	_engine: AudioEngine
 ): AudioNode | null {
@@ -757,20 +790,79 @@ function getWebAudioNode(
 	// Tone.js node — recurse through .output until we hit a raw AudioNode
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let cur: any = node
+
 	for (let i = 0; i < 10; i++) {
 		if (cur?._analysers?.length) {
+			log('output-analyser', node)
 			return cur._analysers[0]
 		}
 
-		if (cur instanceof AudioNode) return cur
-		if (cur._gainNode instanceof AudioNode) return cur._gainNode
+		if (cur instanceof AudioNode) {
+			log('output-audio', node)
+			return cur
+		}
+
+		if (cur._gainNode instanceof AudioNode) {
+			log('output-_gain', node)
+			return cur._gainNode
+		}
+
 		if (cur.output != null) {
+			log('output-deeper', node)
 			cur = cur.output
 			continue
 		}
+
 		break
 	}
+
+	console.error('No output node!', node)
 	return null
+}
+
+/** Get the INPUT AudioNode (for connecting TO this node) */
+function getInputNode(
+	node: ToneAudioNode | Device | AnalyserNode | GainNode,
+	_engine: AudioEngine
+): AudioNode | null {
+	if (node instanceof GainNode || node instanceof AnalyserNode) return node
+	if (isDevice(node as ToneAudioNode | Device)) return (node as Device).node
+
+	// Tone.js effects/nodes have .input — use it so signal goes through processing
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const n = node as any
+
+	// Try .input first (Tone.js effects have separate input/output)
+	if (n.input != null) {
+		let cur = n.input
+		for (let i = 0; i < 10; i++) {
+			if (cur instanceof AudioNode) {
+				log('input-audio', node)
+				return cur
+			}
+			if (cur._gainNode instanceof AudioNode) {
+				log('input-_gain', node)
+				return cur._gainNode
+			}
+			if (cur.input != null) {
+				log('input-deeper', node)
+				cur = cur.input
+				continue
+			}
+			break
+		}
+	}
+
+	// Fallback to output traversal (simple nodes where input === output)
+	return getOutputNode(node, _engine)
+}
+
+/** Get web audio node — used for analyzer access (output side) */
+function getWebAudioNode(
+	node: ToneAudioNode | Device | AnalyserNode | GainNode,
+	engine: AudioEngine
+): AudioNode | null {
+	return getOutputNode(node, engine)
 }
 
 function disposeNode(node: ToneAudioNode | Device): void {
