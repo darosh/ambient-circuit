@@ -14,11 +14,12 @@ export const scene: SceneConfig = {
 			fx: [
 				// { tone: 'OnePoleFilter', params: { frequency: 1200, type: 'lowpass' } },
 				// { tone: 'OnePoleFilter', params: { frequency: 30, type: 'highpass' } },
-				// { tone: 'Freeverb' },
+				{ tone: 'Freeverb', params: { wet: 0.3 } },
 				// { rnbo: 'gigaverb' },
 				// { rnbo: 'platereverb' },
 				// { tone: 'Compressor', params: { threshold: -32 } },
-				{ tone: 'Compressor', params: { threshold: -32 } }
+				{ tone: 'Compressor', params: { threshold: -32 } },
+				{ tone: 'Limiter' }
 			]
 		}
 	},
@@ -44,7 +45,7 @@ export const scene: SceneConfig = {
 						fx: [
 							{ tone: 'Split', params: { channels: 1 } },
 							// { tone: 'OnePoleFilter', params: { frequency: 1200, type: 'lowpass' } },
-							// { tone: 'OnePoleFilter', params: { frequency: 30, type: 'highpass' } },
+							{ tone: 'OnePoleFilter', params: { frequency: 30, type: 'highpass' } }
 							// { tone: 'Reverb' }
 						]
 					}
