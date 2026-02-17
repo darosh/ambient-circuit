@@ -27,7 +27,14 @@
 		ParamValue,
 		NodePresetInfo
 	} from './lib/audio/types'
-	import { connectSharedAnalyzer, listBusFxParams, setBusFxParam, soloChain } from './lib/audio/engine'
+	import {
+		cfgName,
+		connectSharedAnalyzer,
+		genName,
+		listBusFxParams,
+		setBusFxParam,
+		soloChain
+	} from './lib/audio/engine'
 	import { WebGPURenderer } from 'three/webgpu'
 	import { clearMarbleGeometryCache } from './lib/video/marble-geometry'
 	import { clearInstrumentGeometryCache } from './lib/video/instrument-geometry'
@@ -442,13 +449,13 @@
 		}
 	}
 
-	function getShortName (path: string) {
+	function getShortName(path: string) {
 		const parts = path.split('.')
-		
+
 		if (parts.length > 1) {
 			return `${parts[0].slice(0, 3)}…${parts.at(-1)}`
 		}
-		
+
 		return path
 	}
 </script>
@@ -485,7 +492,10 @@
 									on:change={(e) => applyPreset(genPresetInfo, e.detail.value as string)}
 								/>
 							{/if}
-							<Button title="Copy params" on:click={() => copyParams(genParams, genPresetInfo)} />
+							<Button
+								title={`Copy ${genName(selectedAudioChain)}`}
+								on:click={() => copyParams(genParams, genPresetInfo)}
+							/>
 							{#each genParamInfos as info (info.path)}
 								<Slider
 									label={getShortName(info.path)}
@@ -510,7 +520,10 @@
 									/>
 								{/if}
 								{#if fxParamInfos[fxIdx.toString()]}
-									<Button title="Copy params" on:click={() => copyParams(fxParams[fxIdx.toString()], fxPresetInfo)} />
+									<Button
+										title={`Copy ${cfgName(fxConfig)}`}
+										on:click={() => copyParams(fxParams[fxIdx.toString()], fxPresetInfo)}
+									/>
 									{#each fxParamInfos[fxIdx.toString()] as info (selectedAudioTarget + fxIdx + info.path)}
 										<Slider
 											label={getShortName(info.path)}
@@ -546,7 +559,7 @@
 									{/if}
 									{#if busFxParamInfos[fxIdx.toString()]}
 										<Button
-											title="Copy params"
+											title={`Copy ${fxName(bus.config.fx?.[fxIdx])}`}
 											on:click={() => copyParams(busFxParams[fxIdx.toString()], busFxPresetInfo)}
 										/>
 										{#each busFxParamInfos[fxIdx.toString()] as info (info.path)}
