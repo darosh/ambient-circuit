@@ -472,7 +472,10 @@
 						<WaveformMonitor value={waveData} min={0} max={255} interval={100} />
 					{/if}
 					{#if genParamInfos.length > 0 || selectedAudioChain.nodePresets.has(-1)}
-						<Folder title="Generator" expanded={true}>
+						<Folder
+							title={`Generator: ${selectedAudioChain?.config?.generator && ('tone' in selectedAudioChain.config.generator ? selectedAudioChain.config.generator.tone : selectedAudioChain.config?.generator?.rnbo)}`}
+							expanded={true}
+						>
 							{@const genPresetInfo = selectedAudioChain.nodePresets.get(-1)}
 							{#if genPresetInfo}
 								<List
@@ -482,7 +485,8 @@
 									on:change={(e) => applyPreset(genPresetInfo, e.detail.value as string)}
 								/>
 							{/if}
-							{#each genParamInfos as info (selectedAudioTarget + info.path)}
+							<Button title="Copy params" on:click={() => copyParams(genParams, genPresetInfo)} />
+							{#each genParamInfos as info (info.path)}
 								<Slider
 									label={info.path.split('.').pop() ?? info.path}
 									value={genParams[info.path]}
@@ -491,7 +495,6 @@
 									on:change={(e) => setGenParam(info.path, e.detail.value)}
 								/>
 							{/each}
-							<Button title="Copy params" on:click={() => copyParams(genParams, genPresetInfo)} />
 						</Folder>
 					{/if}
 					{#each selectedAudioChain.config.fx ?? [] as fxConfig, fxIdx (fxIdx)}
@@ -545,7 +548,11 @@
 										/>
 									{/if}
 									{#if busFxParamInfos[fxIdx.toString()]}
-										{#each busFxParamInfos[fxIdx.toString()] as info (selectedAudioTarget + fxIdx + info.path)}
+										<Button
+											title="Copy params"
+											on:click={() => copyParams(busFxParams[fxIdx.toString()], busFxPresetInfo)}
+										/>
+										{#each busFxParamInfos[fxIdx.toString()] as info (info.path)}
 											<Slider
 												label={info.path.split('.').pop() ?? info.path}
 												value={busFxParams[fxIdx.toString()][info.path]}
@@ -555,10 +562,6 @@
 													handleBusFxParam(fxIdx, info.path, e.detail.value as number)}
 											/>
 										{/each}
-										<Button
-											title="Copy params"
-											on:click={() => copyParams(busFxParams[fxIdx.toString()], busFxPresetInfo)}
-										/>
 									{/if}
 								</Folder>
 							{/if}
