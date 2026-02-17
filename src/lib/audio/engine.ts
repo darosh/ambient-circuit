@@ -340,7 +340,11 @@ export function genName(chain: AudioChain) {
 		: undefined
 }
 
-export function cfgName(chain: GeneratorConfig | FxConfig) {
+export function cfgName(chain: GeneratorConfig | FxConfig | undefined) {
+	if (!chain) {
+		return
+	}
+
 	return 'tone' in chain ? chain.tone : chain.rnbo
 }
 
@@ -469,7 +473,14 @@ export function soloChain(chains: AudioChain[], selected: AudioChain | undefined
 
 	for (const chain of chains) {
 		if (chain.solo) {
-			chain.solo.solo = chain.output === selected?.output
+			const setSolo = chain.output === selected?.output
+
+			if (chain.solo.solo !== setSolo) {
+				log('solo-set', setSolo, genName(chain) || cfgName(chain.config?.fx?.[0]))
+				chain.solo.solo = setSolo
+			} else {
+				log('solo-keep', setSolo, genName(chain) || cfgName(chain.config?.fx?.[0]))
+			}
 		}
 	}
 }
