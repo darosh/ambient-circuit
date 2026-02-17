@@ -12,8 +12,12 @@ export const scene: SceneConfig = {
 	audio: {
 		master: {
 			fx: [
-				{ rnbo: 'gigaverb' },
+				// { tone: 'OnePoleFilter', params: { frequency: 1200, type: 'lowpass' } },
+				// { tone: 'OnePoleFilter', params: { frequency: 30, type: 'highpass' } },
+				// { tone: 'Freeverb' },
+				// { rnbo: 'gigaverb' },
 				// { rnbo: 'platereverb' },
+				// { tone: 'Compressor', params: { threshold: -32 } },
 				{ tone: 'Compressor', params: { threshold: -32 } }
 			]
 		}
@@ -28,8 +32,24 @@ export const scene: SceneConfig = {
 		{
 			color: c(),
 			rail: { id: 'pluck-synth', nodes: [[-4, 0, 5], 'i i i i i i i i i i'] },
-			marbles: [{ note: 60 }],
-			instruments: [{ type: 'arrow', beat: 2, audio: { generator: { tone: 'PluckSynth' } } }]
+			marbles: [{ note: 60 - 14 }],
+			instruments: [
+				{
+					type: 'arrow',
+					beat: 2,
+					midiLength: 100,
+					midiVelocity: 127,
+					audio: {
+						generator: { tone: 'PluckSynth', params: { resonance: 0.95 } },
+						fx: [
+							{ tone: 'Split', params: { channels: 1 } },
+							// { tone: 'OnePoleFilter', params: { frequency: 1200, type: 'lowpass' } },
+							// { tone: 'OnePoleFilter', params: { frequency: 30, type: 'highpass' } },
+							// { tone: 'Reverb' }
+						]
+					}
+				}
+			]
 		},
 		{
 			color: c(),
