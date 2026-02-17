@@ -5,21 +5,28 @@
 
 	let {
 		analyzer,
+		height = 1,
+		width = 1,
 		position = [0, 0, 0],
 		type = 'waveform'
 	}: {
 		analyzer: ToneAudioNode | null
+		height?: number
+		width?: number
 		position?: Vector3Tuple
 		type?: 'fft' | 'waveform' | 'meter'
 	} = $props()
 
-	const binCount = type === 'meter' ? 1 : 16
-	const barWidth = 0.04
+	const binCount = $derived(type === 'meter' ? 1 : 16)
 	const barGap = 0.01
-	let values = $state<number[]>(new Array(binCount).fill(0))
+	const barWidth = $derived(width / 16 - barGap)
+	const alignCount = 16 // 16 - left, 1 for centering
+
+	let values = <number[]>$derived(Array.from({ length: binCount }).fill(0))
 
 	// Colors: green→yellow→red
 	function barColor(v: number): string {
+		if (v === 0) return '#000000'
 		if (v < 0.4) return '#00ff44'
 		if (v < 0.7) return '#ffdd00'
 		return '#ff3300'
@@ -46,6 +53,7 @@
 					} else {
 						// waveform: -1..1 to 0..1
 						v = Math.abs(v)
+						// v = (v + 1) / 2
 					}
 					next.push(v)
 				}
@@ -59,8 +67,12 @@
 
 <T.Group position.x={position[0]} position.y={position[1]} position.z={position[2]}>
 	{#each values as v, i (i)}
-		{@const h = Math.max(0.01, v * 0.5)}
-		<T.Mesh position.x={(i - binCount / 2) * (barWidth + barGap)} position.y={h / 2} scale.y={h}>
+		{@const h = Math.max(0.01, v * Math.abs(height))}
+		<T.Mesh
+			position.x={(i - alignCount / 2) * (barWidth + barGap)}
+			position.y={(Math.sign(height) * h) / 2}
+			scale.y={h}
+		>
 			<T.BoxGeometry args={[barWidth, 1, barWidth]} />
 			<T.MeshStandardMaterial color={barColor(v)} emissive={barColor(v)} emissiveIntensity={0.5} />
 		</T.Mesh>
