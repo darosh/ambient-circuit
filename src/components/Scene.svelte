@@ -20,6 +20,7 @@
 		disposeScene
 	} from '../lib/audio/engine'
 	import type { AudioEngine, AudioChain } from '../lib/audio/types'
+	import AudioView from './AudioView.svelte'
 
 	export type SelectedEntity = {
 		type: 'instrument' | 'marble'
@@ -35,6 +36,7 @@
 		showPoints = false,
 		showBeats = false,
 		showNames = false,
+		showAudio = false,
 		wireframe = false,
 		fxPost = true,
 		fxRails = true,
@@ -56,6 +58,7 @@
 		showPoints?: boolean
 		showBeats?: boolean
 		showNames?: boolean
+		showAudio?: boolean
 		wireframe?: boolean
 		fxPost?: boolean
 		fxRails?: boolean
@@ -180,7 +183,7 @@
 	function onSelectInstrument(railIdx: number, idx: number) {
 		selectedEntity = { type: 'instrument', railIdx, idx }
 		// Init audio on first interaction (not just play)
-		if (!audioInitialized && hasAudioConfig()) {
+		if (!audioInitGuard && hasAudioConfig()) {
 			initSceneAudio().then(() => {
 				selectedAudioChain = getSelectedAudioChain()
 			})
@@ -191,7 +194,7 @@
 
 	function onSelectMarble(railIdx: number, idx: number) {
 		selectedEntity = { type: 'marble', railIdx, idx }
-		if (!audioInitialized && hasAudioConfig()) {
+		if (!audioInitGuard && hasAudioConfig()) {
 			initSceneAudio().then(() => {
 				selectedAudioChain = getSelectedAudioChain()
 			})
@@ -218,11 +221,12 @@
 
 	// Audio engine (lazy init on first play)
 	const audioEngine: AudioEngine = createAudioEngine()
-	let audioInitialized = false
+	let audioInitGuard = false
+	let audioInitialized = $state(false)
 
 	async function initSceneAudio() {
-		if (audioInitialized) return
-		audioInitialized = true
+		if (audioInitGuard) return
+		audioInitGuard = true
 
 		await initAudio(audioEngine)
 
@@ -272,6 +276,7 @@
 
 		allAudioChains = audioEngine.instanceChains
 		audioEngineRef = audioEngine
+		audioInitialized = true
 	}
 
 	function hasAudioConfig(): boolean {
@@ -329,7 +334,7 @@
 		updateTempo(tempo, delta * 1000)
 
 		// Lazy audio init on first play
-		if (tempo.isPlaying && !audioInitialized && hasAudioConfig()) {
+		if (tempo.isPlaying && !audioInitGuard && hasAudioConfig()) {
 			initSceneAudio()
 		}
 
@@ -455,3 +460,7 @@
 		/>
 	{/if}
 {/each}
+
+{#if audioInitialized}
+	<AudioView engine={audioEngine} offset={[0, -2, 0]} visible={showAudio} />
+{/if}

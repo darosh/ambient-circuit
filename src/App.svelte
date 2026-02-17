@@ -70,6 +70,7 @@
 	let fxInstruments = $state(true)
 	let fxText = $state(true)
 	let autoRotate = $state(false)
+	let showAudio = $state(true)
 	let fps = $state(0)
 	let tempo = $state(createTempoState())
 	let easing = $state('linear')
@@ -596,6 +597,7 @@
 			<Checkbox label="Beats" bind:value={showBeats} />
 			<Checkbox label="Names" bind:value={showNames} />
 			<Checkbox label="Wireframe" bind:value={wireframe} />
+			<Checkbox label="Audio" bind:value={showAudio} />
 			<Checkbox label="MIDI" bind:value={midiEnabled} />
 			{#if midiEnabled && midiState && midiState.outputs.length > 0}
 				<List label="Port" bind:value={selectedMidiPort} options={midiPortOptions} />
@@ -664,6 +666,7 @@
 			fxMarbles={fxMarbles && !wireframe}
 			fxText={fxText && !wireframe}
 			fxInstruments={fxInstruments && !wireframe}
+			{showAudio}
 			{autoRotate}
 			bind:tempo
 			bind:easing

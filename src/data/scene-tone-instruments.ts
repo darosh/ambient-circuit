@@ -10,7 +10,14 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	camera: [3, 16, 7],
 	audio: {
+		buses: {
+			test: {
+				analyzer: true,
+				fx: [{ tone: 'Limiter' }]
+			}
+		},
 		master: {
+			analyzer: 'meter',
 			fx: [
 				// { tone: 'OnePoleFilter', params: { frequency: 1200, type: 'lowpass' } },
 				// { tone: 'OnePoleFilter', params: { frequency: 30, type: 'highpass' } },
@@ -28,7 +35,7 @@ export const scene: SceneConfig = {
 			color: c(),
 			rail: { id: 'synth', nodes: [[-5, 0, 5], 'i i i i i i i i i i'] },
 			marbles: [{ note: 60 }],
-			instruments: [{ type: 'arrow', beat: 1, audio: { generator: { tone: 'Synth' } } }]
+			instruments: [{ type: 'arrow', beat: 1, audio: { analyzer: 'waveform', generator: { tone: 'Synth' } } }]
 		},
 		{
 			color: c(),
@@ -41,6 +48,7 @@ export const scene: SceneConfig = {
 					midiLength: 100,
 					midiVelocity: 127,
 					audio: {
+						analyzer: true,
 						generator: { tone: 'PluckSynth', params: { resonance: 0.95 } },
 						fx: [
 							{ tone: 'Split', params: { channels: 1 } },
@@ -84,7 +92,7 @@ export const scene: SceneConfig = {
 				{
 					type: 'arrow',
 					beat: 7,
-					audio: { generator: { tone: 'MembraneSynth', params: { pitchDecay: 0.4 } } }
+					audio: { bus: 'test', generator: { tone: 'MembraneSynth', params: { pitchDecay: 0.4 } } }
 				}
 			]
 		},
@@ -98,7 +106,10 @@ export const scene: SceneConfig = {
 			color: c(),
 			rail: { id: 'duo-synth', nodes: [[3, 0, 5], 'i i i i i i i i i i'] },
 			marbles: [{ note: 60 }],
-			instruments: [{ type: 'arrow', beat: 9, audio: { generator: { tone: 'DuoSynth' } } }]
+			instruments: [{ type: 'arrow', beat: 9, audio: {
+				analyzer: 'meter',
+				generator: { tone: 'DuoSynth' } 
+			} }]
 		}
 	]
 }
