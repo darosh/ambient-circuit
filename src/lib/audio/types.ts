@@ -1,4 +1,4 @@
-import type { ToneAudioNode } from 'tone'
+import type { ToneAudioNode, Solo } from 'tone'
 import type { Device } from '@rnbo/js'
 
 // --- Authored config (JSON-serializable, no closures) ---
@@ -42,6 +42,7 @@ export type AudioChain = {
 	generator: ToneAudioNode | Device | null
 	fx: (ToneAudioNode | Device)[]
 	analyzer: ToneAudioNode | null
+	solo: Solo | null
 	output: GainNode
 	/** Set param on generator by dot-path */
 	setParam(path: string, value: ParamValue): void

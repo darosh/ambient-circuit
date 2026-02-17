@@ -205,18 +205,16 @@
 		selectedAudioChain?.setFxParam(fxIdx, path, value)
 	}
 
-	// Solo: mute/unmute chains (compare by output identity to avoid Svelte proxy mismatch)
+	// Solo: use Tone.Solo (all instances auto-coordinate muting)
 	$effect(() => {
 		const selected = selectedAudioChain
 		const solo = soloMode
 		const chains = allAudioChains
 		if (!chains.length) return
-		const selectedOutput = selected?.output
-		const now = chains[0]?.output?.context?.currentTime ?? 0
 		for (const chain of chains) {
-			const target = solo && selectedOutput && chain.output !== selectedOutput ? 0 : 1
-			chain.output.gain.setValueAtTime(chain.output.gain.value, now)
-			chain.output.gain.linearRampToValueAtTime(target, now + 0.1)
+			if (chain.solo) {
+				chain.solo.solo = solo && chain.output === selected?.output
+			}
 		}
 	})
 

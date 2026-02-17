@@ -168,7 +168,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Audio init: once on first play, not on scene load
   - [x] Scene change: stop/disconnect/dispose audio (keep main context + gain), ramp gain down/up
   - [x] Scenes without audio config skip audio init entirely
-  - [x] AudioChain type: generator → fx → analyzer → out
+  - [x] AudioChain type: generator → fx → analyzer → solo → out
   - [x] Per-instrument chains + shared/named chains
   - [x] Marble audio chains (own generator, trigger on collision)
   - [x] Chain access from SceneCtx: `ctx.instrument.audio`, `ctx.marble.audio`
@@ -194,7 +194,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Audio init on first click (not just play) for immediate param access
   - [x] Param enumeration from live nodes (Tone.js AudioParams + RNBO device.parameters)
   - [x] `interactivity()` plugin enabled for raycasting
-  - [x] Solo selected chain (mute all others)
+  - [x] Solo selected chain (Tone.Solo node per chain, auto-coordinates muting)
   - [x] Show analyzer visualization of selected instrument
   - [x] Chain/bus selector dropdown in Tweakpane (select chain/bus/master, show params)
   - [ ] Potential UI: threlte `<HUD>`, `<HTML>`, `<View>` (View for selected instrument detail)
@@ -395,7 +395,7 @@ globalBeatHandler(ctx) {
 
 **Routing: chains → buses → master → destination:**
 
-- AudioChain: generator → fx[] → analyzer? → output
+- AudioChain: generator → fx[] → analyzer? → solo → output
 - Chain `bus` prop routes to named bus; otherwise routes to master chain (or masterGain)
 - Buses: named fx chains with input/output GainNodes
 - Master chain: scene-level fx before masterGain (compressor, limiter, etc.)

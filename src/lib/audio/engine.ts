@@ -200,11 +200,18 @@ export async function buildChain(
 		analyzer = await buildAnalyzer(engine, config.analyzer)
 	}
 
-	// Connect chain: generator → fx[0] → fx[1] → ... → analyzer? → output
+	// Solo node for mute/solo control
+	let solo: import('tone').Solo | null = null
+	if (engine.Tone) {
+		solo = new engine.Tone.Solo()
+	}
+
+	// Connect chain: generator → fx[0] → ... → analyzer? → solo? → output
 	const nodes: Array<ToneAudioNode | Device | GainNode> = []
 	if (generator) nodes.push(generator)
 	for (const f of fx) nodes.push(f)
 	if (analyzer) nodes.push(analyzer)
+	if (solo) nodes.push(solo as unknown as ToneAudioNode)
 	nodes.push(output)
 
 	for (let i = 0; i < nodes.length - 1; i++) {
@@ -235,6 +242,7 @@ export async function buildChain(
 		generator,
 		fx,
 		analyzer,
+		solo,
 		output,
 		nodePresets,
 		onParamChange: null,
@@ -384,6 +392,10 @@ export function disposeChain(chain: AudioChain): void {
 	}
 	if (chain.analyzer) {
 		disposeNode(chain.analyzer)
+	}
+	if (chain.solo) {
+		chain.solo.dispose()
+		chain.solo = null
 	}
 	chain.output.disconnect()
 	chain.generator = null
