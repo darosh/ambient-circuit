@@ -273,7 +273,19 @@
 		draw()
 	})
 
-	let sceneId = $state(window.location.hash.slice(1) || scenes[0].id)
+	function parseHash(hash: string) {
+		const raw = hash.slice(1)
+		const q = raw.indexOf('?')
+		if (q === -1) return { id: raw, params: new URLSearchParams() }
+		return { id: raw.slice(0, q), params: new URLSearchParams(raw.slice(q + 1)) }
+	}
+
+	const initialHash = parseHash(window.location.hash)
+	let sceneId = $state(initialHash.id || scenes[0].id)
+
+	$effect(() => {
+		if (initialHash.params.has('play')) tempo.isPlaying = true
+	})
 	let activeScene = $derived(scenes.find((s) => s.id === sceneId) ?? scenes[0])
 	// eslint-disable-next-line svelte/prefer-writable-derived
 	let railVisibility = $state<boolean[]>([])
