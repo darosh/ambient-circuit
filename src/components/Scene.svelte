@@ -21,6 +21,10 @@
 	} from '../lib/audio/engine'
 	import type { AudioEngine, AudioChain } from '../lib/audio/types'
 	import AudioView from './AudioView.svelte'
+	import MidiSignalView from './MidiSignalView.svelte'
+	import { getBeatTransform, getPointsForPath } from '../lib/rail-curve'
+	import { audioLayout } from '../lib/audio-layout'
+	import { Quaternion, Vector3, Matrix4 } from 'three'
 
 	export type SelectedEntity = {
 		type: 'instrument' | 'marble'
@@ -96,6 +100,18 @@
 		})()
 	)
 
+	const midiSignalStates = $state<Array<{ intensity: number }>>(
+		(() => {
+			const signals: Array<{ intensity: number }> = []
+			for (const { instruments } of rails) {
+				instruments?.forEach(() => {
+					signals.push({ intensity: 0 })
+				})
+			}
+			return signals
+		})()
+	)
+
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	const runtimeStates = $state<Array<Record<string, any>>>(
 		(() => {
@@ -115,6 +131,7 @@
 	for (const { instruments } of rails) {
 		instruments?.forEach((ins) => {
 			ins.signal = signalStates[signalIndex]
+			ins.midiSignal = midiSignalStates[signalIndex]
 			ins.runtime = runtimeStates[signalIndex]
 			signalIndex++
 		})
@@ -297,6 +314,66 @@
 		return false
 	}
 
+	const AUDIO_NODE_SPACING = 0.5,
+		AUDIO_LAYER_GAP = 1,
+		AUDIO_COL_SPACING = 1
+	const AUDIO_OFFSET: [number, number, number] = [0, -2, 0]
+
+	const midiSignalLinks = $derived.by(() => {
+		if (!audioInitialized) return []
+		const nodes = audioLayout(
+			audioEngine.instanceChains,
+			audioEngine.buses,
+			audioEngine.masterChain,
+			AUDIO_NODE_SPACING,
+			AUDIO_LAYER_GAP,
+			AUDIO_COL_SPACING
+		)
+
+		const links: Array<{
+			from: [number, number, number]
+			to: [number, number, number]
+			signal: { intensity: number }
+			color: string
+		}> = []
+		let instrIdx = 0
+		for (const railData of rails) {
+			const resolved = resolveRail(railData.rail)
+			for (const instrument of railData.instruments ?? []) {
+				const ie = sceneCtx.instruments[instrIdx]
+				if (ie?.audio && instrument.midiSignal) {
+					const pts = getPointsForPath(resolved, instrument.path)
+					const xform = getBeatTransform(pts, instrument.beat)
+					if (xform) {
+						let worldPos = xform.position.clone()
+						const rm = (railData.runtime as { renderMatrix?: Matrix4 } | undefined)?.renderMatrix
+						if (rm) {
+							const pos = new Vector3(),
+								q = new Quaternion(),
+								sc = new Vector3()
+							rm.decompose(pos, q, sc)
+							worldPos = worldPos.applyQuaternion(q).add(pos)
+						}
+						const genNode = nodes.find((n) => n.chain === ie.audio && n.isGenerator)
+						if (genNode) {
+							const wx = genNode.x + AUDIO_OFFSET[0]
+							const wy = genNode.z + (AUDIO_OFFSET[1] + 4)
+							const wz = -genNode.y + AUDIO_OFFSET[2]
+							links.push({
+								from: worldPos.toArray() as [number, number, number],
+								to: [wx, wy, wz],
+								signal: instrument.midiSignal,
+								color: railData.color ?? '#ffffff'
+							})
+						}
+					}
+				}
+				instrIdx++
+			}
+		}
+		return links
+	})
+
 	// Fire init handler on mount
 	onMount(() => {
 		if (scene.globalBeatHandler) {
@@ -463,4 +540,7 @@
 
 {#if audioInitialized}
 	<AudioView engine={audioEngine} offset={[0, -2, 0]} visible={showAudio} />
+	{#if showAudio}
+		<MidiSignalView links={midiSignalLinks} />
+	{/if}
 {/if}

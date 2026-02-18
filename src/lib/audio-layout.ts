@@ -148,6 +148,5 @@ export function audioLayout(
 		}
 	}
 
-	console.log(nodes)
 	return nodes
 }

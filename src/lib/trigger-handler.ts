@@ -7,6 +7,7 @@ export function triggerHandler(ctx: TriggerContext) {
 
 	// Signal visual feedback
 	ctx.instrument.instrument.signal!.intensity = 1
+	ctx.instrument.instrument.midiSignal!.intensity = 1
 	ctx.marble.marble.signal.intensity = 1
 
 	const midiState = getMidiState()

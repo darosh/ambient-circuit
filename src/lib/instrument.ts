@@ -57,6 +57,8 @@ type InstrumentBase = {
 	midiVelocity?: number
 	/** Impact signal — set intensity=1 in triggerHandler, InstrumentView decays it */
 	signal?: InstrumentSignal
+	/** MIDI signal for MidiSignalView — parallel to signal, consumed independently */
+	midiSignal?: InstrumentSignal
 	actionHandler?: TriggerHandler
 	/** Audio chain config (triggers sound automatically like MIDI) */
 	audio?: AudioChainConfig
