@@ -14,13 +14,15 @@
 		offset = [0, 0, 0],
 		visible = true,
 		curved = true,
-		baseColor = '#ddddff'
+		baseColor = '#ddddff',
+		showText = false
 	}: {
 		engine: AudioEngine
 		offset?: Vector3Tuple
 		visible?: boolean
 		curved?: boolean
 		baseColor?: string
+		showText?: boolean
 	} = $props()
 
 	const LAYER_GAP = 1 // spacing row between layers
@@ -176,6 +178,7 @@
 						emissiveIntensity={0.9}
 					/>
 				{/if}
+				{#if showText}
 				<T.Group rotation.y={DEG_90} rotation.z={Math.PI} position.z=".2" position.y=".06">
 					<TubeText
 						fx={true}
@@ -187,6 +190,7 @@
 						spacing={1.25}
 					/>
 				</T.Group>
+				{/if}
 			</T.Mesh>
 		{/each}
 
