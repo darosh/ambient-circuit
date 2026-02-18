@@ -471,8 +471,8 @@
 	position={[0, 0, 0]}
 	rotation.x={-Math.PI / 2}
 	onclick={() => {
-		selectedEntity = null
-		selectedAudioChain = undefined
+		// selectedEntity = null
+		// selectedAudioChain = undefined
 	}}
 	visible={false}
 >
@@ -480,8 +480,8 @@
 	<T.MeshBasicMaterial />
 </T.Mesh>
 
-<T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />
-<T.AmbientLight intensity={0.4} />
+<!--<T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />-->
+<!--<T.AmbientLight intensity={0.4} />-->
 
 {#if showGrid}
 	{#if !scene.polar}
