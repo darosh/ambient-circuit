@@ -2,6 +2,8 @@ import { sendMidiNote, getMidiState } from './midi/midi'
 import { triggerChain } from './audio/engine'
 import { GlobalBeatContext, TriggerContext } from './scene'
 
+const THROTTLE_AUDIO = 60
+
 export function triggerHandler(ctx: TriggerContext) {
 	// console.log('TRIGGER', ctx.railId, ctx.beat)
 
@@ -27,15 +29,20 @@ export function triggerHandler(ctx: TriggerContext) {
 
 	// Audio trigger
 	const chain = ctx.instrument.audio
+
 	if (chain) {
 		chain.audioSignal.intensity = 1
 		chain.audioSignal.color =
 			ctx.instrument.instrument.color ?? ctx.rail.railData.color ?? '#ffffff'
 	}
-	if (chain?.generator) {
+
+	const now = Date.now()
+
+	if (chain?.generator && now - chain.lastTrigger > THROTTLE_AUDIO) {
 		const note = ctx.marble.marble.config.note ?? ctx.instrument.instrument.midiNote ?? 60
 		const velocity = ctx.instrument.instrument.midiVelocity ?? 100
 		const length = ctx.instrument.instrument.midiLength ?? 200
+		chain.lastTrigger = now
 		triggerChain(chain, note, velocity, length)
 	}
 }

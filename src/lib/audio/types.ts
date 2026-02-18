@@ -60,6 +60,7 @@ export type AudioChain = {
 	onParamChange: ((id: string, value: number) => void) | null
 	/** Visual flash signal for AudioView (consumed each frame) */
 	audioSignal: { intensity: number; color: string }
+	lastTrigger: number
 }
 
 export type NodePresetInfo = {
