@@ -5,12 +5,33 @@ import { Matrix4, Vector3, MathUtils } from 'three/webgpu'
 
 export const scene: SceneConfig = {
 	id: 'scene-rings',
-	bpm: 120,
+	bpm: 30,
 	polar: true,
 	camera: [9.5, 4.5, 8.5],
 	target: [0, 0.75, 0],
+	audioView: [0,0,0],
 	// renderPlayOnly: true,
 	triggerHandler,
+	audio: {
+		chains: {
+			synth: {
+				analyzer: true,
+				generator: {
+					tone: 'Synth',
+					params: {
+						'envelope.attack': 1,
+						volume: 0,
+						detune: -3,
+						'oscillator.type': 'sawtooth'
+					}
+				}
+			}
+		},
+		master: {
+		// 	analyzer: true,
+			fx: [{ rnbo: 'gigaverb', params: { early: .4, revtime: 33, roomsize: 106, dry: 0, tail: .9, damping: .3 } }, { tone: 'Compressor' }]
+		}
+	},
 	rails: [
 		{
 			rail: {
@@ -51,7 +72,7 @@ export const scene: SceneConfig = {
 					{ p: [0, 0, 0], round: 'both' }
 				]
 			},
-			instruments: [{ beat: 2, type: 'star', sides: 7 }],
+			instruments: [{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, midiNote: 60 - 12 }],
 			color: colors[1]
 		},
 		{
@@ -150,10 +171,10 @@ export const scene: SceneConfig = {
 				]
 			},
 			instruments: [
-				{ beat: 2.5, type: 'star', sides: 7 },
-				{ beat: 3.5, type: 'star', sides: 7 }
+				{ beat: 2.5, type: 'star', sides: 7, audio: { id: 'synth' } },
+				{ beat: 3.5, type: 'star', sides: 7, audio: { id: 'synth' } }
 			],
-			marbles: [{ speed: 0.333 }, { speed: 0.5, start: 1 }, { speed: 0.666, start: 2 }],
+			marbles: [{ speed: 0.333, note: 60 }, { speed: 0.5, start: 1, note: 67 }, { speed: 0.666, start: 2, note: 72 }],
 			render: () => {
 				const time = performance.now() * 0.001
 				const rotation = time * Math.PI * 0.125
@@ -196,7 +217,7 @@ export const scene: SceneConfig = {
 					{ p: [0, 0, 0], round: 'both' }
 				]
 			},
-			instruments: [{ beat: 2, type: 'star', sides: 7 }],
+			instruments: [{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, midiNote: 60 - 12 + 7 }],
 			color: colors[1],
 			render: () => {
 				const time = performance.now() * 0.001
