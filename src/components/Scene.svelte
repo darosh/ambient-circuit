@@ -476,7 +476,7 @@
 	<OrbitControls
 		enableDamping
 		target={scene.target ?? [0, 1, 0]}
-		{autoRotate}
+		autoRotate={scene.rotatePlay && tempo.isPlaying ? true : autoRotate}
 		autoRotateSpeed={0.5}
 	/>
 </T.PerspectiveCamera>

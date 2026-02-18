@@ -9,6 +9,7 @@ export const scene: SceneConfig = {
 	polar: true,
 	camera: [9.5, 4.5, 8.5],
 	target: [0, 0.75, 0],
+	rotatePlay: true,
 	audioView: {
 		offset: [0, -0.5, 0],
 		module: 0.25,
@@ -39,7 +40,7 @@ export const scene: SceneConfig = {
 					rnbo: 'gigaverb',
 					params: { early: 0.4, revtime: 33, roomsize: 106, dry: 0, tail: 0.9, damping: 0.3 }
 				},
-				{ tone: 'Compressor' }
+				{ tone: 'Compressor', params: { threshold: -24 } }
 			]
 		}
 	},
