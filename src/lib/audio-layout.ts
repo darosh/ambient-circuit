@@ -20,7 +20,8 @@ export function audioLayout(
 	master: AudioBus | null,
 	NODE_SPACING: number,
 	LAYER_GAP: number,
-	COL_SPACING: number
+	COL_SPACING: number,
+	showAllNodes: boolean
 ) {
 	const nodes: NodeInfo[] = []
 
@@ -78,14 +79,18 @@ export function audioLayout(
 				z: nz,
 				label: cfgName(chain.config.generator) ?? 'gen',
 				isGenerator: true,
-				next: chain.fx.length
-					? nodes.length + 1
-					: chain.config.bus
-						? busNodes.map[chain.config.bus]
-						: masterNodes
+				next: showAllNodes
+					? chain.fx.length
+						? nodes.length + 1
+						: chain.config.bus
+							? busNodes.map[chain.config.bus]
+							: masterNodes
+					: undefined
 			})
 			nz += NODE_SPACING
 		}
+
+		if (!showAllNodes) continue
 
 		for (let fi = 0; fi < chain.fx.length; fi++) {
 			nodes.push({
@@ -104,6 +109,8 @@ export function audioLayout(
 			nz += NODE_SPACING
 		}
 	}
+
+	if (!showAllNodes) return nodes
 
 	// Buses
 	const busPositions: Record<string, Vector3> = {}

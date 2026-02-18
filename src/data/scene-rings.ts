@@ -9,7 +9,10 @@ export const scene: SceneConfig = {
 	polar: true,
 	camera: [9.5, 4.5, 8.5],
 	target: [0, 0.75, 0],
-	audioView: [0,0,0],
+	audioView: {
+		offset: [0, -0.5, 0],
+		module: 0.25
+	},
 	// renderPlayOnly: true,
 	triggerHandler,
 	audio: {
@@ -28,8 +31,14 @@ export const scene: SceneConfig = {
 			}
 		},
 		master: {
-		// 	analyzer: true,
-			fx: [{ rnbo: 'gigaverb', params: { early: .4, revtime: 33, roomsize: 106, dry: 0, tail: .9, damping: .3 } }, { tone: 'Compressor' }]
+			// 	analyzer: true,
+			fx: [
+				{
+					rnbo: 'gigaverb',
+					params: { early: 0.4, revtime: 33, roomsize: 106, dry: 0, tail: 0.9, damping: 0.3 }
+				},
+				{ tone: 'Compressor' }
+			]
 		}
 	},
 	rails: [
@@ -174,7 +183,11 @@ export const scene: SceneConfig = {
 				{ beat: 2.5, type: 'star', sides: 7, audio: { id: 'synth' } },
 				{ beat: 3.5, type: 'star', sides: 7, audio: { id: 'synth' } }
 			],
-			marbles: [{ speed: 0.333, note: 60 }, { speed: 0.5, start: 1, note: 67 }, { speed: 0.666, start: 2, note: 72 }],
+			marbles: [
+				{ speed: 0.333, note: 60 },
+				{ speed: 0.5, start: 1, note: 67 },
+				{ speed: 0.666, start: 2, note: 72 }
+			],
 			render: () => {
 				const time = performance.now() * 0.001
 				const rotation = time * Math.PI * 0.125
@@ -217,7 +230,9 @@ export const scene: SceneConfig = {
 					{ p: [0, 0, 0], round: 'both' }
 				]
 			},
-			instruments: [{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, midiNote: 60 - 12 + 7 }],
+			instruments: [
+				{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, midiNote: 60 - 12 + 7 }
+			],
 			color: colors[1],
 			render: () => {
 				const time = performance.now() * 0.001

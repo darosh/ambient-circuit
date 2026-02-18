@@ -248,16 +248,20 @@
 
 		// Build buses and master chain first (chains route to them)
 		if (scene.audio?.buses || scene.audio?.master) {
-			await buildBuses(audioEngine, {
-				buses: scene.audio.buses,
-				master: scene.audio.master
-			})
+			await buildBuses(
+				audioEngine,
+				{
+					buses: scene.audio.buses,
+					master: scene.audio.master
+				},
+				scene?.audioView?.defaultAnalyser
+			)
 		}
 
 		// Build shared/named chains from scene config
 		if (scene.audio?.chains) {
 			for (const [id, config] of Object.entries(scene.audio.chains)) {
-				await buildChain(audioEngine, { ...config, id })
+				await buildChain(audioEngine, { ...config, id }, scene?.audioView?.defaultAnalyser)
 			}
 		}
 
@@ -268,7 +272,11 @@
 				if (ie.instrument.audio.id && audioEngine.chains.has(ie.instrument.audio.id)) {
 					ie.audio = audioEngine.chains.get(ie.instrument.audio.id)
 				} else {
-					ie.audio = await buildChain(audioEngine, ie.instrument.audio)
+					ie.audio = await buildChain(
+						audioEngine,
+						ie.instrument.audio,
+						scene?.audioView?.defaultAnalyser
+					)
 				}
 			}
 		}
@@ -283,7 +291,7 @@
 				if ('audio' in md && md.audio) {
 					const me = sceneCtx.marbles[mIdx]
 					if (me) {
-						me.audio = await buildChain(audioEngine, md.audio)
+						me.audio = await buildChain(audioEngine, md.audio, scene?.audioView?.defaultAnalyser)
 					}
 				}
 				mIdx++
@@ -317,7 +325,7 @@
 	// 	AUDIO_LAYER_GAP = .5,
 	// 	AUDIO_COL_SPACING = 1
 
-	const AUDIO_OFFSET: [number, number, number] = $derived(scene.audioView ?? [0, -2, 0])
+	const AUDIO_OFFSET: [number, number, number] = $derived(scene?.audioView?.offset ?? [0, -2, 0])
 
 	let audioView: AudioView | undefined = $state()
 
@@ -546,7 +554,18 @@
 {/each}
 
 {#if audioInitialized}
-	<AudioView bind:this={audioView} engine={audioEngine} offset={AUDIO_OFFSET} visible={showAudio} />
+	<AudioView
+		showAllNodes={scene?.audioView?.all}
+		showAnalysers={scene?.audioView?.analyzers}
+		showText={scene?.audioView?.text}
+		defaultAnalyser={scene?.audioView?.defaultAnalyser || '#ddddff'}
+		baseColor={scene?.audioView?.color}
+		module={scene?.audioView?.module}
+		bind:this={audioView}
+		engine={audioEngine}
+		offset={AUDIO_OFFSET}
+		visible={showAudio}
+	/>
 	{#if showAudio}
 		<MidiSignalView links={midiSignalLinks} />
 	{/if}

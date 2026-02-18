@@ -54,7 +54,6 @@ export type SceneConfig = {
 	globalBeatResolution?: number
 	camera?: Vector3Tuple
 	target?: Vector3Tuple
-	audioView?: Vector3Tuple
 	polar?: boolean
 	renderPlayOnly?: boolean
 	/** Optimize collision checks (assumes all marbles are bouncers, skips rail/branch matching) */
@@ -64,5 +63,14 @@ export type SceneConfig = {
 		chains?: Record<string, AudioChainConfig>
 		buses?: Record<string, import('./audio/types').BusConfig>
 		master?: import('./audio/types').MasterConfig
+	}
+	audioView?: {
+		offset?: Vector3Tuple
+		analyzers?: boolean
+		text?: boolean
+		all?: boolean
+		color?: string
+		module?: number
+		defaultAnalyser?: 'fft' | 'meter' | 'waveform'
 	}
 }

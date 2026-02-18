@@ -8,6 +8,9 @@
 	import { audioLayout } from '../lib/audio-layout'
 	import TubeText from './TubeText.svelte'
 	import { easeInQuart, easeOutQuart } from '../lib/easing'
+	import { resolveAnalyzerType } from '../lib/audio/engine'
+
+	const NODE_RADIUS = 0.1
 
 	let {
 		engine,
@@ -15,7 +18,11 @@
 		visible = true,
 		curved = true,
 		baseColor = '#ddddff',
-		showText = false
+		showText = false,
+		showAnalysers = false,
+		showAllNodes = false,
+		module = NODE_RADIUS,
+		defaultAnalyser
 	}: {
 		engine: AudioEngine
 		offset?: Vector3Tuple
@@ -23,12 +30,15 @@
 		curved?: boolean
 		baseColor?: string
 		showText?: boolean
+		showAnalysers?: boolean
+		showAllNodes?: boolean
+		module?: number
+		defaultAnalyser?: string
 	} = $props()
 
 	const LAYER_GAP = 0.5 // spacing row between layers
 	const COL_SPACING = 1
 	const NODE_SPACING = 0.5
-	const NODE_RADIUS = 0.1
 	const NODE_LENGTH = 0.2
 	const METER_HEIGHT = 0.5
 	const METER_WIDTH = 0.5
@@ -97,8 +107,15 @@
 		const chains = engine.instanceChains
 		const buses = engine.buses
 		const master = engine.masterChain
-
-		const nodes = audioLayout(chains, buses, master, NODE_SPACING, LAYER_GAP, COL_SPACING)
+		const nodes = audioLayout(
+			chains,
+			buses,
+			master,
+			NODE_SPACING,
+			LAYER_GAP,
+			COL_SPACING,
+			showAllNodes
+		)
 
 		const tubes: TubeInfo[] = nodes
 			.filter((node) => node.next)
@@ -114,35 +131,32 @@
 				}
 			})
 
-		// Analyzer info for VU meters
-		function resolveAnalyzerType(cfg: AnalyzerType | undefined): 'fft' | 'waveform' | 'meter' {
-			if (cfg === 'meter') return 'meter'
-			if (cfg === 'waveform') return 'waveform'
-			return 'fft' // true and 'fft' both create FFT analyzer
-		}
+		return { nodes, tubes }
+	})
 
-		const analyzerInfos: {
-			analyzer: import('tone').ToneAudioNode
-			pos: Vector3Tuple
-			height: number
-			type: 'fft' | 'waveform' | 'meter'
-		}[] = nodes
+	export function getNodes() {
+		return layout.nodes
+	}
+
+	// Analyzer info for VU meters
+	const analyzerInfos: {
+		analyzer: import('tone').ToneAudioNode
+		pos: Vector3Tuple
+		height: number
+		type: 'fft' | 'waveform' | 'meter'
+	}[] = $derived(
+		layout.nodes
 			.filter((n) => (n.bus || n.chain || n.master)?.analyzer)
 			.map((n) => ({
 				analyzer: <import('tone').ToneAudioNode>(n?.chain || n?.bus || n?.master)!.analyzer,
 				pos: [n.x + COL_SPACING / 2, n.y, n.z - NODE_LENGTH / 2],
 				height: METER_HEIGHT,
 				type: resolveAnalyzerType(
-					<AnalyzerType>(<unknown>(n?.chain || n?.bus || n?.master)!.config.analyzer!)
+					<AnalyzerType>(<unknown>(n?.chain || n?.bus || n?.master)!.config.analyzer!),
+					defaultAnalyser
 				)
 			}))
-
-		return { nodes, tubes, analyzerInfos }
-	})
-
-	export function getNodes() {
-		return layout.nodes
-	}
+	)
 </script>
 
 {#if visible}
@@ -157,7 +171,7 @@
 			<T.Mesh position.x={node.x} position.y={node.y} position.z={node.z} rotation.x={-DEG_90}>
 				{#if node.isGenerator}
 					<!--					<T.CylinderGeometry args={[NODE_RADIUS, NODE_RADIUS, NODE_LENGTH, 8]} />-->
-					<T.SphereGeometry args={[NODE_RADIUS, 16, 8]} />
+					<T.SphereGeometry args={[module, Math.round(module * 160), Math.round(module * 80)]} />
 					<T.MeshStandardMaterial
 						bind:ref={nodeMaterials[ni]}
 						color="#000000"
@@ -166,7 +180,7 @@
 					/>
 				{:else}
 					<!--					<T.ConeGeometry args={[NODE_RADIUS, NODE_LENGTH, 8]} />-->
-					<T.SphereGeometry args={[NODE_RADIUS, 16, 8]} />
+					<T.SphereGeometry args={[module, Math.round(module * 160), Math.round(module * 80)]} />
 					<T.MeshStandardMaterial
 						bind:ref={nodeMaterials[ni]}
 						opacity={0.5}
@@ -223,18 +237,20 @@
 		{/each}
 
 		<!-- VU Meters -->
-		{#each layout.analyzerInfos as info, ai (ai)}
-			<T.Group position={info.pos} rotation.x={DEG_90}>
-				<!--				<Billboard>-->
-				<AnalyserView
-					{baseColor}
-					analyzer={info.analyzer}
-					type={info.type}
-					height={info.height}
-					width={METER_WIDTH}
-				/>
-				<!--				</Billboard>-->
-			</T.Group>
-		{/each}
+		{#if showAnalysers && analyzerInfos}
+			{#each analyzerInfos as info, ai (ai)}
+				<T.Group position={info.pos} rotation.x={DEG_90}>
+					<!--				<Billboard>-->
+					<AnalyserView
+						{baseColor}
+						analyzer={info.analyzer}
+						type={info.type}
+						height={info.height}
+						width={METER_WIDTH}
+					/>
+					<!--				</Billboard>-->
+				</T.Group>
+			{/each}
+		{/if}
 	</T.Group>
 {/if}

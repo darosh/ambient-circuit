@@ -19,6 +19,14 @@ import { debug } from 'debug'
 
 const log = debug('audio')
 
+export function resolveAnalyzerType(cfg?: AnalyzerType, def?: string) {
+	if (cfg === 'meter') return 'meter'
+	if (cfg === 'waveform') return 'waveform'
+	if (cfg === 'fft') return 'fft'
+
+	return <'fft' | 'waveform' | 'meter'>def ?? 'meter'
+}
+
 /**
  * Create audio engine (no AudioContext yet — lazy init)
  */
@@ -74,20 +82,21 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
  */
 export async function buildBuses(
 	engine: AudioEngine,
-	config: { buses?: Record<string, BusConfig>; master?: MasterConfig }
+	config: { buses?: Record<string, BusConfig>; master?: MasterConfig },
+	def?: string
 ): Promise<void> {
 	if (!engine.ctx || !engine.masterGain) throw new Error('Audio engine not initialized')
 
 	// 1. Build master chain
 	if (config.master) {
-		engine.masterChain = await buildBus(engine, config.master, engine.masterGain)
+		engine.masterChain = await buildBus(engine, config.master, engine.masterGain, def)
 	}
 
 	// 2. Build buses → output to master chain input (or masterGain)
 	const busTarget = engine.masterChain ? engine.masterChain.input : engine.masterGain
 	if (config.buses) {
 		for (const [name, busConfig] of Object.entries(config.buses)) {
-			const bus = await buildBus(engine, busConfig, busTarget)
+			const bus = await buildBus(engine, busConfig, busTarget, def)
 			engine.buses.set(name, bus)
 		}
 	}
@@ -99,7 +108,8 @@ export async function buildBuses(
 async function buildBus(
 	engine: AudioEngine,
 	config: BusConfig,
-	destination: GainNode | AudioNode
+	destination: GainNode | AudioNode,
+	def?: string
 ): Promise<AudioBus> {
 	if (!engine.ctx) throw new Error('No AudioContext')
 
@@ -117,7 +127,7 @@ async function buildBus(
 
 	let analyzer: ToneAudioNode | null = null
 	if (config.analyzer) {
-		analyzer = await buildAnalyzer(engine, config.analyzer)
+		analyzer = await buildAnalyzer(engine, config.analyzer, def)
 	}
 
 	// Connect: input → fx[0] → ... → analyzer? → output
@@ -160,7 +170,8 @@ async function buildBus(
  */
 export async function buildChain(
 	engine: AudioEngine,
-	config: AudioChainConfig
+	config: AudioChainConfig,
+	def?: string
 ): Promise<AudioChain> {
 	if (!engine.ctx || !engine.masterGain) {
 		throw new Error('Audio engine not initialized')
@@ -196,7 +207,7 @@ export async function buildChain(
 
 	let analyzer: ToneAudioNode | null = null
 	if (config.analyzer) {
-		analyzer = await buildAnalyzer(engine, config.analyzer)
+		analyzer = await buildAnalyzer(engine, config.analyzer, def)
 	}
 
 	// Solo node for mute/solo control
@@ -294,16 +305,19 @@ export async function buildChain(
  */
 async function buildAnalyzer(
 	engine: AudioEngine,
-	config: AnalyzerType
+	config: AnalyzerType,
+	def?: string
 ): Promise<ToneAudioNode | null> {
 	if (!config || !engine.Tone) return null
 	const Tone = engine.Tone
 
-	if (config === true || config === 'fft') {
+	const ana = resolveAnalyzerType(config, def)
+
+	if (ana === 'fft') {
 		return new Tone.Analyser('fft', 64) as unknown as ToneAudioNode
-	} else if (config === 'waveform') {
+	} else if (ana === 'waveform') {
 		return new Tone.Analyser('waveform', 256) as unknown as ToneAudioNode
-	} else if (config === 'meter') {
+	} else if (ana === 'meter') {
 		return new Tone.Meter() as unknown as ToneAudioNode
 	}
 	return null
