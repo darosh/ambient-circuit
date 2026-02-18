@@ -56,6 +56,14 @@ export function bouncerHandler(ctx: BounceContext) {
 
 	// Trigger marble1 audio chain
 	const chain1 = ctx.marble1.audio
+	if (chain1) {
+		chain1.audioSignal.intensity = 1
+		chain1.audioSignal.color =
+			ctx.marble1.marble.runtime.color ??
+			ctx.marble1.marble.config.color ??
+			ctx.rail.railData.color ??
+			'#ffffff'
+	}
 	if (chain1?.generator && now - chain1.lastTrigger > THROTTLE_AUDIO) {
 		const note = ctx.marble1.marble.config.note ?? 60
 		chain1.lastTrigger = now
@@ -64,6 +72,14 @@ export function bouncerHandler(ctx: BounceContext) {
 
 	// Trigger marble2 audio chain
 	const chain2 = ctx.marble2.audio
+	if (chain2) {
+		chain2.audioSignal.intensity = 1
+		chain2.audioSignal.color =
+			ctx.marble2.marble.runtime.color ??
+			ctx.marble2.marble.config.color ??
+			ctx.rail.railData.color ??
+			'#ffffff'
+	}
 	if (chain2?.generator && now - chain2.lastTrigger > THROTTLE_AUDIO) {
 		const note = ctx.marble2.marble.config.note ?? 60
 		chain2.lastTrigger = now

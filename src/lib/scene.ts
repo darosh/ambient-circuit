@@ -74,5 +74,6 @@ export type SceneConfig = {
 		midiAlpha?: number
 		module?: number
 		defaultAnalyser?: 'fft' | 'meter' | 'waveform'
+		marbleLinks?: boolean
 	}
 }

@@ -393,6 +393,51 @@
 		return links
 	})
 
+	const marbleSignalLinks = $derived.by(() => {
+		if (!audioInitialized || !scene?.audioView?.marbleLinks) return []
+		const nodes = audioView?.getNodes()
+		if (!nodes?.length) return []
+
+		const links: Array<{
+			from: [number, number, number]
+			to: [number, number, number]
+			signal: { intensity: number }
+			color: string
+		}> = []
+
+		for (const me of sceneCtx.marbles) {
+			if (!me.audio) continue
+			const genNode = nodes.find((n) => n.chain === me.audio && n.isGenerator)
+			if (!genNode) continue
+
+			const currentRailId: string = me.marble.runtime.railId ?? me.marble.config.resolvedRail.id
+			const railIdx = rails.findIndex((r) => r.rail.id === currentRailId)
+			const railData = rails[railIdx]
+
+			let pos = me.marble.position.clone()
+			const rm = (railData?.runtime as { renderMatrix?: Matrix4 } | undefined)?.renderMatrix
+			if (rm) {
+				const rPos = new Vector3(),
+					q = new Quaternion(),
+					sc = new Vector3()
+				rm.decompose(rPos, q, sc)
+				pos = pos.applyQuaternion(q).add(rPos)
+			}
+
+			const wx = genNode.x + AUDIO_OFFSET[0]
+			const wy = genNode.z + (AUDIO_OFFSET[1] + 4)
+			const wz = -genNode.y + AUDIO_OFFSET[2]
+			links.push({
+				from: pos.toArray() as [number, number, number],
+				to: [wx, wy, wz],
+				signal: me.audio.audioSignal,
+				color:
+					me.marble.runtime.color ?? me.marble.config.color ?? rails[railIdx].color ?? '#ffffff'
+			})
+		}
+		return links
+	})
+
 	// Fire init handler on mount
 	onMount(() => {
 		if (scene.globalBeatHandler) {
@@ -572,5 +617,8 @@
 	/>
 	{#if showAudio}
 		<MidiSignalView alpha={scene?.audioView?.midiAlpha} links={midiSignalLinks} />
+		{#if scene?.audioView?.marbleLinks}
+			<MidiSignalView alpha={scene?.audioView?.midiAlpha} links={marbleSignalLinks} />
+		{/if}
 	{/if}
 {/if}
