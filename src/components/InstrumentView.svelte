@@ -15,6 +15,11 @@
 	import { makeStandardMaterial } from '../lib/video/material-standard'
 	import { Material } from 'three'
 
+	// Constant rotation matrices for type-based offsets (computed once at module load)
+	const _ROT_NEG_HALF_PI = new Matrix4().makeRotationZ(-Math.PI / 2)
+	const _ROT_HALF_PI = new Matrix4().makeRotationZ(Math.PI / 2)
+	const _ROT_NEG_PI = new Matrix4().makeRotationZ(-Math.PI)
+
 	type Props = {
 		instrument: Instrument
 		rail: ResolvedRail
@@ -141,6 +146,15 @@
 
 	let spinAngle = $state(0)
 	let impactTime = 0
+
+	// Scratch objects for rotation — created once per instrument instance, reused every frame
+	const _iRef = new Vector3(),
+		_iUp = new Vector3(),
+		_iRight = new Vector3()
+	const _iCorrUp = new Vector3(),
+		_iMat = new Matrix4(),
+		_iTmpMat = new Matrix4()
+	const _iEuler = new Euler()
 	let impactBaseAngle = 0
 	let activeRotation = $state(0)
 	let impactBoostSpeed = $state(0)
@@ -170,65 +184,56 @@
 	const rotation = $derived.by((): [number, number, number] => {
 		if (!transform) return [0, 0, 0]
 
-		const tangent = transform.tangent
+		const { x: tx, y: ty, z: tz } = transform.tangent
 
-		// Compute proper up vector perpendicular to tangent (Gram-Schmidt)
-		// Use world Y unless tangent is nearly vertical
-		const ref = Math.abs(tangent.y) < 0.9 ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0)
-		// Project out component parallel to tangent
-		const up = ref
-			.clone()
-			.sub(tangent.clone().multiplyScalar(ref.dot(tangent)))
-			.normalize()
+		// Gram-Schmidt: choose ref, project out tangent component
+		if (Math.abs(ty) < 0.9) _iRef.set(0, 1, 0)
+		else _iRef.set(1, 0, 0)
+		const dot = _iRef.x * tx + _iRef.y * ty + _iRef.z * tz
+		_iUp.set(_iRef.x - tx * dot, _iRef.y - ty * dot, _iRef.z - tz * dot).normalize()
 
-		const right = new Vector3().crossVectors(up, tangent).normalize()
-		const correctedUp = new Vector3().crossVectors(tangent, right).normalize()
+		// Reuse _iRef as tangent copy for cross products
+		_iRef.set(tx, ty, tz)
+		_iRight.crossVectors(_iUp, _iRef).normalize()
+		_iCorrUp.crossVectors(_iRef, _iRight).normalize()
+		_iMat.makeBasis(_iRight, _iCorrUp, _iRef)
 
-		// Align normal with tangent
-		const m = new Matrix4()
-		m.makeBasis(right, correctedUp, tangent)
-
-		// Apply base rotation offset based on type
+		// Apply type-based constant rotation
 		const type = instrument.type || 'poly'
 		if (type === 'poly' || type === 'star' || type === 'heart') {
-			m.multiply(new Matrix4().makeRotationZ(-Math.PI / 2))
+			_iMat.multiply(_ROT_NEG_HALF_PI)
 		} else if (type === 'cross' || type === 'whirl' || type === 'sun' || type === 'eater') {
-			m.multiply(new Matrix4().makeRotationZ(Math.PI / 2))
+			_iMat.multiply(_ROT_HALF_PI)
 		} else if (type === 'cone' || type === 'spiral') {
-			m.multiply(new Matrix4().makeRotationZ(-Math.PI))
+			_iMat.multiply(_ROT_NEG_PI)
 		}
 
-		// Apply rail tilt (design element)
 		const tiltRad = ((rail.tilt ?? 0) * Math.PI) / 180
 		if (tiltRad !== 0) {
-			m.multiply(new Matrix4().makeRotationZ(tiltRad))
+			_iTmpMat.makeRotationZ(tiltRad)
+			_iMat.multiply(_iTmpMat)
 		}
 
-		// Apply active rotation (continuous for spiral/cone)
 		if (activeRotationEnabled) {
-			m.multiply(new Matrix4().makeRotationZ(activeRotation))
+			_iTmpMat.makeRotationZ(activeRotation)
+			_iMat.multiply(_iTmpMat)
 		}
 
-		// Apply impact spin (for non-pulse types or when pulse is disabled)
 		if (!pulseAnimationEnabled) {
-			m.multiply(new Matrix4().makeRotationZ(spinAngle))
+			_iTmpMat.makeRotationZ(spinAngle)
+			_iMat.multiply(_iTmpMat)
 		}
 
-		const euler = new Euler().setFromRotationMatrix(m)
-		return [euler.x, euler.y, euler.z]
+		_iEuler.setFromRotationMatrix(_iMat)
+		return [_iEuler.x, _iEuler.y, _iEuler.z]
 	})
 
 	// Compute position with bounce offset for pulse animation
 	const position = $derived.by((): [number, number, number] => {
 		if (!transform) return [0, 0, 0]
-		const base = transform.position.clone()
-
-		if (pulseAnimationEnabled && bounceOffset > 0) {
-			// Bounce along world Y axis (up)
-			base.y += bounceOffset
-		}
-
-		return [base.x, base.y, base.z]
+		const base = transform.position
+		const y = pulseAnimationEnabled && bounceOffset > 0 ? base.y + bounceOffset : base.y
+		return [base.x, y, base.z]
 	})
 
 	// Hover/select glow baseline

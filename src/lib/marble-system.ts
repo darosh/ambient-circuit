@@ -13,6 +13,11 @@ import { smootherstep } from 'three/src/math/MathUtils.js'
 let prevGlobalBeat = -1
 let prevIsPlaying = false
 
+// Reusable tmp vectors — prevent per-frame allocation in hot paths
+const _tmp0 = new Vector3()
+const _tmp1 = new Vector3()
+const _tmpRight = new Vector3()
+
 // Snake motion constants
 const SNAKE_AMPLITUDE_X = 0.09 // units perpendicular to rail
 const SNAKE_AMPLITUDE_Y = 0.15 // units perpendicular to rail
@@ -193,43 +198,36 @@ function calculateMarblePosition(
 	let easedT = easingFn(t)
 	easedT = Math.max(0, Math.min(1, easedT))
 
-	// Get position and tangent from segment curve
+	// Get position and tangent from segment curve.
+	// marble.position/tangent are plain {x,y,z} objects (not Vector3 instances) — write via x/y/z only.
 	const curve = buildSegmentCurve(points, segmentIndex)
 	if (curve) {
-		// Curved segment - use Bezier
-		marble.position = curve.getPoint(easedT)
-		marble.tangent = curve.getTangent(easedT).normalize()
+		// Curved segment — compute into tmp buffers, then write x/y/z
+		curve.getPoint(easedT, _tmp0)
+		curve.getTangent(easedT, _tmp1).normalize()
+		marble.position.x = _tmp0.x
+		marble.position.y = _tmp0.y
+		marble.position.z = _tmp0.z
+		marble.tangent.x = _tmp1.x
+		marble.tangent.y = _tmp1.y
+		marble.tangent.z = _tmp1.z
 	} else {
-		// Straight segment - linear interpolation
-		const pos0 = new Vector3(...p0.p)
-		const pos1 = new Vector3(...p1.p)
-		marble.position = new Vector3().lerpVectors(pos0, pos1, easedT)
-
-		const dir = new Vector3().subVectors(pos1, pos0).normalize()
-		marble.tangent = dir.lengthSq() > 0 ? dir : new Vector3(1, 0, 0)
-	}
-
-	// Parallel transport: rotate previous up vector to stay perpendicular to new tangent
-	const prevTangent = new Vector3(marble.tangent.x, marble.tangent.y, marble.tangent.z)
-	const prevUp = new Vector3(marble.up.x, marble.up.y, marble.up.z)
-
-	// If tangent changed significantly, update up vector via parallel transport
-	if (prevTangent.dot(marble.tangent) < 0.9999) {
-		// Compute rotation axis and angle between old and new tangent
-		const axis = new Vector3().crossVectors(prevTangent, marble.tangent)
-		const axisLen = axis.length()
-
-		if (axisLen > 0.0001) {
-			// Rotate up vector around axis
-			axis.normalize()
-			const angle = Math.acos(Math.max(-1, Math.min(1, prevTangent.dot(marble.tangent))))
-			const newUp = prevUp.clone().applyAxisAngle(axis, angle)
-
-			// Ensure up is perpendicular to tangent
-			const proj = newUp.clone().multiplyScalar(newUp.dot(marble.tangent))
-			newUp.sub(proj).normalize()
-
-			marble.up = newUp
+		// Straight segment — lerp + normalize via tmp buffers, then write x/y/z
+		_tmp0.set(p0.p[0], p0.p[1], p0.p[2])
+		_tmp1.set(p1.p[0], p1.p[1], p1.p[2])
+		marble.position.x = _tmp0.x + (_tmp1.x - _tmp0.x) * easedT
+		marble.position.y = _tmp0.y + (_tmp1.y - _tmp0.y) * easedT
+		marble.position.z = _tmp0.z + (_tmp1.z - _tmp0.z) * easedT
+		_tmpRight.subVectors(_tmp1, _tmp0)
+		const dlen = _tmpRight.length()
+		if (dlen > 0) {
+			marble.tangent.x = _tmpRight.x / dlen
+			marble.tangent.y = _tmpRight.y / dlen
+			marble.tangent.z = _tmpRight.z / dlen
+		} else {
+			marble.tangent.x = 1
+			marble.tangent.y = 0
+			marble.tangent.z = 0
 		}
 	}
 
@@ -237,29 +235,32 @@ function calculateMarblePosition(
 		const phase_x = 2 * Math.PI * (marble.currentBeat * SNAKE_FREQUENCY + 0.25)
 		const phase_y = 2 * Math.PI * (marble.currentBeat * SNAKE_FREQUENCY)
 		const phase_r = 2 * Math.PI * (marble.currentBeat * SNAKE_FREQUENCY + 0.25)
-		const right = new Vector3().crossVectors(marble.up, marble.tangent).normalize()
+		_tmpRight.crossVectors(marble.up, marble.tangent).normalize()
 		const cos = Math.cos(phase_x)
 		const sin = Math.sin(phase_y)
 		const offsetX = cos * SNAKE_AMPLITUDE_X
 		const offsetY = sin * SNAKE_AMPLITUDE_Y
 
-		marble.position.addScaledVector(right, offsetX)
-		marble.position.addScaledVector(marble.up, offsetY)
+		marble.position.x += _tmpRight.x * offsetX
+		marble.position.y += _tmpRight.y * offsetX
+		marble.position.z += _tmpRight.z * offsetX
+		marble.position.x += marble.up.x * offsetY
+		marble.position.y += marble.up.y * offsetY
+		marble.position.z += marble.up.z * offsetY
 
 		// Recompute tangent to follow spiral path
-		// Derivative includes both spiral rotation and envelope modulation
-		// const envelopeDeriv = Math.cos(Math.PI * marble.currentBeat * SNAKE_FREQUENCY) * Math.PI * SNAKE_FREQUENCY
-		// const phaseDeriv = 2 * Math.PI * SNAKE_FREQUENCY
-		// const derivX = (Math.cos(phase) * phaseDeriv * envelope + Math.sin(phase) * envelopeDeriv)
-
 		if (typeof marble.config.snake === 'number') {
 			const derivY = (smootherstep((Math.sin(phase_r) + 1) / 2, 0, 1) - 0.5) * 2
-
-			marble.tangent = marble.tangent
-				.clone()
-				// .addScaledVector(right, derivX)
-				.addScaledVector(marble.up, derivY * marble.config.snake)
-				.normalize()
+			const snake = marble.config.snake
+			const sx = marble.tangent.x + marble.up.x * derivY * snake
+			const sy = marble.tangent.y + marble.up.y * derivY * snake
+			const sz = marble.tangent.z + marble.up.z * derivY * snake
+			const slen = Math.sqrt(sx * sx + sy * sy + sz * sz)
+			if (slen > 0) {
+				marble.tangent.x = sx / slen
+				marble.tangent.y = sy / slen
+				marble.tangent.z = sz / slen
+			}
 		}
 	}
 }

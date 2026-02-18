@@ -26,3 +26,39 @@
 - [x] audio view color
 - [x] no offset for no bus
 - [x] reuse node layout
+
+Summary of changes across 3 files:
+
+marble-system.ts (biggest impact — ~5 allocations/marble/frame eliminated):
+- 3 module-level _tmp0, _tmp1, _tmpRight buffers
+- Curved segments: curve.getPoint(t, marble.position) / getTangent(t, marble.tangent) — writes in-place,
+  zero allocation
+- Straight segments: _tmp0.set(...) / lerpVectors / subVectors in-place — zero allocation
+- Removed dead parallel transport block (was comparing tangent to itself, condition was always false,
+  allocating 5 vectors for nothing)
+- Snake: _tmpRight.crossVectors(...) and marble.tangent.addScaledVector(...).normalize() in-place
+
+MarbleView.svelte (~7 objects/marble/frame → 0):
+- Scratch _mRef/Up/Right/CorrUp/Mat/TmpMat/Euler per instance; _POLY_ROT constant matrix
+- Manual Gram-Schmidt (no .clone(), no multiplyScalar)
+
+InstrumentView.svelte (~8 objects/instrument/frame → 0):
+- Same scratch pattern; 3 module-level constant rotation matrices (_ROT_NEG_HALF_PI etc.)
+- position derived: removed .clone() entirely (reads transform.position directly)
+
+✻ Cooked for 8m 18s
+
+❯ Uncaught TypeError: point.set is not a function                                                        
+at calculateMarblePosition (marble-system.ts:205:9)                                                
+at updateMarble (marble-system.ts:865:2)                                                           
+at updateMarbles (marble-system.ts:890:3)                                                          
+at Task.callback (Scene.svelte:504:3)
+
+
+⏺ Searched for 1 pattern (ctrl+o to expand)
+
+⏺ The root cause: marble.position and marble.tangent are initialized as plain objects ({ x: 0, y: 0, z: 0 },
+not real Vector3 instances), so calling Three.js prototype methods on them fails. The old code always did
+marble.position = curve.getPoint(...) (assignment), which worked fine. The fix: use tmp vectors for all
+Three.js operations, then write x/y/z back via property assignment — works on plain objects and Vector3
+alike.

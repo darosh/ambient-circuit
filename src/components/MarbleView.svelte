@@ -21,6 +21,16 @@
 	const TANGENT_VERTICAL_THRESHOLD = 0.9
 	const COIL_SPIN_SPEED = 2 // rotations per second
 
+	// Scratch objects for rotation — created once per marble instance, reused every frame
+	const _mRef = new Vector3(),
+		_mUp = new Vector3(),
+		_mRight = new Vector3()
+	const _mCorrUp = new Vector3(),
+		_mMat = new Matrix4(),
+		_mTmpMat = new Matrix4()
+	const _mEuler = new Euler()
+	const _POLY_ROT = new Matrix4().makeRotationZ(-Math.PI / 2)
+
 	type Props = {
 		marble: Marble
 		rail: ResolvedRail
@@ -106,42 +116,37 @@
 	const rotation = $derived.by((): [number, number, number] => {
 		if (type === 'ball') return [0, 0, 0]
 
-		const tangent = new Vector3(marble.tangent.x, marble.tangent.y, marble.tangent.z)
+		const tx = marble.tangent.x,
+			ty = marble.tangent.y,
+			tz = marble.tangent.z
 
-		// Compute up vector using Gram-Schmidt (same as InstrumentView)
-		// Use world Y unless tangent is nearly vertical
-		const ref =
-			Math.abs(tangent.y) < TANGENT_VERTICAL_THRESHOLD ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0)
-		const up = ref
-			.clone()
-			.sub(tangent.clone().multiplyScalar(ref.dot(tangent)))
-			.normalize()
+		// Gram-Schmidt: choose ref, project out tangent component
+		if (Math.abs(ty) < TANGENT_VERTICAL_THRESHOLD) _mRef.set(0, 1, 0)
+		else _mRef.set(1, 0, 0)
+		const dot = _mRef.x * tx + _mRef.y * ty + _mRef.z * tz
+		_mUp.set(_mRef.x - tx * dot, _mRef.y - ty * dot, _mRef.z - tz * dot).normalize()
 
-		const right = new Vector3().crossVectors(up, tangent).normalize()
-		const correctedUp = new Vector3().crossVectors(tangent, right).normalize()
+		// Reuse _mRef as tangent copy for cross products
+		_mRef.set(tx, ty, tz)
+		_mRight.crossVectors(_mUp, _mRef).normalize()
+		_mCorrUp.crossVectors(_mRef, _mRight).normalize()
+		_mMat.makeBasis(_mRight, _mCorrUp, _mRef)
 
-		// Align normal with tangent
-		const m = new Matrix4()
-		m.makeBasis(right, correctedUp, tangent)
+		if (type === 'poly') _mMat.multiply(_POLY_ROT)
 
-		// Apply base rotation offset (match instrument orientation)
-		if (type === 'poly') {
-			m.multiply(new Matrix4().makeRotationZ(-Math.PI / 2))
-		}
-
-		// Apply rail tilt
 		const tiltRad = ((rail.tilt ?? 0) * Math.PI) / 180
 		if (tiltRad !== 0) {
-			m.multiply(new Matrix4().makeRotationZ(tiltRad))
+			_mTmpMat.makeRotationZ(tiltRad)
+			_mMat.multiply(_mTmpMat)
 		}
 
-		// Apply continuous spin for coil type
 		if (type === 'coil') {
-			m.multiply(new Matrix4().makeRotationZ(spinAngle))
+			_mTmpMat.makeRotationZ(spinAngle)
+			_mMat.multiply(_mTmpMat)
 		}
 
-		const euler = new Euler().setFromRotationMatrix(m)
-		return [euler.x, euler.y, euler.z]
+		_mEuler.setFromRotationMatrix(_mMat)
+		return [_mEuler.x, _mEuler.y, _mEuler.z]
 	})
 
 	const glowBaseline = $derived(selected ? 0.4 : hovered ? 0.2 : 0)
