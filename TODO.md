@@ -16,3 +16,8 @@
 - [ ] use rails for camera path? or scene path? and keep the camera for user only
 - [ ] remove ovelapping beats from structure scene
 - [ ] /data to /scene
+- [ ] impact material for audio view
+- [x] test moving rails
+- [ ] test marble as instrument
+- [ ] show audio text, show audio analyzers
+- [ ] default analyzer
