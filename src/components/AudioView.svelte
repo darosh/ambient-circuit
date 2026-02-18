@@ -157,7 +157,8 @@
 		{#each layout.nodes as node, ni (ni)}
 			<T.Mesh position.x={node.x} position.y={node.y} position.z={node.z} rotation.x={-DEG_90}>
 				{#if node.isGenerator}
-					<T.CylinderGeometry args={[NODE_RADIUS, NODE_RADIUS, NODE_LENGTH, 8]} />
+<!--					<T.CylinderGeometry args={[NODE_RADIUS, NODE_RADIUS, NODE_LENGTH, 8]} />-->
+					<T.SphereGeometry args={[NODE_RADIUS, 16, 8]} />
 					<T.MeshStandardMaterial
 						bind:ref={nodeMaterials[ni]}
 						color="#000000"
@@ -165,7 +166,8 @@
 						emissiveIntensity={0.9}
 					/>
 				{:else}
-					<T.ConeGeometry args={[NODE_RADIUS, NODE_LENGTH, 8]} />
+<!--					<T.ConeGeometry args={[NODE_RADIUS, NODE_LENGTH, 8]} />-->
+					<T.SphereGeometry args={[NODE_RADIUS, 16, 8]} />
 					<T.MeshStandardMaterial
 						bind:ref={nodeMaterials[ni]}
 						opacity={0.5}
