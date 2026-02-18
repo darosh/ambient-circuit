@@ -25,11 +25,13 @@
 	let values = <number[]>$derived(Array.from({ length: binCount }).fill(0))
 
 	// Colors: green→yellow→red
-	function barColor(v: number): string {
-		if (v === 0) return '#000000'
-		if (v < 0.4) return '#00ff44'
-		if (v < 0.7) return '#ffdd00'
-		return '#ff3300'
+	function barColor(_v: number): string {
+		return '#ffffff'
+
+		// if (v < 0.05) return '#000000'
+		// if (v < 0.4) return '#00ff44'
+		// if (v < 0.7) return '#ffdd00'
+		// return '#ff3300'
 	}
 
 	useTask(() => {

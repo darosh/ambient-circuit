@@ -2,35 +2,39 @@
 	import { T } from '@threlte/core'
 	import type { AudioEngine, AnalyzerType } from '../lib/audio/types'
 	import type { Vector3Tuple } from 'three'
-	import { Vector3, LineCurve3 } from 'three'
-	import { cfgName } from '../lib/audio/engine'
+	import { Vector3, LineCurve3, CubicBezierCurve3 } from 'three'
 	import VUMeterView from './VUMeterView.svelte'
 	import { MathUtils } from 'three/webgpu'
+	import { audioLayout, type NodeInfo } from '../lib/audio-layout'
+	import TubeText from './TubeText.svelte'
 
 	let {
 		engine,
 		offset = [0, 0, 0],
-		visible = true
+		visible = true,
+		curved = true
 	}: {
 		engine: AudioEngine
 		offset?: Vector3Tuple
 		visible?: boolean
+		curved?: boolean
 	} = $props()
 
 	const LAYER_GAP = 1 // spacing row between layers
 	const COL_SPACING = 1
-	const NODE_SPACING = 0.25
+	const NODE_SPACING = 0.5
 	const NODE_RADIUS = 0.1
 	const NODE_LENGTH = 0.2
 	const METER_HEIGHT = 0.5
 	const METER_WIDTH = 0.5
-	const TUBE_RADIUS = 0.01
-	const TUBE_SEGMENTS = 1
+	const TUBE_RADIUS = 0.025
+	const TUBE_SEGMENTS_STRAIGHT = 1
+	const TUBE_SEGMENTS_CURVED = 32
+	const CURVE_TANGENT = 0.5
 	const DEG_90 = MathUtils.DEG2RAD * 90
 	const LINE_SHIFT = new Vector3(0, 0, NODE_LENGTH / 2)
 
-	type NodeInfo = { x: number; y: number; z: number; label: string; isGenerator: boolean }
-	type TubeInfo = { from: Vector3; to: Vector3; color: string }
+	type TubeInfo = { from: Vector3; to: Vector3; color?: string; crossColumn?: boolean }
 
 	// Derive layout from engine state
 	const layout = $derived.by(() => {
@@ -38,180 +42,28 @@
 		const buses = engine.buses
 		const master = engine.masterChain
 
-		const nodes: NodeInfo[] = []
-		const tubes: TubeInfo[] = []
-		const chainEndpoints: { pos: Vector3; bus?: string }[] = []
+		const nodes: NodeInfo[] = audioLayout(
+			chains,
+			buses,
+			master,
+			NODE_SPACING,
+			LAYER_GAP,
+			COL_SPACING
+		)
 
-		// Compute instrument layer depth (max nodes across all chains)
-		let maxChainNodes = 0
-		for (const chain of chains) {
-			let count = 0
-			if (chain.generator) count++
-			count += chain.fx.length
-			if (count > maxChainNodes) maxChainNodes = count
-		}
-		const instrLayerDepth = maxChainNodes * NODE_SPACING
+		const tubes: TubeInfo[] = nodes
+			.filter((node) => node.next)
+			.map((node) => {
+				const next = nodes[node.next!]
+				const from = new Vector3(node.x, node.y, node.z).add(LINE_SHIFT)
+				const to = new Vector3(next.x, next.y, next.z).sub(LINE_SHIFT)
 
-		// Bus layer start
-		const busEntries = Array.from(buses.entries())
-		const hasBuses = busEntries.length > 0
-		const busLayerZ = instrLayerDepth + LAYER_GAP
-
-		// Compute bus layer depth
-		let maxBusNodes = 0
-		for (const [, bus] of busEntries) {
-			if (bus.fx.length > maxBusNodes) maxBusNodes = bus.fx.length
-		}
-		const busLayerDepth = maxBusNodes * NODE_SPACING
-
-		// Master layer start
-		const masterLayerZ = hasBuses ? busLayerZ + busLayerDepth + LAYER_GAP : busLayerZ // no buses → master right after instrument gap
-
-		// Instrument chains
-		for (let ci = 0; ci < chains.length; ci++) {
-			const chain = chains[ci]
-			const cx = (ci - (chains.length - 1) / 2) * COL_SPACING
-			let nz = 0
-
-			if (chain.generator) {
-				nodes.push({
-					x: cx,
-					y: 0,
-					z: nz,
-					label: cfgName(chain.config.generator) ?? 'gen',
-					isGenerator: true
-				})
-				const prevZ = nz
-				nz += NODE_SPACING
-				if (chain.fx.length > 0) {
-					tubes.push({
-						from: new Vector3(cx, 0, prevZ),
-						to: new Vector3(cx, 0, nz),
-						color: '#00ff00'
-					})
+				return {
+					from,
+					to,
+					crossColumn: from.x !== to.x || from.y !== to.y
 				}
-			}
-
-			for (let fi = 0; fi < chain.fx.length; fi++) {
-				nodes.push({
-					x: cx,
-					y: 0,
-					z: nz,
-					label: cfgName(chain.config.fx?.[fi]) ?? 'fx',
-					isGenerator: false
-				})
-				const prevZ = nz
-				nz += NODE_SPACING
-				if (fi < chain.fx.length - 1) {
-					tubes.push({
-						from: new Vector3(cx, 0, prevZ),
-						to: new Vector3(cx, 0, nz),
-						color: '#FF0000'
-					})
-				}
-			}
-
-			chainEndpoints.push({
-				pos: new Vector3(cx, 0, nz - NODE_SPACING),
-				bus: chain.config.bus
 			})
-		}
-
-		// Buses
-		const busPositions: Record<string, Vector3> = {}
-		const busEndPositions: Record<string, Vector3> = {}
-		for (let bi = 0; bi < busEntries.length; bi++) {
-			const [name, bus] = busEntries[bi]
-			const bx = (bi - (busEntries.length - 1) / 2) * COL_SPACING
-			let nz = 0
-
-			busPositions[name] = new Vector3(bx, 0, busLayerZ)
-
-			for (let fi = 0; fi < bus.fx.length; fi++) {
-				nodes.push({
-					x: bx,
-					y: 0,
-					z: busLayerZ + nz,
-					label: cfgName(bus.config.fx?.[fi]) ?? 'fx',
-					isGenerator: false
-				})
-				if (fi > 0) {
-					tubes.push({
-						from: new Vector3(bx, 0, busLayerZ + nz - NODE_SPACING),
-						to: new Vector3(bx, 0, busLayerZ + nz),
-						color: '#0000ff'
-					})
-				}
-				nz += NODE_SPACING
-			}
-			busEndPositions[name] = new Vector3(bx, 0, busLayerZ + nz - NODE_SPACING)
-		}
-
-		// Master chain
-		const masterPos = new Vector3(0, 0, masterLayerZ)
-		if (master) {
-			let nz = 0
-			for (let fi = 0; fi < master.fx.length; fi++) {
-				nodes.push({
-					x: 0,
-					y: 0,
-					z: masterLayerZ + nz,
-					label: cfgName(master.config.fx?.[fi]) ?? 'fx',
-					isGenerator: false
-				})
-				if (fi > 0) {
-					tubes.push({
-						from: new Vector3(0, 0, masterLayerZ + nz - NODE_SPACING),
-						to: new Vector3(0, 0, masterLayerZ + nz),
-						color: '#ffff00'
-					})
-				}
-				nz += NODE_SPACING
-			}
-		}
-
-		// Connection tubes: chain → bus or master
-		for (const ep of chainEndpoints) {
-			if (ep.bus && busPositions[ep.bus]) {
-				// Chain → bus
-				tubes.push({
-					from: ep.pos.clone().add(LINE_SHIFT),
-					to: busPositions[ep.bus].clone().sub(LINE_SHIFT),
-					color: '#ff00ff'
-				})
-			} else {
-				// Chain → master (no bus): straight down to bus layer end, then to master
-				if (hasBuses) {
-					// Add straight segment through bus layer
-					const straightEnd = new Vector3(ep.pos.x, 0, busLayerZ + busLayerDepth)
-					tubes.push({
-						from: ep.pos,
-						to: straightEnd,
-						color: '#00ffff'
-					})
-					tubes.push({
-						from: straightEnd,
-						to: masterPos.clone().sub(LINE_SHIFT),
-						color: '#00ffff'
-					})
-				} else {
-					tubes.push({
-						from: ep.pos,
-						to: masterPos,
-						color: '#444444'
-					})
-				}
-			}
-		}
-
-		// Bus → master tubes
-		for (const name of Object.keys(busEndPositions)) {
-			tubes.push({
-				from: busEndPositions[name],
-				to: masterPos,
-				color: '#664444'
-			})
-		}
 
 		// Analyzer info for VU meters
 		function resolveAnalyzerType(cfg: AnalyzerType | undefined): 'fft' | 'waveform' | 'meter' {
@@ -225,37 +77,16 @@
 			pos: Vector3Tuple
 			height: number
 			type: 'fft' | 'waveform' | 'meter'
-		}[] = []
-		for (let ci = 0; ci < chains.length; ci++) {
-			const chain = chains[ci]
-			if (chain.analyzer) {
-				const cx = (ci - (chains.length - 1) / 2) * COL_SPACING
-				analyzerInfos.push({
-					analyzer: chain.analyzer,
-					pos: [cx + COL_SPACING / 2, 0, -NODE_LENGTH / 2],
-					height: METER_HEIGHT,
-					type: resolveAnalyzerType(chain.config.analyzer)
-				})
-			}
-		}
-		for (const [, bus] of buses) {
-			if (bus.analyzer) {
-				analyzerInfos.push({
-					analyzer: bus.analyzer,
-					pos: [COL_SPACING / 2, 0, busLayerZ - NODE_LENGTH / 2],
-					height: METER_HEIGHT,
-					type: resolveAnalyzerType(bus.config.analyzer)
-				})
-			}
-		}
-		if (master?.analyzer) {
-			analyzerInfos.push({
-				analyzer: master.analyzer,
-				pos: [COL_SPACING / 2, 0, masterLayerZ],
+		}[] = nodes
+			.filter((n) => (n.bus || n.chain || n.master)?.analyzer)
+			.map((n) => ({
+				analyzer: <import('tone').ToneAudioNode>(n?.chain || n?.bus || n?.master)!.analyzer,
+				pos: [n.x + COL_SPACING / 2, n.y, n.z - NODE_LENGTH / 2],
 				height: METER_HEIGHT,
-				type: resolveAnalyzerType(master.config.analyzer)
-			})
-		}
+				type: resolveAnalyzerType(
+					<AnalyzerType>(<unknown>(n?.chain || n?.bus || n?.master)!.config.analyzer!)
+				)
+			}))
 
 		return { nodes, tubes, analyzerInfos }
 	})
@@ -283,27 +114,57 @@
 						emissiveIntensity={0.9}
 					/>
 				{/if}
+				<T.Group rotation.y={DEG_90} rotation.z={Math.PI} position.z=".2" position.y=".06">
+					<TubeText
+						fx={true}
+						id={node.label}
+						text={node.label.toUpperCase()}
+						color="#ffffff"
+						size={0.14}
+						width={2}
+						spacing={1.25}
+					/>
+				</T.Group>
 			</T.Mesh>
 		{/each}
 
 		<!-- Connection tubes -->
 		{#each layout.tubes as tube, ti (ti)}
-			{@const curve = new LineCurve3(tube.from, tube.to)}
+			{@const useCurve = curved && tube.crossColumn}
+			{@const dz = tube.to.z - tube.from.z}
+			{@const curve = useCurve
+				? new CubicBezierCurve3(
+						tube.from,
+						new Vector3(tube.from.x, 0, tube.from.z + dz * CURVE_TANGENT),
+						new Vector3(tube.to.x, 0, tube.to.z - dz * CURVE_TANGENT),
+						tube.to
+					)
+				: new LineCurve3(tube.from, tube.to)}
 			<T.Mesh>
-				<T.TubeGeometry args={[curve, TUBE_SEGMENTS, TUBE_RADIUS, 4, false]} />
-				<T.MeshStandardMaterial opacity={0.5} emissive="#ffffff" emissiveIntensity={0.5} />
+				<T.TubeGeometry
+					args={[
+						curve,
+						useCurve ? TUBE_SEGMENTS_CURVED : TUBE_SEGMENTS_STRAIGHT,
+						TUBE_RADIUS,
+						4,
+						false
+					]}
+				/>
+				<T.MeshStandardMaterial emissive="#aaaaaa" emissiveIntensity={0.8} />
 			</T.Mesh>
 		{/each}
 
 		<!-- VU Meters -->
 		{#each layout.analyzerInfos as info, ai (ai)}
 			<T.Group position={info.pos} rotation.x={DEG_90}>
+				<!--				<Billboard>-->
 				<VUMeterView
 					analyzer={info.analyzer}
 					type={info.type}
 					height={info.height}
 					width={METER_WIDTH}
 				/>
+				<!--				</Billboard>-->
 			</T.Group>
 		{/each}
 	</T.Group>

@@ -8,11 +8,12 @@ export const scene: SceneConfig = {
 	id: 'scene-tone-instruments',
 	bpm: 220,
 	triggerHandler,
-	camera: [3, 16, 7],
+	camera: [9, 18, 18],
+	target: [0, 2, 0],
 	audio: {
 		buses: {
 			test: {
-				analyzer: 'fft',
+				analyzer: 'meter',
 				fx: [{ tone: 'Limiter' }]
 			}
 		},
@@ -39,7 +40,7 @@ export const scene: SceneConfig = {
 				{
 					type: 'arrow',
 					beat: 1,
-					audio: { bus: 'test', analyzer: 'waveform', generator: { tone: 'Synth' } }
+					audio: { bus: 'test', analyzer: true, generator: { tone: 'Synth' } }
 				}
 			]
 		},
@@ -71,25 +72,33 @@ export const scene: SceneConfig = {
 			color: c(),
 			rail: { id: 'metal-synth', nodes: [[-3, 0, 5], 'i i i i i i i i i i'] },
 			marbles: [{ note: 60 }],
-			instruments: [{ type: 'arrow', beat: 3, audio: { generator: { tone: 'MetalSynth' } } }]
+			instruments: [
+				{ type: 'arrow', beat: 3, audio: { analyzer: true, generator: { tone: 'MetalSynth' } } }
+			]
 		},
 		{
 			color: c(),
 			rail: { id: 'noise-synth', nodes: [[-2, 0, 5], 'i i i i i i i i i i'] },
 			marbles: [{ note: 40.5 }],
-			instruments: [{ type: 'arrow', beat: 4, audio: { generator: { tone: 'NoiseSynth' } } }]
+			instruments: [
+				{ type: 'arrow', beat: 4, audio: { analyzer: true, generator: { tone: 'NoiseSynth' } } }
+			]
 		},
 		{
 			color: c(),
 			rail: { id: 'am-synth', nodes: [[-1, 0, 5], 'i i i i i i i i i i'] },
 			marbles: [{ note: 60 }],
-			instruments: [{ type: 'arrow', beat: 5, audio: { generator: { tone: 'AMSynth' } } }]
+			instruments: [
+				{ type: 'arrow', beat: 5, audio: { analyzer: true, generator: { tone: 'AMSynth' } } }
+			]
 		},
 		{
 			color: c(),
 			rail: { id: 'fm-synth', nodes: [[0, 0, 5], 'i i i i i i i i i i'] },
 			marbles: [{ note: 60 }],
-			instruments: [{ type: 'arrow', beat: 6, audio: { generator: { tone: 'FMSynth' } } }]
+			instruments: [
+				{ type: 'arrow', beat: 6, audio: { analyzer: true, generator: { tone: 'FMSynth' } } }
+			]
 		},
 		{
 			color: c(),
@@ -99,7 +108,11 @@ export const scene: SceneConfig = {
 				{
 					type: 'arrow',
 					beat: 7,
-					audio: { bus: 'test', generator: { tone: 'MembraneSynth', params: { pitchDecay: 0.4 } } }
+					audio: {
+						analyzer: true,
+						bus: 'test',
+						generator: { tone: 'MembraneSynth', params: { pitchDecay: 0.4 } }
+					}
 				}
 			]
 		},
@@ -107,7 +120,9 @@ export const scene: SceneConfig = {
 			color: c(),
 			rail: { id: 'mono-synth', nodes: [[2, 0, 5], 'i i i i i i i i i i'] },
 			marbles: [{ note: 60 }],
-			instruments: [{ type: 'arrow', beat: 8, audio: { generator: { tone: 'MonoSynth' } } }]
+			instruments: [
+				{ type: 'arrow', beat: 8, audio: { analyzer: true, generator: { tone: 'MonoSynth' } } }
+			]
 		},
 		{
 			color: c(),
@@ -118,7 +133,7 @@ export const scene: SceneConfig = {
 					type: 'arrow',
 					beat: 9,
 					audio: {
-						analyzer: 'meter',
+						analyzer: true,
 						generator: { tone: 'DuoSynth' }
 					}
 				}
