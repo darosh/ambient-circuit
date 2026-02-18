@@ -62,7 +62,7 @@ export function audioLayout(
 		{ total: 0, map: <Record<string, number>>{} }
 	)
 
-	const masterNodes = instrumentNodes + busNodes.total
+	const masterNodes = master ? instrumentNodes + busNodes.total : undefined
 
 	// Instrument chains
 	for (let ci = 0; ci < chains.length; ci++) {
