@@ -11,7 +11,9 @@ export const scene: SceneConfig = {
 	target: [0, 0.75, 0],
 	audioView: {
 		offset: [0, -0.5, 0],
-		module: 0.25
+		module: 0.25,
+		color: '#333366',
+		midiAlpha: 0.4
 	},
 	// renderPlayOnly: true,
 	triggerHandler,

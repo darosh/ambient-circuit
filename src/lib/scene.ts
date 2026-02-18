@@ -70,6 +70,7 @@ export type SceneConfig = {
 		text?: boolean
 		all?: boolean
 		color?: string
+		midiAlpha?: number
 		module?: number
 		defaultAnalyser?: 'fft' | 'meter' | 'waveform'
 	}

@@ -567,6 +567,6 @@
 		visible={showAudio}
 	/>
 	{#if showAudio}
-		<MidiSignalView links={midiSignalLinks} />
+		<MidiSignalView alpha={scene?.audioView?.midiAlpha} links={midiSignalLinks} />
 	{/if}
 {/if}

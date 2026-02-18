@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	import { LineCurve3, Color, MeshStandardMaterial, Vector3 } from 'three/webgpu'
+	import { LineCurve3, Vector3 } from 'three/webgpu'
 	import { CubicBezierCurve3, type Vector3Tuple } from 'three/webgpu'
-	import { easeOutQuart } from '../lib/easing'
 	import { untrack } from 'svelte'
+	import { buildImpactMaterial } from '../lib/video/material-impact'
 
 	const TUBE_SEGMENTS_STRAIGHT = 1
 	const TUBE_SEGMENTS_CURVED = 12
@@ -19,12 +19,14 @@
 		color?: string
 	}
 
-	let { links, curved = true }: { links: SignalLink[]; curved?: boolean } = $props()
+	let {
+		links,
+		curved = true,
+		alpha = 0.5
+	}: { links: SignalLink[]; curved?: boolean; alpha?: number } = $props()
 
-	const DURATION = 0.5,
-		BASE = 0.15,
-		PEAK = 2.0,
-		TUBE_R = 0.02
+	const FLASH_DURATION = 0.5
+	const TUBE_R = 0.02
 
 	const curves = $derived(
 		links.map((l) => {
@@ -48,16 +50,10 @@
 			}
 		})
 	)
+
 	const materials = $derived(
-		untrack(() => links).map(
-			(l) =>
-				new MeshStandardMaterial({
-					transparent: true,
-					color: 0x000000,
-					opacity: 0.5,
-					emissive: new Color(l.color ?? '#ffffff'),
-					emissiveIntensity: BASE
-				})
+		untrack(() => links).map((l) =>
+			buildImpactMaterial(l.color ?? '#ffffff', l.color ?? '#ffffff', alpha, true, 1, 0.7)
 		)
 	)
 
@@ -71,20 +67,20 @@
 	useTask((delta) => {
 		for (let i = 0; i < links.length; i++) {
 			if (links[i].signal.intensity > 0) {
-				animTimes[i] = DURATION
+				animTimes[i] = FLASH_DURATION
 				links[i].signal.intensity = 0
 			}
+
 			if (animTimes[i] > 0) {
 				animTimes[i] = Math.max(0, animTimes[i] - delta)
-				materials[i].emissiveIntensity =
-					BASE + easeOutQuart(animTimes[i] / DURATION) * (PEAK - BASE)
+				materials[i].impactT.value = animTimes[i] / FLASH_DURATION
 			}
 		}
 	})
 </script>
 
 {#each links as _, i (i)}
-	<T.Mesh material={materials[i]}>
+	<T.Mesh material={materials[i].mat}>
 		<T.TubeGeometry args={[curves[i].curve, curves[i].segments, TUBE_R, 4, false]} />
 	</T.Mesh>
 {/each}

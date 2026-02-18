@@ -55,7 +55,9 @@ export function buildImpactMaterial(
 	baseHexColor: string,
 	impactHexColor?: string,
 	alpha = 1.0,
-	transparent = true
+	transparent = true,
+	colorPart = 0.75,
+	baseIntensity = BASE_INTENSITY
 ) {
 	const emissiveColor = uniform(color(baseHexColor))
 	const impactColor = uniform(color(impactHexColor ?? baseHexColor))
@@ -69,7 +71,7 @@ export function buildImpactMaterial(
 
 	mat.outputNode = Fn(() => {
 		// colorT: 0 while impactT > 0.75 (stays impactColor), then 0→1 as impactT → 0
-		const colorT4 = (impactT as any).div(0.75).oneMinus().clamp(0, 1).pow(4)
+		const colorT4 = (impactT as any).div(colorPart).oneMinus().clamp(0, 1).pow(4)
 		// manual blend — avoids .mix() return type issues with luminance/div
 		const blendedColor = (impactColor as any)
 			.mul((colorT4 as any).oneMinus())
@@ -77,13 +79,15 @@ export function buildImpactMaterial(
 
 		// easeOutQuart: 1 at impactT=1 (peak), 0 at impactT=0 (rest)
 		const intensityEase = (impactT as any).oneMinus().pow(4).oneMinus()
-		const finalIntensity = float(BASE_INTENSITY).add(
-			intensityEase.mul(PEAK_INTENSITY - BASE_INTENSITY)
+		const finalIntensity = float(baseIntensity).add(
+			intensityEase.mul(PEAK_INTENSITY - baseIntensity)
 		)
+
+		const alphaFlash = float(alpha) //.add(impactT.mul(1e5)).clamp(0, 1)
 
 		// normalize by emissiveColor luminance (stable reference matching original pattern)
 		const lum = luminance(blendedColor) //.max(0.01)
-		return vec4(blendedColor.div(lum).mul(finalIntensity), float(alpha))
+		return vec4(blendedColor.div(lum).mul(finalIntensity), alphaFlash)
 	})()
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
