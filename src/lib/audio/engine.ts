@@ -735,7 +735,7 @@ async function loadRNBO(
 
 	let patcher = engine.rnboCache.get(path)
 	if (!patcher) {
-		const resp = await fetch(`/patchers/${path}.json`)
+		const resp = await fetch(`./patchers/${path}.json`)
 		patcher = await resp.json()
 		engine.rnboCache.set(path, patcher)
 	}
