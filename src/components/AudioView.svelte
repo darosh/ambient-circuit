@@ -224,7 +224,7 @@
 			<T.Group position={info.pos} rotation.x={DEG_90}>
 				<!--				<Billboard>-->
 				<AnalyserView
-					baseColor={baseColor}
+					{baseColor}
 					analyzer={info.analyzer}
 					type={info.type}
 					height={info.height}
