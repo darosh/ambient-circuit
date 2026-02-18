@@ -22,6 +22,9 @@ export const scene: SceneConfig = {
 	bouncerOnlyMode: false,
 	camera: [0, 11, 8],
 	target: [0, 1, 0],
+	audioView: {
+		marbleLinks: true
+	},
 	audio: {
 		chains: {
 			synth: { generator: { tone: 'Synth' } }
