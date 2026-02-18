@@ -18,8 +18,8 @@
 	} = $props()
 
 	const binCount = $derived(type === 'meter' ? 1 : 16)
-	const barGap = 0.01
-	const barWidth = $derived(width / 16 - barGap)
+	const barGap = 0.05
+	const barWidth = $derived((width - barGap * 15) / 16)
 	const alignCount = 16 // 16 - left, 1 for centering
 
 	let values = <number[]>$derived(Array.from({ length: binCount }).fill(0))
