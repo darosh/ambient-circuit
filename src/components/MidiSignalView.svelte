@@ -51,7 +51,9 @@
 		links.map(
 			(l) =>
 				new MeshStandardMaterial({
+					transparent: true,
 					color: 0x000000,
+					opacity: 0.5,
 					emissive: new Color(l.color ?? '#ffffff'),
 					emissiveIntensity: BASE
 				})

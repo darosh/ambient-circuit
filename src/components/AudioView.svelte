@@ -1,24 +1,26 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import type { AudioEngine, AnalyzerType } from '../lib/audio'
-	import type { Vector3Tuple } from 'three'
-	import { Vector3, LineCurve3, CubicBezierCurve3, MeshStandardMaterial } from 'three'
+	import { Color, type HSL, type Vector3Tuple } from 'three/webgpu'
+	import { Vector3, LineCurve3, CubicBezierCurve3, MeshStandardMaterial } from 'three/webgpu'
 	import AnalyserView from './AnalyserView.svelte'
 	import { MathUtils } from 'three/webgpu'
 	import { audioLayout, type NodeInfo } from '../lib/audio-layout'
 	import TubeText from './TubeText.svelte'
-	import { easeOutQuart } from '../lib/easing'
+	import { easeInQuart, easeOutQuart } from '../lib/easing'
 
 	let {
 		engine,
 		offset = [0, 0, 0],
 		visible = true,
-		curved = true
+		curved = true,
+		baseColor = '#ddddff'
 	}: {
 		engine: AudioEngine
 		offset?: Vector3Tuple
 		visible?: boolean
 		curved?: boolean
+		baseColor?: string
 	} = $props()
 
 	const LAYER_GAP = 1 // spacing row between layers
@@ -38,10 +40,18 @@
 	type TubeInfo = { from: Vector3; to: Vector3; color?: string; crossColumn?: boolean }
 
 	const FLASH_DURATION = 0.5
+	const COLOR_DURATION = 0.75
 	const BASE_INTENSITY = 0.9
-	const PEAK_INTENSITY = 3.0
+	const PEAK_INTENSITY = 2.0
 	let nodeMaterials: MeshStandardMaterial[] = $state([])
 	const animTimes: number[] = []
+	const startColors: HSL[] = []
+
+	const baseHsl = $derived.by(() => {
+		const hsl = <HSL>(<unknown>{})
+		new Color(baseColor).getHSL(hsl)
+		return hsl
+	})
 
 	useTask((delta) => {
 		const nodes = layout.nodes
@@ -51,18 +61,30 @@
 			const mat = nodeMaterials[ni]
 			if (!mat) continue
 			const sig = chain.audioSignal
+
 			if (sig.intensity > 0) {
 				animTimes[ni] = FLASH_DURATION
 				mat.emissive.set(sig.color)
 				sig.intensity = 0
+				startColors[ni] = <HSL>{}
+				new Color(sig.color).getHSL(<HSL>(<unknown>startColors[ni]))
 			}
+
 			if (animTimes[ni] > 0) {
 				animTimes[ni] = Math.max(0, animTimes[ni] - delta)
 				const t = animTimes[ni] / FLASH_DURATION
 				mat.emissiveIntensity = BASE_INTENSITY + easeOutQuart(t) * (PEAK_INTENSITY - BASE_INTENSITY)
+				const sc: HSL = startColors[ni]
+
+				const tt = t > COLOR_DURATION ? 0 : 1 - t / COLOR_DURATION
+				const l = sc.l + easeInQuart(tt) * (baseHsl.l - sc.l)
+				const nc = new Color().setHSL(sc.h, sc.s, l)
+
+				mat.emissive.set(nc.getHex())
+
 				if (animTimes[ni] === 0) {
-					mat.emissive.set('#ffffff')
 					mat.emissiveIntensity = BASE_INTENSITY
+					mat.emissive.set(baseColor)
 				}
 			}
 		}
@@ -139,7 +161,7 @@
 					<T.MeshStandardMaterial
 						bind:ref={nodeMaterials[ni]}
 						color="#000000"
-						emissive="#ffffff"
+						emissive={baseColor}
 						emissiveIntensity={0.9}
 					/>
 				{:else}
@@ -148,7 +170,7 @@
 						bind:ref={nodeMaterials[ni]}
 						opacity={0.5}
 						color="#000000"
-						emissive="#ffffff"
+						emissive={baseColor}
 						emissiveIntensity={0.9}
 					/>
 				{/if}
@@ -157,7 +179,7 @@
 						fx={true}
 						id={node.label}
 						text={node.label.toUpperCase()}
-						color="#ffffff"
+						color={baseColor}
 						size={0.14}
 						width={2}
 						spacing={1.25}
@@ -188,7 +210,12 @@
 						false
 					]}
 				/>
-				<T.MeshStandardMaterial emissive="#aaaaaa" emissiveIntensity={0.8} />
+				<T.MeshStandardMaterial
+					opacity={0.5}
+					transparent
+					emissive={baseColor}
+					emissiveIntensity={1.6}
+				/>
 			</T.Mesh>
 		{/each}
 
@@ -197,6 +224,7 @@
 			<T.Group position={info.pos} rotation.x={DEG_90}>
 				<!--				<Billboard>-->
 				<AnalyserView
+					baseColor={baseColor}
 					analyzer={info.analyzer}
 					type={info.type}
 					height={info.height}

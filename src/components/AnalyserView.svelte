@@ -8,12 +8,14 @@
 		height = 1,
 		width = 1,
 		position = [0, 0, 0],
+		baseColor = '#ccccff',
 		type = 'waveform'
 	}: {
 		analyzer: ToneAudioNode | null
 		height?: number
 		width?: number
 		position?: Vector3Tuple
+		baseColor?: string
 		type?: 'fft' | 'waveform' | 'meter'
 	} = $props()
 
@@ -26,7 +28,7 @@
 
 	// Colors: green→yellow→red
 	function barColor(_v: number): string {
-		return '#ffffff'
+		return baseColor
 
 		// if (v < 0.05) return '#000000'
 		// if (v < 0.4) return '#00ff44'
