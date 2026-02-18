@@ -1,19 +1,7 @@
 // based on https://github.com/mrdoob/three.js/blob/master/examples/webgpu_tsl_vfx_tornado.html
 
-import { TextureLoader, MeshBasicNodeMaterial, RepeatWrapping, DoubleSide } from 'three/webgpu'
-import {
-	luminance,
-	min,
-	time,
-	uniform,
-	color,
-	texture,
-	Fn,
-	uv,
-	vec2,
-	vec4,
-	positionWorld
-} from 'three/tsl'
+import { MeshBasicNodeMaterial, DoubleSide } from 'three/webgpu'
+import { luminance, uniform, color, Fn, vec4 } from 'three/tsl'
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const materialCache = new Map<string, { mat: MeshBasicNodeMaterial; impactIntensity: any }>()
