@@ -621,8 +621,6 @@ function buildEaterGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		verts.push(new Vector3(Math.cos(a) * radius, Math.sin(a) * radius, 0))
 	}
 
-	console.log({ arcStartAngle, arcEndAngle })
-
 	// Add center point to close the pizza slice
 	verts.push(new Vector3(0, 0, 0))
 
