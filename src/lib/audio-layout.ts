@@ -138,7 +138,7 @@ export function audioLayout(
 			nodes.push({
 				master: !fi ? master : null,
 				x: 0,
-				y: COL_SPACING,
+				y: busNodes.total ? COL_SPACING : 0,
 				z: masterLayerZ + nz,
 				label: cfgName(master.config.fx?.[fi]) ?? 'fx',
 				isGenerator: false,
