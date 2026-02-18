@@ -1,5 +1,5 @@
 import type { SceneConfig } from '../lib/scene'
-import { colors } from './colors'
+import { colors } from './utils/colors'
 import { triggerHandler } from '../lib/trigger-handler'
 
 let ci = 0

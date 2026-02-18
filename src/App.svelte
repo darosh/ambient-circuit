@@ -17,7 +17,7 @@
 	import Scene from './components/Scene.svelte'
 	import { createTempoState } from './lib/tempo'
 	import { easingNames } from './lib/easing'
-	import { scenes } from './data'
+	import { scenes } from './scenes'
 	import { initMidi, setMidiPort, type MidiState, setMidiState } from './lib/midi/midi'
 	import type { SelectedEntity } from './components/Scene.svelte'
 	import type {

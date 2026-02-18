@@ -1,7 +1,7 @@
 import type { SceneConfig } from '../lib/scene'
-import { colors } from './colors'
+import { colors } from './utils/colors'
 import { triggerHandler } from '../lib/trigger-handler'
-import { randomizer } from './randomizer'
+import { randomizer } from './utils/randomizer'
 
 let ci = 0
 const _c = () => colors[ci++ % colors.length]

@@ -1,5 +1,5 @@
 import type { SceneConfig } from '../lib/scene'
-import { color3 as colors } from './colors'
+import { color3 as colors } from './utils/colors'
 import { triggerHandler } from '../lib/trigger-handler'
 import { Matrix4, Vector3, MathUtils } from 'three/webgpu'
 

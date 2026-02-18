@@ -1,5 +1,5 @@
 import type { SceneConfig } from '../lib/scene'
-import { color2 as colors } from './colors'
+import { color2 as colors } from './utils/colors'
 import { triggerHandler } from '../lib/trigger-handler'
 
 import { circle, roundedRect, coil, spiral } from '../lib/rail-primitives'

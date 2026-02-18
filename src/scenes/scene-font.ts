@@ -1,5 +1,5 @@
 import type { SceneConfig } from '../lib/scene'
-import { colors } from './colors'
+import { colors } from './utils/colors'
 import { globalHandlerFactory, triggerHandler } from '../lib/trigger-handler'
 
 export const scene: SceneConfig = {
