@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import type { AudioEngine, AnalyzerType } from '../lib/audio'
-	import { Color, type HSL, type Vector3Tuple } from 'three/webgpu'
-	import { Vector3, LineCurve3, CubicBezierCurve3, MeshStandardMaterial } from 'three/webgpu'
+	import { Color, type Vector3Tuple } from 'three/webgpu'
+	import { Vector3, LineCurve3, CubicBezierCurve3 } from 'three/webgpu'
 	import AnalyserView from './AnalyserView.svelte'
 	import { MathUtils } from 'three/webgpu'
 	import { audioLayout } from '../lib/audio-layout'
 	import TubeText from './TubeText.svelte'
-	import { easeInQuart, easeOutQuart } from '../lib/easing'
 	import { resolveAnalyzerType } from '../lib/audio/engine'
+	import { buildImpactMaterial } from '../lib/video/material-impact'
 
 	const NODE_RADIUS = 0.1
 
@@ -52,55 +52,9 @@
 	type TubeInfo = { from: Vector3; to: Vector3; color?: string; crossColumn?: boolean }
 
 	const FLASH_DURATION = 0.5
-	const COLOR_DURATION = 0.75
-	const BASE_INTENSITY = 0.9
-	const PEAK_INTENSITY = 2.0
-	let nodeMaterials: MeshStandardMaterial[] = $state([])
+
+	let fxArr: ReturnType<typeof buildImpactMaterial>[] = $state([])
 	const animTimes: number[] = []
-	const startColors: HSL[] = []
-
-	const baseHsl = $derived.by(() => {
-		const hsl = <HSL>(<unknown>{})
-		new Color(baseColor).getHSL(hsl)
-		return hsl
-	})
-
-	useTask((delta) => {
-		const nodes = layout.nodes
-		for (let ni = 0; ni < nodes.length; ni++) {
-			const chain = nodes[ni].chain
-			if (!chain) continue
-			const mat = nodeMaterials[ni]
-			if (!mat) continue
-			const sig = chain.audioSignal
-
-			if (sig.intensity > 0) {
-				animTimes[ni] = FLASH_DURATION
-				mat.emissive.set(sig.color)
-				sig.intensity = 0
-				startColors[ni] = <HSL>{}
-				new Color(sig.color).getHSL(<HSL>(<unknown>startColors[ni]))
-			}
-
-			if (animTimes[ni] > 0) {
-				animTimes[ni] = Math.max(0, animTimes[ni] - delta)
-				const t = animTimes[ni] / FLASH_DURATION
-				mat.emissiveIntensity = BASE_INTENSITY + easeOutQuart(t) * (PEAK_INTENSITY - BASE_INTENSITY)
-				const sc: HSL = startColors[ni]
-
-				const tt = t > COLOR_DURATION ? 0 : 1 - t / COLOR_DURATION
-				const l = sc.l + easeInQuart(tt) * (baseHsl.l - sc.l)
-				const nc = new Color().setHSL(sc.h, sc.s, l)
-
-				mat.emissive.set(nc.getHex())
-
-				if (animTimes[ni] === 0) {
-					mat.emissiveIntensity = BASE_INTENSITY
-					mat.emissive.set(baseColor)
-				}
-			}
-		}
-	})
 
 	// Derive layout from engine state
 	const layout = $derived.by(() => {
@@ -132,6 +86,47 @@
 			})
 
 		return { nodes, tubes }
+	})
+
+	// Create/dispose materials when layout changes
+	$effect(() => {
+		const nodes = layout.nodes
+		const newFx = nodes.map((n) =>
+			buildImpactMaterial(baseColor, baseColor, n.isGenerator ? 1.0 : 1.0)
+		)
+		fxArr = newFx
+		return () => {
+			for (const fx of newFx) fx.mat.dispose()
+		}
+	})
+
+	// Update base color uniform when prop changes
+	$effect(() => {
+		for (const fx of fxArr) {
+			fx.emissiveColor.value = new Color(baseColor)
+		}
+	})
+
+	useTask((delta) => {
+		const nodes = layout.nodes
+		for (let ni = 0; ni < nodes.length; ni++) {
+			const chain = nodes[ni].chain
+			if (!chain) continue
+			const fx = fxArr[ni]
+			if (!fx) continue
+			const sig = chain.audioSignal
+
+			if (sig.intensity > 0) {
+				animTimes[ni] = FLASH_DURATION
+				fx.impactColor.value = new Color(sig.color)
+				sig.intensity = 0
+			}
+
+			if (animTimes[ni] > 0) {
+				animTimes[ni] = Math.max(0, animTimes[ni] - delta)
+				fx.impactT.value = animTimes[ni] / FLASH_DURATION
+			}
+		}
 	})
 
 	export function getNodes() {
@@ -169,25 +164,9 @@
 		<!-- Nodes -->
 		{#each layout.nodes as node, ni (ni)}
 			<T.Mesh position.x={node.x} position.y={node.y} position.z={node.z} rotation.x={-DEG_90}>
-				{#if node.isGenerator}
-					<!--					<T.CylinderGeometry args={[NODE_RADIUS, NODE_RADIUS, NODE_LENGTH, 8]} />-->
-					<T.SphereGeometry args={[module, Math.round(module * 160), Math.round(module * 80)]} />
-					<T.MeshStandardMaterial
-						bind:ref={nodeMaterials[ni]}
-						color="#000000"
-						emissive={baseColor}
-						emissiveIntensity={0.9}
-					/>
-				{:else}
-					<!--					<T.ConeGeometry args={[NODE_RADIUS, NODE_LENGTH, 8]} />-->
-					<T.SphereGeometry args={[module, Math.round(module * 160), Math.round(module * 80)]} />
-					<T.MeshStandardMaterial
-						bind:ref={nodeMaterials[ni]}
-						opacity={0.5}
-						color="#000000"
-						emissive={baseColor}
-						emissiveIntensity={0.9}
-					/>
+				<T.SphereGeometry args={[module, Math.round(module * 160), Math.round(module * 80)]} />
+				{#if fxArr[ni]}
+					<T is={fxArr[ni].mat} />
 				{/if}
 				{#if showText}
 					<T.Group rotation.y={DEG_90} rotation.z={Math.PI} position.z=".2" position.y=".06">
