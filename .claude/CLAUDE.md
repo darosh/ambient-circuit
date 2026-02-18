@@ -200,7 +200,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [ ] Potential UI: threlte `<HUD>`, `<HTML>`, `<View>` (View for selected instrument detail)
 - [ ] Audio visualization
   - [x] AudioView: 3D chain topology (generators=cylinders, fx=cones, tubes between nodes)
-  - [x] VUMeterView: per-frame FFT/waveform/meter bars with color gradient
+  - [x] AnalyserView: per-frame FFT/waveform/meter bars with color gradient
   - [x] Chain/bus/master analyzer visualization
   - [x] Debug toggle in Tweakpane
   - [ ] Future: chain representations in separate layer, waveform rays, rail displacement by waveform
@@ -261,7 +261,7 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/audio/index.ts    - Re-exports from types + engine
 /src/lib/audio/patchers/   - RNBO exported patchers (JSON from Max)
 /src/components/AudioView.svelte - 3D audio chain topology visualization
-/src/components/VUMeterView.svelte - per-frame VU meter (FFT/waveform/meter)
+/src/components/AnalyserView.svelte - per-frame VU meter (FFT/waveform/meter)
 /src/components/Scene.svelte    - 3D scene with rails, marbles, tempo integration
 /src/components/RailView.svelte - renders Rail as TubeGeometry + debug points/beats
 /tests                     - vitest tests (not colocated)

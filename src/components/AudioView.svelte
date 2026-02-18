@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { T } from '@threlte/core'
-	import type { AudioEngine, AnalyzerType } from '../lib/audio/types'
+	import type { AudioEngine, AnalyzerType } from '../lib/audio'
 	import type { Vector3Tuple } from 'three'
 	import { Vector3, LineCurve3, CubicBezierCurve3 } from 'three'
-	import VUMeterView from './VUMeterView.svelte'
+	import AnalyserView from './AnalyserView.svelte'
 	import { MathUtils } from 'three/webgpu'
 	import { audioLayout, type NodeInfo } from '../lib/audio-layout'
 	import TubeText from './TubeText.svelte'
@@ -158,7 +158,7 @@
 		{#each layout.analyzerInfos as info, ai (ai)}
 			<T.Group position={info.pos} rotation.x={DEG_90}>
 				<!--				<Billboard>-->
-				<VUMeterView
+				<AnalyserView
 					analyzer={info.analyzer}
 					type={info.type}
 					height={info.height}
