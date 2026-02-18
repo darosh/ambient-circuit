@@ -3,6 +3,7 @@
 	import { LineCurve3, Color, MeshStandardMaterial, Vector3 } from 'three/webgpu'
 	import { CubicBezierCurve3, type Vector3Tuple } from 'three/webgpu'
 	import { easeOutQuart } from '../lib/easing'
+	import { untrack } from 'svelte'
 
 	const TUBE_SEGMENTS_STRAIGHT = 1
 	const TUBE_SEGMENTS_CURVED = 12
@@ -48,7 +49,7 @@
 		})
 	)
 	const materials = $derived(
-		links.map(
+		untrack(() => links).map(
 			(l) =>
 				new MeshStandardMaterial({
 					transparent: true,
@@ -61,8 +62,9 @@
 	)
 
 	const animTimes = $state<number[]>([])
+
 	$effect(() => {
-		animTimes.length = links.length
+		animTimes.length = untrack(() => links.length)
 		animTimes.fill(0)
 	})
 
