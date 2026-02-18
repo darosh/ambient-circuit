@@ -317,7 +317,8 @@
 	const AUDIO_NODE_SPACING = 0.5,
 		AUDIO_LAYER_GAP = 1,
 		AUDIO_COL_SPACING = 1
-	const AUDIO_OFFSET: [number, number, number] = [0, -2, 0]
+	
+	const AUDIO_OFFSET: [number, number, number] = $derived(scene.audioView ?? [0, -2, 0])
 
 	const midiSignalLinks = $derived.by(() => {
 		if (!audioInitialized) return []
@@ -539,7 +540,7 @@
 {/each}
 
 {#if audioInitialized}
-	<AudioView engine={audioEngine} offset={[0, -2, 0]} visible={showAudio} />
+	<AudioView engine={audioEngine} offset={AUDIO_OFFSET} visible={showAudio} />
 	{#if showAudio}
 		<MidiSignalView links={midiSignalLinks} />
 	{/if}

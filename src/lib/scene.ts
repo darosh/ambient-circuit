@@ -54,6 +54,7 @@ export type SceneConfig = {
 	globalBeatResolution?: number
 	camera?: Vector3Tuple
 	target?: Vector3Tuple
+	audioView?: Vector3Tuple
 	polar?: boolean
 	renderPlayOnly?: boolean
 	/** Optimize collision checks (assumes all marbles are bouncers, skips rail/branch matching) */
