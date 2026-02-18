@@ -5,7 +5,7 @@
 	import { Vector3, LineCurve3, CubicBezierCurve3, MeshStandardMaterial } from 'three/webgpu'
 	import AnalyserView from './AnalyserView.svelte'
 	import { MathUtils } from 'three/webgpu'
-	import { audioLayout, type NodeInfo } from '../lib/audio-layout'
+	import { audioLayout } from '../lib/audio-layout'
 	import TubeText from './TubeText.svelte'
 	import { easeInQuart, easeOutQuart } from '../lib/easing'
 
@@ -25,7 +25,7 @@
 		showText?: boolean
 	} = $props()
 
-	const LAYER_GAP = 1 // spacing row between layers
+	const LAYER_GAP = 0.5 // spacing row between layers
 	const COL_SPACING = 1
 	const NODE_SPACING = 0.5
 	const NODE_RADIUS = 0.1
@@ -98,14 +98,7 @@
 		const buses = engine.buses
 		const master = engine.masterChain
 
-		const nodes: NodeInfo[] = audioLayout(
-			chains,
-			buses,
-			master,
-			NODE_SPACING,
-			LAYER_GAP,
-			COL_SPACING
-		)
+		const nodes = audioLayout(chains, buses, master, NODE_SPACING, LAYER_GAP, COL_SPACING)
 
 		const tubes: TubeInfo[] = nodes
 			.filter((node) => node.next)
@@ -146,6 +139,10 @@
 
 		return { nodes, tubes, analyzerInfos }
 	})
+
+	export function getNodes() {
+		return layout.nodes
+	}
 </script>
 
 {#if visible}
@@ -159,7 +156,7 @@
 		{#each layout.nodes as node, ni (ni)}
 			<T.Mesh position.x={node.x} position.y={node.y} position.z={node.z} rotation.x={-DEG_90}>
 				{#if node.isGenerator}
-<!--					<T.CylinderGeometry args={[NODE_RADIUS, NODE_RADIUS, NODE_LENGTH, 8]} />-->
+					<!--					<T.CylinderGeometry args={[NODE_RADIUS, NODE_RADIUS, NODE_LENGTH, 8]} />-->
 					<T.SphereGeometry args={[NODE_RADIUS, 16, 8]} />
 					<T.MeshStandardMaterial
 						bind:ref={nodeMaterials[ni]}
@@ -168,7 +165,7 @@
 						emissiveIntensity={0.9}
 					/>
 				{:else}
-<!--					<T.ConeGeometry args={[NODE_RADIUS, NODE_LENGTH, 8]} />-->
+					<!--					<T.ConeGeometry args={[NODE_RADIUS, NODE_LENGTH, 8]} />-->
 					<T.SphereGeometry args={[NODE_RADIUS, 16, 8]} />
 					<T.MeshStandardMaterial
 						bind:ref={nodeMaterials[ni]}
@@ -179,17 +176,17 @@
 					/>
 				{/if}
 				{#if showText}
-				<T.Group rotation.y={DEG_90} rotation.z={Math.PI} position.z=".2" position.y=".06">
-					<TubeText
-						fx={true}
-						id={node.label}
-						text={node.label.toUpperCase()}
-						color={baseColor}
-						size={0.14}
-						width={2}
-						spacing={1.25}
-					/>
-				</T.Group>
+					<T.Group rotation.y={DEG_90} rotation.z={Math.PI} position.z=".2" position.y=".06">
+						<TubeText
+							fx={true}
+							id={node.label}
+							text={node.label.toUpperCase()}
+							color={baseColor}
+							size={0.14}
+							width={2}
+							spacing={1.25}
+						/>
+					</T.Group>
 				{/if}
 			</T.Mesh>
 		{/each}

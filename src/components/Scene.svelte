@@ -23,7 +23,6 @@
 	import AudioView from './AudioView.svelte'
 	import MidiSignalView from './MidiSignalView.svelte'
 	import { getBeatTransform, getPointsForPath } from '../lib/rail-curve'
-	import { audioLayout } from '../lib/audio-layout'
 	import { Quaternion, Vector3, Matrix4 } from 'three'
 
 	export type SelectedEntity = {
@@ -314,22 +313,29 @@
 		return false
 	}
 
-	const AUDIO_NODE_SPACING = 0.5,
-		AUDIO_LAYER_GAP = 1,
-		AUDIO_COL_SPACING = 1
-	
+	// const AUDIO_NODE_SPACING = 0.5,
+	// 	AUDIO_LAYER_GAP = .5,
+	// 	AUDIO_COL_SPACING = 1
+
 	const AUDIO_OFFSET: [number, number, number] = $derived(scene.audioView ?? [0, -2, 0])
+
+	let audioView: AudioView | undefined = $state()
 
 	const midiSignalLinks = $derived.by(() => {
 		if (!audioInitialized) return []
-		const nodes = audioLayout(
-			audioEngine.instanceChains,
-			audioEngine.buses,
-			audioEngine.masterChain,
-			AUDIO_NODE_SPACING,
-			AUDIO_LAYER_GAP,
-			AUDIO_COL_SPACING
-		)
+
+		const nodes = audioView?.getNodes()
+
+		if (!nodes?.length) return []
+
+		// const nodes = audioLayout(
+		// 	audioEngine.instanceChains,
+		// 	audioEngine.buses,
+		// 	audioEngine.masterChain,
+		// 	AUDIO_NODE_SPACING,
+		// 	AUDIO_LAYER_GAP,
+		// 	AUDIO_COL_SPACING
+		// )
 
 		const links: Array<{
 			from: [number, number, number]
@@ -540,7 +546,7 @@
 {/each}
 
 {#if audioInitialized}
-	<AudioView engine={audioEngine} offset={AUDIO_OFFSET} visible={showAudio} />
+	<AudioView bind:this={audioView} engine={audioEngine} offset={AUDIO_OFFSET} visible={showAudio} />
 	{#if showAudio}
 		<MidiSignalView links={midiSignalLinks} />
 	{/if}
