@@ -14,10 +14,15 @@
 - [ ] make RNBO synth
 - [ ] make RNBO karplus-strong synth https://rnbo.cycling74.com/explore/synth-building-blocks-intro
 - [ ] use rails for camera path? or scene path? and keep the camera for user only
-- [ ] remove ovelapping beats from structure scene
-- [ ] /data to /scene
-- [ ] impact material for audio view
+- [ ] remove overlapping beats from structure scene
+- [x] /data to /scene
+- [x] impact material for audio view
 - [x] test moving rails
 - [ ] test marble as instrument
-- [ ] show audio text, show audio analyzers
-- [ ] default analyzer
+- [x] hide audio text,
+- [x] show audio analyzers
+- [x] show all nodes
+- [x] default analyzer
+- [x] audio view color
+- [x] no offset for no bus
+- [x] reuse node layout
