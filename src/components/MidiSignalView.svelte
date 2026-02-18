@@ -5,11 +5,11 @@
 	import { easeOutQuart } from '../lib/easing'
 
 	const TUBE_SEGMENTS_STRAIGHT = 1
-	const TUBE_SEGMENTS_CURVED = 32
+	const TUBE_SEGMENTS_CURVED = 12
 	const CURVE_TANGENT = 0.5
 	const NODE_LENGTH = 0.2
 	const LINE_SHIFT = NODE_LENGTH / 2
-	const INS_SHIFT = 0.3
+	const INS_SHIFT = 0.025
 
 	type SignalLink = {
 		from: Vector3Tuple
@@ -28,20 +28,22 @@
 	const curves = $derived(
 		links.map((l) => {
 			const useCurve = curved && true
-			const d = (l.to[1] - l.from[1]) * CURVE_TANGENT
+			const f = new Vector3(l.from[0], l.from[1] + INS_SHIFT, l.from[2])
+			const t = new Vector3(l.to[0], l.to[1] - LINE_SHIFT, l.to[2])
+			// const d = (l.to[1] - l.from[1]) * CURVE_TANGENT
+			const len = f.distanceTo(t)
+			const d = Math.max(l.to[1] - l.from[1], len / 2) * CURVE_TANGENT
 			return {
 				useCurve,
+				segments: useCurve ? Math.round(TUBE_SEGMENTS_CURVED * len) : TUBE_SEGMENTS_STRAIGHT,
 				curve: useCurve
 					? new CubicBezierCurve3(
-							new Vector3(l.from[0], l.from[1] + INS_SHIFT, l.from[2]),
+							f,
 							new Vector3(l.from[0], l.from[1] + d, l.from[2]),
 							new Vector3(l.to[0], l.to[1] - LINE_SHIFT - d, l.to[2]),
-							new Vector3(l.to[0], l.to[1] - LINE_SHIFT, l.to[2])
+							t
 						)
-					: new LineCurve3(
-							new Vector3(l.from[0], l.from[1] + INS_SHIFT, l.from[2]),
-							new Vector3(l.to[0], l.to[1] - LINE_SHIFT, l.to[2])
-						)
+					: new LineCurve3(f, t)
 			}
 		})
 	)
@@ -79,14 +81,6 @@
 
 {#each links as _, i (i)}
 	<T.Mesh material={materials[i]}>
-		<T.TubeGeometry
-			args={[
-				curves[i].curve,
-				curves[i].useCurve ? TUBE_SEGMENTS_CURVED : TUBE_SEGMENTS_STRAIGHT,
-				TUBE_R,
-				4,
-				false
-			]}
-		/>
+		<T.TubeGeometry args={[curves[i].curve, curves[i].segments, TUBE_R, 4, false]} />
 	</T.Mesh>
 {/each}
