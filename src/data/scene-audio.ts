@@ -7,6 +7,21 @@ export const scene: SceneConfig = {
 	camera: [0, 8, 12],
 	triggerHandler,
 	audio: {
+		chains: {
+			synth: {
+				generator: {
+					tone: 'Synth',
+					params: {
+						'envelope.attack': 0.1,
+						'envelope.decay': 0.2,
+						'envelope.sustain': 0.5,
+						'envelope.release': 0.8,
+						volume: -13,
+						'oscillator.type': 'fatsawtooth'
+					}
+				}
+			}
+		},
 		master: {
 			fx: [
 				{
@@ -38,19 +53,7 @@ export const scene: SceneConfig = {
 					type: 'sun',
 					beat: 1,
 					midiNote: 60,
-					audio: {
-						generator: {
-							tone: 'Synth',
-							params: {
-								'envelope.attack': 0.1,
-								'envelope.decay': 0.2,
-								'envelope.sustain': 0.5,
-								'envelope.release': 0.8,
-								volume: -13,
-								'oscillator.type': 'fatsawtooth'
-							}
-						}
-					}
+					audio: { id: 'synth' }
 				},
 				{
 					type: 'sun',
@@ -102,6 +105,12 @@ export const scene: SceneConfig = {
 					beat: 4,
 					midiNote: 55,
 					audio: { generator: { rnbo: 'feedback-synth' }, bus: 'reverb' }
+				},
+				{
+					type: 'spiral',
+					beat: 6,
+					midiNote: 55,
+					audio: { id: 'synth' }
 				}
 			]
 		}
