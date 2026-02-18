@@ -245,6 +245,7 @@ export async function buildChain(
 		output,
 		nodePresets,
 		onParamChange: null,
+		audioSignal: { intensity: 0, color: '#ffffff' },
 		setParam(path, value) {
 			if (chain.generator) setNodeParam(chain.generator, path, value)
 		},

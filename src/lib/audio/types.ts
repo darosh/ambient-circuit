@@ -58,6 +58,8 @@ export type AudioChain = {
 	nodePresets: Map<number, NodePresetInfo>
 	/** Callback fired when any RNBO device params change */
 	onParamChange: ((id: string, value: number) => void) | null
+	/** Visual flash signal for AudioView (consumed each frame) */
+	audioSignal: { intensity: number; color: string }
 }
 
 export type NodePresetInfo = {

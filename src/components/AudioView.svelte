@@ -1,12 +1,13 @@
 <script lang="ts">
-	import { T } from '@threlte/core'
+	import { T, useTask } from '@threlte/core'
 	import type { AudioEngine, AnalyzerType } from '../lib/audio'
 	import type { Vector3Tuple } from 'three'
-	import { Vector3, LineCurve3, CubicBezierCurve3 } from 'three'
+	import { Vector3, LineCurve3, CubicBezierCurve3, MeshStandardMaterial } from 'three'
 	import AnalyserView from './AnalyserView.svelte'
 	import { MathUtils } from 'three/webgpu'
 	import { audioLayout, type NodeInfo } from '../lib/audio-layout'
 	import TubeText from './TubeText.svelte'
+	import { easeOutQuart } from '../lib/easing'
 
 	let {
 		engine,
@@ -35,6 +36,37 @@
 	const LINE_SHIFT = new Vector3(0, 0, NODE_LENGTH / 2)
 
 	type TubeInfo = { from: Vector3; to: Vector3; color?: string; crossColumn?: boolean }
+
+	const FLASH_DURATION = 0.5
+	const BASE_INTENSITY = 0.9
+	const PEAK_INTENSITY = 3.0
+	let nodeMaterials: MeshStandardMaterial[] = $state([])
+	const animTimes: number[] = []
+
+	useTask((delta) => {
+		const nodes = layout.nodes
+		for (let ni = 0; ni < nodes.length; ni++) {
+			const chain = nodes[ni].chain
+			if (!chain) continue
+			const mat = nodeMaterials[ni]
+			if (!mat) continue
+			const sig = chain.audioSignal
+			if (sig.intensity > 0) {
+				animTimes[ni] = FLASH_DURATION
+				mat.emissive.set(sig.color)
+				sig.intensity = 0
+			}
+			if (animTimes[ni] > 0) {
+				animTimes[ni] = Math.max(0, animTimes[ni] - delta)
+				const t = animTimes[ni] / FLASH_DURATION
+				mat.emissiveIntensity = BASE_INTENSITY + easeOutQuart(t) * (PEAK_INTENSITY - BASE_INTENSITY)
+				if (animTimes[ni] === 0) {
+					mat.emissive.set('#ffffff')
+					mat.emissiveIntensity = BASE_INTENSITY
+				}
+			}
+		}
+	})
 
 	// Derive layout from engine state
 	const layout = $derived.by(() => {
@@ -104,10 +136,16 @@
 			<T.Mesh position.x={node.x} position.y={node.y} position.z={node.z} rotation.x={-DEG_90}>
 				{#if node.isGenerator}
 					<T.CylinderGeometry args={[NODE_RADIUS, NODE_RADIUS, NODE_LENGTH, 8]} />
-					<T.MeshStandardMaterial color="#000000" emissive="#ffffff" emissiveIntensity={0.9} />
+					<T.MeshStandardMaterial
+						bind:ref={nodeMaterials[ni]}
+						color="#000000"
+						emissive="#ffffff"
+						emissiveIntensity={0.9}
+					/>
 				{:else}
 					<T.ConeGeometry args={[NODE_RADIUS, NODE_LENGTH, 8]} />
 					<T.MeshStandardMaterial
+						bind:ref={nodeMaterials[ni]}
 						opacity={0.5}
 						color="#000000"
 						emissive="#ffffff"

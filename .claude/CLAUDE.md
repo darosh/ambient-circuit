@@ -204,6 +204,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Chain/bus/master analyzer visualization
   - [x] Debug toggle in Tweakpane
   - [x] MidiSignalView: tubes linking instrument 3D positions to AudioView generator nodes, flash on trigger (easeOutQuart decay)
+  - [x] AudioView generator node color flash on trigger (instrument color → rail color fallback, easeOutQuart decay)
   - [ ] Future: chain representations in separate layer, waveform rays, rail displacement by waveform
 - [ ] Event log system (global trigger/audio events, tracker-style display)
 

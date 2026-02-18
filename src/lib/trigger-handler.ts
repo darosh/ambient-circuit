@@ -27,6 +27,11 @@ export function triggerHandler(ctx: TriggerContext) {
 
 	// Audio trigger
 	const chain = ctx.instrument.audio
+	if (chain) {
+		chain.audioSignal.intensity = 1
+		chain.audioSignal.color =
+			ctx.instrument.instrument.color ?? ctx.rail.railData.color ?? '#ffffff'
+	}
 	if (chain?.generator) {
 		const note = ctx.marble.marble.config.note ?? ctx.instrument.instrument.midiNote ?? 60
 		const velocity = ctx.instrument.instrument.midiVelocity ?? 100
