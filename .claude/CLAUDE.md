@@ -173,6 +173,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Marble audio chains (own generator, trigger on collision)
   - [x] Chain access from SceneCtx: `ctx.instrument.audio`, `ctx.marble.audio`
   - [x] Default triggerHandler plays audio automatically (like MIDI)
+  - [x] Default bouncerHandler signals both marbles + triggers their audio chains on collision
   - [x] RNBO patcher loading with cache (`./rnbo/*.json` from static)
   - [x] Tone.js instrument creation by name (`new Tone[name]`)
   - [x] RNBO fx in chains (Tone Synth → RNBO shimmerev works)

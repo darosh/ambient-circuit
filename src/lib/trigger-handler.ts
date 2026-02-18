@@ -1,6 +1,6 @@
 import { sendMidiNote, getMidiState } from './midi/midi'
 import { triggerChain } from './audio/engine'
-import { GlobalBeatContext, TriggerContext } from './scene'
+import type { BounceContext, GlobalBeatContext, TriggerContext } from './scene'
 
 const THROTTLE_AUDIO = 60
 
@@ -44,6 +44,30 @@ export function triggerHandler(ctx: TriggerContext) {
 		const length = ctx.instrument.instrument.midiLength ?? 200
 		chain.lastTrigger = now
 		triggerChain(chain, note, velocity, length)
+	}
+}
+
+export function bouncerHandler(ctx: BounceContext) {
+	// Signal visual feedback on both marbles
+	ctx.marble1.marble.signal.intensity = 1
+	ctx.marble2.marble.signal.intensity = 1
+
+	const now = Date.now()
+
+	// Trigger marble1 audio chain
+	const chain1 = ctx.marble1.audio
+	if (chain1?.generator && now - chain1.lastTrigger > THROTTLE_AUDIO) {
+		const note = ctx.marble1.marble.config.note ?? 60
+		chain1.lastTrigger = now
+		triggerChain(chain1, note, 100, 200)
+	}
+
+	// Trigger marble2 audio chain
+	const chain2 = ctx.marble2.audio
+	if (chain2?.generator && now - chain2.lastTrigger > THROTTLE_AUDIO) {
+		const note = ctx.marble2.marble.config.note ?? 60
+		chain2.lastTrigger = now
+		triggerChain(chain2, note, 100, 200)
 	}
 }
 

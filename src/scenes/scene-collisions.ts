@@ -1,6 +1,6 @@
 import type { SceneConfig } from '../lib/scene'
 import { colors } from './utils/colors'
-import { triggerHandler } from '../lib/trigger-handler'
+import { bouncerHandler, triggerHandler } from '../lib/trigger-handler'
 
 let ci = 0
 const c = () => colors[ci++ % colors.length]
@@ -10,7 +10,8 @@ export const scene: SceneConfig = {
 	bpm: 90,
 	triggerHandler,
 	bounceHandler: (ctx) => {
-		// Flash both marbles white on collision
+		bouncerHandler(ctx)
+		// Flash both marbles red on collision
 		ctx.marble1.state.color = '#ff0000'
 		ctx.marble2.state.color = '#ff0000'
 		setTimeout(() => {
@@ -21,6 +22,11 @@ export const scene: SceneConfig = {
 	bouncerOnlyMode: false,
 	camera: [0, 11, 8],
 	target: [0, 1, 0],
+	audio: {
+		chains: {
+			synth: { generator: { tone: 'Synth' } }
+		}
+	},
 	rails: [
 		// Simple rail with bouncer marbles
 		{
@@ -31,7 +37,14 @@ export const scene: SceneConfig = {
 			color: c(),
 			marbles: [
 				// Two bouncer marbles starting at opposite ends, moving toward each other
-				{ start: 1, speed: 0.5, direction: 'forward', bouncer: true, type: 'ball' },
+				{
+					start: 1,
+					speed: 0.5,
+					direction: 'forward',
+					bouncer: true,
+					type: 'ball',
+					audio: { id: 'synth' }
+				},
 				{ start: 5, speed: 0.5, direction: 'backward', bouncer: true, type: 'ball' }
 			]
 		},

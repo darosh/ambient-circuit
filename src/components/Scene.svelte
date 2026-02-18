@@ -291,7 +291,11 @@
 				if ('audio' in md && md.audio) {
 					const me = sceneCtx.marbles[mIdx]
 					if (me) {
-						me.audio = await buildChain(audioEngine, md.audio, scene?.audioView?.defaultAnalyser)
+						if (md.audio.id && audioEngine.chains.has(md.audio.id)) {
+							me.audio = audioEngine.chains.get(md.audio.id)
+						} else {
+							me.audio = await buildChain(audioEngine, md.audio, scene?.audioView?.defaultAnalyser)
+						}
 					}
 				}
 				mIdx++
