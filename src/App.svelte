@@ -1,6 +1,7 @@
 <script lang="ts">
 	// import { Inspector } from 'three/addons/inspector/Inspector.js'
-	import { Canvas } from '@threlte/core'
+	import { Canvas, T } from '@threlte/core'
+	import { OrbitControls } from '@threlte/extras'
 	import {
 		ThemeUtils,
 		Pane,
@@ -679,7 +680,6 @@
 			fxText={fxText && !wireframe}
 			fxInstruments={fxInstruments && !wireframe}
 			{showAudio}
-			{autoRotate}
 			bind:tempo
 			bind:easing
 			bind:railVisibility
@@ -690,6 +690,14 @@
 			bind:audioEngineRef
 		/>
 	{/key}
+	<T.PerspectiveCamera makeDefault position={activeScene.camera ?? [5, 7, 9]} fov={30}>
+		<OrbitControls
+			enableDamping
+			target={activeScene.target ?? [0, 1, 0]}
+			autoRotate={activeScene.rotatePlay && tempo.isPlaying ? true : autoRotate}
+			autoRotateSpeed={0.5}
+		/>
+	</T.PerspectiveCamera>
 </Canvas>
 
 {#if showStats}

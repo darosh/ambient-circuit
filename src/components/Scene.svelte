@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import { untrack, onMount, onDestroy } from 'svelte'
-	import { OrbitControls, interactivity } from '@threlte/extras'
+	import { interactivity } from '@threlte/extras'
 	import RailView from './RailView.svelte'
 	import MarbleView from './MarbleView.svelte'
 	import Bloom from './Bloom.svelte'
@@ -12,18 +12,11 @@
 	import type { SceneConfig } from '../lib/scene'
 	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
 	import type { EaterMarbleData } from '../lib/rail-data'
-	import {
-		createAudioEngine,
-		initAudio,
-		buildChain,
-		buildBuses,
-		disposeScene
-	} from '../lib/audio/engine'
-	import type { AudioEngine, AudioChain } from '../lib/audio/types'
+	import { createAudioEngine, initAudio, buildChain, buildBuses, disposeScene } from '../lib/audio'
+	import type { AudioEngine, AudioChain } from '../lib/audio'
 	import AudioView from './AudioView.svelte'
 	import MidiSignalView from './MidiSignalView.svelte'
-	import { getBeatTransform, getPointsForPath } from '../lib/rail-curve'
-	import { Quaternion, Vector3, Matrix4 } from 'three'
+	import { getMarbleSignalLinks, getMidiSignalLinks } from '../lib/helpers/links'
 
 	export type SelectedEntity = {
 		type: 'instrument' | 'marble'
@@ -46,7 +39,6 @@
 		fxMarbles = true,
 		fxInstruments = true,
 		fxText = true,
-		autoRotate = false,
 		tempo = $bindable(),
 		easing = $bindable(),
 		railVisibility = $bindable(),
@@ -68,7 +60,6 @@
 		fxMarbles?: boolean
 		fxInstruments?: boolean
 		fxText?: boolean
-		autoRotate?: boolean
 		showStats?: boolean
 		tempo?: TempoState
 		easing?: string
@@ -192,8 +183,7 @@
 
 	// Create scene context once at mount (non-reactive to avoid loops)
 	const sceneCtx = (() => {
-		const ctx = createSceneCtx(marbles, rails, marbleRailIndices, tempo)
-		return ctx
+		return createSceneCtx(marbles, rails, marbleRailIndices, tempo)
 	})()
 
 	function onSelectInstrument(railIdx: number, idx: number) {
@@ -340,57 +330,7 @@
 
 		if (!nodes?.length) return []
 
-		// const nodes = audioLayout(
-		// 	audioEngine.instanceChains,
-		// 	audioEngine.buses,
-		// 	audioEngine.masterChain,
-		// 	AUDIO_NODE_SPACING,
-		// 	AUDIO_LAYER_GAP,
-		// 	AUDIO_COL_SPACING
-		// )
-
-		const links: Array<{
-			from: [number, number, number]
-			to: [number, number, number]
-			signal: { intensity: number }
-			color: string
-		}> = []
-		let instrIdx = 0
-		for (const railData of rails) {
-			const resolved = resolveRail(railData.rail)
-			for (const instrument of railData.instruments ?? []) {
-				const ie = sceneCtx.instruments[instrIdx]
-				if (ie?.audio && instrument.midiSignal) {
-					const pts = getPointsForPath(resolved, instrument.path)
-					const xform = getBeatTransform(pts, instrument.beat)
-					if (xform) {
-						let worldPos = xform.position.clone()
-						const rm = (railData.runtime as { renderMatrix?: Matrix4 } | undefined)?.renderMatrix
-						if (rm) {
-							const pos = new Vector3(),
-								q = new Quaternion(),
-								sc = new Vector3()
-							rm.decompose(pos, q, sc)
-							worldPos = worldPos.applyQuaternion(q).add(pos)
-						}
-						const genNode = nodes.find((n) => n.chain === ie.audio && n.isGenerator)
-						if (genNode) {
-							const wx = genNode.x + AUDIO_OFFSET[0]
-							const wy = genNode.z + (AUDIO_OFFSET[1] + 4)
-							const wz = -genNode.y + AUDIO_OFFSET[2]
-							links.push({
-								from: worldPos.toArray() as [number, number, number],
-								to: [wx, wy, wz],
-								signal: instrument.midiSignal,
-								color: railData.color ?? '#ffffff'
-							})
-						}
-					}
-				}
-				instrIdx++
-			}
-		}
-		return links
+		return getMidiSignalLinks(sceneCtx.instruments, nodes, rails, AUDIO_OFFSET)
 	})
 
 	const marbleSignalLinks = $derived.by(() => {
@@ -398,44 +338,7 @@
 		const nodes = audioView?.getNodes()
 		if (!nodes?.length) return []
 
-		const links: Array<{
-			from: [number, number, number]
-			to: [number, number, number]
-			signal: { intensity: number }
-			color: string
-		}> = []
-
-		for (const me of sceneCtx.marbles) {
-			if (!me.audio) continue
-			const genNode = nodes.find((n) => n.chain === me.audio && n.isGenerator)
-			if (!genNode) continue
-
-			const currentRailId: string = me.marble.runtime.railId ?? me.marble.config.resolvedRail.id
-			const railIdx = rails.findIndex((r) => r.rail.id === currentRailId)
-			const railData = rails[railIdx]
-
-			let pos = new Vector3(me.marble.position.x, me.marble.position.y, me.marble.position.z)
-			const rm = (railData?.runtime as { renderMatrix?: Matrix4 } | undefined)?.renderMatrix
-			if (rm) {
-				const rPos = new Vector3(),
-					q = new Quaternion(),
-					sc = new Vector3()
-				rm.decompose(rPos, q, sc)
-				pos = pos.applyQuaternion(q).add(rPos)
-			}
-
-			const wx = genNode.x + AUDIO_OFFSET[0]
-			const wy = genNode.z + (AUDIO_OFFSET[1] + 4)
-			const wz = -genNode.y + AUDIO_OFFSET[2]
-			links.push({
-				from: pos.toArray() as [number, number, number],
-				to: [wx, wy, wz],
-				signal: me.audio.audioSignal,
-				color:
-					me.marble.runtime.color ?? me.marble.config.color ?? rails[railIdx].color ?? '#ffffff'
-			})
-		}
-		return links
+		return getMarbleSignalLinks(sceneCtx.marbles, nodes, rails, AUDIO_OFFSET)
 	})
 
 	// Fire init handler on mount
@@ -520,15 +423,6 @@
 {#if fxPost}
 	<Bloom strength={0.5} radius={0.2} threshold={0.5} />
 {/if}
-
-<T.PerspectiveCamera makeDefault position={scene.camera ?? [5, 7, 9]} fov={30}>
-	<OrbitControls
-		enableDamping
-		target={scene.target ?? [0, 1, 0]}
-		autoRotate={scene.rotatePlay && tempo.isPlaying ? true : autoRotate}
-		autoRotateSpeed={0.5}
-	/>
-</T.PerspectiveCamera>
 
 <!-- Invisible plane for deselect on miss -->
 <T.Mesh
