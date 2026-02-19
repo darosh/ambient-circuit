@@ -230,9 +230,7 @@ export const scene: SceneConfig = {
 					{ p: [0, 0, 0], round: 'both' }
 				]
 			},
-			instruments: [
-				{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, note: 60 - 12 + 7 }
-			],
+			instruments: [{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, note: 60 - 12 + 7 }],
 			color: colors[1],
 			render: (out) => {
 				const rotation = performance.now() * 0.001 * Math.PI * 0.125
