@@ -1,6 +1,11 @@
 import { sendMidiNote, getMidiState } from './midi/midi'
-import { triggerChain } from './audio/engine'
+import { triggerChain } from './audio'
 import type { BounceContext, GlobalBeatContext, TriggerContext } from './scene'
+import midiNotes from '../scenes/utils/notes'
+
+const VELOCITY = 100
+const DURATION = 200
+const NOTE = midiNotes.C4
 
 export function triggerHandler(ctx: TriggerContext) {
 	// console.log('TRIGGER', ctx.railId, ctx.beat)
@@ -17,12 +22,25 @@ export function triggerHandler(ctx: TriggerContext) {
 		ctx.instrument.instrument.actionHandler(ctx)
 	}
 
+	const note = ctx.marble.marble.runtime.note
+		?? ctx.marble.marble.config.note
+		?? ctx.instrument.instrument.midiNote
+		?? NOTE
+
+	const velocity = ctx.marble.marble.runtime.velocity
+		?? ctx.marble.marble.config.velocity
+		?? ctx.instrument.instrument.midiVelocity
+		?? VELOCITY
+
+	const duration = ctx.marble.marble.runtime.duration
+		?? ctx.marble.marble.config.duration
+		?? ctx.instrument.instrument.midiLength
+		?? DURATION
+
 	if (midiState?.enabled) {
 		const channel = ctx.instrument.instrument.midiChannel ?? 1
-		const note = ctx.marble.marble.config.note ?? ctx.instrument.instrument.midiNote ?? 60
-		const velocity = ctx.instrument.instrument.midiVelocity ?? 100
-		const length = ctx.instrument.instrument.midiLength ?? 200
-		sendMidiNote(midiState, channel, note, velocity, length)
+		
+		sendMidiNote(midiState, channel, note, velocity, duration)
 	}
 
 	// Audio trigger
@@ -35,10 +53,7 @@ export function triggerHandler(ctx: TriggerContext) {
 	}
 
 	if (chain?.generator) {
-		const note = ctx.marble.marble.config.note ?? ctx.instrument.instrument.midiNote ?? 60
-		const velocity = ctx.instrument.instrument.midiVelocity ?? 100
-		const length = ctx.instrument.instrument.midiLength ?? 200
-		triggerChain(chain, note, velocity, length)
+		triggerChain(chain, note, velocity, duration)
 	}
 }
 
@@ -49,6 +64,7 @@ export function bouncerHandler(ctx: BounceContext) {
 
 	// Trigger marble1 audio chain
 	const chain1 = ctx.marble1.audio
+	
 	if (chain1) {
 		ctx.marble1.marble.midiSignal.intensity = 1
 		chain1.audioSignal.intensity = 1
@@ -58,9 +74,28 @@ export function bouncerHandler(ctx: BounceContext) {
 			ctx.rail.railData.color ??
 			'#ffffff'
 	}
+	
 	if (chain1?.generator) {
-		const note = ctx.marble1.marble.config.note ?? 60
-		triggerChain(chain1, note, 100, 200)
+		const note = ctx.marble1.marble.runtime.note
+			?? ctx.marble1.marble.config.note
+			?? ctx.marble2.marble.runtime.note
+			?? ctx.marble2.marble.config.note
+			?? NOTE
+		
+		const velocity = ctx.marble1.marble.runtime.velocity
+			?? ctx.marble1.marble.config.velocity
+			?? ctx.marble2.marble.runtime.velocity
+			?? ctx.marble2.marble.config.velocity
+			?? VELOCITY
+		
+		const duration = ctx.marble1.marble.runtime.duration
+			?? ctx.marble1.marble.config.duration
+			?? ctx.marble2.marble.runtime.duration
+			?? ctx.marble2.marble.config.duration
+			?? DURATION
+		
+		// TODO: Marbles should send MIDI too
+		triggerChain(chain1, note, velocity, duration)
 	}
 
 	// Trigger marble2 audio chain
@@ -74,9 +109,27 @@ export function bouncerHandler(ctx: BounceContext) {
 			ctx.rail.railData.color ??
 			'#ffffff'
 	}
+	
 	if (chain2?.generator) {
-		const note = ctx.marble2.marble.config.note ?? 60
-		triggerChain(chain2, note, 100, 200)
+		const note = ctx.marble2.marble.runtime.note
+			?? ctx.marble2.marble.config.note
+			?? ctx.marble1.marble.runtime.note
+			?? ctx.marble1.marble.config.note
+			?? NOTE
+
+		const velocity = ctx.marble2.marble.runtime.velocity
+			?? ctx.marble2.marble.config.velocity
+			?? ctx.marble1.marble.runtime.velocity
+			?? ctx.marble1.marble.config.velocity
+			?? VELOCITY
+
+		const duration = ctx.marble2.marble.runtime.duration
+			?? ctx.marble2.marble.config.duration
+			?? ctx.marble1.marble.runtime.duration
+			?? ctx.marble1.marble.config.duration
+			?? DURATION
+		
+		triggerChain(chain2, note, velocity, duration)
 	}
 }
 

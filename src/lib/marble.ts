@@ -27,6 +27,8 @@ export interface MarbleConfig {
 	color?: string
 	speed?: number // Speed multiplier (default 1)
 	note?: number // MIDI note for note mode, undefined for vanilla mode
+	velocity?: number // MIDI velocity
+	duration?: number // MIDI
 	type?: MarbleType // Visual type (default 'ball')
 	sides?: number // For poly type (default 6)
 	rounds?: number // For coil type (default 3)
@@ -38,6 +40,8 @@ export interface MarbleConfig {
 export interface MarbleRuntime {
 	speed?: number // overrides config.speed
 	note?: number // overrides config.note
+	velocity?: number // overrides config.velocity
+	duration?: number // overrides config.duration
 	lastTriggeredBeat?: number // beat that was last triggered
 	lastTriggeredDirection?: MarbleDirection // direction when last triggered
 	targetBeat?: number // if set, overrides computed beat at end of update
