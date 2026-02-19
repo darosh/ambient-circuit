@@ -1,5 +1,6 @@
 import {
 	type BufferGeometry,
+	type Curve,
 	CurvePath,
 	LineCurve3,
 	QuadraticBezierCurve3,
@@ -142,7 +143,7 @@ function buildInstrumentGeometry(params: InstrumentGeometryParams): BufferGeomet
 		path.add(new LineCurve3(p1, p2))
 	}
 	return new TubeGeometry(
-		path as unknown as import('three').Curve<Vector3>,
+		path as unknown as Curve<Vector3>,
 		segments,
 		width / 2,
 		RADIAL_SEGMENTS,
@@ -199,7 +200,7 @@ function buildPolyStarGeometry(params: InstrumentGeometryParams): BufferGeometry
 		type === 'star' ? n * 2 * TUBULAR_SEGMENTS_POLY : n * TUBULAR_SEGMENTS_POLY
 
 	return new TubeGeometry(
-		path as unknown as import('three').Curve<Vector3>,
+		path as unknown as Curve<Vector3>,
 		tubularSegments,
 		width / 2,
 		RADIAL_SEGMENTS,
@@ -241,7 +242,7 @@ function buildWhirlCrossGeometry(params: InstrumentGeometryParams): BufferGeomet
 	}
 
 	return new TubeGeometry(
-		path as unknown as import('three').Curve<Vector3>,
+		path as unknown as Curve<Vector3>,
 		n * TUBULAR_SEGMENTS_POLY,
 		width / 2,
 		RADIAL_SEGMENTS,
@@ -311,7 +312,7 @@ function buildSpiralGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	}
 
 	return new TubeGeometry(
-		path as unknown as import('three').Curve<Vector3>,
+		path as unknown as Curve<Vector3>,
 		rounds * TUBULAR_SEGMENTS_SPIRAL,
 		width / 2,
 		RADIAL_SEGMENTS,
@@ -361,7 +362,7 @@ function buildConeGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	}
 
 	return new TubeGeometry(
-		path as unknown as import('three').Curve<Vector3>,
+		path as unknown as Curve<Vector3>,
 		rounds * TUBULAR_SEGMENTS_SPIRAL,
 		width / 2,
 		RADIAL_SEGMENTS,
@@ -492,7 +493,7 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 					: TUBULAR_SEGMENTS_ARROW_OTHER
 
 	const mainGeometry = new TubeGeometry(
-		path as unknown as import('three').Curve<Vector3>,
+		path as unknown as Curve<Vector3>,
 		tubularSegments,
 		width / 2,
 		RADIAL_SEGMENTS,
@@ -501,7 +502,7 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 
 	if (secondaryPath) {
 		const secondaryGeometry = new TubeGeometry(
-			secondaryPath as unknown as import('three').Curve<Vector3>,
+			secondaryPath as unknown as Curve<Vector3>,
 			tubularSegments,
 			width / 2,
 			RADIAL_SEGMENTS,
@@ -566,7 +567,7 @@ function buildSunGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	}
 
 	const mainGeometry = new TubeGeometry(
-		path as unknown as import('three').Curve<Vector3>,
+		path as unknown as Curve<Vector3>,
 		12 * TUBULAR_SEGMENTS_POLY,
 		width / 2,
 		RADIAL_SEGMENTS,
@@ -577,7 +578,7 @@ function buildSunGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		const geometries = [mainGeometry]
 		for (const rayPath of sunRayPaths) {
 			const rayGeometry = new TubeGeometry(
-				rayPath as unknown as import('three').Curve<Vector3>,
+				rayPath as unknown as Curve<Vector3>,
 				TUBULAR_SEGMENTS_SUN_RAY,
 				width / 2,
 				RADIAL_SEGMENTS,
@@ -645,7 +646,7 @@ function buildEaterGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	}
 
 	return new TubeGeometry(
-		path as unknown as import('three').Curve<Vector3>,
+		path as unknown as Curve<Vector3>,
 		n * TUBULAR_SEGMENTS_POLY,
 		width / 2,
 		RADIAL_SEGMENTS,
@@ -696,7 +697,7 @@ function buildPolyFillGeometry(
 	}
 
 	return new TubeGeometry(
-		path as unknown as import('three').Curve<Vector3>,
+		path as unknown as Curve<Vector3>,
 		n * TUBULAR_SEGMENTS_POLY,
 		width / 2,
 		RADIAL_SEGMENTS,

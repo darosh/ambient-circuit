@@ -1,4 +1,5 @@
 import {
+	type Curve,
 	CurvePath,
 	LineCurve3,
 	QuadraticBezierCurve3,
@@ -79,7 +80,7 @@ function buildMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | nul
 	} else if (type === 'poly') {
 		const n = sides
 		const r = size / (1 + Math.cos(Math.PI / n))
-		const curves: import('three').Curve<Vector3>[] = []
+		const curves: Curve<Vector3>[] = []
 		const verts: Vector3[] = []
 
 		for (let i = 0; i < n; i++) {
@@ -132,7 +133,7 @@ function buildMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | nul
 		}
 
 		return new TubeGeometry(
-			path as unknown as import('three').Curve<Vector3>,
+			path as unknown as Curve<Vector3>,
 			rounds * COIL_SEGMENTS_PER_ROUND,
 			width / 2,
 			MARBLE_RADIAL_SEGMENTS,
@@ -179,7 +180,7 @@ function buildEaterMarbleGeometry(
 	verts.push(new Vector3(0, 0, 0))
 
 	// Build path with corner rounding (same as poly pattern)
-	const curves: import('three').Curve<Vector3>[] = []
+	const curves: Curve<Vector3>[] = []
 	const vertCount = verts.length
 
 	for (let i = 0; i < vertCount; i++) {
