@@ -4,6 +4,7 @@ import { createMarble } from '../src/lib/marble'
 import { createTempoState } from '../src/lib/tempo'
 import { resolveRail } from '../src/lib/rail-resolve'
 import type { RailData } from '../src/lib/rail-data'
+import type { SceneConfig } from '../src/lib/scene'
 
 describe('scene-ctx', () => {
 	it('createSceneCtx creates correct entity counts', () => {
@@ -59,7 +60,7 @@ describe('scene-ctx', () => {
 
 		const marbleRailIndices = [0, 1]
 
-		const sceneCtx = createSceneCtx(marbles, rails, marbleRailIndices, tempo)
+		const sceneCtx = createSceneCtx(marbles, rails, marbleRailIndices, tempo, {} as SceneConfig)
 
 		expect(sceneCtx.marbles.length).toBe(2)
 		expect(sceneCtx.instruments.length).toBe(3)
@@ -114,7 +115,7 @@ describe('scene-ctx', () => {
 		]
 
 		const marbleRailIndices = [0]
-		const sceneCtx = createSceneCtx(marbles, rails, marbleRailIndices, tempo)
+		const sceneCtx = createSceneCtx(marbles, rails, marbleRailIndices, tempo, {} as SceneConfig)
 
 		// Test marble state
 		sceneCtx.marbles[0].state.speed = 2
@@ -159,7 +160,7 @@ describe('scene-ctx', () => {
 		]
 
 		const marbleRailIndices = [0]
-		const sceneCtx = createSceneCtx(marbles, rails, marbleRailIndices, tempo)
+		const sceneCtx = createSceneCtx(marbles, rails, marbleRailIndices, tempo, {} as SceneConfig)
 
 		// Initial state
 		expect(sceneCtx.marbles[0].state.visible).toBe(true)
@@ -204,7 +205,7 @@ describe('scene-ctx', () => {
 		]
 
 		const marbleRailIndices = [0]
-		const sceneCtx = createSceneCtx(marbles, rails, marbleRailIndices, tempo)
+		const sceneCtx = createSceneCtx(marbles, rails, marbleRailIndices, tempo, {} as SceneConfig)
 
 		// Initial state
 		expect(sceneCtx.beat).toBe(0)

@@ -3,6 +3,7 @@ import { createMarble } from '../src/lib/marble'
 import { MarbleState } from '../src/lib/marble-state'
 import { updateMarble } from '../src/lib/marble-system'
 import { resolveRail } from '../src/lib/rail-resolve'
+import type { SceneConfig } from '../src/lib/scene'
 import { createTempoState, type TempoState } from '../src/lib/tempo'
 import type { TriggerHandler } from '../src/lib/scene'
 import { createSceneCtx } from '../src/lib/scene-ctx-factory'
@@ -84,7 +85,13 @@ describe('Rail Switching API', () => {
 			{ rail: { id: rail1.id, nodes: [] }, color: '#ff0000' },
 			{ rail: { id: rail2.id, nodes: [] }, color: '#00ff00' }
 		]
-		const sceneCtx = createSceneCtx([marble, dummyMarble], railDataList, [0, 1], tempo)
+		const sceneCtx = createSceneCtx(
+			[marble, dummyMarble],
+			railDataList,
+			[0, 1],
+			tempo,
+			{} as SceneConfig
+		)
 
 		// Verify initial state
 		expect(marble.config.resolvedRail.id).toBe('rail-1')
@@ -125,7 +132,7 @@ describe('Rail Switching API', () => {
 		tempo.isPlaying = true
 
 		const railDataList: RailData[] = [{ rail: { id: rail1.id, nodes: [] }, color: '#ff0000' }]
-		const sceneCtx = createSceneCtx([marble], railDataList, [0], tempo)
+		const sceneCtx = createSceneCtx([marble], railDataList, [0], tempo, {} as SceneConfig)
 
 		// Mock console.warn
 		const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -181,7 +188,13 @@ describe('Rail Switching API', () => {
 			{ rail: { id: rail1.id, nodes: [] }, color: '#ff0000' },
 			{ rail: { id: rail2.id, nodes: [] }, color: '#00ff00' }
 		]
-		const sceneCtx = createSceneCtx([marble, dummyMarble], railDataList, [0, 1], tempo)
+		const sceneCtx = createSceneCtx(
+			[marble, dummyMarble],
+			railDataList,
+			[0, 1],
+			tempo,
+			{} as SceneConfig
+		)
 
 		// Switch rail
 		const state = new MarbleState(marble)
@@ -261,7 +274,13 @@ describe('Rail Switching API', () => {
 				instruments: [{ type: 'heart', beat: 1 }]
 			}
 		]
-		const sceneCtx = createSceneCtx([marble, dummyMarble], railDataList, [0, 1], tempo)
+		const sceneCtx = createSceneCtx(
+			[marble, dummyMarble],
+			railDataList,
+			[0, 1],
+			tempo,
+			{} as SceneConfig
+		)
 
 		const triggerHandler: TriggerHandler = vi.fn()
 
@@ -325,7 +344,13 @@ describe('Rail Switching API', () => {
 			{ rail: { id: rail2.id, nodes: [] }, color: '#00ff00' },
 			{ rail: { id: rail3.id, nodes: [] }, color: '#0000ff' }
 		]
-		const sceneCtx = createSceneCtx([marble, dummy2, dummy3], railDataList, [0, 1, 2], tempo)
+		const sceneCtx = createSceneCtx(
+			[marble, dummy2, dummy3],
+			railDataList,
+			[0, 1, 2],
+			tempo,
+			{} as SceneConfig
+		)
 
 		const state = new MarbleState(marble)
 
@@ -371,7 +396,13 @@ describe('Rail Switching API', () => {
 			{ rail: { id: rail1.id, nodes: [] }, color: '#ff0000' },
 			{ rail: { id: rail2.id, nodes: [] }, color: '#00ff00' }
 		]
-		const sceneCtx = createSceneCtx([marble, dummyMarble], railDataList, [0, 1], tempo)
+		const sceneCtx = createSceneCtx(
+			[marble, dummyMarble],
+			railDataList,
+			[0, 1],
+			tempo,
+			{} as SceneConfig
+		)
 
 		const state = new MarbleState(marble)
 

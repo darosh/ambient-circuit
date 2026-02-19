@@ -6,7 +6,7 @@ import { computeBeatPositions } from '../src/lib/rail-curve'
 import { resolveRail } from '../src/lib/rail-resolve'
 import type { ResolvedRail } from '../src/lib/rail'
 import type { RailData } from '../src/lib/rail-data'
-import type { TriggerHandler } from '../src/lib/scene'
+import type { TriggerHandler, SceneConfig } from '../src/lib/scene'
 import { createSceneCtx } from '../src/lib/scene-ctx-factory'
 
 describe('marble-system', () => {
@@ -236,7 +236,7 @@ describe('marble-system', () => {
 			ctx.instrument.instrument.actionHandler?.(ctx)
 		}
 
-		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo)
+		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo, {} as SceneConfig)
 
 		// First update at beat 0 - marble initializes but doesn't trigger yet
 		updateMarble(
@@ -304,7 +304,7 @@ describe('marble-system', () => {
 			ctx.instrument.instrument.actionHandler?.(ctx)
 		}
 
-		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo)
+		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo, {} as SceneConfig)
 
 		// Advance to just before beat 3
 		tempo.currentBeat = 2
@@ -375,7 +375,7 @@ describe('marble-system', () => {
 			ctx.instrument.instrument.actionHandler?.(ctx)
 		}
 
-		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo)
+		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo, {} as SceneConfig)
 
 		// Advance to just before beat 3
 		tempo.currentBeat = 2
@@ -451,7 +451,7 @@ describe('marble-system', () => {
 			ctx.instrument.instrument.actionHandler?.(ctx)
 		}
 
-		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo)
+		const sceneCtx = createSceneCtx([marble], [railData], [0], tempo, {} as SceneConfig)
 
 		// First update at beat 0 - marble initializes
 		updateMarble(
