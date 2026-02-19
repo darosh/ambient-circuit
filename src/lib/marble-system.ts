@@ -567,10 +567,10 @@ function checkInstrumentTriggers(
 		}
 
 		if (triggered && triggerHandler && sceneCtx) {
-			// Find entities
+			// Find entities (O(1) lookups)
 			const marbleEntity = sceneCtx.marbles[marbleIndex]
-			const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
-			const railEntity = sceneCtx.rails.find((re) => re.id === railId)
+			const instrumentEntity = sceneCtx.instrumentByRef.get(instrument)
+			const railEntity = sceneCtx.railById.get(railId)
 
 			// Skip if marble is inactive
 			if (!marbleEntity.activity.value) {
