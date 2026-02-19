@@ -285,7 +285,7 @@
 	let sceneId = $state(initialHash.id || scenes[0].id)
 
 	$effect(() => {
-		function onHashChange () {
+		function onHashChange() {
 			const h = parseHash(window.location.hash)
 			sceneId = h.id || scenes[0].id
 		}
