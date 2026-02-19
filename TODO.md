@@ -26,7 +26,12 @@
 - [x] audio view color
 - [x] no offset for no bus
 - [x] reuse node layout
-- [ ] leak
+- [ ] scene switch leaks
+- [ ] hide debug
+- [ ] hide fps
+- [ ] preserve hash params
+- [ ] collision examples
+- [ ] tone PolySynth
 
 Summary of changes across 3 files:
 
