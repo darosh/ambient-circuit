@@ -341,6 +341,17 @@ globalBeatHandler(ctx) {
 
 ## Development Guidelines
 
+### Performance (Hot Paths)
+
+- **`computeBeatPositions` is for visualization only** — never call in `updateMarble` or any per-frame path. Use `points[0].beat` / `points[last].beat` directly for min/max range.
+- **`getCurve(points, i)`** in `marble-system.ts` wraps `buildSegmentCurve` with a module-level `WeakMap` cache keyed by the points array reference. `rail.points` is stable between frames so curves build once per rail. Branch combined paths (fresh array each call) miss cache — acceptable, they're infrequent.
+- **No per-frame allocation in `calculateMarblePosition`**: uses reusable `_tmp0/_tmp1/_tmpRight` scratch vectors; `getCurve` hits cache; writes marble position via `x/y/z` not `new Vector3()`.
+
+### Memory / Scene Switch
+
+- **Scene `onDestroy` clears signal/runtime refs**: `ins.signal`, `ins.midiSignal`, `ins.runtime`, `railData.runtime` are set to `undefined` to release `$state` proxy refs held by module-level scene config objects.
+- **Geometry disposal**: `MarbleView` and `InstrumentView` call `geometry?.dispose()` / `innerGeometry?.dispose()` in `onDestroy`. Safe to double-call — `clearMarble/InstrumentGeometryCache()` may have already disposed them.
+
 ### WebGPU Rendering
 
 **Context:**

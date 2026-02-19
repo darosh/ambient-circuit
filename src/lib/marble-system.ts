@@ -3,9 +3,10 @@ import type { TempoState } from './tempo'
 import type { Instrument } from './instrument'
 import type { TriggerHandler, GlobalBeatHandler } from './scene'
 import type { SceneCtx } from './scene-ctx'
-import { computeBeatPositions, buildSegmentCurve } from './rail-curve'
+import { buildSegmentCurve } from './rail-curve'
 import { easingFunctions } from './easing'
 import { Vector3 } from 'three/webgpu'
+import type { CubicBezierCurve3 } from 'three/webgpu'
 import { ResolvedPoint, ResolvedSplit } from './rail'
 import { smootherstep } from 'three/src/math/MathUtils.js'
 
@@ -17,6 +18,21 @@ let prevIsPlaying = false
 const _tmp0 = new Vector3()
 const _tmp1 = new Vector3()
 const _tmpRight = new Vector3()
+
+// Segment curve cache: keyed by points array reference (stable for main rail between frames)
+const _curveCache = new WeakMap<ResolvedPoint[], (CubicBezierCurve3 | null)[]>()
+
+function getCurve(points: ResolvedPoint[], i: number): CubicBezierCurve3 | null {
+	let cache = _curveCache.get(points)
+	if (!cache) {
+		cache = []
+		for (let j = 0; j < points.length - 1; j++) {
+			cache.push(buildSegmentCurve(points, j))
+		}
+		_curveCache.set(points, cache)
+	}
+	return cache[i] ?? null
+}
 
 // Snake motion constants
 const SNAKE_AMPLITUDE_X = 0.09 // units perpendicular to rail
@@ -200,7 +216,7 @@ function calculateMarblePosition(
 
 	// Get position and tangent from segment curve.
 	// marble.position/tangent are plain {x,y,z} objects (not Vector3 instances) — write via x/y/z only.
-	const curve = buildSegmentCurve(points, segmentIndex)
+	const curve = getCurve(points, segmentIndex)
 	if (curve) {
 		// Curved segment — compute into tmp buffers, then write x/y/z
 		curve.getPoint(easedT, _tmp0)
@@ -631,21 +647,24 @@ export function updateMarble(
 		rawBeat = marble.currentBeat + (marble.direction === 'forward' ? deltaBeat : -deltaBeat)
 	}
 
-	// Temporary points to get beat range
+	// Get beat range directly from points (no allocation needed)
 	const tempPoints = getCurrentPathPoints(marble)
 	if (tempPoints.length === 0) return
-	const tempBeatPositions = computeBeatPositions(tempPoints)
-	if (tempBeatPositions.length === 0) {
-		marble.position = tempPoints[0] ? new Vector3(...tempPoints[0].p) : new Vector3()
+	if (tempPoints.length === 1) {
+		marble.position.x = tempPoints[0].p[0]
+		marble.position.y = tempPoints[0].p[1]
+		marble.position.z = tempPoints[0].p[2]
 		return
 	}
 
-	const minBeat = tempBeatPositions[0].beat
-	const maxBeat = tempBeatPositions[tempBeatPositions.length - 1].beat
+	const minBeat = tempPoints[0].beat
+	const maxBeat = tempPoints[tempPoints.length - 1].beat
 	const beatRange = maxBeat - minBeat
 
 	if (beatRange === 0) {
-		marble.position = tempBeatPositions[0].position.clone()
+		marble.position.x = tempPoints[0].p[0]
+		marble.position.y = tempPoints[0].p[1]
+		marble.position.z = tempPoints[0].p[2]
 		return
 	}
 
@@ -671,10 +690,9 @@ export function updateMarble(
 
 		// Recalculate beat range with branch
 		const branchPoints = getCurrentPathPoints(marble)
-		const branchBeatPos = computeBeatPositions(branchPoints)
-		if (branchBeatPos.length > 0) {
-			const newMinBeat = branchBeatPos[0].beat
-			const newMaxBeat = branchBeatPos[branchBeatPos.length - 1].beat
+		if (branchPoints.length > 1) {
+			const newMinBeat = branchPoints[0].beat
+			const newMaxBeat = branchPoints[branchPoints.length - 1].beat
 			const newBeatRange = newMaxBeat - newMinBeat
 
 			// Only wrap if PAST newMaxBeat
@@ -713,10 +731,9 @@ export function updateMarble(
 
 			// Re-wrap with main rail range after reset
 			const mainPoints = getCurrentPathPoints(marble)
-			const mainBeatPos = computeBeatPositions(mainPoints)
-			if (mainBeatPos.length > 0) {
-				const mainMin = mainBeatPos[0].beat
-				const mainMax = mainBeatPos[mainBeatPos.length - 1].beat
+			if (mainPoints.length > 1) {
+				const mainMin = mainPoints[0].beat
+				const mainMax = mainPoints[mainPoints.length - 1].beat
 				const mainRange = mainMax - mainMin
 				if (mainRange > 0 && rawBeat > mainMax) {
 					const mainExcess = rawBeat - mainMax
@@ -757,10 +774,9 @@ export function updateMarble(
 
 			// Re-wrap with main rail range after reset
 			const mainPoints = getCurrentPathPoints(marble)
-			const mainBeatPos = computeBeatPositions(mainPoints)
-			if (mainBeatPos.length > 0) {
-				const mainMin = mainBeatPos[0].beat
-				const mainMax = mainBeatPos[mainBeatPos.length - 1].beat
+			if (mainPoints.length > 1) {
+				const mainMin = mainPoints[0].beat
+				const mainMax = mainPoints[mainPoints.length - 1].beat
 				const mainRange = mainMax - mainMin
 				if (mainRange > 0 && rawBeat < mainMin) {
 					const mainDeficit = mainMin - rawBeat
