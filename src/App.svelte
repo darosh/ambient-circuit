@@ -285,6 +285,16 @@
 	let sceneId = $state(initialHash.id || scenes[0].id)
 
 	$effect(() => {
+		function onHashChange () {
+			const h = parseHash(window.location.hash)
+			sceneId = h.id || scenes[0].id
+		}
+
+		window.addEventListener('hashchange', onHashChange)
+		return () => window.removeEventListener('hashchange', onHashChange)
+	})
+
+	$effect(() => {
 		if (initialHash.params.has('play')) tempo.isPlaying = true
 	})
 	let activeScene = $derived(scenes.find((s) => s.id === sceneId) ?? scenes[0])
@@ -295,6 +305,10 @@
 	})
 
 	$effect(() => {
+		if (window.location.hash === `#${sceneId}` || window.location.hash.startsWith(`#${sceneId}?`)) {
+			return
+		}
+
 		window.location.hash = sceneId
 		clearMarbleGeometryCache()
 		clearInstrumentGeometryCache()
