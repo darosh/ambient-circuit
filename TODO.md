@@ -26,7 +26,10 @@
 - [x] audio view color
 - [x] no offset for no bus
 - [x] reuse node layout
+- [x] audio engine caching
 - [ ] scene switch leaks
+- [ ] check analyser view leaks?
+- [ ] check all new obj and reusability
 - [ ] hide debug
 - [ ] hide fps
 - [x] preserve hash params
