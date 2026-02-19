@@ -20,6 +20,9 @@ export const scene: SceneConfig = {
 		}, 200)
 	},
 	bouncerOnlyMode: false,
+	duration: 375 / 2,
+	velocity: 60,
+	pitch: 0,
 	camera: [0, 11, 8],
 	target: [0, 1, 0],
 	audioView: {
@@ -122,7 +125,8 @@ export const scene: SceneConfig = {
 					type: 'poly',
 					sides: 3,
 					audio: { id: 'synth' },
-					note: 60 - 12
+					note: 60 - 12,
+					duration: 375
 				},
 				// Non-bouncer marble - will still bounce when hit by bouncer
 				{ start: 4, speed: 0.5, direction: 'forward', bouncer: false, type: 'ball' }
@@ -194,7 +198,8 @@ export const scene: SceneConfig = {
 					bouncer: true,
 					type: 'ball',
 					audio: { id: 'bass' },
-					note: 60 - 24
+					note: 60 - 24,
+					duration: 375
 				},
 				{
 					start: 2,

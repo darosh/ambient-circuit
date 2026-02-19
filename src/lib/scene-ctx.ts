@@ -6,6 +6,7 @@ import type { MarbleState } from './marble-state'
 import type { InstrumentState } from './instrument-state'
 import type { RailState } from './rail-state'
 import type { AudioChain } from './audio/types'
+import { SceneConfig } from './scene'
 
 /**
  * Marble entity with state API and visibility/activity refs
@@ -64,6 +65,8 @@ export type SceneCtx = {
 		play: boolean // tempo.isPlaying
 		bpm: number // tempo.config.bpm
 	}
+
+	config: SceneConfig
 	/** Arbitrary scene-level data, passed through to all handler contexts */
 	user: Record<string, unknown>
 }

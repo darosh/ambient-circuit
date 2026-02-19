@@ -6,6 +6,7 @@ import { MarbleState } from './marble-state'
 import { InstrumentState } from './instrument-state'
 import { RailState } from './rail-state'
 import { resolveRail } from './rail-resolve'
+import { SceneConfig } from './scene'
 
 /**
  * Create SceneCtx from scene data (called once at mount)
@@ -15,6 +16,7 @@ export function createSceneCtx(
 	rails: RailData[],
 	marbleRailIndices: number[],
 	tempo: TempoState,
+	scene: SceneConfig,
 	user: Record<string, unknown> = {}
 ): SceneCtx {
 	// Build marble entities with pre-created State wrappers
@@ -96,6 +98,7 @@ export function createSceneCtx(
 			play: tempo.isPlaying,
 			bpm: tempo.config.bpm
 		},
+		config: scene,
 		user
 	}
 }

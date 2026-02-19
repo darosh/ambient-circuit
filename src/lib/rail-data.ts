@@ -13,6 +13,8 @@ type MarbleDataBase = {
 	speed?: number
 	start?: number
 	note?: number
+	duration?: number
+	velocity?: number
 	easing?: import('./marble').EasingMode
 	color?: string
 	bouncer?: boolean

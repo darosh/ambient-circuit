@@ -157,6 +157,8 @@
 							color: m.color,
 							speed: m.speed ?? 1,
 							note: m.note,
+							velocity: m.velocity,
+							duration: m.duration,
 							type: m.type,
 							angle: (<EaterMarbleData>m)?.angle ?? 60,
 							bouncer: m.bouncer ?? false,
@@ -189,7 +191,7 @@
 
 	// Create scene context once at mount (non-reactive to avoid loops)
 	const sceneCtx = (() => {
-		return createSceneCtx(marbles, rails, marbleRailIndices, tempo, scene.user ?? {})
+		return createSceneCtx(marbles, rails, marbleRailIndices, tempo, scene, scene.user ?? {})
 	})()
 
 	function onSelectInstrument(railIdx: number, idx: number) {

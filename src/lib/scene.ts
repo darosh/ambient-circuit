@@ -62,6 +62,9 @@ export type SceneConfig = {
 	polar?: boolean
 	renderPlayOnly?: boolean
 	rotatePlay?: boolean
+	pitch?: number
+	velocity?: number
+	duration?: number
 	/** Optimize collision checks (assumes all marbles are bouncers, skips rail/branch matching) */
 	bouncerOnlyMode?: boolean
 	/** Audio config: named/shared chains, buses, master */

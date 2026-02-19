@@ -23,21 +23,23 @@ export function triggerHandler(ctx: TriggerContext) {
 	}
 
 	const note =
-		ctx.marble.marble.runtime.note ??
-		ctx.marble.marble.config.note ??
-		ctx.instrument.instrument.note ??
-		NOTE
+		(ctx.marble.marble.runtime.note ??
+			ctx.marble.marble.config.note ??
+			ctx.instrument.instrument.note ??
+			NOTE) + (ctx.scene.config.pitch ?? 0)
 
 	const velocity =
 		ctx.marble.marble.runtime.velocity ??
 		ctx.marble.marble.config.velocity ??
 		ctx.instrument.instrument.velocity ??
+		ctx.scene.config.velocity ??
 		VELOCITY
 
 	const duration =
 		ctx.marble.marble.runtime.duration ??
 		ctx.marble.marble.config.duration ??
 		ctx.instrument.instrument.duration ??
+		ctx.scene.config.duration ??
 		DURATION
 
 	if (midiState?.enabled) {
@@ -80,17 +82,18 @@ export function bouncerHandler(ctx: BounceContext) {
 
 	if (chain1?.generator) {
 		const note =
-			ctx.marble1.marble.runtime.note ??
-			ctx.marble1.marble.config.note ??
-			ctx.marble2.marble.runtime.note ??
-			ctx.marble2.marble.config.note ??
-			NOTE
+			(ctx.marble1.marble.runtime.note ??
+				ctx.marble1.marble.config.note ??
+				ctx.marble2.marble.runtime.note ??
+				ctx.marble2.marble.config.note ??
+				NOTE) + (ctx.scene.config.pitch ?? 0)
 
 		const velocity =
 			ctx.marble1.marble.runtime.velocity ??
 			ctx.marble1.marble.config.velocity ??
 			ctx.marble2.marble.runtime.velocity ??
 			ctx.marble2.marble.config.velocity ??
+			ctx.scene.config.velocity ??
 			VELOCITY
 
 		const duration =
@@ -98,6 +101,7 @@ export function bouncerHandler(ctx: BounceContext) {
 			ctx.marble1.marble.config.duration ??
 			ctx.marble2.marble.runtime.duration ??
 			ctx.marble2.marble.config.duration ??
+			ctx.scene.config.duration ??
 			DURATION
 
 		// TODO: Marbles should send MIDI too
@@ -118,17 +122,18 @@ export function bouncerHandler(ctx: BounceContext) {
 
 	if (chain2?.generator) {
 		const note =
-			ctx.marble2.marble.runtime.note ??
-			ctx.marble2.marble.config.note ??
-			ctx.marble1.marble.runtime.note ??
-			ctx.marble1.marble.config.note ??
-			NOTE
+			(ctx.marble2.marble.runtime.note ??
+				ctx.marble2.marble.config.note ??
+				ctx.marble1.marble.runtime.note ??
+				ctx.marble1.marble.config.note ??
+				NOTE) + (ctx.scene.config.pitch ?? 0)
 
 		const velocity =
 			ctx.marble2.marble.runtime.velocity ??
 			ctx.marble2.marble.config.velocity ??
 			ctx.marble1.marble.runtime.velocity ??
 			ctx.marble1.marble.config.velocity ??
+			ctx.scene.config.velocity ??
 			VELOCITY
 
 		const duration =
@@ -136,6 +141,7 @@ export function bouncerHandler(ctx: BounceContext) {
 			ctx.marble2.marble.config.duration ??
 			ctx.marble1.marble.runtime.duration ??
 			ctx.marble1.marble.config.duration ??
+			ctx.scene.config.duration ??
 			DURATION
 
 		triggerChain(chain2, note, velocity, duration)
