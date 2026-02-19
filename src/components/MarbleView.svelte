@@ -61,7 +61,9 @@
 	// Apply rail render transform to marble position
 	const transformedPosition = $derived.by(() => {
 		const basePos = new Vector3(marble.position.x, marble.position.y, marble.position.z)
-		const matrix = railData.runtime?.renderVersion ? railData.runtime?.renderMatrix as Matrix4 | undefined : undefined
+		const matrix = railData.runtime?.renderVersion
+			? (railData.runtime?.renderMatrix as Matrix4 | undefined)
+			: undefined
 		if (matrix) {
 			basePos.applyMatrix4(matrix)
 		}

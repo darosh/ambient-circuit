@@ -12,7 +12,7 @@ import type {
 	NodePresetInfo
 } from './types'
 import type { ToneAudioNode } from 'tone'
-import { createDevice, IPatcher, MIDIEvent } from '@rnbo/js'
+import { createDevice, type IPatcher, MIDIEvent } from '@rnbo/js'
 import type { Device, MIDIByte } from '@rnbo/js'
 import TONE_DEFAULTS from './tone-defaults'
 import { debug } from 'debug'
@@ -754,7 +754,7 @@ async function loadRNBO(
 		const resp = await fetch(`./patchers/${path}.json`)
 		patcher = await resp.json()
 		engine.rnboCache.set(path, patcher)
-		
+
 		// Empty attempt to dispose RNBO device, reusing disposedRnbos instead
 		// if (!engine.rnboCache.get('empty')) {
 		// 	const resp = await fetch(`./patchers/empty.json`)
@@ -763,8 +763,10 @@ async function loadRNBO(
 		// }
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const device = await createDevice({ context: engine.ctx, patcher: patcher as any }, disposedRnbos.shift())
+	const device = await createDevice(
+		{ context: engine.ctx, patcher: patcher as IPatcher },
+		disposedRnbos.shift()
+	)
 
 	// Extract and apply presets
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -926,7 +928,7 @@ function disposeNode(node: ToneAudioNode | Device): void {
 		node.node.disconnect()
 		node.parameterChangeEvent.removeAllSubscriptions()
 
-		for(const {id} of [...node.dataBufferDescriptions]) {
+		for (const { id } of [...node.dataBufferDescriptions]) {
 			node.releaseDataBuffer(id).then()
 		}
 

@@ -336,8 +336,10 @@
 
 		if (!nodes?.length) return []
 
-		if (rails[0]?.runtime?.renderVersion) { /* empty */ }
-		
+		if (rails[0]?.runtime?.renderVersion) {
+			/* empty */
+		}
+
 		return getMidiSignalLinks(sceneCtx.instruments, nodes, rails, AUDIO_OFFSET)
 	})
 
