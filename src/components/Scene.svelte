@@ -235,6 +235,7 @@
 	const audioEngine: AudioEngine = createAudioEngine()
 	let audioInitGuard = false
 	let audioInitialized = $state(false)
+	let noAudioScene = $state(!hasAudioConfig())
 
 	async function initSceneAudio() {
 		if (audioInitGuard) return
@@ -397,7 +398,9 @@
 			lastTime = now
 		}
 
-		updateTempo(tempo, delta * 1000)
+		if (audioInitialized || noAudioScene) {
+			updateTempo(tempo, delta * 1000)
+		}
 
 		// Lazy audio init on first play
 		if (tempo.isPlaying && !audioInitGuard && hasAudioConfig()) {
