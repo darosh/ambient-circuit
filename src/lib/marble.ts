@@ -1,5 +1,6 @@
 import type { ResolvedRail } from './rail'
 import type { Vector3 } from 'three/webgpu'
+import { InstrumentSignal } from './instrument'
 
 export type MarbleDirection = 'forward' | 'backward'
 export type MarbleSequenceMode = 'looping' | 'ping-pong'
@@ -74,6 +75,8 @@ export interface Marble {
 	routingCounter: number // for weighted branch selection
 	lastGlobalBeat: number // last processed global beat to prevent re-processing
 	signal: { intensity: number } // impact signal, set to 1 on beat crossing
+	/** MIDI signal for MidiSignalView — parallel to signal, consumed independently */
+	midiSignal: InstrumentSignal
 }
 
 export function createMarble(config: MarbleConfig, index = 0): Marble {
@@ -92,6 +95,7 @@ export function createMarble(config: MarbleConfig, index = 0): Marble {
 		branchIndex: null, // starts on main rail
 		routingCounter: 0, // for weighted routing
 		lastGlobalBeat: -1, // no beat processed yet
-		signal: { intensity: 0 }
+		signal: { intensity: 0 },
+		midiSignal: { intensity: 0 }
 	}
 }

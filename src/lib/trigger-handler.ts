@@ -50,6 +50,7 @@ export function bouncerHandler(ctx: BounceContext) {
 	// Trigger marble1 audio chain
 	const chain1 = ctx.marble1.audio
 	if (chain1) {
+		ctx.marble1.marble.midiSignal.intensity = 1
 		chain1.audioSignal.intensity = 1
 		chain1.audioSignal.color =
 			ctx.marble1.marble.runtime.color ??
@@ -65,6 +66,7 @@ export function bouncerHandler(ctx: BounceContext) {
 	// Trigger marble2 audio chain
 	const chain2 = ctx.marble2.audio
 	if (chain2) {
+		ctx.marble2.marble.midiSignal.intensity = 1
 		chain2.audioSignal.intensity = 1
 		chain2.audioSignal.color =
 			ctx.marble2.marble.runtime.color ??

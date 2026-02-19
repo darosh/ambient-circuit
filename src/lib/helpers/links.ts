@@ -94,7 +94,7 @@ export function getMarbleSignalLinks(
 		links.push({
 			from: pos.toArray() as [number, number, number],
 			to: [wx, wy, wz],
-			signal: me.audio.audioSignal,
+			signal: me.marble.midiSignal,
 			color: me.marble.runtime.color ?? me.marble.config.color ?? rails[railIdx].color ?? '#ffffff'
 		})
 	}
