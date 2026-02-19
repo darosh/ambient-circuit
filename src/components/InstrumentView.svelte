@@ -13,7 +13,7 @@
 	} from '../lib/video/instrument-geometry'
 	import { onDestroy, untrack } from 'svelte'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
-	import { Material } from 'three'
+	import type { Material } from 'three/webgpu'
 
 	// Constant rotation matrices for type-based offsets (computed once at module load)
 	const _ROT_NEG_HALF_PI = new Matrix4().makeRotationZ(-Math.PI / 2)

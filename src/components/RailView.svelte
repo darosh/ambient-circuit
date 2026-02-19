@@ -26,7 +26,7 @@
 	import { onDestroy, untrack } from 'svelte'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
 	import { makeRailMaterial } from '../lib/config'
-	import { Material } from 'three'
+	import type { Material } from 'three/webgpu'
 
 	type Props = {
 		railData: RailData

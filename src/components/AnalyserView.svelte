@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import type { ToneAudioNode } from 'tone'
-	import type { Vector3Tuple } from 'three'
+	import type { Vector3Tuple } from 'three/webgpu'
 
 	let {
 		analyzer,

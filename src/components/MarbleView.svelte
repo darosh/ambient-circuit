@@ -15,7 +15,7 @@
 		type MarbleType
 	} from '../lib/video/marble-geometry'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
-	import { Material } from 'three'
+	import type { Material } from 'three/webgpu'
 
 	// Animation constants
 	const TANGENT_VERTICAL_THRESHOLD = 0.9

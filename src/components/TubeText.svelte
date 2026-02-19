@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { T } from '@threlte/core'
 	import { Color, LineCurve3 } from 'three/webgpu'
-	import type { Material } from 'three'
+	import type { Material } from 'three/webgpu'
 	import { createTubeMaterialCached } from '../lib/video/material-text-tube'
 	import { getTextPathsCached } from '../lib/video/text-geometry'
 	import { buildTubeGeometry } from '../lib/video/tube-geometry'
