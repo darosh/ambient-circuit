@@ -21,6 +21,7 @@ const WAIT_S = Number(args.wait ?? 8)
 const TARGET_URL = args.url ?? 'http://localhost:5173'
 const HEADLESS = !('no-headless' in args)
 const OUT_DIR = 'heap-snapshots'
+const SERVER_TYPE = args.type ?? 'dev'
 
 console.log({
 	WAIT_S,
@@ -56,7 +57,7 @@ async function ensureDevServer() {
 	} catch {} // eslint-disable-line no-empty
 
 	console.log('Starting vite dev server...')
-	viteProc = spawn('npx', ['vite', 'dev'], { stdio: ['ignore', 'pipe', 'pipe'] })
+	viteProc = spawn('npx', ['vite', SERVER_TYPE], { stdio: ['ignore', 'pipe', 'pipe'] })
 
 	await new Promise((resolve, reject) => {
 		const timeout = setTimeout(() => reject(new Error('Vite dev server timeout')), 15000)

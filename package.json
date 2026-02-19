@@ -50,6 +50,7 @@
 		"preview": "vite preview",
 		"heap": "node scripts/heap-snapshot.js",
 		"heap:play": "node scripts/heap-snapshot.js --url=http://localhost:5173/#scene-rings --no-headless --wait=30",
+		"heap:play:preview": "node scripts/heap-snapshot.js --url=http://localhost:4173/#scene-rings --no-headless --type=preview --wait=30",
 		"test": "vitest"
 	},
 	"sideEffects": false,
