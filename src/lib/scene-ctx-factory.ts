@@ -14,7 +14,8 @@ export function createSceneCtx(
 	marbles: Marble[],
 	rails: RailData[],
 	marbleRailIndices: number[],
-	tempo: TempoState
+	tempo: TempoState,
+	user: Record<string, unknown> = {}
 ): SceneCtx {
 	// Build marble entities with pre-created State wrappers
 	const marbleVisRefs = marbles.map(() => ({ value: true }))
@@ -94,7 +95,8 @@ export function createSceneCtx(
 		state: {
 			play: tempo.isPlaying,
 			bpm: tempo.config.bpm
-		}
+		},
+		user
 	}
 }
 

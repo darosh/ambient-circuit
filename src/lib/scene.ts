@@ -12,6 +12,7 @@ export type TriggerContext = InstrumentTriggerContext & {
 
 	// Scene-wide context
 	scene: SceneCtx
+	user: Record<string, unknown>
 }
 
 export type TriggerHandler = (ctx: TriggerContext) => void
@@ -25,6 +26,7 @@ export type GlobalBeatContext = {
 	prevBeat: number // previous globalBeat
 	isPlaying: boolean
 	phase: 'init' | 'tick' | 'play' | 'pause' | 'destroy' // lifecycle phase
+	user: Record<string, unknown>
 }
 
 export type GlobalBeatHandler = (ctx: GlobalBeatContext) => void
@@ -39,6 +41,7 @@ export type BounceContext = {
 	rail: RailEntity
 	beat: number // collision beat position
 	globalBeat: number
+	user: Record<string, unknown>
 }
 
 export type BounceHandler = (ctx: BounceContext) => void
@@ -47,6 +50,8 @@ export type SceneConfig = {
 	id: string
 	bpm: number
 	rails: RailData[]
+	/** Arbitrary scene-level state, passed through to all handler contexts as ctx.user */
+	user?: Record<string, unknown>
 	triggerHandler?: TriggerHandler
 	globalBeatHandler?: GlobalBeatHandler
 	bounceHandler?: BounceHandler

@@ -111,19 +111,23 @@
 		}
 	})
 
-	// Runtime render transform
-	let renderMatrix = $state(new Matrix4())
+	// Runtime render transform (pre-allocated, filled in-place by render fn)
+	const _renderOut = new Matrix4()
+	let _renderVersion = $state(0) // incremented each frame to trigger $derived
 
 	// Extract position/rotation for group, scale for geometry
 	const renderTransform = $derived.by(() => {
 		if (!(render && (!renderPlayOnly || tempo?.isPlaying))) return null
+
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		_renderVersion // establish reactivity dependency
 
 		const position = new Vector3()
 		const rotation = new Euler()
 		let scale: Vector3 | null = new Vector3()
 
 		const quaternion = new Quaternion()
-		renderMatrix.decompose(position, quaternion, scale)
+		_renderOut.decompose(position, quaternion, scale)
 		rotation.setFromQuaternion(quaternion)
 
 		if (!isScaled(scale)) {
@@ -356,13 +360,14 @@
 	})
 
 	useTask((delta) => {
-		// Update render matrix
+		// Update render matrix (fills _renderOut in-place, no allocation)
 		if (render && tempo && sceneCtx && (!renderPlayOnly || tempo.isPlaying)) {
-			renderMatrix = render(tempo.currentBeat + tempo.beatProgress, tempo, delta, sceneCtx)
+			render(_renderOut, sceneCtx, tempo.currentBeat + tempo.beatProgress, tempo, delta)
+			_renderVersion++
 
-			// Store in runtime for marble access
+			// Clone for runtime so MarbleView's $derived detects the new reference
 			if (railData.runtime) {
-				railData.runtime.renderMatrix = renderMatrix
+				railData.runtime.renderMatrix = _renderOut.clone()
 			}
 		}
 

@@ -79,7 +79,8 @@ export function checkGlobalBeatTrigger(
 			beat: globalBeat,
 			prevBeat: prevGlobalBeat,
 			isPlaying,
-			phase: isPlaying ? 'play' : 'pause'
+			phase: isPlaying ? 'play' : 'pause',
+			user: sceneCtx.user
 		})
 		prevIsPlaying = isPlaying
 		prevGlobalBeat = globalBeat
@@ -97,7 +98,8 @@ export function checkGlobalBeatTrigger(
 				beat: globalBeat,
 				prevBeat: prevGlobalBeat,
 				isPlaying,
-				phase: 'tick'
+				phase: 'tick',
+				user: sceneCtx.user
 			})
 		}
 	}
@@ -122,7 +124,8 @@ export function fireGlobalBeatInit(
 		beat: globalBeat,
 		prevBeat: -1,
 		isPlaying: tempo.isPlaying,
-		phase: 'init'
+		phase: 'init',
+		user: sceneCtx.user
 	})
 
 	// Initialize tracking state
@@ -147,7 +150,8 @@ export function fireGlobalBeatDestroy(
 		beat: globalBeat,
 		prevBeat: prevGlobalBeat,
 		isPlaying: tempo.isPlaying,
-		phase: 'destroy'
+		phase: 'destroy',
+		user: sceneCtx.user
 	})
 }
 
@@ -439,7 +443,8 @@ function checkMarbleCollisions(
 							marble2: marbleEntity2,
 							rail: railEntity,
 							beat: collisionBeat,
-							globalBeat
+							globalBeat,
+							user: sceneCtx.user
 						})
 					}
 				}
@@ -529,7 +534,8 @@ function checkInstrumentTriggers(
 							marble: marbleEntity,
 							instrument: instrumentEntity,
 							rail: railEntity,
-							scene: sceneCtx
+							scene: sceneCtx,
+							user: sceneCtx.user
 						})
 
 						// Clear trigger context
@@ -602,7 +608,8 @@ function checkInstrumentTriggers(
 					marble: marbleEntity,
 					instrument: instrumentEntity,
 					rail: railEntity,
-					scene: sceneCtx
+					scene: sceneCtx,
+					user: sceneCtx.user
 				})
 
 				// Clear trigger context

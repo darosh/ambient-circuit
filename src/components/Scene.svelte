@@ -189,7 +189,7 @@
 
 	// Create scene context once at mount (non-reactive to avoid loops)
 	const sceneCtx = (() => {
-		return createSceneCtx(marbles, rails, marbleRailIndices, tempo)
+		return createSceneCtx(marbles, rails, marbleRailIndices, tempo, scene.user ?? {})
 	})()
 
 	function onSelectInstrument(railIdx: number, idx: number) {

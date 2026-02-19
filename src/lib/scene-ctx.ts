@@ -64,6 +64,8 @@ export type SceneCtx = {
 		play: boolean // tempo.isPlaying
 		bpm: number // tempo.config.bpm
 	}
+	/** Arbitrary scene-level data, passed through to all handler contexts */
+	user: Record<string, unknown>
 }
 
 /**

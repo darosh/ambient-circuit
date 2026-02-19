@@ -3,6 +3,13 @@ import { color3 as colors } from './utils/colors'
 import { triggerHandler } from '../lib/trigger-handler'
 import { Matrix4, Vector3, MathUtils } from 'three/webgpu'
 
+// Cached math objects for render functions (allocated once, reused every frame)
+const _axis_y = new Vector3(0, 1, 0)
+const _axis_y025 = new Vector3(0, 1, 0.25).normalize()
+const _axis_12 = new Vector3(1, 2, 0).normalize()
+const _axis_y_n1 = new Vector3(0, 1, -1).normalize()
+const _mat_r = new Matrix4()
+
 export const scene: SceneConfig = {
 	id: 'scene-rings',
 	bpm: 30,
@@ -66,10 +73,9 @@ export const scene: SceneConfig = {
 				{ start: 2, speed: 2 }
 			],
 			color: colors[0],
-			render: (_ctx) => {
-				const time = performance.now() * -0.001
-				const rotation = time * Math.PI * 0.5
-				return new Matrix4().makeRotationY(rotation)
+			render: (out) => {
+				const rotation = performance.now() * -0.001 * Math.PI * 0.5
+				out.makeRotationAxis(_axis_y, rotation)
 			}
 		},
 		{
@@ -104,10 +110,9 @@ export const scene: SceneConfig = {
 				{ start: 0, speed: 1 },
 				{ start: 1, speed: 1.5 }
 			],
-			render: (_ctx) => {
-				const time = performance.now() * 0.0007
-				const rotation = time * Math.PI * 0.5
-				return new Matrix4().makeRotationY(rotation)
+			render: (out) => {
+				const rotation = performance.now() * 0.0007 * Math.PI * 0.5
+				out.makeRotationAxis(_axis_y, rotation)
 			},
 			color: colors[0]
 		},
@@ -127,10 +132,9 @@ export const scene: SceneConfig = {
 					{ p: [0, 0, 0], round: 'both' }
 				]
 			},
-			render: () => {
-				const time = performance.now() * 0.001
-				const rotation = time * Math.PI * 0.125
-				return new Matrix4().makeRotationY(rotation)
+			render: (out) => {
+				const rotation = performance.now() * 0.001 * Math.PI * 0.125
+				out.makeRotationAxis(_axis_y, rotation)
 			},
 			instruments: [
 				{ beat: 2, type: 'star', sides: 7 },
@@ -156,17 +160,11 @@ export const scene: SceneConfig = {
 			],
 			color: colors[1],
 			marbles: [{ speed: 0.2 }, { speed: 0.2, direction: 'backward', start: 1 }],
-			render: (time) => {
-				// const scale = 1 + Math.sin((time * Math.PI * 2) / 42) * 0.125
-				// return new Matrix4().makeScale(scale, scale, scale)
-				const r = new Matrix4().makeRotationAxis(
-					new Vector3(0, 1, 0.25).normalize(),
-					MathUtils.DEG2RAD * time * 12
-				)
-
-				return new Matrix4()
-					.makeRotationAxis(new Vector3(1, 2, 0).normalize(), MathUtils.DEG2RAD * 12.5)
-					.multiply(r)
+			render: (out, _ctx, beat) => {
+				// const scale = 1 + Math.sin((beat * Math.PI * 2) / 42) * 0.125
+				// out.makeScale(scale, scale, scale)
+				const r = _mat_r.makeRotationAxis(_axis_y025, MathUtils.DEG2RAD * beat * 12)
+				out.makeRotationAxis(_axis_12, MathUtils.DEG2RAD * 12.5).multiply(r)
 			}
 		},
 		{
@@ -191,10 +189,9 @@ export const scene: SceneConfig = {
 				{ speed: 0.5, start: 1, note: 67 },
 				{ speed: 0.666, start: 2, note: 72 }
 			],
-			render: () => {
-				const time = performance.now() * 0.001
-				const rotation = time * Math.PI * 0.125
-				return new Matrix4().makeRotationAxis(new Vector3(0, 1, -1).normalize(), rotation)
+			render: (out) => {
+				const rotation = performance.now() * 0.001 * Math.PI * 0.125
+				out.makeRotationAxis(_axis_y_n1, rotation)
 			},
 			color: colors[0]
 		},
@@ -237,10 +234,9 @@ export const scene: SceneConfig = {
 				{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, midiNote: 60 - 12 + 7 }
 			],
 			color: colors[1],
-			render: () => {
-				const time = performance.now() * 0.001
-				const rotation = time * Math.PI * 0.125
-				return new Matrix4().makeRotationAxis(new Vector3(0, 1, -1).normalize(), rotation)
+			render: (out) => {
+				const rotation = performance.now() * 0.001 * Math.PI * 0.125
+				out.makeRotationAxis(_axis_y_n1, rotation)
 			}
 		}
 	]

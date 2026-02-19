@@ -58,7 +58,7 @@ Create a "marble-machine-inspired" music sequencer where:
 
 **Phase:** Audio system
 
-**Last Updated:** 2026-02-15
+**Last Updated:** 2026-02-19
 
 **What Works:**
 
@@ -123,7 +123,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Timer cleanup pattern via destroy phase
   - [x] Cross-entity manipulation (reverse all marbles, target specific entities)
   - [x] Test scenes: scene-ctx-test, scene-global-beat
-  - [x] Rail rendering control via RailData.render property
+  - [x] Rail rendering control via RailData.render property (`(out: Matrix4, ctx: SceneCtx, beat, tempo, delta) => void`)
   - [x] Rail transform operations via Rail.transform (three.js Object3D transforms)
   - [x] Beat jump instrument triggering (marble state changes trigger instruments correctly)
   - [x] Boundary beat triggering (first/last beat instruments work in both looping and ping-pong modes)
@@ -283,6 +283,7 @@ ctx.marble        // MarbleEntity: current marble with .state API
 ctx.instrument    // InstrumentEntity: current instrument with .state API
 ctx.rail          // RailEntity: current rail with .state API
 ctx.scene         // SceneCtx: all marbles/instruments/rails in scene
+ctx.user          // SceneConfig.user (arbitrary scene state, passed through unchanged)
 ctx.midiState     // MidiState | null
 // + InstrumentTriggerContext fields (railId, marbleIndex, beat, globalBeat, etc.)
 ```
@@ -346,6 +347,8 @@ globalBeatHandler(ctx) {
 - **`computeBeatPositions` is for visualization only** — never call in `updateMarble` or any per-frame path. Use `points[0].beat` / `points[last].beat` directly for min/max range.
 - **`getCurve(points, i)`** in `marble-system.ts` wraps `buildSegmentCurve` with a module-level `WeakMap` cache keyed by the points array reference. `rail.points` is stable between frames so curves build once per rail. Branch combined paths (fresh array each call) miss cache — acceptable, they're infrequent.
 - **No per-frame allocation in `calculateMarblePosition`**: uses reusable `_tmp0/_tmp1/_tmpRight` scratch vectors; `getCurve` hits cache; writes marble position via `x/y/z` not `new Vector3()`.
+- **`RailData.render` fills `out: Matrix4` in-place** — no allocation in the render fn body; pre-allocate axes/scratch matrices at module level. RailView uses `_renderOut` + `_renderVersion` counter for its own `$derived`; clones once per frame into `railData.runtime.renderMatrix` so `MarbleView.$derived` gets a new reference to trigger re-run.
+- **`SceneConfig.user`** — arbitrary scene state object passed through unchanged to all handler contexts (`ctx.user`) and render fns (`ctx.user` via SceneCtx). Use for mutable state (counters, flags) and to cache per-scene math objects (pre-allocated `Vector3`/`Matrix4`).
 
 ### Memory / Scene Switch
 

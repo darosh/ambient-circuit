@@ -51,6 +51,6 @@ export type RailData = {
 	marbles?: MarbleData[] | false
 	instruments?: Instrument[]
 	runtime?: RailRuntime
-	/** Runtime animation function returning Matrix4 transform */
-	render?: (beat: number, tempo: TempoState, delta: number, ctx: SceneCtx) => Matrix4
+	/** Runtime animation function: fills `out` matrix in-place (no allocation) */
+	render?: (out: Matrix4, ctx: SceneCtx, beat: number, tempo: TempoState, delta: number) => void
 }
