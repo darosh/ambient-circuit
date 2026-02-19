@@ -27,6 +27,7 @@
 - [x] no offset for no bus
 - [x] reuse node layout
 - [x] audio engine caching
+- [ ] review need for lazy instruments load
 - [ ] scene switch leaks
 - [ ] check analyser view leaks?
 - [ ] check all new obj and reusability
