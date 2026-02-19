@@ -414,7 +414,7 @@
 			const railIdx = rails.findIndex((r) => r.rail.id === currentRailId)
 			const railData = rails[railIdx]
 
-			let pos = me.marble.position.clone()
+			let pos = new Vector3(me.marble.position.x, me.marble.position.y, me.marble.position.z)
 			const rm = (railData?.runtime as { renderMatrix?: Matrix4 } | undefined)?.renderMatrix
 			if (rm) {
 				const rPos = new Vector3(),
