@@ -331,11 +331,8 @@
 
 	const midiSignalLinks = $derived.by(() => {
 		if (!audioInitialized) return []
-
 		const nodes = audioView?.getNodes()
-
 		if (!nodes?.length) return []
-
 		if (rails[0]?.runtime?.renderVersion) {
 			/* empty */
 		}
@@ -347,6 +344,9 @@
 		if (!audioInitialized || !scene?.audioView?.marbleLinks) return []
 		const nodes = audioView?.getNodes()
 		if (!nodes?.length) return []
+		if (rails[0]?.runtime?.renderVersion) {
+			/* empty */
+		}
 
 		return getMarbleSignalLinks(sceneCtx.marbles, nodes, rails, AUDIO_OFFSET)
 	})
