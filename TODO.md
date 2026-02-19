@@ -29,44 +29,83 @@
 - [ ] scene switch leaks
 - [ ] hide debug
 - [ ] hide fps
-- [ ] preserve hash params
+- [x] preserve hash params
 - [ ] collision examples
 - [ ] tone PolySynth
 
-Summary of changes across 3 files:
+/Users/jan/.nvm/versions/node/v24.8.0/bin/npm run heap:play:preview
 
-marble-system.ts (biggest impact — ~5 allocations/marble/frame eliminated):
+> ambient-circuit@0.0.1 heap:play:preview
+> node scripts/heap-snapshot.js --url=http://localhost:4173/#scene-rings --no-headless --type=preview --switching --wait=30
 
-- 3 module-level \_tmp0, \_tmp1, \_tmpRight buffers
-- Curved segments: curve.getPoint(t, marble.position) / getTangent(t, marble.tangent) — writes in-place,
-  zero allocation
-- Straight segments: \_tmp0.set(...) / lerpVectors / subVectors in-place — zero allocation
-- Removed dead parallel transport block (was comparing tangent to itself, condition was always false,
-  allocating 5 vectors for nothing)
-- Snake: \_tmpRight.crossVectors(...) and marble.tangent.addScaledVector(...).normalize() in-place
+{
+WAIT_S: 30,
+TARGET_URL: 'http://localhost:4173/#scene-rings',
+OUT_DIR: 'heap-snapshots',
+SERVER_TYPE: 'preview',
+SWITCH_SCENES: [
+'scene-test',
+'scene-structure',
+'scene-rings',
+'scene-instruments',
+'scene-orientation',
+'scene-logic'
+]
+}
+Starting vite dev server...
+Dev server ready
+Navigating to http://localhost:4173/#scene-rings...
+Taking snapshot A...
+Saved: heap-snapshots/snap-A-1771498239149.heapsnapshot
+Waiting 30s...
+Scene: scene-test
+Scene: scene-structure
+Scene: scene-rings
+Scene: scene-instruments
+Scene: scene-orientation
+Scene: scene-logic
+Taking snapshot B...
+Saved: heap-snapshots/snap-B-1771498270669.heapsnapshot
 
-MarbleView.svelte (~7 objects/marble/frame → 0):
+Heap Analysis — Ambient Circuit
+──────────────────────────────────────────────────────
+Snapshot A: 17.3 MB (274,140 nodes)
+Snapshot B: 40.2 MB (632,188 nodes) [after 30s]
+Delta: 23 MB (approx) (+358048 nodes)
 
-- Scratch \_mRef/Up/Right/CorrUp/Mat/TmpMat/Euler per instance; \_POLY_ROT constant matrix
-- Manual Gram-Schmidt (no .clone(), no multiplyScalar)
+Top 10 by size growth:
+#1 system / JSArrayBufferData +250 objs +6018 KB ⚠ geometry data
+#2 (object elements) +7803 objs +5137 KB
+#3 +15304 objs +2147 KB
+#4 Object +47173 objs +1596 KB
+#5 heap number +100883 objs +1182 KB
+#6 R +34417 objs +807 KB
+#7 Ei +6666 objs +547 KB
+#8 system / Context +12804 objs +436 KB
+#9 system / TrustedByteArray +1640 objs +348 KB
+#10Ae +3992 objs +344 KB
 
-InstrumentView.svelte (~8 objects/instrument/frame → 0):
+Three.js resources in snapshot B:
+InterleavedBufferAttribute 1 40 B
+WebGLCubeRenderTarget 1 36 B
+MeshStandardMaterial 1 32 B
+MeshBasicMaterial 1 32 B
+MeshPhysicalMaterial 1 32 B
+LineBasicMaterial 1 32 B
+WebGLRenderTarget 1 32 B
+BufferGeometry 1 28 B
+BufferAttribute 1 28 B
+ShaderMaterial 1 28 B
+CanvasTexture 1 28 B
+InstancedMesh 1 28 B
+DataTexture 1 24 B
+VideoTexture 1 24 B
+SkinnedMesh 1 24 B
+Material 1 20 B
+Texture 1 20 B
+AudioBuffer 1 0 B
+AudioBufferSourceNode 1 0 B
 
-- Same scratch pattern; 3 module-level constant rotation matrices (\_ROT_NEG_HALF_PI etc.)
-- position derived: removed .clone() entirely (reads transform.position directly)
+Vite dev server stopped
 
-✻ Cooked for 8m 18s
-
-❯ Uncaught TypeError: point.set is not a function  
-at calculateMarblePosition (marble-system.ts:205:9)  
-at updateMarble (marble-system.ts:865:2)  
-at updateMarbles (marble-system.ts:890:3)  
-at Task.callback (Scene.svelte:504:3)
-
-⏺ Searched for 1 pattern (ctrl+o to expand)
-
-⏺ The root cause: marble.position and marble.tangent are initialized as plain objects ({ x: 0, y: 0, z: 0 },
-not real Vector3 instances), so calling Three.js prototype methods on them fails. The old code always did
-marble.position = curve.getPoint(...) (assignment), which worked fine. The fix: use tmp vectors for all
-Three.js operations, then write x/y/z back via property assignment — works on plain objects and Vector3
-alike.
+Process finished with exit code 0
