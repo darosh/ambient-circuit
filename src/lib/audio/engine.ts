@@ -48,8 +48,16 @@ export function createAudioEngine(): AudioEngine {
 /**
  * Initialize audio (called once on first play)
  */
+
+const engineCache: Partial<AudioEngine> = {}
+
 export async function initAudio(engine: AudioEngine): Promise<void> {
 	if (engine.initialized) return
+
+	if (engineCache.initialized) {
+		Object.assign(engine, engineCache)
+		return
+	}
 
 	engine.ctx = new AudioContext()
 
@@ -59,20 +67,27 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 		;(<Record<string, boolean>>(<unknown>self)).TONE_SILENCE_LOGGING = true
 	}
 
-	const Tone = await import('tone')
-	Tone.setContext(engine.ctx)
-	await Tone.start()
-	engine.Tone = Tone
+	engine.Tone = await import('tone')
+	engine.Tone.setContext(engine.ctx)
+	await engine.Tone.start()
 
 	// Master gain → destination
-	const masterGain = engine.ctx.createGain()
-	masterGain.connect(engine.ctx.destination)
-	engine.masterGain = masterGain
+	engine.masterGain = engine.ctx.createGain()
+	engine.masterGain.connect(engine.ctx.destination)
 
 	// Shared analyzer for UI visualization
-	engine.sharedAnalyzer = new Tone.Analyser('fft', 64) as unknown as ToneAudioNode
+	engine.sharedAnalyzer = new engine.Tone.Analyser('fft', 64) as unknown as ToneAudioNode
 
 	engine.initialized = true
+
+	const { initialized, sharedAnalyzer, masterGain, Tone, ctx } = engine
+	Object.assign(engineCache, {
+		initialized,
+		sharedAnalyzer,
+		masterGain,
+		Tone,
+		ctx
+	})
 
 	log('initialized')
 }
