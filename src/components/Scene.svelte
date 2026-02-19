@@ -12,6 +12,7 @@
 	import type { SceneConfig } from '../lib/scene'
 	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
 	import type { EaterMarbleData } from '../lib/rail-data'
+	import type { Instrument } from '../lib/instrument'
 	import { createAudioEngine, initAudio, buildChain, buildBuses, disposeScene } from '../lib/audio'
 	import type { AudioEngine, AudioChain } from '../lib/audio'
 	import AudioView from './AudioView.svelte'
@@ -173,6 +174,11 @@
 	})()
 	let marbles = $state(_init.ms)
 	const marbleRailIndices = _init.indices
+
+	// Pre-allocated, updated in-place on rail switch (no per-frame allocation)
+	const liveRailIndices: number[] = marbleRailIndices.slice()
+	const instrumentsPerRail: Instrument[][] = liveRailIndices.map((i) => rails[i].instruments || [])
+	const railIds: string[] = liveRailIndices.map((i) => rails[i].rail.id)
 
 	const noBouncers = $derived(!marbles.some((m) => m.config.bouncer))
 
@@ -406,21 +412,21 @@
 			}
 		}
 
-		// Compute live rail indices (respects runtime switches)
-		const marbleRailIndicesLive = marbles.map((m, i) => {
-			const currentRailId = m.runtime.railId ?? m.config.resolvedRail.id
-			const railIdx = rails.findIndex((r) => r.rail.id === currentRailId)
-			return railIdx >= 0 ? railIdx : marbleRailIndices[i]
-		})
-
-		const instrumentsPerMarble = marbleRailIndicesLive.map((i) => rails[i].instruments || [])
-		const railIdPerMarble = marbleRailIndicesLive.map((i) => rails[i].rail.id)
+		// Sync live rail indices from marble runtime (only changes on rail switch)
+		for (let i = 0; i < marbles.length; i++) {
+			const ri = marbles[i].runtime.railIndex ?? marbleRailIndices[i]
+			if (ri !== liveRailIndices[i]) {
+				liveRailIndices[i] = ri
+				instrumentsPerRail[i] = rails[ri].instruments || []
+				railIds[i] = rails[ri].rail.id
+			}
+		}
 
 		updateMarbles(
 			marbles,
 			tempo,
-			instrumentsPerMarble,
-			railIdPerMarble,
+			instrumentsPerRail,
+			railIds,
 			scene.triggerHandler,
 			sceneCtx,
 			scene.globalBeatHandler,

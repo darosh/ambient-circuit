@@ -46,6 +46,7 @@ export interface MarbleRuntime {
 	triggerBeat?: number // beat that triggered the current handler
 	// Rail switching
 	railId?: string // current rail override
+	railIndex?: number // current index into scene rails array (updated on switch)
 	targetRailId?: string // deferred switch target
 	// Collision tracking
 	lastCollisionTime?: number // global beat of last collision (prevents oscillation)

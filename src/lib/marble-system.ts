@@ -864,13 +864,15 @@ export function updateMarble(
 		if (!sceneCtx) {
 			console.warn(`[rail-switch] Cannot switch: sceneCtx not available`)
 		} else {
-			const targetRail = sceneCtx.rails.find((r) => r.id === targetRailId)
-			if (!targetRail) {
+			const targetRailIdx = sceneCtx.rails.findIndex((r) => r.id === targetRailId)
+			if (targetRailIdx < 0) {
 				console.warn(`[rail-switch] Rail "${targetRailId}" not found`)
 			} else {
+				const targetRail = sceneCtx.rails[targetRailIdx]
 				// Perform switch
 				marble.config.resolvedRail = targetRail.resolvedRail
 				marble.runtime.railId = targetRailId
+				marble.runtime.railIndex = targetRailIdx
 
 				// Reset rail-specific state
 				const newPoints = targetRail.resolvedRail.points
