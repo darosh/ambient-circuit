@@ -36,6 +36,7 @@
 - [x] preserve hash params
 - [ ] collision examples
 - [ ] tone PolySynth
+- [ ] use gigaverb from examples, freeverb too
 
 /Users/jan/.nvm/versions/node/v24.8.0/bin/npm run heap:play:preview
 
