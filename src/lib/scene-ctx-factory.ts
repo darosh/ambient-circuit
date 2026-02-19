@@ -68,6 +68,7 @@ export function createSceneCtx(
 
 		return {
 			id: rd.rail.id,
+			index: i,
 			railData: rd,
 			resolvedRail: resolvedRail!,
 			state: new RailState(rd, railVisRefs[i], railActRefs[i]),
@@ -76,10 +77,19 @@ export function createSceneCtx(
 		}
 	})
 
+	// O(1) lookup maps
+	const railById = new Map<string, RailEntity>()
+	for (const re of railEntities) railById.set(re.id, re)
+
+	const instrumentByRef = new WeakMap<import('./instrument').Instrument, InstrumentEntity>()
+	for (const ie of instrumentEntities) instrumentByRef.set(ie.instrument, ie)
+
 	return {
 		marbles: marbleEntities,
 		instruments: instrumentEntities,
 		rails: railEntities,
+		railById,
+		instrumentByRef,
 		beat: tempo.currentBeat + tempo.beatProgress,
 		state: {
 			play: tempo.isPlaying,

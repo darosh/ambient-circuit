@@ -430,7 +430,7 @@ function checkMarbleCollisions(
 					const marbleEntity1 = sceneCtx.marbles[m1.index]
 					const marbleEntity2 = sceneCtx.marbles[m2.index]
 					const railId = railIds[i] || railIds[j]
-					const railEntity = sceneCtx.rails.find((r) => r.id === railId)
+					const railEntity = sceneCtx.railById.get(railId)
 
 					if (marbleEntity1 && marbleEntity2 && railEntity) {
 						bounceHandler({
@@ -489,8 +489,8 @@ function checkInstrumentTriggers(
 				if (triggerHandler && sceneCtx) {
 					// Find entities
 					const marbleEntity = sceneCtx.marbles[marbleIndex]
-					const instrumentEntity = sceneCtx.instruments.find((ie) => ie.instrument === instrument)
-					const railEntity = sceneCtx.rails.find((re) => re.id === railId)
+					const instrumentEntity = sceneCtx.instrumentByRef.get(instrument)
+					const railEntity = sceneCtx.railById.get(railId)
 
 					// Skip if marble is inactive
 					if (!marbleEntity.activity.value) {
@@ -864,15 +864,14 @@ export function updateMarble(
 		if (!sceneCtx) {
 			console.warn(`[rail-switch] Cannot switch: sceneCtx not available`)
 		} else {
-			const targetRailIdx = sceneCtx.rails.findIndex((r) => r.id === targetRailId)
-			if (targetRailIdx < 0) {
+			const targetRail = sceneCtx.railById.get(targetRailId)
+			if (!targetRail) {
 				console.warn(`[rail-switch] Rail "${targetRailId}" not found`)
 			} else {
-				const targetRail = sceneCtx.rails[targetRailIdx]
 				// Perform switch
 				marble.config.resolvedRail = targetRail.resolvedRail
 				marble.runtime.railId = targetRailId
-				marble.runtime.railIndex = targetRailIdx
+				marble.runtime.railIndex = targetRail.index
 
 				// Reset rail-specific state
 				const newPoints = targetRail.resolvedRail.points

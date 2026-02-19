@@ -37,6 +37,7 @@ export type InstrumentEntity = {
  */
 export type RailEntity = {
 	id: string // rail ID
+	index: number // position in scene rails array
 	railData: RailData // original rail data
 	resolvedRail: ResolvedRail // resolved geometry
 	state: RailState // pre-built API wrapper
@@ -52,6 +53,10 @@ export type SceneCtx = {
 	marbles: MarbleEntity[]
 	instruments: InstrumentEntity[]
 	rails: RailEntity[]
+
+	// O(1) lookup maps (built once at mount)
+	railById: Map<string, RailEntity>
+	instrumentByRef: WeakMap<Instrument, InstrumentEntity>
 
 	// Global state
 	beat: number // current globalBeat (float)
