@@ -22,11 +22,16 @@ const TARGET_URL = args.url ?? 'http://localhost:5173'
 const HEADLESS = !('no-headless' in args)
 const OUT_DIR = 'heap-snapshots'
 const SERVER_TYPE = args.type ?? 'dev'
+const SWITCH_SCENES = 'switching' in args
+	? ['scene-test', 'scene-structure', 'scene-rings', 'scene-instruments', 'scene-orientation', 'scene-logic']
+	: null
 
 console.log({
 	WAIT_S,
 	TARGET_URL,
-	OUT_DIR
+	OUT_DIR,
+	SERVER_TYPE,
+	...(SWITCH_SCENES ? { SWITCH_SCENES } : {})
 })
 
 // --- Chrome detection ---
@@ -197,7 +202,16 @@ async function main() {
 		const parsedA = parseSnapshot(snapA)
 
 		console.log(`Waiting ${WAIT_S}s...`)
-		await new Promise((r) => setTimeout(r, WAIT_S * 1000))
+		if (SWITCH_SCENES) {
+			const step = Math.floor((WAIT_S * 1000) / SWITCH_SCENES.length)
+			for (const sceneId of SWITCH_SCENES) {
+				await page.evaluate((id) => { window.location.hash = `#${id}` }, sceneId)
+				console.log(`  Scene: ${sceneId}`)
+				await new Promise((r) => setTimeout(r, step))
+			}
+		} else {
+			await new Promise((r) => setTimeout(r, WAIT_S * 1000))
+		}
 
 		const snapB = await takeSnapshot(cdp, 'B')
 		const parsedB = parseSnapshot(snapB)
