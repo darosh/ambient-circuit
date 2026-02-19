@@ -305,6 +305,9 @@
 	})
 
 	onDestroy(() => {
+		geometry?.dispose()
+		innerGeometry?.dispose()
+
 		if (fxMaterial) {
 			fxMaterial.mat.dispose()
 		}

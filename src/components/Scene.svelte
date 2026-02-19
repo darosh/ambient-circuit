@@ -350,6 +350,18 @@
 
 	// Fire destroy handler on unmount
 	onDestroy(() => {
+		// Release $state proxy refs from module-level scene config
+		for (const railData of rails) {
+			if (railData.instruments) {
+				for (const ins of railData.instruments) {
+					ins.signal = undefined
+					ins.midiSignal = undefined
+					ins.runtime = undefined
+				}
+			}
+			railData.runtime = undefined
+		}
+
 		if (scene.globalBeatHandler) {
 			fireGlobalBeatDestroy(tempo, sceneCtx, scene.globalBeatHandler)
 		}

@@ -171,6 +171,8 @@
 	})
 
 	onDestroy(() => {
+		geometry?.dispose()
+
 		if (fx) {
 			fx.mat.dispose()
 		}
