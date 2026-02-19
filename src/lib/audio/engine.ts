@@ -12,7 +12,7 @@ import type {
 	NodePresetInfo
 } from './types'
 import type { ToneAudioNode } from 'tone'
-import { createDevice, MIDIEvent } from '@rnbo/js'
+import { createDevice, IPatcher, MIDIEvent } from '@rnbo/js'
 import type { Device, MIDIByte } from '@rnbo/js'
 import TONE_DEFAULTS from './tone-defaults'
 import { debug } from 'debug'
@@ -80,13 +80,14 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 
 	engine.initialized = true
 
-	const { initialized, sharedAnalyzer, masterGain, Tone, ctx } = engine
+	const { initialized, sharedAnalyzer, masterGain, Tone, ctx, rnboCache } = engine
 	Object.assign(engineCache, {
 		initialized,
 		sharedAnalyzer,
 		masterGain,
 		Tone,
-		ctx
+		ctx,
+		rnboCache
 	})
 
 	log('initialized')
@@ -753,10 +754,17 @@ async function loadRNBO(
 		const resp = await fetch(`./patchers/${path}.json`)
 		patcher = await resp.json()
 		engine.rnboCache.set(path, patcher)
+		
+		// Empty attempt to dispose RNBO device, reusing disposedRnbos instead
+		// if (!engine.rnboCache.get('empty')) {
+		// 	const resp = await fetch(`./patchers/empty.json`)
+		// 	const patcher = await resp.json()
+		// 	engine.rnboCache.set('empty', patcher)
+		// }
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const device = await createDevice({ context: engine.ctx, patcher: patcher as any })
+	const device = await createDevice({ context: engine.ctx, patcher: patcher as any }, disposedRnbos.shift())
 
 	// Extract and apply presets
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -911,9 +919,20 @@ function getWebAudioNode(
 	return getOutputNode(node, engine)
 }
 
+const disposedRnbos: Device[] = []
+
 function disposeNode(node: ToneAudioNode | Device): void {
 	if (isDevice(node)) {
 		node.node.disconnect()
+		node.parameterChangeEvent.removeAllSubscriptions()
+
+		for(const {id} of [...node.dataBufferDescriptions]) {
+			node.releaseDataBuffer(id).then()
+		}
+
+		// empty attempt using disposedRnbos instead
+		// createDevice({context: node.context, patcher: <IPatcher>engineCache.rnboCache?.get('empty')}, node).then()
+		disposedRnbos.push(node)
 	} else {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const n = node as any
