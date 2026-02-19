@@ -367,7 +367,8 @@
 
 			// Clone for runtime so MarbleView's $derived detects the new reference
 			if (railData.runtime) {
-				railData.runtime.renderMatrix = _renderOut.clone()
+				railData.runtime.renderMatrix = _renderOut //.clone()
+				railData.runtime.renderVersion = _renderVersion
 			}
 		}
 

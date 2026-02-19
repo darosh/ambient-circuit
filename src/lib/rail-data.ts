@@ -43,6 +43,7 @@ export type MarbleData = BallMarbleData | PolyMarbleData | CoilMarbleData | Eate
 export type RailRuntime = {
 	color?: string
 	renderMatrix?: unknown // Matrix4
+	renderVersion?: number
 }
 
 export type RailData = {
