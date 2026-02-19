@@ -101,7 +101,8 @@ export const scene: SceneConfig = {
 					speed: 0.5,
 					direction: 'forward',
 					bouncer: true,
-					type: 'ball',
+					type: 'poly',
+					sides: 3,
 					audio: { id: 'synth' }
 				},
 				{ start: 5, speed: 0.5, direction: 'backward', bouncer: true, type: 'ball' }
