@@ -52,13 +52,13 @@ export const scene: SceneConfig = {
 				{
 					type: 'sun',
 					beat: 1,
-					midiNote: 60,
+					note: 60,
 					audio: { id: 'synth' }
 				},
 				{
 					type: 'sun',
 					beat: 3,
-					midiNote: 64,
+					note: 64,
 					audio: {
 						generator: {
 							tone: 'Synth',
@@ -75,13 +75,13 @@ export const scene: SceneConfig = {
 				{
 					type: 'sun',
 					beat: 5,
-					midiNote: 67,
+					note: 67,
 					audio: { generator: { tone: 'Synth' }, bus: 'reverb' }
 				},
 				{
 					type: 'sun',
 					beat: 7,
-					midiNote: 72,
+					note: 72,
 					audio: { generator: { tone: 'Synth' }, bus: 'reverb' }
 				}
 			]
@@ -97,19 +97,19 @@ export const scene: SceneConfig = {
 				{
 					type: 'spiral',
 					beat: 0,
-					midiNote: 48,
+					note: 48,
 					audio: { generator: { rnbo: 'feedback-synth' }, bus: 'reverb' }
 				},
 				{
 					type: 'spiral',
 					beat: 4,
-					midiNote: 55,
+					note: 55,
 					audio: { generator: { rnbo: 'feedback-synth' }, bus: 'reverb' }
 				},
 				{
 					type: 'spiral',
 					beat: 6,
-					midiNote: 55,
+					note: 55,
 					audio: { id: 'synth' }
 				}
 			]

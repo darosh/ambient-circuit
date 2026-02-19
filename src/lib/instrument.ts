@@ -48,13 +48,13 @@ type InstrumentBase = {
 	/** Visual visibility (default true) */
 	visible?: boolean
 	/** MIDI channel (1-16), default 1 */
-	midiChannel?: number
+	channel?: number
 	/** MIDI note (0-127), default 60 (C4) */
-	midiNote?: number
+	note?: number
 	/** Note length in ms, default 200 */
-	midiLength?: number
+	duration?: number
 	/** MIDI velocity (0-127), default 100 */
-	midiVelocity?: number
+	velocity?: number
 	/** Impact signal — set intensity=1 in triggerHandler, InstrumentView decays it */
 	signal?: InstrumentSignal
 	/** MIDI signal for MidiSignalView — parallel to signal, consumed independently */

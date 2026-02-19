@@ -102,7 +102,7 @@ export const scene: SceneConfig = {
 				{
 					beat: 2,
 					sides: 3,
-					midiChannel: 2,
+					channel: 2,
 					actionHandler(ctx) {
 						// Shift up an octave
 						ctx.marble.state.note = (ctx.marble.state.note ?? 60) + 12
@@ -111,7 +111,7 @@ export const scene: SceneConfig = {
 				{
 					beat: 6,
 					sides: 5,
-					midiChannel: 2,
+					channel: 2,
 					actionHandler(ctx) {
 						// Reset to C4
 						ctx.marble.state.note = 60
@@ -164,10 +164,10 @@ export const scene: SceneConfig = {
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [
-				{ beat: 2.2, sides: 3, midiChannel: 3 },
-				{ beat: 2.4, sides: 4, midiChannel: 3 },
-				{ beat: 2.6, sides: 5, midiChannel: 3 },
-				{ beat: 2.8, sides: 6, midiChannel: 3 }
+				{ beat: 2.2, sides: 3, channel: 3 },
+				{ beat: 2.4, sides: 4, channel: 3 },
+				{ beat: 2.6, sides: 5, channel: 3 },
+				{ beat: 2.8, sides: 6, channel: 3 }
 			]
 		},
 		// Example 7: Visual transformations - instrument color

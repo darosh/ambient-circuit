@@ -24,21 +24,21 @@ export function triggerHandler(ctx: TriggerContext) {
 
 	const note = ctx.marble.marble.runtime.note
 		?? ctx.marble.marble.config.note
-		?? ctx.instrument.instrument.midiNote
+		?? ctx.instrument.instrument.note
 		?? NOTE
 
 	const velocity = ctx.marble.marble.runtime.velocity
 		?? ctx.marble.marble.config.velocity
-		?? ctx.instrument.instrument.midiVelocity
+		?? ctx.instrument.instrument.velocity
 		?? VELOCITY
 
 	const duration = ctx.marble.marble.runtime.duration
 		?? ctx.marble.marble.config.duration
-		?? ctx.instrument.instrument.midiLength
+		?? ctx.instrument.instrument.duration
 		?? DURATION
 
 	if (midiState?.enabled) {
-		const channel = ctx.instrument.instrument.midiChannel ?? 1
+		const channel = ctx.instrument.instrument.channel ?? 1
 		
 		sendMidiNote(midiState, channel, note, velocity, duration)
 	}

@@ -59,8 +59,8 @@ export const scene: SceneConfig = {
 				{
 					type: 'arrow',
 					beat: 2,
-					midiLength: 100,
-					midiVelocity: 127,
+					duration: 100,
+					velocity: 127,
 					audio: {
 						analyzer: true,
 						bus: 'test',

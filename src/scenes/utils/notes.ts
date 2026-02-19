@@ -1,4 +1,4 @@
-const midiNotes = {
+const notes = {
 	C_1: 0,
 	Cs_1: 1,
 	Ds_1: 3,
@@ -140,4 +140,4 @@ const midiNotes = {
 	G9: 127
 } as const
 
-export default midiNotes
+export default notes

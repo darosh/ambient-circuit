@@ -23,69 +23,69 @@ export const scene: SceneConfig = {
 				{
 					beat: 7.3,
 					sides: 3,
-					midiChannel: 4
+					channel: 4
 				},
 				{
 					beat: 7.4,
 					sides: 4,
-					midiChannel: 4
+					channel: 4
 				},
 				{
 					beat: 7.5,
 					sides: 5,
-					midiChannel: 4
+					channel: 4
 				},
 				{
 					beat: 7.6,
 					sides: 6,
-					midiChannel: 4
+					channel: 4
 				},
 				{
 					beat: 7.7,
 					sides: 12,
-					midiChannel: 4
+					channel: 4
 				},
 				{
 					beat: 10.3,
 					type: 'arrow',
-					midiChannel: 4
+					channel: 4
 				},
 				{
 					beat: 10.5,
 					type: 'arrow',
 					kind: 'play',
-					midiChannel: 4
+					channel: 4
 				},
 				{
 					beat: 10.7,
 					type: 'arrow',
 					kind: 'fwd',
-					midiChannel: 4
+					channel: 4
 				},
 				{
 					beat: 9.25,
 					fill: true,
 					sides: 3,
-					midiChannel: 4
+					channel: 4
 				},
 				{
 					beat: 9.5,
 					fill: true,
 					sides: 4,
-					midiChannel: 4
+					channel: 4
 				},
 				{
 					beat: 9.75,
 					fill: true,
 					sides: 12,
-					midiChannel: 4
+					channel: 4
 				},
 				{
 					beat: 4.5,
 					type: 'sun',
 					rays: 12,
 					brightness: 3,
-					midiChannel: 4
+					channel: 4
 				}
 			]
 		},
@@ -101,7 +101,7 @@ export const scene: SceneConfig = {
 				]
 			},
 			color: colors[1],
-			instruments: [{ beat: 1.5, sides: 3, midiChannel: 1 }],
+			instruments: [{ beat: 1.5, sides: 3, channel: 1 }],
 			marbles: [{ type: 'poly', sides: 3 }]
 		},
 		{
@@ -127,8 +127,8 @@ export const scene: SceneConfig = {
 			},
 			marbles: [{ type: 'poly', sides: 12, mode: 'ping-pong' as const, speed: 2 }],
 			instruments: [
-				{ type: 'cone', beat: 0.05, align: 'tip', rounds: 5, point: 'backward', midiChannel: 6 },
-				{ type: 'cone', beat: 0.95, align: 'tip', rounds: 5, midiChannel: 6 }
+				{ type: 'cone', beat: 0.05, align: 'tip', rounds: 5, point: 'backward', channel: 6 },
+				{ type: 'cone', beat: 0.95, align: 'tip', rounds: 5, channel: 6 }
 			],
 			color: c()
 		},
@@ -147,10 +147,10 @@ export const scene: SceneConfig = {
 			marbles: [{ type: 'poly' as const, sides: 6 }],
 			color: c(),
 			instruments: [
-				{ sides: 4, type: 'star', beat: 1, midiChannel: 5 },
-				{ sides: 5, type: 'star', beat: 3, midiChannel: 5 },
-				{ sides: 3, type: 'whirl', beat: 5, midiChannel: 5 },
-				{ sides: 6, type: 'cross', beat: 7, midiChannel: 5 }
+				{ sides: 4, type: 'star', beat: 1, channel: 5 },
+				{ sides: 5, type: 'star', beat: 3, channel: 5 },
+				{ sides: 3, type: 'whirl', beat: 5, channel: 5 },
+				{ sides: 6, type: 'cross', beat: 7, channel: 5 }
 			]
 		},
 		{
@@ -178,8 +178,8 @@ export const scene: SceneConfig = {
 				})
 			},
 			instruments: [
-				{ beat: 1.5, sides: 4, midiChannel: 2 },
-				{ beat: 2.5, sides: 5, midiChannel: 2 }
+				{ beat: 1.5, sides: 4, channel: 2 },
+				{ beat: 2.5, sides: 5, channel: 2 }
 			],
 			color: c()
 		},
@@ -270,14 +270,14 @@ export const scene: SceneConfig = {
 					path: [0],
 					type: 'whirl',
 					sides: 6,
-					midiChannel: 3
+					channel: 3
 				},
 				{
 					beat: 2.5,
 					path: [1],
 					type: 'sun',
 					rays: 0,
-					midiChannel: 1
+					channel: 1
 				}
 			],
 			color: c()

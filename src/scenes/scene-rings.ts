@@ -90,7 +90,7 @@ export const scene: SceneConfig = {
 					{ p: [0, 0, 0], round: 'both' }
 				]
 			},
-			instruments: [{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, midiNote: 60 - 12 }],
+			instruments: [{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, note: 60 - 12 }],
 			color: colors[1]
 		},
 		{
@@ -231,7 +231,7 @@ export const scene: SceneConfig = {
 				]
 			},
 			instruments: [
-				{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, midiNote: 60 - 12 + 7 }
+				{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, note: 60 - 12 + 7 }
 			],
 			color: colors[1],
 			render: (out) => {
