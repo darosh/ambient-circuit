@@ -7,8 +7,8 @@ export type ParamValue = number | string
 export type ParamMap = Record<string, ParamValue>
 
 export type NodeConfig =
-	| { tone: string; params?: ParamMap }
-	| { rnbo: string; params?: ParamMap; preset?: string }
+	| { tone: string; params?: ParamMap; poly?: number }
+	| { rnbo: string; params?: ParamMap; preset?: string; poly?: number }
 
 export type GeneratorConfig = NodeConfig
 export type FxConfig = NodeConfig
@@ -37,6 +37,13 @@ export type MasterConfig = {
 
 // --- Runtime instances ---
 
+export type VoiceTracker = {
+	/** Max simultaneous voices */
+	max: number
+	/** AudioContext.currentTime values when each active voice ends */
+	endTimes: number[]
+}
+
 export type AudioChain = {
 	config: AudioChainConfig
 	generator: ToneAudioNode | Device | null
@@ -44,6 +51,8 @@ export type AudioChain = {
 	analyzer: ToneAudioNode | null
 	solo: Solo | null
 	output: GainNode
+	/** Voice allocation tracker */
+	voices: VoiceTracker
 	/** Set param on generator by dot-path */
 	setParam(path: string, value: ParamValue): void
 	/** Set param on fx node by index + dot-path */

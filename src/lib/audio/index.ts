@@ -10,7 +10,8 @@ export type {
 	FxConfig,
 	AnalyzerType,
 	ParamValue,
-	ParamMap
+	ParamMap,
+	VoiceTracker
 } from './types'
 export {
 	createAudioEngine,
@@ -18,6 +19,7 @@ export {
 	buildChain,
 	buildBuses,
 	triggerChain,
+	getVoice,
 	connectSharedAnalyzer,
 	disposeChain,
 	listBusFxParams,

@@ -9,7 +9,8 @@ import type {
 	FxConfig,
 	ParamValue,
 	AnalyzerType,
-	NodePresetInfo
+	NodePresetInfo,
+	VoiceTracker
 } from './types'
 import type { ToneAudioNode } from 'tone'
 import { createDevice, type IPatcher, MIDIEvent } from '@rnbo/js'
@@ -263,6 +264,11 @@ export async function buildChain(
 		}
 	}
 
+	const genPoly = config.generator?.poly
+	const maxVoices =
+		genPoly !== undefined ? genPoly : config.generator && 'rnbo' in config.generator ? 8 : 1
+	const voices: VoiceTracker = { max: maxVoices, endTimes: [] }
+
 	const chain: AudioChain = {
 		config,
 		generator,
@@ -270,6 +276,7 @@ export async function buildChain(
 		analyzer,
 		solo,
 		output,
+		voices,
 		nodePresets,
 		onParamChange: null,
 		audioSignal: { intensity: 0, color: '#ffffff' },
@@ -381,15 +388,37 @@ export function cfgName(chain: GeneratorConfig | FxConfig | undefined) {
 }
 
 /**
- * Trigger a note on a chain
+ * Try to allocate a voice slot for the given duration.
+ * Returns true if a slot was available and has been reserved.
+ * Uses AudioContext time for accurate note-length tracking.
+ */
+export function getVoice(chain: AudioChain, durationMs: number): boolean {
+	if (!chain.generator) return false
+	const now = chain.output.context.currentTime
+	const v = chain.voices
+	// Expire finished voices
+	const alive: number[] = []
+	for (let i = 0; i < v.endTimes.length; i++) {
+		if (v.endTimes[i] > now) alive.push(v.endTimes[i])
+	}
+	v.endTimes = alive
+	if (v.endTimes.length >= v.max) return false
+	v.endTimes.push(now + durationMs / 1000)
+	return true
+}
+
+/**
+ * Trigger a note on a chain. Returns false if no voice was available.
  */
 export function triggerChain(
 	chain: AudioChain,
 	note: number,
 	velocity: number,
 	durationMs: number
-): void {
-	if (!chain.generator) return
+): boolean {
+	if (!chain.generator) return false
+	if (!getVoice(chain, durationMs)) return false
+	chain.lastTrigger = Date.now()
 
 	if (isDevice(chain.generator)) {
 		// RNBO: send MIDI events
@@ -426,6 +455,7 @@ export function triggerChain(
 			}
 		}
 	}
+	return true
 }
 
 /**
@@ -541,6 +571,12 @@ export function unflattenParams(flat: Record<string, ParamValue>): Record<string
 	return result
 }
 
+/** PolySynth has .maxPolyphony and routes params via .set()/.get() on voice options */
+function isPolySynth(node: ToneAudioNode): boolean {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	return typeof (node as any).maxPolyphony === 'number'
+}
+
 /**
  * Set param on a live node by dot-path
  */
@@ -554,11 +590,13 @@ export function setNodeParam(node: ToneAudioNode | Device, path: string, value: 
 		// Tone.js: walk dot-path
 		const parts = path.split('.')
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		let cur: any = node
+		let cur: any = isPolySynth(node) ? (node as any).options : node
+
 		for (let i = 0; i < parts.length - 1; i++) {
 			if (cur == null) return
 			cur = cur[parts[i]]
 		}
+
 		if (cur != null) {
 			if (cur[parts[parts.length - 1]]?.value !== undefined) {
 				cur[parts[parts.length - 1]].value = value
@@ -583,7 +621,7 @@ export function getNodeParam(
 	} else {
 		const parts = path.split('.')
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		let cur: any = node
+		let cur: any = isPolySynth(node) ? (node as any).options : node
 		for (const part of parts) {
 			if (cur == null) return undefined
 			cur = cur[part]
@@ -728,7 +766,7 @@ async function buildNode(
 		}
 	} else {
 		return {
-			node: createToneNode(engine, config.tone, config.params),
+			node: createToneNode(engine, config.tone, config.params, config.poly),
 			presetNames: [],
 			activePreset: null
 		}
@@ -801,12 +839,24 @@ async function loadRNBO(
 function createToneNode(
 	engine: AudioEngine,
 	name: string,
-	params?: Record<string, ParamValue>
+	params?: Record<string, ParamValue>,
+	poly?: number
 ): ToneAudioNode {
 	if (!engine.Tone) throw new Error('Tone.js not loaded')
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const ToneLib = engine.Tone as any
+
+	if (poly !== undefined && poly > 1) {
+		const VoiceClass = ToneLib[name]
+		if (!VoiceClass) throw new Error(`Unknown Tone voice: ${name}`)
+		const opts = params
+			? { options: unflattenParams(params), voice: VoiceClass, maxPolyphony: poly }
+			: { voice: VoiceClass, maxPolyphony: poly }
+
+		return new ToneLib.PolySynth(opts) as ToneAudioNode
+	}
+
 	const NodeClass = ToneLib[name]
 	if (!NodeClass) throw new Error(`Unknown Tone node: ${name}`)
 

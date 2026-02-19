@@ -2,8 +2,6 @@ import { sendMidiNote, getMidiState } from './midi/midi'
 import { triggerChain } from './audio/engine'
 import type { BounceContext, GlobalBeatContext, TriggerContext } from './scene'
 
-const THROTTLE_AUDIO = 60
-
 export function triggerHandler(ctx: TriggerContext) {
 	// console.log('TRIGGER', ctx.railId, ctx.beat)
 
@@ -36,13 +34,10 @@ export function triggerHandler(ctx: TriggerContext) {
 			ctx.instrument.instrument.color ?? ctx.rail.railData.color ?? '#ffffff'
 	}
 
-	const now = Date.now()
-
-	if (chain?.generator && now - chain.lastTrigger > THROTTLE_AUDIO) {
+	if (chain?.generator) {
 		const note = ctx.marble.marble.config.note ?? ctx.instrument.instrument.midiNote ?? 60
 		const velocity = ctx.instrument.instrument.midiVelocity ?? 100
 		const length = ctx.instrument.instrument.midiLength ?? 200
-		chain.lastTrigger = now
 		triggerChain(chain, note, velocity, length)
 	}
 }
@@ -51,8 +46,6 @@ export function bouncerHandler(ctx: BounceContext) {
 	// Signal visual feedback on both marbles
 	ctx.marble1.marble.signal.intensity = 1
 	ctx.marble2.marble.signal.intensity = 1
-
-	const now = Date.now()
 
 	// Trigger marble1 audio chain
 	const chain1 = ctx.marble1.audio
@@ -64,9 +57,8 @@ export function bouncerHandler(ctx: BounceContext) {
 			ctx.rail.railData.color ??
 			'#ffffff'
 	}
-	if (chain1?.generator && now - chain1.lastTrigger > THROTTLE_AUDIO) {
+	if (chain1?.generator) {
 		const note = ctx.marble1.marble.config.note ?? 60
-		chain1.lastTrigger = now
 		triggerChain(chain1, note, 100, 200)
 	}
 
@@ -80,9 +72,8 @@ export function bouncerHandler(ctx: BounceContext) {
 			ctx.rail.railData.color ??
 			'#ffffff'
 	}
-	if (chain2?.generator && now - chain2.lastTrigger > THROTTLE_AUDIO) {
+	if (chain2?.generator) {
 		const note = ctx.marble2.marble.config.note ?? 60
-		chain2.lastTrigger = now
 		triggerChain(chain2, note, 100, 200)
 	}
 }

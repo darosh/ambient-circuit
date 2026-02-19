@@ -7,7 +7,7 @@ const c = () => colors[ci++ % colors.length]
 
 export const scene: SceneConfig = {
 	id: 'scene-collisions',
-	bpm: 90,
+	bpm: 160,
 	triggerHandler,
 	bounceHandler: (ctx) => {
 		bouncerHandler(ctx)
@@ -23,11 +23,64 @@ export const scene: SceneConfig = {
 	camera: [0, 11, 8],
 	target: [0, 1, 0],
 	audioView: {
-		marbleLinks: true
+		color: '#555599',
+		marbleLinks: true,
+		module: 0.25
 	},
 	audio: {
 		chains: {
-			synth: { generator: { tone: 'Synth' } }
+			synth: {
+				generator: {
+					tone: 'AMSynth',
+					poly: 16,
+					params: {
+						volume: -24,
+						'modulation.attack': 0.1,
+						'envelope.attack': 0.001,
+						'envelope.release': 2,
+						'modulation.release': 2,
+						'oscillator.type': 'square'
+					}
+				}
+			},
+			bass: {
+				generator: {
+					rnbo: 'feedback-synth',
+					params: {
+						cutoff: 2216.304347826087,
+						overblow: 1.13586956521739,
+						Q: 0.77010869565217,
+						harmonics: 7.84782608695652,
+						left_delay: 10,
+						fb: 0,
+						right_delay: 10
+					}
+				},
+				fx: [{ tone: 'Volume', params: { volume: -9 } }]
+			}
+		},
+		master: {
+			fx: [
+				{
+					rnbo: 'platereverb',
+					preset: 'Dark'
+				},
+				{
+					tone: 'Compressor',
+					params: { threshold: -8 }
+				},
+				{
+					tone: 'Volume',
+					params: { volume: 24 }
+				},
+				{
+					tone: 'Limiter'
+				},
+				{
+					tone: 'Volume',
+					params: { volume: -3 }
+				}
+			]
 		}
 	},
 	rails: [
@@ -61,7 +114,16 @@ export const scene: SceneConfig = {
 			color: c(),
 			marbles: [
 				// Bouncer marble - will affect non-bouncer on collision
-				{ start: 1, speed: 1.5, direction: 'forward', bouncer: true, type: 'poly', sides: 3 },
+				{
+					start: 1,
+					speed: 1.5,
+					direction: 'forward',
+					bouncer: true,
+					type: 'poly',
+					sides: 3,
+					audio: { id: 'synth' },
+					note: 60 - 12
+				},
 				// Non-bouncer marble - will still bounce when hit by bouncer
 				{ start: 4, speed: 0.5, direction: 'forward', bouncer: false, type: 'ball' }
 			]
@@ -71,14 +133,49 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'chaos',
-				nodes: [[-1.5, 0, 0], 'r r r orb ol l l l ilb ir']
+				nodes: [[-1.5, 0, 1], 'r r r orb ol l l l ilb ir']
 			},
 			color: c(),
 			marbles: [
-				{ start: 0, speed: 0.4, direction: 'forward', bouncer: true, type: 'coil', rounds: 2 },
-				{ start: 2, speed: 0.6, direction: 'forward', bouncer: true, type: 'poly', sides: 4 },
-				{ start: 4, speed: 0.5, direction: 'backward', bouncer: true, type: 'poly', sides: 12 },
-				{ start: 6, speed: 0.7, direction: 'backward', bouncer: true, type: 'ball' }
+				{
+					start: 0,
+					speed: 0.4,
+					direction: 'forward',
+					bouncer: true,
+					type: 'coil',
+					rounds: 2,
+					audio: { id: 'synth' },
+					note: 60 + 7
+				},
+				{
+					start: 2,
+					speed: 0.6,
+					direction: 'forward',
+					bouncer: true,
+					type: 'poly',
+					sides: 4,
+					audio: { id: 'synth' },
+					note: 60 + 12
+				},
+				{
+					start: 4,
+					speed: 0.5,
+					direction: 'backward',
+					bouncer: true,
+					type: 'poly',
+					sides: 12,
+					audio: { id: 'synth' },
+					note: 60 + 5
+				},
+				{
+					start: 6,
+					speed: 0.7,
+					direction: 'backward',
+					bouncer: true,
+					type: 'ball',
+					audio: { id: 'synth' },
+					note: 60
+				}
 			]
 		},
 
@@ -90,8 +187,25 @@ export const scene: SceneConfig = {
 			},
 			color: c(),
 			marbles: [
-				{ start: 0, speed: 0.8, mode: 'ping-pong', bouncer: true, type: 'ball' },
-				{ start: 2, speed: 0.6, mode: 'ping-pong', bouncer: true, type: 'poly', sides: 6 }
+				{
+					start: 0,
+					speed: 0.8,
+					mode: 'ping-pong',
+					bouncer: true,
+					type: 'ball',
+					audio: { id: 'bass' },
+					note: 60 - 24
+				},
+				{
+					start: 2,
+					speed: 0.6,
+					mode: 'ping-pong',
+					bouncer: true,
+					type: 'poly',
+					sides: 6,
+					audio: { id: 'synth' },
+					note: 60 + 7
+				}
 			]
 		}
 	]
