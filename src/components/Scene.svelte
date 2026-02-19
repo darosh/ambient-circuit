@@ -399,6 +399,11 @@
 		}
 
 		if (audioInitialized || noAudioScene) {
+			// prevent big jump on play start
+			if (!tempo.currentBeat && !tempo.beatProgress && (delta > 5)) {
+				delta = 1
+			}
+			
 			updateTempo(tempo, delta * 1000)
 		}
 
