@@ -20,6 +20,7 @@
 	import AudioView from './AudioView.svelte'
 	import MidiSignalView from './MidiSignalView.svelte'
 	import { getMarbleSignalLinks, getMidiSignalLinks } from '../lib/helpers/links'
+	import Stars from './Stars.svelte'
 
 	export type SelectedEntity = {
 		type: 'instrument' | 'marble'
@@ -320,6 +321,10 @@
 	<T.PlaneGeometry args={[1000, 1000]} />
 	<T.MeshBasicMaterial />
 </T.Mesh>
+
+{#if scene.stars}
+	<Stars />
+{/if}
 
 {#if wireframe}
 	<T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />

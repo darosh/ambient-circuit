@@ -8,7 +8,7 @@
 - [ ] rail deactivation -> inherited by instruments and marbler
 - [ ] active uniform reducing lightness in rail material
 - [ ] ball destruction and creation in handlers
-- [ ] add <Stars>
+- [x] add <Stars>
 - [ ] try <Float> on rails
 - [ ] replace the Perlin texture with procedural generation
 - [ ] make RNBO synth

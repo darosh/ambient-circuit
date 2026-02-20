@@ -60,8 +60,9 @@ export type SceneConfig = {
 	camera?: Vector3Tuple
 	target?: Vector3Tuple
 	polar?: boolean
+	stars?: boolean
 	renderPlayOnly?: boolean
-	rotatePlay?: boolean
+	rotatePlay?: boolean | number
 	pitch?: number
 	velocity?: number
 	duration?: number

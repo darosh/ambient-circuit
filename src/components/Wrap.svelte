@@ -66,7 +66,7 @@
 		enableDamping
 		target={activeScene.target ?? [0, 1, 0]}
 		autoRotate={activeScene.rotatePlay && tempo.isPlaying ? true : autoRotate}
-		autoRotateSpeed={0.5}
+		autoRotateSpeed={(activeScene.rotatePlay ?? 1) * 0.5}
 	/>
 </T.PerspectiveCamera>
 
