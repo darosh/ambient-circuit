@@ -65,7 +65,7 @@
 	let showNames = $state(false)
 	let wireframe = $state(false)
 	let showStats = $state(true)
-	let showHud = $state(true)
+	let showHud = $state(false)
 	let fxPost = $state(true)
 	let fxHud = $state(true)
 	let fxRails = $state(true)
