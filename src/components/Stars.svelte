@@ -46,7 +46,13 @@
 
 	const tslMaterial = new PointsNodeMaterial({
 		colorNode: vec3(1)
-			.mul(sin(positionWorld.x).add(1).mul(positionWorld.length().oneMinus()).oneMinus().div(untrack(() => radius / 3)))
+			.mul(
+				sin(positionWorld.x)
+					.add(1)
+					.mul(positionWorld.length().oneMinus())
+					.oneMinus()
+					.div(untrack(() => radius / 3))
+			)
 			.mul(
 				sin(time.add(positionWorld.length().mul(positionLocal.length())).mul(uniforms.speed))
 					.mul(0.5)

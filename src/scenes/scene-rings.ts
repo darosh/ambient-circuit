@@ -16,7 +16,7 @@ export const scene: SceneConfig = {
 	polar: true,
 	camera: [9.5, 4.5, 8.5],
 	target: [0, 0.75, 0],
-	rotatePlay: .125,
+	rotatePlay: 0.125,
 	stars: true,
 	audioView: {
 		offset: [0, -0.5, 0],
