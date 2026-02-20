@@ -263,8 +263,13 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/rail-data.ts      - Rail definitions with MIDI-enabled onTrigger handlers
 /src/lib/audio/types.ts    - Audio types (AudioChainConfig, AudioChain, AudioEngine)
 /src/lib/audio/engine.ts   - Audio engine lifecycle (init, build, trigger, dispose)
+/src/lib/audio/scene-audio.ts - buildSceneAudio(), hasAudioConfig() (extracted from Scene.svelte)
 /src/lib/audio/index.ts    - Re-exports from types + engine
 /src/lib/audio/patchers/   - RNBO exported patchers (JSON from Max)
+/src/lib/helpers/rail-geometry.ts - computeRailNamePosition, scalePoints, scaleSplits
+/src/lib/helpers/scene-init.ts   - createInstrumentSignals, assignInstrumentSignals, createMarbleConfigs
+/src/lib/helpers/keyboard.ts     - createKeydownHandler (config-driven key map)
+/src/lib/helpers/audio-params.ts - readChainParams, readBusParams, ParamInfo type
 /src/components/Bloom.svelte        - Post-processing bloom (scene only)
 /src/components/BloomHud.svelte     - Post-processing bloom + HUD compositing
 /src/components/HudScene.svelte     - HUD overlay content (ortho camera)

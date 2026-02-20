@@ -5,15 +5,18 @@
 	import RailView from './RailView.svelte'
 	import MarbleView from './MarbleView.svelte'
 	import { createTempoState, updateTempo, type TempoState } from '../lib/tempo'
-	import { createMarble } from '../lib/marble'
 	import { updateMarbles, fireGlobalBeatInit, fireGlobalBeatDestroy } from '../lib/marble-system'
-	import { resolveRail } from '../lib/rail-resolve'
 	import type { SceneConfig } from '../lib/scene'
 	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
-	import type { EaterMarbleData } from '../lib/rail-data'
 	import type { Instrument } from '../lib/instrument'
-	import { createAudioEngine, initAudio, buildChain, buildBuses, disposeScene } from '../lib/audio'
+	import { createAudioEngine, disposeScene } from '../lib/audio'
 	import type { AudioEngine, AudioChain } from '../lib/audio'
+	import { hasAudioConfig, buildSceneAudio } from '../lib/audio/scene-audio'
+	import {
+		createInstrumentSignals,
+		assignInstrumentSignals,
+		createMarbleConfigs
+	} from '../lib/helpers/scene-init'
 	import AudioView from './AudioView.svelte'
 	import MidiSignalView from './MidiSignalView.svelte'
 	import { getMarbleSignalLinks, getMidiSignalLinks } from '../lib/helpers/links'
@@ -77,54 +80,15 @@
 	const rails = untrack(() => scene.rails)
 
 	// Create reactive signal and runtime maps
-	const signalStates = $state<Array<{ intensity: number }>>(
-		(() => {
-			const signals: Array<{ intensity: number }> = []
-			for (const { instruments } of rails) {
-				instruments?.forEach(() => {
-					signals.push({ intensity: 0 })
-				})
-			}
-			return signals
-		})()
-	)
-
-	const midiSignalStates = $state<Array<{ intensity: number }>>(
-		(() => {
-			const signals: Array<{ intensity: number }> = []
-			for (const { instruments } of rails) {
-				instruments?.forEach(() => {
-					signals.push({ intensity: 0 })
-				})
-			}
-			return signals
-		})()
-	)
-
+	const _insSignals = createInstrumentSignals(rails)
+	const signalStates = $state(_insSignals.signals)
+	const midiSignalStates = $state(_insSignals.midiSignals)
 	/* eslint-disable @typescript-eslint/no-explicit-any */
-	const runtimeStates = $state<Array<Record<string, any>>>(
-		(() => {
-			const runtimes: Array<Record<string, any>> = []
-			/* eslint-enable @typescript-eslint/no-explicit-any */
-			for (const { instruments } of rails) {
-				instruments?.forEach(() => {
-					runtimes.push({})
-				})
-			}
-			return runtimes
-		})()
-	)
+	const runtimeStates = $state<Array<Record<string, any>>>(_insSignals.runtimes)
+	/* eslint-enable @typescript-eslint/no-explicit-any */
 
 	// Assign signals and runtimes to instruments (reactive references)
-	let signalIndex = 0
-	for (const { instruments } of rails) {
-		instruments?.forEach((ins) => {
-			ins.signal = signalStates[signalIndex]
-			ins.midiSignal = midiSignalStates[signalIndex]
-			ins.runtime = runtimeStates[signalIndex]
-			signalIndex++
-		})
-	}
+	assignInstrumentSignals(rails, signalStates, midiSignalStates, runtimeStates)
 
 	// Create reactive runtime states for rails
 	const railRuntimeStates = $state<Array<{ color?: string }>>(rails.map(() => ({})))
@@ -134,46 +98,9 @@
 		rails[i].runtime = railRuntimeStates[i]
 	}
 
-	const _init = (() => {
-		const ms = []
-		const indices: number[] = []
-		for (let i = 0; i < rails.length; i++) {
-			const { rail, marbles: mds } = rails[i]
-			const resolvedRail = resolveRail(rail)
-
-			const configs = mds && mds.length > 0 ? mds : mds === false ? [] : [{}]
-
-			for (const m of configs) {
-				ms.push(
-					createMarble(
-						{
-							resolvedRail,
-							startBeat: m.start ?? 0,
-							direction: m.direction ?? 'forward',
-							sequenceMode: m.mode ?? 'looping',
-							easing: m.easing ?? (easing || 'linear'),
-							color: m.color,
-							speed: m.speed ?? 1,
-							note: m.note,
-							velocity: m.velocity,
-							duration: m.duration,
-							type: m.type,
-							angle: (<EaterMarbleData>m)?.angle ?? 60,
-							bouncer: m.bouncer ?? false,
-							snake: m.snake ?? false,
-							...('sides' in m ? { sides: m.sides } : {}),
-							...(m.type === 'coil' ? { rounds: m.rounds } : {})
-						},
-						ms.length
-					)
-				)
-				indices.push(i)
-			}
-		}
-		return { ms, indices }
-	})()
-	let marbles = $state(_init.ms)
-	const marbleRailIndices = _init.indices
+	const _init = createMarbleConfigs(rails, easing || 'linear')
+	let marbles = $state(_init.marbles)
+	const marbleRailIndices = _init.railIndices
 
 	// Pre-allocated, updated in-place on rail switch (no per-frame allocation)
 	const liveRailIndices: number[] = marbleRailIndices.slice()
@@ -195,7 +122,7 @@
 	function onSelectInstrument(railIdx: number, idx: number) {
 		selectedEntity = { type: 'instrument', railIdx, idx }
 		// Init audio on first interaction (not just play)
-		if (!audioInitGuard && hasAudioConfig()) {
+		if (!audioInitGuard && hasAudioConfig(scene, rails)) {
 			initSceneAudio().then(() => {
 				selectedAudioChain = getSelectedAudioChain()
 			})
@@ -206,7 +133,7 @@
 
 	function onSelectMarble(railIdx: number, idx: number) {
 		selectedEntity = { type: 'marble', railIdx, idx }
-		if (!audioInitGuard && hasAudioConfig()) {
+		if (!audioInitGuard && hasAudioConfig(scene, rails)) {
 			initSceneAudio().then(() => {
 				selectedAudioChain = getSelectedAudioChain()
 			})
@@ -235,91 +162,21 @@
 	const audioEngine: AudioEngine = createAudioEngine()
 	let audioInitGuard = false
 	let audioInitialized = $state(false)
-	let noAudioScene = $state(!hasAudioConfig())
+	let noAudioScene = $state(!hasAudioConfig(scene, rails))
 
 	async function initSceneAudio() {
 		if (audioInitGuard) return
 		audioInitGuard = true
 
-		await initAudio(audioEngine)
-
-		// Build buses and master chain first (chains route to them)
-		if (scene.audio?.buses || scene.audio?.master) {
-			await buildBuses(
-				audioEngine,
-				{
-					buses: scene.audio.buses,
-					master: scene.audio.master
-				},
-				scene?.audioView?.defaultAnalyser
-			)
-		}
-
-		// Build shared/named chains from scene config
-		if (scene.audio?.chains) {
-			for (const [id, config] of Object.entries(scene.audio.chains)) {
-				await buildChain(audioEngine, { ...config, id }, scene?.audioView?.defaultAnalyser)
-			}
-		}
-
-		// Build per-instrument chains
-		for (const ie of sceneCtx.instruments) {
-			if (ie.instrument.audio) {
-				// Use shared chain if referenced by id, otherwise build new
-				if (ie.instrument.audio.id && audioEngine.chains.has(ie.instrument.audio.id)) {
-					ie.audio = audioEngine.chains.get(ie.instrument.audio.id)
-				} else {
-					ie.audio = await buildChain(
-						audioEngine,
-						ie.instrument.audio,
-						scene?.audioView?.defaultAnalyser
-					)
-				}
-			}
-		}
-
-		// Build per-marble chains
-		// (marble audio from rail-data config — stored on MarbleData, need to match by index)
-		let mIdx = 0
-		for (const rd of rails) {
-			const mds =
-				rd.marbles && rd.marbles.length > 0 ? rd.marbles : rd.marbles === false ? [] : [{}]
-			for (const md of mds) {
-				if ('audio' in md && md.audio) {
-					const me = sceneCtx.marbles[mIdx]
-					if (me) {
-						if (md.audio.id && audioEngine.chains.has(md.audio.id)) {
-							me.audio = audioEngine.chains.get(md.audio.id)
-						} else {
-							me.audio = await buildChain(audioEngine, md.audio, scene?.audioView?.defaultAnalyser)
-						}
-					}
-				}
-				mIdx++
-			}
-		}
-
-		allAudioChains = audioEngine.instanceChains
+		allAudioChains = await buildSceneAudio(
+			audioEngine,
+			scene,
+			rails,
+			sceneCtx,
+			scene?.audioView?.defaultAnalyser
+		)
 		audioEngineRef = audioEngine
 		audioInitialized = true
-	}
-
-	function hasAudioConfig(): boolean {
-		if (scene.audio?.chains) return true
-		for (const rd of rails) {
-			if (rd.instruments) {
-				for (const ins of rd.instruments) {
-					if (ins.audio) return true
-				}
-			}
-			const mds = rd.marbles
-			if (mds && mds.length > 0) {
-				for (const md of mds) {
-					if ('audio' in md && md.audio) return true
-				}
-			}
-		}
-		return false
 	}
 
 	// const AUDIO_NODE_SPACING = 0.5,
@@ -408,7 +265,7 @@
 		}
 
 		// Lazy audio init on first play
-		if (tempo.isPlaying && !audioInitGuard && hasAudioConfig()) {
+		if (tempo.isPlaying && !audioInitGuard && hasAudioConfig(scene, rails)) {
 			initSceneAudio()
 		}
 

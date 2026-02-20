@@ -30,7 +30,6 @@
 		cfgName,
 		connectSharedAnalyzer,
 		genName,
-		listBusFxParams,
 		setBusFxParam,
 		soloChain
 	} from './lib/audio/engine'
@@ -38,6 +37,8 @@
 	import { clearMarbleGeometryCache } from './lib/video/marble-geometry'
 	import { clearInstrumentGeometryCache } from './lib/video/instrument-geometry'
 	import Wrap from './components/Wrap.svelte'
+	import { createKeydownHandler } from './lib/helpers/keyboard'
+	import { readChainParams, readBusParams, type ParamInfo } from './lib/helpers/audio-params'
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
@@ -150,19 +151,9 @@
 			busFxParams = {}
 			return
 		}
-		const fi: Record<string, ParamInfo[]> = {}
-		const fp: Record<string, Record<string, number>> = {}
-		for (let i = 0; i < bus.fx.length; i++) {
-			const infos = listBusFxParams(bus, i)
-			if (infos.length > 0) {
-				fi[i.toString()] = infos
-				const p: Record<string, number> = {}
-				for (const f of infos) p[f.path] = f.value
-				fp[i.toString()] = p
-			}
-		}
-		busFxParamInfos = fi
-		busFxParams = fp
+		const result = readBusParams(bus)
+		busFxParamInfos = result.busFxParamInfos
+		busFxParams = result.busFxParams
 	})
 
 	function handleBusFxParam(fxIdx: number, path: string, value: number) {
@@ -173,7 +164,6 @@
 	}
 
 	// Reactive param values for selected chain
-	type ParamInfo = { path: string; value: number; min: number; max: number }
 	let genParamInfos = $state<ParamInfo[]>([])
 	let genParams = $state<Record<string, number>>({})
 	let fxParamInfos = $state<Record<string, ParamInfo[]>>({})
@@ -393,26 +383,11 @@
 			fxParams = {}
 			return
 		}
-		const gInfos = chain.listParams()
-		genParamInfos = gInfos
-		const gp: Record<string, number> = {}
-		for (const p of gInfos) gp[p.path] = p.value
-		genParams = gp
-
-		const fi: Record<string, ParamInfo[]> = {}
-		const fp: Record<string, Record<string, number>> = {}
-		const fxList = chain.config.fx ?? []
-		for (let i = 0; i < fxList.length; i++) {
-			const fInfos = chain.listFxParams(i)
-			if (fInfos.length > 0) {
-				fi[i.toString()] = fInfos
-				const p: Record<string, number> = {}
-				for (const f of fInfos) p[f.path] = f.value
-				fp[i.toString()] = p
-			}
-		}
-		fxParamInfos = fi
-		fxParams = fp
+		const result = readChainParams(chain)
+		genParamInfos = result.genParamInfos
+		genParams = result.genParams
+		fxParamInfos = result.fxParamInfos
+		fxParams = result.fxParams
 	})
 
 	function copyParams(params: Record<string, number>, presetInfo?: NodePresetInfo) {
@@ -422,57 +397,35 @@
 		navigator.clipboard.writeText(JSON.stringify(out))
 	}
 
-	function handleKeydown(e: KeyboardEvent) {
-		if (e.code === 'Space' && e.target === document.body) {
-			e.preventDefault()
-			tempo.isPlaying = !tempo.isPlaying
+	const handleKeydown = createKeydownHandler([
+		{ code: 'Space', action: () => (tempo.isPlaying = !tempo.isPlaying) },
+		{ code: 'KeyW', action: () => (wireframe = !wireframe) },
+		{ code: 'KeyR', action: () => (autoRotate = !autoRotate) },
+		{
+			code: 'KeyE',
+			action: () =>
+				(easing =
+					easingNames[(easingNames.findIndex((x) => x === easing) + 1) % easingNames.length])
+		},
+		{ code: 'KeyB', action: () => (showBeats = !showBeats) },
+		{ code: 'KeyN', action: () => (showNames = !showNames) },
+		{ code: 'KeyG', action: () => (showGrid = !showGrid) },
+		{ code: 'KeyM', action: () => (midiEnabled = !midiEnabled) },
+		{ code: 'KeyD', action: () => (debugEnabled = !debugEnabled) },
+		{ code: 'KeyF', action: () => (showStats = !showStats) },
+		{
+			code: 'KeyS',
+			action: () =>
+				(sceneId = scenes[(scenes.findIndex((d) => d.id === sceneId) + 1) % scenes.length].id)
+		},
+		{
+			code: 'KeyA',
+			action: () =>
+				(sceneId =
+					scenes[(scenes.findIndex((d) => d.id === sceneId) - 1 + scenes.length) % scenes.length]
+						.id)
 		}
-
-		if (e.code === 'KeyW' && e.target === document.body) {
-			wireframe = !wireframe
-		}
-
-		if (e.code === 'KeyR' && e.target === document.body) {
-			autoRotate = !autoRotate
-		}
-
-		if (e.code === 'KeyE' && e.target === document.body) {
-			easing = easingNames[(easingNames.findIndex((x) => x === easing) + 1) % easingNames.length]
-		}
-
-		if (e.code === 'KeyB' && e.target === document.body) {
-			showBeats = !showBeats
-		}
-
-		if (e.code === 'KeyN' && e.target === document.body) {
-			showNames = !showNames
-		}
-
-		if (e.code === 'KeyG' && e.target === document.body) {
-			showGrid = !showGrid
-		}
-
-		if (e.code === 'KeyM' && e.target === document.body) {
-			midiEnabled = !midiEnabled
-		}
-
-		if (e.code === 'KeyD' && e.target === document.body) {
-			debugEnabled = !debugEnabled
-		}
-
-		if (e.code === 'KeyF' && e.target === document.body) {
-			showStats = !showStats
-		}
-
-		if (e.code === 'KeyS' && e.target === document.body) {
-			sceneId = scenes[(scenes.findIndex((d) => d.id === sceneId) + 1) % scenes.length].id
-		}
-
-		if (e.code === 'KeyA' && e.target === document.body) {
-			sceneId =
-				scenes[(scenes.findIndex((d) => d.id === sceneId) - 1 + scenes.length) % scenes.length].id
-		}
-	}
+	])
 
 	function getShortName(path: string) {
 		const parts = path.split('.')

@@ -26,6 +26,7 @@
 	import { onDestroy, untrack } from 'svelte'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
 	import { makeRailMaterial } from '../lib/config'
+	import { computeRailNamePosition, scalePoints, scaleSplits } from '../lib/helpers/rail-geometry'
 	import type { Material } from 'three/webgpu'
 
 	type Props = {
@@ -135,7 +136,7 @@
 		}
 
 		return {
-			position: position.toArray(),
+			position: position.toArray() as [number, number, number],
 			rotation: [rotation.x, rotation.y, rotation.z] as [number, number, number],
 			scale,
 			quaternion
@@ -143,33 +144,13 @@
 	})
 
 	// Apply scale to rail points for geometry (not instruments)
-	const displayPoints = $derived.by(() => {
-		if (!renderTransform?.scale) return resolved.points
+	const displayPoints = $derived(
+		renderTransform?.scale ? scalePoints(resolved.points, renderTransform.scale) : resolved.points
+	)
 
-		const { x, y, z } = renderTransform.scale
-
-		return resolved.points.map((pt) => ({
-			...pt,
-			p: [pt.p[0] * x, pt.p[1] * y, pt.p[2] * z] as ResolvedPoint['p']
-		}))
-	})
-
-	const displaySplits = $derived.by(() => {
-		if (!renderTransform?.scale) return resolved.splits
-
-		const { x, y, z } = renderTransform.scale
-		return resolved.splits.map((split) => ({
-			...split,
-			p: [split.p[0] * x, split.p[1] * y, split.p[2] * z] as typeof split.p,
-			branches: split.branches.map((branch) => ({
-				...branch,
-				points: branch.points.map((pt) => ({
-					...pt,
-					p: [pt.p[0] * x, pt.p[1] * y, pt.p[2] * z] as ResolvedPoint['p']
-				}))
-			}))
-		}))
-	})
+	const displaySplits = $derived(
+		renderTransform?.scale ? scaleSplits(resolved.splits, renderTransform.scale) : resolved.splits
+	)
 
 	// Create display rail with scaled points for instrument positioning
 	const displayResolved = $derived.by(() => {
@@ -258,31 +239,17 @@
 
 	const allMeshes = $derived([...mainMeshes, ...branchMeshes])
 
-	const railNamePosition = $derived.by(() => {
-		if (!showNames || displayPoints.length === 0) return null
-		let minX = Infinity,
-			maxX = -Infinity
-		let maxY = -Infinity
-		let minZ = Infinity
-		for (const pt of displayPoints) {
-			if (pt.p[0] < minX) minX = pt.p[0]
-			if (pt.p[0] > maxX) maxX = pt.p[0]
-			if (pt.p[1] > maxY) maxY = pt.p[1]
-			if (pt.p[2] < minZ) minZ = pt.p[2]
-		}
-		for (const split of displaySplits) {
-			for (const branch of split.branches) {
-				for (const pt of branch.points) {
-					if (pt.p[0] < minX) minX = pt.p[0]
-					if (pt.p[0] > maxX) maxX = pt.p[0]
-					if (pt.p[1] > maxY) maxY = pt.p[1]
-					if (pt.p[2] < minZ) minZ = pt.p[2]
-				}
-			}
-		}
-		const midX = (minX + maxX) / 2
-		return new Vector3(midX, maxY + 0.4, minZ - 0.3)
-	})
+	// Unified group transform (identity when no renderTransform)
+	const _identityQuat = new Quaternion()
+	const _zeroTuple: [number, number, number] = [0, 0, 0]
+	const groupPosition = $derived(renderTransform?.position ?? _zeroTuple)
+	const groupRotation = $derived(renderTransform?.rotation ?? _zeroTuple)
+	const groupQuaternion = $derived(renderTransform?.quaternion ?? _identityQuat)
+	const displayRail = $derived(renderTransform ? displayResolved : resolved)
+
+	const railNamePosition = $derived(
+		showNames ? computeRailNamePosition(displayPoints, displaySplits) : null
+	)
 
 	const { camera } = useThrelte()
 	let nameGroup = $state<Group | undefined>()
@@ -398,91 +365,52 @@
 	})
 </script>
 
-{#if renderTransform}
-	{#if showBeats}
-		{#each visibleBeats as bp, bpIndex (bpIndex)}
-			{@const isDownbeat = bp.beat === resolved.beatOffset}
-			<T.Group
-				bind:ref={beatGroups[bpIndex]}
-				position={bp.position
-					.clone()
-					.applyQuaternion(renderTransform.quaternion)
-					.add(new Vector3(0.2, isDownbeat ? -0.2 : 0.2, 0))
-					.toArray()}
-			>
-				<Align>
-					<LineText
-						fx={fxText}
-						{id}
-						text={bp.beat.toString()}
-						{color}
-						spacing={1}
-						size={BEAT_TEXT_SIZE}
-						width={BEAT_TEXT_WIDTH}
-					/>
-				</Align>
-			</T.Group>
-		{/each}
-	{/if}
-
-	{#if showNameDeferred && railNamePosition}
+{#if showBeats}
+	{#each visibleBeats as bp, bpIndex (bpIndex)}
+		{@const isDownbeat = bp.beat === resolved.beatOffset}
 		<T.Group
-			bind:ref={nameGroup}
-			position={railNamePosition.clone().applyQuaternion(renderTransform.quaternion).toArray()}
+			bind:ref={beatGroups[bpIndex]}
+			position={bp.position
+				.clone()
+				.applyQuaternion(groupQuaternion)
+				.add(new Vector3(0.2, isDownbeat ? -0.2 : 0.2, 0))
+				.toArray()}
 		>
 			<Align>
 				<LineText
 					fx={fxText}
 					{id}
-					text={rail.id.toUpperCase()}
+					text={bp.beat.toString()}
 					{color}
-					size={RAIL_TEXT_SIZE}
-					width={RAIL_TEXT_WIDTH}
-					spacing={2}
+					spacing={1}
+					size={BEAT_TEXT_SIZE}
+					width={BEAT_TEXT_WIDTH}
 				/>
 			</Align>
 		</T.Group>
-	{/if}
+	{/each}
+{/if}
 
-	<T.Group position={renderTransform.position} rotation={renderTransform.rotation}>
-		{#each allMeshes as { geometry }, idx (idx)}
-			<T.Mesh {geometry} material={<Material>(fxRails ? fxMaterialObj.mat : plainMaterial)} />
-		{/each}
-
-		{#if showPoints}
-			{#each displayPoints as pt, ptIndex (ptIndex)}
-				<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
-					<T.SphereGeometry args={[0.04, 8, 8]} />
-					<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
-				</T.Mesh>
-			{/each}
-			{#each displaySplits as split, splitIndex (splitIndex)}
-				{#each split.branches as branch, branchIndex (branchIndex)}
-					{#each branch.points as pt, ptIndex (ptIndex)}
-						<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
-							<T.SphereGeometry args={[0.04, 8, 8]} />
-							<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
-						</T.Mesh>
-					{/each}
-				{/each}
-			{/each}
-		{/if}
-
-		{#each visibleInstruments as instrument, idx (idx)}
-			<InstrumentView
+{#if showNameDeferred && railNamePosition}
+	<T.Group
+		bind:ref={nameGroup}
+		position={railNamePosition.clone().applyQuaternion(groupQuaternion).toArray()}
+	>
+		<Align>
+			<LineText
+				fx={fxText}
+				{id}
+				text={rail.id.toUpperCase()}
 				{color}
-				size={0.5}
-				{instrument}
-				rail={displayResolved}
-				bind:signal={instrument.signal}
-				{fxInstruments}
-				{wireframe}
-				selected={selectedInstrumentIdx === idx}
-				onselect={() => onSelectInstrument?.(railIdx, idx)}
+				size={RAIL_TEXT_SIZE}
+				width={RAIL_TEXT_WIDTH}
+				spacing={2}
 			/>
-		{/each}
+		</Align>
 	</T.Group>
-{:else}
+{/if}
+
+<T.Group position={groupPosition} rotation={groupRotation}>
 	{#each allMeshes as { geometry }, idx (idx)}
 		<T.Mesh {geometry} material={<Material>(fxRails ? fxMaterialObj.mat : plainMaterial)} />
 	{/each}
@@ -506,53 +434,12 @@
 		{/each}
 	{/if}
 
-	{#if showBeats}
-		{#each visibleBeats as bp, bpIndex (bpIndex)}
-			{@const isDownbeat = bp.beat === resolved.beatOffset}
-			<T.Group
-				bind:ref={beatGroups[bpIndex]}
-				position={[bp.position.x + 0.2, bp.position.y + (isDownbeat ? -0.2 : 0.2), bp.position.z]}
-			>
-				<Align>
-					<LineText
-						fx={fxText}
-						{id}
-						text={bp.beat.toString()}
-						{color}
-						size={BEAT_TEXT_SIZE}
-						spacing={1}
-						width={BEAT_TEXT_WIDTH}
-					/>
-				</Align>
-			</T.Group>
-		{/each}
-	{/if}
-
-	{#if showNameDeferred && railNamePosition}
-		<T.Group
-			bind:ref={nameGroup}
-			position={[railNamePosition.x, railNamePosition.y, railNamePosition.z]}
-		>
-			<Align>
-				<LineText
-					fx={fxText}
-					{id}
-					text={rail.id.toUpperCase()}
-					{color}
-					size={RAIL_TEXT_SIZE}
-					width={RAIL_TEXT_WIDTH}
-					spacing={2}
-				/>
-			</Align>
-		</T.Group>
-	{/if}
-
 	{#each visibleInstruments as instrument, idx (idx)}
 		<InstrumentView
 			{color}
 			size={0.5}
 			{instrument}
-			rail={resolved}
+			rail={displayRail}
 			bind:signal={instrument.signal}
 			{fxInstruments}
 			{wireframe}
@@ -560,4 +447,4 @@
 			onselect={() => onSelectInstrument?.(railIdx, idx)}
 		/>
 	{/each}
-{/if}
+</T.Group>

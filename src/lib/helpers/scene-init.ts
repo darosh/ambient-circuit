@@ -1,0 +1,87 @@
+import type { RailData, EaterMarbleData } from '../rail-data'
+import type { Marble } from '../marble'
+import { createMarble } from '../marble'
+import { resolveRail } from '../rail-resolve'
+
+export function createInstrumentSignals(rails: RailData[]): {
+	signals: Array<{ intensity: number }>
+	midiSignals: Array<{ intensity: number }>
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	runtimes: Array<Record<string, any>>
+	/* eslint-enable @typescript-eslint/no-explicit-any */
+} {
+	const signals: Array<{ intensity: number }> = []
+	const midiSignals: Array<{ intensity: number }> = []
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	const runtimes: Array<Record<string, any>> = []
+	/* eslint-enable @typescript-eslint/no-explicit-any */
+	for (const { instruments } of rails) {
+		instruments?.forEach(() => {
+			signals.push({ intensity: 0 })
+			midiSignals.push({ intensity: 0 })
+			runtimes.push({})
+		})
+	}
+	return { signals, midiSignals, runtimes }
+}
+
+export function assignInstrumentSignals(
+	rails: RailData[],
+	signals: Array<{ intensity: number }>,
+	midiSignals: Array<{ intensity: number }>,
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	runtimes: Array<Record<string, any>>
+	/* eslint-enable @typescript-eslint/no-explicit-any */
+): void {
+	let idx = 0
+	for (const { instruments } of rails) {
+		instruments?.forEach((ins) => {
+			ins.signal = signals[idx]
+			ins.midiSignal = midiSignals[idx]
+			ins.runtime = runtimes[idx]
+			idx++
+		})
+	}
+}
+
+export function createMarbleConfigs(
+	rails: RailData[],
+	easing: string
+): { marbles: Marble[]; railIndices: number[] } {
+	const ms: Marble[] = []
+	const indices: number[] = []
+	for (let i = 0; i < rails.length; i++) {
+		const { rail, marbles: mds } = rails[i]
+		const resolvedRail = resolveRail(rail)
+
+		const configs = mds && mds.length > 0 ? mds : mds === false ? [] : [{}]
+
+		for (const m of configs) {
+			ms.push(
+				createMarble(
+					{
+						resolvedRail,
+						startBeat: m.start ?? 0,
+						direction: m.direction ?? 'forward',
+						sequenceMode: m.mode ?? 'looping',
+						easing: m.easing ?? (easing || 'linear'),
+						color: m.color,
+						speed: m.speed ?? 1,
+						note: m.note,
+						velocity: m.velocity,
+						duration: m.duration,
+						type: m.type,
+						angle: (<EaterMarbleData>m)?.angle ?? 60,
+						bouncer: m.bouncer ?? false,
+						snake: m.snake ?? false,
+						...('sides' in m ? { sides: m.sides } : {}),
+						...(m.type === 'coil' ? { rounds: m.rounds } : {})
+					},
+					ms.length
+				)
+			)
+			indices.push(i)
+		}
+	}
+	return { marbles: ms, railIndices: indices }
+}
