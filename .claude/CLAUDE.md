@@ -198,7 +198,8 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Solo selected chain (Tone.Solo node per chain, auto-coordinates muting)
   - [x] Show analyzer visualization of selected instrument
   - [x] Chain/bus selector dropdown in Tweakpane (select chain/bus/master, show params)
-  - [ ] Potential UI: threlte `<HUD>`, `<HTML>`, `<View>` (View for selected instrument detail)
+  - [x] HUD overlay via BloomHud component (separate scene composited in PostProcessing pipeline)
+  - [ ] Selection with bounding-box corners for selected instrument detail
 - [ ] Audio visualization
   - [x] AudioView: 3D chain topology (generators=cylinders, fx=cones, tubes between nodes)
   - [x] AnalyserView: per-frame FFT/waveform/meter bars with color gradient
@@ -264,6 +265,9 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/audio/engine.ts   - Audio engine lifecycle (init, build, trigger, dispose)
 /src/lib/audio/index.ts    - Re-exports from types + engine
 /src/lib/audio/patchers/   - RNBO exported patchers (JSON from Max)
+/src/components/Bloom.svelte        - Post-processing bloom (scene only)
+/src/components/BloomHud.svelte     - Post-processing bloom + HUD compositing
+/src/components/HudScene.svelte     - HUD overlay content (ortho camera)
 /src/components/AudioView.svelte - 3D audio chain topology visualization
 /src/components/AnalyserView.svelte - per-frame VU meter (FFT/waveform/meter)
 /src/components/Scene.svelte    - 3D scene with rails, marbles, tempo integration
@@ -380,6 +384,38 @@ globalBeatHandler(ctx) {
 - Use `TubeGeometry` along CatmullRomCurve3 for thick lines
 - Standard `MeshStandardMaterial` via `<T>` automatically uses NodeMaterial version
 - Provides proper lighting/shadows support
+
+### HUD & Post-Processing
+
+**Architecture:**
+
+- WebGPU `PostProcessing` renders via a single unified pipeline — cannot mix `postProcessing.render()` with `renderer.render()` calls
+- Two components: `Bloom.svelte` (scene-only bloom) and `BloomHud.svelte` (bloom + HUD compositing)
+- HUD uses `createSceneContext()` + `createCameraContext()` for a separate scene rendered as a second `pass()` node
+- HUD composited via TSL `mix()` with RGB max mask (non-black HUD pixels overlay the scene)
+
+**Runtime updates:**
+
+- Bloom strength/radius/threshold: update `bloomNode.strength.value` etc. (internal uniforms, no recompilation)
+- Toggling enabled/hudBloom or changing hudFx: rebuild `postProcessing.outputNode` + set `postProcessing.needsUpdate = true` to trigger shader recompilation
+
+**Props (BloomHud):**
+
+- `enabled` — toggle bloom effect (strength=0 when false)
+- `hudBloom` — composite HUD before bloom (HUD elements glow) vs after (HUD stays crisp)
+- `hudFx` — `(color: TslNode) => TslNode` transform for HUD effects (e.g. `gaussianBlur(color, null, 4)`)
+- `children` — snippet rendered into HUD scene
+
+**Caveat:** RGB mask means pure black HUD elements are transparent. Use non-black colors.
+
+**Available TSL effects** for `hudFx`: `gaussianBlur`, `dotScreen`, `rgbShift`, `film`, `sobelOperator`, `chromaticAberration`, `pixelation`, `fxaa` — all from `three/addons/tsl/display/`
+
+**Files:**
+
+- `/src/components/Bloom.svelte` — scene-only bloom (no HUD)
+- `/src/components/BloomHud.svelte` — bloom + HUD compositing pipeline
+- `/src/components/HudScene.svelte` — HUD content (OrthographicCamera + overlay elements)
+- `/src/components/HUD.svelte` — original threlte HUD copy (reference, not used with bloom)
 
 ### MIDI System
 

@@ -4,7 +4,6 @@
 	import { interactivity } from '@threlte/extras'
 	import RailView from './RailView.svelte'
 	import MarbleView from './MarbleView.svelte'
-	import Bloom from './Bloom.svelte'
 	import { createTempoState, updateTempo, type TempoState } from '../lib/tempo'
 	import { createMarble } from '../lib/marble'
 	import { updateMarbles, fireGlobalBeatInit, fireGlobalBeatDestroy } from '../lib/marble-system'
@@ -35,7 +34,6 @@
 		showNames = false,
 		showAudio = false,
 		wireframe = false,
-		fxPost = true,
 		fxRails = true,
 		fxMarbles = true,
 		fxInstruments = true,
@@ -452,10 +450,6 @@
 	})
 </script>
 
-{#if fxPost}
-	<Bloom strength={0.5} radius={0.2} threshold={0.5} />
-{/if}
-
 <!-- Invisible plane for deselect on miss -->
 <T.Mesh
 	position={[0, 0, 0]}
@@ -470,8 +464,10 @@
 	<T.MeshBasicMaterial />
 </T.Mesh>
 
-<!--<T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />-->
-<!--<T.AmbientLight intensity={0.4} />-->
+{#if wireframe}
+	<T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />
+	<T.AmbientLight intensity={0.4} />
+{/if}
 
 {#if showGrid}
 	{#if !scene.polar}

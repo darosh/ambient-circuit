@@ -1,7 +1,6 @@
 <script lang="ts">
 	// import { Inspector } from 'three/addons/inspector/Inspector.js'
-	import { Canvas, T } from '@threlte/core'
-	import { OrbitControls } from '@threlte/extras'
+	import { Canvas } from '@threlte/core'
 	import {
 		ThemeUtils,
 		Pane,
@@ -15,7 +14,6 @@
 		WaveformMonitor
 	} from 'svelte-tweakpane-ui'
 	import type { Theme } from 'svelte-tweakpane-ui'
-	import Scene from './components/Scene.svelte'
 	import { createTempoState } from './lib/tempo'
 	import { easingNames } from './lib/easing'
 	import { scenes } from './scenes'
@@ -39,6 +37,7 @@
 	import { WebGPURenderer } from 'three/webgpu'
 	import { clearMarbleGeometryCache } from './lib/video/marble-geometry'
 	import { clearInstrumentGeometryCache } from './lib/video/instrument-geometry'
+	import Wrap from './components/Wrap.svelte'
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
@@ -65,7 +64,9 @@
 	let showNames = $state(false)
 	let wireframe = $state(false)
 	let showStats = $state(true)
+	let showHud = $state(true)
 	let fxPost = $state(true)
+	let fxHud = $state(true)
 	let fxRails = $state(true)
 	let fxMarbles = $state(true)
 	let fxInstruments = $state(true)
@@ -611,6 +612,7 @@
 		<Folder title="FX" expanded={false}>
 			<List label="Easing" bind:value={easing} options={easingNames} />
 			<Checkbox label="Post" bind:value={fxPost} />
+			<Checkbox label="Hud" bind:value={fxHud} />
 			<Checkbox label="Rails" bind:value={fxRails} />
 			<Checkbox label="Marbles" bind:value={fxMarbles} />
 			<Checkbox label="Instruments" bind:value={fxInstruments} />
@@ -618,6 +620,7 @@
 			<Checkbox label="Auto Rotate" bind:value={autoRotate} />
 		</Folder>
 		<Folder title="Debug" expanded={false}>
+			<Checkbox label="HUD" bind:value={showHud} />
 			<Checkbox label="Stats" bind:value={showStats} />
 			<Checkbox label="Grid" bind:value={showGrid} />
 			<Checkbox label="Points" bind:value={showPoints} />
@@ -679,39 +682,33 @@
 		return renderer
 	}}
 >
-	{#key sceneId}
-		<Scene
-			scene={activeScene}
-			{showGrid}
-			{showPoints}
-			{showBeats}
-			{showNames}
-			{wireframe}
-			{showStats}
-			fxPost={fxPost && !wireframe}
-			fxRails={fxRails && !wireframe}
-			fxMarbles={fxMarbles && !wireframe}
-			fxText={fxText && !wireframe}
-			fxInstruments={fxInstruments && !wireframe}
-			{showAudio}
-			bind:tempo
-			bind:easing
-			bind:railVisibility
-			bind:fps
-			bind:selectedEntity
-			bind:selectedAudioChain
-			bind:allAudioChains
-			bind:audioEngineRef
-		/>
-	{/key}
-	<T.PerspectiveCamera makeDefault position={activeScene.camera ?? [5, 7, 9]} fov={30}>
-		<OrbitControls
-			enableDamping
-			target={activeScene.target ?? [0, 1, 0]}
-			autoRotate={activeScene.rotatePlay && tempo.isPlaying ? true : autoRotate}
-			autoRotateSpeed={0.5}
-		/>
-	</T.PerspectiveCamera>
+	<Wrap
+		{sceneId}
+		{activeScene}
+		{showGrid}
+		{showPoints}
+		{showBeats}
+		{showNames}
+		{wireframe}
+		{showStats}
+		{showHud}
+		fxPost={fxPost && !wireframe}
+		fxRails={fxRails && !wireframe}
+		fxMarbles={fxMarbles && !wireframe}
+		fxText={fxText && !wireframe}
+		fxInstruments={fxInstruments && !wireframe}
+		{fxHud}
+		{showAudio}
+		bind:tempo
+		{easing}
+		bind:railVisibility
+		bind:fps
+		{selectedEntity}
+		{selectedAudioChain}
+		bind:allAudioChains
+		{audioEngineRef}
+		{autoRotate}
+	></Wrap>
 </Canvas>
 
 {#if showStats}
