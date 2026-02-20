@@ -162,7 +162,7 @@
 	const audioEngine: AudioEngine = createAudioEngine()
 	let audioInitGuard = false
 	let audioInitialized = $state(false)
-	let noAudioScene = $state(!hasAudioConfig(scene, rails))
+	let noAudioScene = $derived(!hasAudioConfig(scene, rails))
 
 	async function initSceneAudio() {
 		if (audioInitGuard) return
