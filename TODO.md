@@ -14,11 +14,11 @@
 - [ ] make RNBO synth
 - [ ] make RNBO karplus-strong synth https://rnbo.cycling74.com/explore/synth-building-blocks-intro
 - [ ] use rails for camera path? or scene path? and keep the camera for user only
-- [ ] remove overlapping beats from structure scene
+- [x] ~~remove overlapping beats from structure scene~~
 - [x] /data to /scene
 - [x] impact material for audio view
 - [x] test moving rails
-- [ ] test marble as instrument
+- [x] test marble as instrument
 - [x] hide audio text,
 - [x] show audio analyzers
 - [x] show all nodes
@@ -27,16 +27,20 @@
 - [x] no offset for no bus
 - [x] reuse node layout
 - [x] audio engine caching
-- [ ] review need for lazy instruments load
+- [x] check analyser view leaks?
+- [x] preserve hash params
+- [x] collision examples
+- [x] tone PolySynth
 - [ ] scene switch leaks
-- [ ] check analyser view leaks?
 - [ ] check all new obj and reusability
+- [ ] review need for lazy instruments load
 - [ ] hide debug
 - [ ] hide fps
-- [x] preserve hash params
-- [ ] collision examples
-- [ ] tone PolySynth
-- [ ] use gigaverb from examples, freeverb too
+- [ ] use gigaverb from examples
+- [ ] freeverb too
+- [ ] version in app
+- [ ] negative Z audio view
+- [ ] HUD
 
 /Users/jan/.nvm/versions/node/v24.8.0/bin/npm run heap:play:preview
 
