@@ -17,6 +17,7 @@ export const scene: SceneConfig = {
 	camera: [9.5, 4.5, 8.5],
 	target: [0, 0.75, 0],
 	rotatePlay: 0.125,
+	sequencerMode: 'time',
 	stars: true,
 	audioView: {
 		offset: [0, -0.5, 0],

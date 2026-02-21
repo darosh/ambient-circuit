@@ -7,6 +7,8 @@ const c = colorFactory()
 export const scene: SceneConfig = {
 	id: 'scene-tone-instruments',
 	bpm: 220,
+	sequencerBeats: 32,
+	sequencerMode: 'time',
 	triggerHandler,
 	camera: [9, 18, 18],
 	target: [0, 2, 0],

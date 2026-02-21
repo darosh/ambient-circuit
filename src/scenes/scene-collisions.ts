@@ -8,6 +8,8 @@ const c = () => colors[ci++ % colors.length]
 export const scene: SceneConfig = {
 	id: 'scene-collisions',
 	bpm: 160,
+	sequencerBeats: 12,
+	sequencerMode: 'time',
 	triggerHandler,
 	bounceHandler: (ctx) => {
 		bouncerHandler(ctx)

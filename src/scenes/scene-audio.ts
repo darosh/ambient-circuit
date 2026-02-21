@@ -5,6 +5,8 @@ export const scene: SceneConfig = {
 	id: 'scene-audio',
 	bpm: 120,
 	camera: [0, 8, 12],
+	sequencerBeats: 16,
+	sequencerMode: 'compact',
 	triggerHandler,
 	tint: [1.4, 1, 1],
 	audioView: {
