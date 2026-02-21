@@ -506,7 +506,7 @@ When colors can change at runtime (via `ctx.*.state.color = '#ff0000'`), use uni
 // GOOD - MarbleView pattern (✅ implemented)
 const fx = makeMarbleMaterial(effectiveColor)  // create once
 $effect(() => {
-  fx.emissiveColor.value = new Color(effectiveColor)  // update uniform
+  fx.emissiveColor.value.set(effectiveColor)  // update uniform in-place (never create unnececary new Color())
 })
 
 // BAD - recreates material on every color change

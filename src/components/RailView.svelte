@@ -105,7 +105,7 @@
 	const plainMaterial = $derived(!fxRails ? makeStandardMaterial(untrack(() => color)) : null)
 
 	$effect(() => {
-		fxMaterialObj.emissiveColor.value = new Color(color)
+		fxMaterialObj.emissiveColor.value.set(color)
 
 		if (plainMaterial) {
 			plainMaterial.color = new Color(color)

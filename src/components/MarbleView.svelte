@@ -77,7 +77,7 @@
 
 	$effect(() => {
 		if (fx) {
-			fx.emissiveColor.value = new Color(effectiveColor)
+			fx.emissiveColor.value.set(effectiveColor)
 		}
 
 		if (plainMaterial) {

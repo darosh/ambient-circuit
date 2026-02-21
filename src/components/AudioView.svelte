@@ -103,7 +103,7 @@
 	// Update base color uniform when prop changes
 	$effect(() => {
 		for (const fx of fxArr) {
-			fx.emissiveColor.value = new Color(baseColor)
+			fx.emissiveColor.value.set(baseColor)
 		}
 	})
 
@@ -118,7 +118,7 @@
 
 			if (sig.intensity > 0) {
 				animTimes[ni] = FLASH_DURATION
-				fx.impactColor.value = new Color(sig.color)
+				fx.impactColor.value.set(sig.color)
 				sig.intensity = 0
 			}
 
