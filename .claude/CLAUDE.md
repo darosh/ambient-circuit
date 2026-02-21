@@ -550,6 +550,8 @@ const fx = $derived(makeInstrumentMaterial(effectiveColor))
 - Read RNBO JSON files and `/public/patchers`
 - Run or commit default build on `/docs` for GitHub Pages
 - Read files in `/docs`
+- Read files in `/.fonts`
+- Read files in `/.heap-snapshots`
 - Run dev server
 - Read `TODO.md`
 ---

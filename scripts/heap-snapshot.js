@@ -20,7 +20,7 @@ const args = Object.fromEntries(
 const WAIT_S = Number(args.wait ?? 8)
 const TARGET_URL = args.url ?? 'http://localhost:5173'
 const HEADLESS = !('no-headless' in args)
-const OUT_DIR = 'heap-snapshots'
+const OUT_DIR = '.heap-snapshots'
 const SERVER_TYPE = args.type ?? 'dev'
 const SWITCH_SCENES =
 	'switching' in args

@@ -25,4 +25,7 @@ vite.config.ts.timestamp-*
 .idea
 
 # Heap snapshots
-heap-snapshots/
+.heap-snapshots/
+
+# WIP Temp
+.fonts

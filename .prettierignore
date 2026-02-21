@@ -8,4 +8,5 @@ docs/
 public/
 .build-check/
 rnbo/
-heap-snapshots/
+.heap-snapshots/
+.fonts/

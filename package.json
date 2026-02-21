@@ -41,11 +41,10 @@
 	},
 	"private": true,
 	"scripts": {
+		"dev": "vite dev",
 		"build": "vite build",
-		"build:font": "node ./scripts/font.js ./public/Outfit-Medium.ttf ./public/outfit-medium-regular.json '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-_:.,;|()[]{} '",
 		"check": "svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
-		"dev": "vite dev",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"preview": "vite preview",

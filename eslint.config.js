@@ -42,7 +42,8 @@ export default tseslint.config(
 			'docs/',
 			'.build-check/',
 			'rnbo/',
-			'heap-snapshots/'
+			'.heap-snapshots/',
+			'.fonts/'
 		]
 	}
 )
