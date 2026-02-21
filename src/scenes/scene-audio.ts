@@ -7,6 +7,9 @@ export const scene: SceneConfig = {
 	camera: [0, 8, 12],
 	triggerHandler,
 	tint: [1.4, 1, 1],
+	audioView: {
+		color: '#fff4f0'
+	},
 	audio: {
 		chains: {
 			synth: {
