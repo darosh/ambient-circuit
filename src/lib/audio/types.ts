@@ -111,4 +111,5 @@ export type AudioEngine = {
 	buses: Map<string, AudioBus>
 	masterChain: AudioBus | null
 	sharedAnalyzer: ToneAudioNode | null
+	muted: boolean
 }

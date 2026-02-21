@@ -42,7 +42,8 @@ export function createAudioEngine(): AudioEngine {
 		rnboCache: new Map(),
 		buses: new Map(),
 		masterChain: null,
-		sharedAnalyzer: null
+		sharedAnalyzer: null,
+		muted: engineCache.muted ?? false
 	}
 }
 
@@ -76,22 +77,55 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 	engine.masterGain = engine.ctx.createGain()
 	engine.masterGain.connect(engine.ctx.destination)
 
+	toggleMute(engine, engine.muted)
+
 	// Shared analyzer for UI visualization
 	engine.sharedAnalyzer = new engine.Tone.Analyser('fft', 64) as unknown as ToneAudioNode
 
 	engine.initialized = true
 
-	const { initialized, sharedAnalyzer, masterGain, Tone, ctx, rnboCache } = engine
+	const { initialized, sharedAnalyzer, masterGain, Tone, ctx, rnboCache, muted } = engine
 	Object.assign(engineCache, {
 		initialized,
 		sharedAnalyzer,
 		masterGain,
 		Tone,
 		ctx,
-		rnboCache
+		rnboCache,
+		muted
 	})
 
+	// Apply muted state from cache (user toggled mute before engine init)
+	if (engineCache.muted) {
+		engine.muted = true
+		engine.masterGain.gain.value = 0
+	}
+
 	log('initialized')
+}
+
+const MUTE_RAMP = 0.05
+
+/**
+ * Toggle mute state. Works before/after audio init.
+ */
+export function toggleMute(engine: AudioEngine | null, value?: boolean): boolean {
+	engineCache.muted = value ?? !engineCache.muted
+
+	if (!engine) return engineCache.muted
+
+	engine.muted = engineCache.muted
+
+	if (engine.masterGain) {
+		const ctx = engine.masterGain.context
+		engine.masterGain.gain.cancelScheduledValues(ctx.currentTime)
+		engine.masterGain.gain.setValueAtTime(engine.masterGain.gain.value, ctx.currentTime)
+		engine.masterGain.gain.linearRampToValueAtTime(
+			engine.muted ? 0 : 1,
+			ctx.currentTime + MUTE_RAMP
+		)
+	}
+	return engine.muted
 }
 
 /**
