@@ -475,7 +475,7 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		const rectW = h * 0.3 // rectangle width (narrower part)
 		const rectH = h * 0.4 // rectangle height
 		const trapW = h * 0.6 // trapezoid depth
-		const trapWide = h * 1.1 // trapezoid wide side
+		const trapWide = h * 1.15 // trapezoid wide side
 
 		const rL = -rectW / 2 - trapW / 2
 		const rR = rectW / 2 - trapW / 2
