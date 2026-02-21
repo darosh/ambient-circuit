@@ -111,6 +111,13 @@
 	}
 
 	$effect(() => {
+		if (title) {
+			idleTimer = 0
+			targetOpacity = 1
+		}
+	})
+
+	$effect(() => {
 		window.addEventListener('pointermove', onMouseActivity)
 		window.addEventListener('pointerdown', onMouseActivity)
 		return () => {
