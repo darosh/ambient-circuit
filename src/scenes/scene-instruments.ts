@@ -183,8 +183,10 @@ export const scene: SceneConfig = {
 			},
 			color: c(),
 			instruments: [
-				{ type: 'eater', beat: 3.5, angle: 90 },
-				{ type: 'heart', beat: 5.5, pulse: true },
+				{ type: 'arrow', beat: 3.5, kind: 'repro' },
+				{ type: 'arrow', beat: 4.5, kind: 'muted' },
+				{ type: 'eater', beat: 5.5, angle: 90 },
+				{ type: 'heart', beat: 6.5, pulse: true },
 				{ type: 'heart', beat: 7.5, pulse: false }
 			]
 		}

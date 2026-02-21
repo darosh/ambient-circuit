@@ -36,7 +36,16 @@ export type InstrumentType =
 	| 'sun'
 	| 'eater'
 
-export type ArrowKind = 'plain' | 'play' | 'fwd' | 'rec' | 'stop' | 'step' | 'pause'
+export type ArrowKind =
+	| 'plain'
+	| 'play'
+	| 'fwd'
+	| 'rec'
+	| 'stop'
+	| 'step'
+	| 'pause'
+	| 'repro'
+	| 'muted'
 
 export type InstrumentGeometryParams = {
 	type: InstrumentType
@@ -383,6 +392,7 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	const cr = cornerRadius
 	const path = new CurvePath<Vector3>()
 	let secondaryPath: CurvePath<Vector3> | null = null
+	let tertiaryPath: CurvePath<Vector3> | null = null
 
 	const length = size * 1
 
@@ -459,6 +469,72 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 			}
 			path.add(new LineCurve3(arcEnd, nextArcStart))
 		}
+	} else if (kind === 'repro' || kind === 'muted') {
+		// Speaker icon: rectangle (back) + trapezoid (front cone)
+		const h = length // total height
+		const rectW = h * 0.3 // rectangle width (narrower part)
+		const rectH = h * 0.4 // rectangle height
+		const trapW = h * 0.6 // trapezoid depth
+		const trapWide = h * 1.1 // trapezoid wide side
+
+		const rL = -rectW / 2 - trapW / 2
+		const rR = rectW / 2 - trapW / 2
+
+		// Closed outline: rectangle back + trapezoid cone as one shape
+		// Path: rect-top-left → rect-bottom-left → rect-bottom-right →
+		//        trap-bottom-right → trap-bottom-far → trap-top-far → trap-top-right →
+		//        rect-top-right → close
+		const trapR = rectW / 2 - trapW / 2 + trapW
+		const verts = [
+			new Vector3(0, rectH / 2, zScale * rL), // rect top-left
+			new Vector3(0, -rectH / 2, zScale * rL), // rect bottom-left
+			new Vector3(0, -rectH / 2, zScale * rR), // rect bottom-right
+			new Vector3(0, -trapWide / 2, zScale * trapR), // trap bottom-wide
+			new Vector3(0, trapWide / 2, zScale * trapR), // trap top-wide
+			new Vector3(0, rectH / 2, zScale * rR) // rect top-right (= trap top-narrow)
+		]
+
+		for (let i = 0; i < verts.length; i++) {
+			const curr = verts[i]
+			const next = verts[(i + 1) % verts.length]
+			const prev = verts[(i - 1 + verts.length) % verts.length]
+
+			const inDir = new Vector3().subVectors(curr, prev).normalize()
+			const outDir = new Vector3().subVectors(next, curr).normalize()
+
+			const _cr = i === 3 || i === 4 ? cr : cr / 2
+
+			const arcStart = curr.clone().addScaledVector(inDir, -_cr)
+			const arcEnd = curr.clone().addScaledVector(outDir, _cr)
+			const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+			if (cr > 0) {
+				path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+			}
+
+			path.add(new LineCurve3(arcEnd, nextArcStart))
+		}
+
+		// Inner dividing line between rect and trapezoid
+		secondaryPath = new CurvePath<Vector3>()
+		secondaryPath.add(
+			new LineCurve3(
+				new Vector3(0, rectH / 2 - width * 0.1, zScale * rR * 0.8),
+				new Vector3(0, -rectH / 2 - width * 0.1, zScale * rR * 0.8)
+			)
+		)
+
+		// Mute stroke: diagonal line across the icon (separate open path)
+		if (kind === 'muted') {
+			tertiaryPath = new CurvePath<Vector3>()
+			const ext = h * 0.2
+			tertiaryPath.add(
+				new LineCurve3(
+					new Vector3(0, -trapWide / 2, zScale * (trapR + ext)),
+					new Vector3(0, trapWide / 2, zScale * (rL + ext))
+				)
+			)
+		}
 	} else if (kind === 'pause') {
 		const spacing = width * 2.5
 		const height = length
@@ -490,7 +566,11 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 				? 3 * TUBULAR_SEGMENTS_POLY
 				: kind === 'stop'
 					? 4 * TUBULAR_SEGMENTS_POLY
-					: TUBULAR_SEGMENTS_ARROW_OTHER
+					: kind === 'repro' || kind === 'muted'
+						? 6 * TUBULAR_SEGMENTS_POLY
+						: TUBULAR_SEGMENTS_ARROW_OTHER
+
+	const straightSecondary = kind === 'repro' || kind === 'muted'
 
 	const mainGeometry = new TubeGeometry(
 		path as unknown as Curve<Vector3>,
@@ -500,18 +580,33 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		closed
 	)
 
+	const geometries = [mainGeometry]
+
 	if (secondaryPath) {
-		const secondaryGeometry = new TubeGeometry(
-			secondaryPath as unknown as Curve<Vector3>,
-			tubularSegments,
-			width / 2,
-			RADIAL_SEGMENTS,
-			closed
+		geometries.push(
+			new TubeGeometry(
+				secondaryPath as unknown as Curve<Vector3>,
+				straightSecondary ? Math.round(tubularSegments / 8) : tubularSegments,
+				width / 2,
+				RADIAL_SEGMENTS,
+				closed
+			)
 		)
-		return mergeGeometries([mainGeometry, secondaryGeometry])
 	}
 
-	return mainGeometry
+	if (tertiaryPath) {
+		geometries.push(
+			new TubeGeometry(
+				tertiaryPath as unknown as Curve<Vector3>,
+				TUBULAR_SEGMENTS_ARROW_OTHER,
+				width / 2,
+				RADIAL_SEGMENTS,
+				false
+			)
+		)
+	}
+
+	return geometries.length > 1 ? mergeGeometries(geometries) : mainGeometry
 }
 
 function buildSunGeometry(params: InstrumentGeometryParams): BufferGeometry {
