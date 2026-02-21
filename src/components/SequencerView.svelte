@@ -25,6 +25,7 @@
 		beatsVisible = 8,
 		bpm = 120,
 		baseColor,
+		colors = false,
 		freeze = false
 	}: {
 		events: NoteEvent[]
@@ -37,6 +38,7 @@
 		beatsVisible?: number
 		bpm?: number
 		baseColor: string
+		colors?: boolean
 		freeze?: boolean
 	} = $props()
 
@@ -136,7 +138,11 @@
 				}
 				const alpha = getAlpha(x + slide)
 				pool[idx].alpha.value = alpha
-				pool[idx].emissiveColor.value.set(ring[idx].color)
+
+				if (colors) {
+					pool[idx].emissiveColor.value.set(ring[idx].color)
+				}
+
 				if (alpha > 0.01) {
 					const collapsed = x < rightEdge
 					if (!collapsed) rightEdge = x + noteW
@@ -152,7 +158,7 @@
 
 	// Per-slot slide animation — each slot has its own offset that decays to 0
 	const ringSlides = new Float32Array(MAX_SLOTS)
-	const SLIDE_SPEED = 12 // higher = faster settle
+	const SLIDE_SPEED = 6 // higher = faster settle
 
 	let _sliding = false // true while any slot has non-zero slide
 

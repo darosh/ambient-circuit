@@ -28,6 +28,7 @@
 		currentBeat = 0,
 		sequencerMode,
 		beatsVisible = 8,
+		sequencerColors,
 		bpm = 120,
 		freeze = false
 	}: {
@@ -42,6 +43,7 @@
 		onPrevScene: () => void
 		currentBeat?: number
 		sequencerMode?: 'time' | 'compact'
+		sequencerColors?: boolean
 		beatsVisible?: number
 		bpm?: number
 		freeze?: boolean
@@ -381,7 +383,7 @@
 	{@const analyzerType = resolveAnalyzerType(row.chain.config.analyzer, defaultAnalyser)}
 	{@const label = labels[i] ?? ''}
 	{@const analyserEndX = row.chain.analyzer
-		? x + sphereR * 4 + (sequencerMode === 'time' ? 0 : 4) * sphereR + sphereR * 2
+		? x + sphereR * 4 + (sequencerMode === 'time' ? 0 : 5) * sphereR
 		: x + (sequencerMode === 'time' ? 0 : 4) * sphereR}
 	{@const seqX = analyserEndX + sphereR}
 	{@const seqWidth = $viewport.width / 2 - sphereR * 2 - seqX}
@@ -419,6 +421,7 @@
 			height={sphereR * 2}
 			charWidth={CHAR_WIDTH / 2}
 			position={[seqX, y - sphereR / 2 + sphereR * 0.075, 0]}
+			colors={sequencerColors}
 			{beatsVisible}
 			{bpm}
 			{baseColor}

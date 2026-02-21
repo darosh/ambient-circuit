@@ -7,6 +7,7 @@ export const scene: SceneConfig = {
 	camera: [0, 8, 12],
 	sequencerBeats: 16,
 	sequencerMode: 'compact',
+	sequencerColors: true,
 	triggerHandler,
 	tint: [1.4, 1, 1],
 	audioView: {

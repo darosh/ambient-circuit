@@ -65,6 +65,7 @@ export type SceneConfig = {
 	names?: boolean
 	sequencerBeats?: number
 	sequencerMode?: 'time' | 'compact'
+	sequencerColors?: boolean
 	renderPlayOnly?: boolean
 	rotatePlay?: boolean | number
 	pitch?: number

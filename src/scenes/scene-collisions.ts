@@ -9,7 +9,7 @@ export const scene: SceneConfig = {
 	id: 'scene-collisions',
 	bpm: 160,
 	sequencerBeats: 12,
-	sequencerMode: 'time',
+	sequencerMode: 'compact',
 	triggerHandler,
 	bounceHandler: (ctx) => {
 		bouncerHandler(ctx)

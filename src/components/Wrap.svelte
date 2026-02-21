@@ -99,6 +99,7 @@
 				bpm={tempo?.config?.bpm ?? 120}
 				beatsVisible={activeScene.sequencerBeats}
 				sequencerMode={activeScene.sequencerMode}
+				sequencerColors={activeScene.sequencerColors}
 				{onPlay}
 				{onStop}
 				{onRewind}
