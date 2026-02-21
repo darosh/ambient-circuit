@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import type { AudioEngine, AnalyzerType } from '../lib/audio'
-	import { Color, type Vector3Tuple } from 'three/webgpu'
+	import { type Vector3Tuple } from 'three/webgpu'
 	import { Vector3, LineCurve3, CubicBezierCurve3 } from 'three/webgpu'
 	import AnalyserView from './AnalyserView.svelte'
 	import { MathUtils } from 'three/webgpu'

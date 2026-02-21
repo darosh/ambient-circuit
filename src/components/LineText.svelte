@@ -33,12 +33,16 @@
 	let material = $state<LineMat | undefined>(undefined)
 	const plainMaterial = $derived(!fx ? createLineMaterialCached(id, color, width) : null)
 	const useMaterial = $derived(fx ? material?.mat : plainMaterial?.mat)
-	const colorValue = $derived(new Color(color))
+	const colorValue = new Color()
+
+	$effect(() => {
+		colorValue.set(color)
+	})
 
 	$effect(() => {
 		if (material) {
 			if (!material.emissiveColor.value.equals(colorValue)) {
-				material.emissiveColor.value = colorValue
+				material.emissiveColor.value.set(colorValue)
 			}
 
 			return

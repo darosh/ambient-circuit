@@ -79,7 +79,11 @@
 		!fxInstruments ? makeStandardMaterial(untrack(() => effectiveColor)) : null
 	)
 	const effectiveVisible = $derived(instrument.runtime?.visible ?? true)
-	const colorValue = $derived(new Color(effectiveColor))
+	const colorValue = new Color()
+
+	$effect(() => {
+		colorValue.set(effectiveColor)
+	})
 
 	$effect(() => {
 		if (fxMaterial && !fxMaterial.emissiveColor.value.equals(colorValue)) {

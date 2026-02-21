@@ -9,7 +9,6 @@
 	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/rail-curve'
 	import {
 		type BufferGeometry,
-		Color,
 		CurvePath,
 		Euler,
 		Group,
@@ -108,7 +107,7 @@
 		fxMaterialObj.emissiveColor.value.set(color)
 
 		if (plainMaterial) {
-			plainMaterial.color = new Color(color)
+			plainMaterial.color.set(color)
 		}
 	})
 

@@ -2,7 +2,7 @@
 	import { T, useTask } from '@threlte/core'
 	import { onDestroy, untrack } from 'svelte'
 	import type { Marble } from '../lib/marble'
-	import { Vector3, Euler, Matrix4, Color } from 'three/webgpu'
+	import { Vector3, Euler, Matrix4 } from 'three/webgpu'
 	import { makeMarbleMaterial } from '../lib/config'
 	import { easeOutQuart } from '../lib/easing'
 	import type { ResolvedRail } from '../lib/rail'
@@ -81,7 +81,7 @@
 		}
 
 		if (plainMaterial) {
-			plainMaterial.color = new Color(effectiveColor)
+			plainMaterial.color.set(effectiveColor)
 		}
 	})
 

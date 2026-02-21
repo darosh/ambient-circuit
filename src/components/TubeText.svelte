@@ -36,7 +36,11 @@
 	)
 	const plainMaterial = $derived(!fx ? createStandardMaterialCached(id, color) : null)
 	const useMaterial = $derived(fx ? material?.mat : plainMaterial)
-	const colorValue = $derived(new Color(color))
+	const colorValue = new Color()
+
+	$effect(() => {
+		colorValue.set(color)
+	})
 
 	// Update uniform instead of recreating material
 	$effect(() => {
