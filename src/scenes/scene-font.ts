@@ -7,6 +7,7 @@ export const scene: SceneConfig = {
 	bpm: 120,
 	globalBeatHandler: globalHandlerFactory(),
 	camera: [0, 6, 10],
+	names: true,
 	triggerHandler,
 	rails: [
 		{

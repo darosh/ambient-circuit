@@ -10,6 +10,7 @@ export const scene: SceneConfig = {
 	bpm: 120,
 	triggerHandler,
 	camera: [3, 16, 7],
+	names: true,
 	rails: [
 		{
 			rail: {
@@ -178,7 +179,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'heart',
+				id: 'misc',
 				nodes: [[5, 0, 4], 'i i i i i i i i']
 			},
 			color: c(),

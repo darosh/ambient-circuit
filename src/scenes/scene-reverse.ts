@@ -11,6 +11,7 @@ export const scene: SceneConfig = {
 	id: 'scene-reverse',
 	bpm: 120,
 	camera: [0, 12, 7],
+	names: true,
 	globalBeatHandler: globalHandlerFactory(),
 	triggerHandler,
 	rails: [

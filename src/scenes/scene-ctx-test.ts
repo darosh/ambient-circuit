@@ -11,6 +11,7 @@ export const scene: SceneConfig = {
 	id: 'scene-ctx-test',
 	bpm: 120,
 	camera: [0, 13, 0],
+	names: true,
 	globalBeatHandler,
 	triggerHandler,
 	rails: [

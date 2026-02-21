@@ -46,7 +46,7 @@
 		{showGrid}
 		{showPoints}
 		{showBeats}
-		{showNames}
+		showNames={activeScene.names ?? showNames}
 		{wireframe}
 		{showStats}
 		fxPost={fxPost && !wireframe}

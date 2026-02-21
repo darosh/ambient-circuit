@@ -62,6 +62,7 @@ export type SceneConfig = {
 	tint?: Vector3Tuple
 	polar?: boolean
 	stars?: boolean
+	names?: boolean
 	renderPlayOnly?: boolean
 	rotatePlay?: boolean | number
 	pitch?: number

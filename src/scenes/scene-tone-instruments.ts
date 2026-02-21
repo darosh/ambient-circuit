@@ -12,6 +12,7 @@ export const scene: SceneConfig = {
 	target: [0, 2, 0],
 	// tint: [1, 1, 1.05],
 	// tint: [1.2, 1, 1],
+	names: true,
 	audioView: {
 		defaultAnalyser: 'fft',
 		color: '#aaaaff',
