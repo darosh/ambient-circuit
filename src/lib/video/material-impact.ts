@@ -64,6 +64,7 @@ export function buildImpactMaterial(
 	const impactColor = uniform(color(impactHexColor ?? baseHexColor))
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	const impactT = uniform(0)
+	const alphaU = uniform(alpha)
 
 	const mat = new MeshBasicNodeMaterial({
 		transparent,
@@ -84,13 +85,11 @@ export function buildImpactMaterial(
 			intensityEase.mul(peakIntensity - baseIntensity)
 		)
 
-		const alphaFlash = float(alpha) //.add(impactT.mul(1e5)).clamp(0, 1)
-
 		// normalize by emissiveColor luminance (stable reference matching original pattern)
 		const lum = luminance(blendedColor) //.max(0.01)
-		return vec4(blendedColor.div(lum).mul(finalIntensity), alphaFlash)
+		return vec4(blendedColor.div(lum).mul(finalIntensity), alphaU)
 	})()
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
-	return { mat, impactT, emissiveColor, impactColor }
+	return { mat, impactT, emissiveColor, impactColor, alpha: alphaU }
 }
