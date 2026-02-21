@@ -40,8 +40,8 @@ export const scenes: SceneConfig[] = [
 	sceneFont,
 	sceneEasing,
 	sceneRailSwitch,
-	sceneCollisions,
 	sceneSnake,
 	sceneAudio,
+	sceneCollisions,
 	sceneToneInstruments
 ]

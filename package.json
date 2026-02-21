@@ -9,6 +9,7 @@
 		"@threlte/extras": "^9.7.1",
 		"@threlte/rapier": "^3.2.0",
 		"@threlte/theatre": "^3.1.2",
+		"@tonaljs/chord-detect": "^4.9.1",
 		"debug": "^4.4.3",
 		"maath": "^0.10.8",
 		"rambda": "^11.1.0",

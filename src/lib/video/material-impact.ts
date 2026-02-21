@@ -57,7 +57,8 @@ export function buildImpactMaterial(
 	alpha = 1.0,
 	transparent = true,
 	colorPart = 0.75,
-	baseIntensity = BASE_INTENSITY
+	baseIntensity = BASE_INTENSITY,
+	peakIntensity = PEAK_INTENSITY
 ) {
 	const emissiveColor = uniform(color(baseHexColor))
 	const impactColor = uniform(color(impactHexColor ?? baseHexColor))
@@ -80,7 +81,7 @@ export function buildImpactMaterial(
 		// easeOutQuart: 1 at impactT=1 (peak), 0 at impactT=0 (rest)
 		const intensityEase = (impactT as any).oneMinus().pow(4).oneMinus()
 		const finalIntensity = float(baseIntensity).add(
-			intensityEase.mul(PEAK_INTENSITY - baseIntensity)
+			intensityEase.mul(peakIntensity - baseIntensity)
 		)
 
 		const alphaFlash = float(alpha) //.add(impactT.mul(1e5)).clamp(0, 1)

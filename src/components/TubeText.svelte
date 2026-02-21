@@ -10,6 +10,7 @@
 
 	let {
 		text,
+		material: propMaterial,
 		color,
 		size,
 		width = 0.5,
@@ -19,12 +20,13 @@
 		...props
 	}: {
 		text: string
+		material?: Material
 		color: string
 		size: number
-		width: number
-		spacing: number
+		width?: number
+		spacing?: number
 		id: string
-		fx: boolean
+		fx?: boolean
 	} = $props()
 
 	const paths = $derived.by(() => getTextPathsCached(text, spacing))
@@ -70,7 +72,7 @@
 <T.Group {...props}>
 	<T.Group scale={size}>
 		{#each geometries as geometry, idx (idx)}
-			<T.Mesh {geometry} material={<Material>useMaterial} />
+			<T.Mesh {geometry} material={propMaterial ?? <Material>useMaterial} />
 		{/each}
 	</T.Group>
 </T.Group>

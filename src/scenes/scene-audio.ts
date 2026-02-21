@@ -6,6 +6,7 @@ export const scene: SceneConfig = {
 	bpm: 120,
 	camera: [0, 8, 12],
 	triggerHandler,
+	tint: [1.4, 1, 1],
 	audio: {
 		chains: {
 			synth: {

@@ -17,7 +17,7 @@
 		offset = [0, 0, 0],
 		visible = true,
 		curved = true,
-		baseColor = '#ddddff',
+		baseColor = '#ffffff',
 		showText = false,
 		showAnalysers = false,
 		showAllNodes = false,

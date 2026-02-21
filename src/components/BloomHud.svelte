@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { T, useThrelte, useTask, createSceneContext, createCameraContext } from '@threlte/core'
-	import { onMount } from 'svelte'
+	import { onMount, untrack } from 'svelte'
 	import type { Snippet } from 'svelte'
 	import { PostProcessing, type WebGPURenderer } from 'three/webgpu'
-	import { pass, mix, max } from 'three/tsl'
+	import { pass, mix, max, vec3, uniform, add } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,6 +17,7 @@
 		/** Bloom the HUD too (composites before bloom instead of after) */
 		hudBloom?: boolean
 		/** Transform HUD color node with TSL effects (e.g. blur) */
+		tint?: [number, number, number]
 		hudFx?: (color: TslNode) => TslNode
 		children?: Snippet<[{ ref: import('three').Scene }]>
 	}
@@ -27,6 +28,7 @@
 		radius = 0.1,
 		threshold = 1,
 		hudBloom = false,
+		tint = [1, 1, 1],
 		hudFx,
 		children
 	}: Props = $props()
@@ -36,6 +38,7 @@
 	// HUD gets its own scene + camera context
 	const { scene: hudScene } = createSceneContext()
 	const { camera: hudCamera } = createCameraContext()
+	const tintUniform = uniform(vec3(...untrack(() => tint)))
 
 	const postProcessing = new PostProcessing(renderer as unknown as WebGPURenderer)
 
@@ -61,11 +64,15 @@
 
 			if (hudBloom) {
 				// Composite HUD before bloom — both get bloomed
-				const combined = mix(scenePassColor, hudColor, hudMask)
-				output = combined.add(bloom(combined, strength, radius, threshold))
+				const combined = add(
+					scenePassColor.add(bloom(scenePassColor, strength, radius, threshold)),
+					hudColor.add(bloom(hudColor, strength, radius, threshold))
+				)
+
+				output = combined.mul(tintUniform)
 			} else {
 				// Composite HUD after bloom — HUD stays crisp
-				output = mix(scenePassColor.add(bloomNode), hudColor, hudMask)
+				output = mix(scenePassColor.add(bloomNode), hudColor, hudMask).mul(tintUniform)
 			}
 		} else {
 			output = scenePassColor.add(bloomNode)
@@ -81,6 +88,11 @@
 		bloomNode.strength.value = enabled ? strength : 0
 		bloomNode.radius.value = radius
 		bloomNode.threshold.value = threshold
+	})
+
+	$effect(() => {
+		if (!tint) return
+		tintUniform.value.fromArray(tint)
 	})
 
 	onMount(() => {

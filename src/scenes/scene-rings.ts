@@ -29,7 +29,7 @@ export const scene: SceneConfig = {
 	audio: {
 		chains: {
 			synth: {
-				analyzer: true,
+				analyzer: 'fft',
 				generator: {
 					tone: 'Synth',
 					params: {

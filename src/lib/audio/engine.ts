@@ -279,7 +279,7 @@ export async function buildChain(
 		voices,
 		nodePresets,
 		onParamChange: null,
-		audioSignal: { intensity: 0, color: '#ffffff' },
+		audioSignal: { intensity: 0, color: '#ffffff', lastNote: 0, activeNotes: [] },
 		lastTrigger: 0,
 		setParam(path, value) {
 			if (chain.generator) setNodeParam(chain.generator, path, value)
@@ -419,6 +419,16 @@ export function triggerChain(
 	if (!chain.generator) return false
 	if (!getVoice(chain, durationMs)) return false
 	chain.lastTrigger = Date.now()
+	chain.audioSignal.lastNote = note
+	const sig = chain.audioSignal
+	const now = chain.output.context.currentTime
+	// Expire old notes and push new one
+	const alive: { midi: number; end: number }[] = []
+	for (let i = 0; i < sig.activeNotes.length; i++) {
+		if (sig.activeNotes[i].end > now) alive.push(sig.activeNotes[i])
+	}
+	alive.push({ midi: note, end: now + durationMs / 1000 })
+	sig.activeNotes = alive
 
 	if (isDevice(chain.generator)) {
 		// RNBO: send MIDI events
@@ -995,4 +1005,40 @@ function disposeNode(node: ToneAudioNode | Device): void {
 
 function midiToFreq(note: number): number {
 	return 440 * Math.pow(2, (note - 69) / 12)
+}
+
+// --- Chord / note label ---
+
+import { detect } from '@tonaljs/chord-detect'
+import tones from '../../scenes/utils/tones'
+
+const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+
+/**
+ * Get a label for a chain: chord name if 3+ unique pitch classes sounding, else note name
+ */
+export function getChainLabel(chain: AudioChain): string {
+	const sig = chain.audioSignal
+	const now = chain.output.context.currentTime
+
+	// Expire old notes
+	const alive: { midi: number; end: number }[] = []
+	for (let i = 0; i < sig.activeNotes.length; i++) {
+		if (sig.activeNotes[i].end > now) alive.push(sig.activeNotes[i])
+	}
+	sig.activeNotes = alive
+
+	// Collect unique pitch classes
+	const pcs = new Set<string>()
+	for (let i = 0; i < alive.length; i++) {
+		pcs.add(NOTE_NAMES[alive[i].midi % 12])
+	}
+
+	if (pcs.size >= 2) {
+		const chords = detect(Array.from(pcs))
+		if (chords.length > 0) return chords[0]
+	}
+
+	if (sig.lastNote > 0) return tones[sig.lastNote] ?? ''
+	return ''
 }

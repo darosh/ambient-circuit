@@ -10,9 +10,11 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	camera: [9, 18, 18],
 	target: [0, 2, 0],
+	// tint: [1, 1, 1.05],
+	// tint: [1.2, 1, 1],
 	audioView: {
 		defaultAnalyser: 'fft',
-		color: '#ddddff',
+		color: '#aaaaff',
 		analyzers: true,
 		text: true,
 		all: true

@@ -2,16 +2,19 @@
 	import { T, useTask } from '@threlte/core'
 	import type { ToneAudioNode } from 'tone'
 	import type { Vector3Tuple } from 'three/webgpu'
+	import type { Material } from 'three/webgpu'
 
 	let {
 		analyzer,
+		material,
 		height = 1,
 		width = 1,
 		position = [0, 0, 0],
-		baseColor = '#ccccff',
+		baseColor = '#ffffff',
 		type = 'waveform'
 	}: {
 		analyzer: ToneAudioNode | null
+		material?: Material
 		height?: number
 		width?: number
 		position?: Vector3Tuple
@@ -73,12 +76,20 @@
 	{#each values as v, i (i)}
 		{@const h = Math.max(0.01, v * Math.abs(height))}
 		<T.Mesh
+			{material}
 			position.x={(i - alignCount / 2) * (barWidth + barGap)}
 			position.y={(Math.sign(height) * h) / 2}
 			scale.y={h}
 		>
 			<T.BoxGeometry args={[barWidth, 1, barWidth]} />
-			<T.MeshStandardMaterial color={barColor(v)} emissive={barColor(v)} emissiveIntensity={0.5} />
+
+			{#if !material}
+				<T.MeshStandardMaterial
+					color={barColor(v)}
+					emissive={barColor(v)}
+					emissiveIntensity={0.5}
+				/>
+			{/if}
 		</T.Mesh>
 	{/each}
 </T.Group>

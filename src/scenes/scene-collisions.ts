@@ -33,6 +33,7 @@ export const scene: SceneConfig = {
 	audio: {
 		chains: {
 			synth: {
+				analyzer: 'fft',
 				generator: {
 					tone: 'AMSynth',
 					poly: 16,
@@ -47,6 +48,7 @@ export const scene: SceneConfig = {
 				}
 			},
 			bass: {
+				analyzer: 'fft',
 				generator: {
 					rnbo: 'feedback-synth',
 					params: {

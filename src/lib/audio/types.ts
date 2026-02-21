@@ -68,7 +68,12 @@ export type AudioChain = {
 	/** Callback fired when any RNBO device params change */
 	onParamChange: ((id: string, value: number) => void) | null
 	/** Visual flash signal for AudioView (consumed each frame) */
-	audioSignal: { intensity: number; color: string }
+	audioSignal: {
+		intensity: number
+		color: string
+		lastNote: number
+		activeNotes: { midi: number; end: number }[]
+	}
 	lastTrigger: number
 }
 

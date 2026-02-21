@@ -391,7 +391,7 @@
 		showAllNodes={scene?.audioView?.all}
 		showAnalysers={scene?.audioView?.analyzers}
 		showText={scene?.audioView?.text}
-		defaultAnalyser={scene?.audioView?.defaultAnalyser || '#ddddff'}
+		defaultAnalyser={scene?.audioView?.defaultAnalyser}
 		baseColor={scene?.audioView?.color}
 		module={scene?.audioView?.module}
 		bind:this={audioView}

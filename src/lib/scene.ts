@@ -59,6 +59,7 @@ export type SceneConfig = {
 	globalBeatResolution?: number
 	camera?: Vector3Tuple
 	target?: Vector3Tuple
+	tint?: Vector3Tuple
 	polar?: boolean
 	stars?: boolean
 	renderPlayOnly?: boolean
