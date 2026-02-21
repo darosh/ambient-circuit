@@ -6,8 +6,10 @@
 	import { buildImpactMaterial } from '../lib/video/material-impact'
 	import { createInstrumentGeometry, type ArrowKind } from '../lib/video/instrument-geometry'
 	import AnalyserView from './AnalyserView.svelte'
+	import SequencerView, { type NoteEvent } from './SequencerView.svelte'
 	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
 	import GeoText from './GeoText.svelte'
+	import { easeInCubic } from '../lib/easing'
 
 	extend({ MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial })
 
@@ -22,7 +24,12 @@
 		onStop,
 		onRewind,
 		onNextScene,
-		onPrevScene
+		onPrevScene,
+		currentBeat = 0,
+		sequencerMode,
+		beatsVisible = 8,
+		bpm = 120,
+		freeze = false
 	}: {
 		engine: AudioEngine | null
 		defaultAnalyser: string | undefined
@@ -33,6 +40,11 @@
 		onRewind: () => void
 		onNextScene: () => void
 		onPrevScene: () => void
+		currentBeat?: number
+		sequencerMode?: 'time' | 'compact'
+		beatsVisible?: number
+		bpm?: number
+		freeze?: boolean
 	} = $props()
 
 	const viewport = useViewport()
@@ -40,6 +52,7 @@
 	const MIN_SPHERE_R = 0.08
 	const BASE_SPHERE_R = 0.2
 	const FLASH_DURATION = 0.8
+	const CHAR_WIDTH = 0.68
 
 	type RowState = {
 		chain: AudioChain
@@ -58,11 +71,24 @@
 	// Reactive rows for template (rebuilt on chain change)
 	let rows = $state<{ chain: AudioChain; fx: ReturnType<typeof buildImpactMaterial> }[]>([])
 
+	// Sequencer note history per chain (reactive so template re-renders)
+	let seqEvents = $state<NoteEvent[][]>([])
+	// Non-reactive lastSeen per chain for sequencer (separate from rowStates.lastSeen)
+	let seqLastSeen: number[] = []
+
 	// Adaptive layout
 	const rowCount = $derived(rows.length)
 	const availHeight = $derived($viewport.height - 1)
+	const vpWidth = $derived($viewport.width)
 	const sphereR = $derived(Math.max(MIN_SPHERE_R, Math.min(BASE_SPHERE_R, availHeight / rowCount)))
 	const rowSpacing = $derived(sphereR * 2 + 0.25)
+
+	// Animated analyser X positions (easeInQuad, 200ms)
+	const ANIM_DUR = 0.1
+	let analyserAnimX = $state<number[]>([])
+	const _aStartX: number[] = []
+	const _aTargetX: number[] = []
+	const _aAnimT: number[] = []
 
 	// --- Transport controls ---
 	const TRANSPORT_FLASH = 0.4
@@ -178,6 +204,8 @@
 				rows = []
 				labels = []
 				flashing = []
+				seqEvents = []
+				seqLastSeen = []
 			}
 			return
 		}
@@ -208,8 +236,23 @@
 			rows = nextRows
 			labels = nextLabels
 			flashing = nextFlashing
+			seqEvents = chains.map(() => [])
+			seqLastSeen = chains.map(() => 0)
+			// Init animated X — no animation on chain setup, snap to target
+			const initBaseX = -vpWidth / 2 + sphereR * 2
+			analyserAnimX = chains.map(() => initBaseX + sphereR * 4)
+			_aStartX.length = chains.length
+			_aTargetX.length = chains.length
+			_aAnimT.length = chains.length
+			for (let i = 0; i < chains.length; i++) {
+				_aStartX[i] = analyserAnimX[i]
+				_aTargetX[i] = analyserAnimX[i]
+				_aAnimT[i] = ANIM_DUR
+			}
 		}
 	})
+
+	const SEQ_MAX = 16 // keep only enough for SequencerView to detect; ring buffer handles history
 
 	// Animation + label update
 	useTask((delta) => {
@@ -230,6 +273,21 @@
 				}
 			}
 
+			// Sequencer: detect new trigger per-row (no outer array reassignment needed)
+			if (i < seqLastSeen.length && chain.lastTrigger > seqLastSeen[i]) {
+				seqLastSeen[i] = chain.lastTrigger
+				const ev: NoteEvent = {
+					label: getChainLabel(chain) || '*',
+					color: chain.audioSignal.color,
+					time: Date.now(),
+					beat: currentBeat
+				}
+				const arr = seqEvents[i]
+				arr.push(ev)
+				if (arr.length > SEQ_MAX) arr.splice(0, arr.length - SEQ_MAX)
+				// Svelte 5 tracks arr mutation directly — no outer seqEvents reassignment needed
+			}
+
 			const wasFlashing = flashing[i]
 			if (s.animTime > 0) {
 				s.animTime = Math.max(0, s.animTime - delta)
@@ -245,6 +303,26 @@
 		}
 		if (labelsChanged) labels = [...labels]
 		if (flashChanged) flashing = [...flashing]
+
+		// Animate analyser X positions (easeInQuad 200ms)
+		const baseX = -vpWidth / 2 + sphereR * 2
+		let animXChanged = false
+		for (let i = 0; i < rowStates.length; i++) {
+			const label = labels[i] ?? ''
+			const targetX = baseX + sphereR * 4 + Math.max(label.length - 2, 0) * sphereR * CHAR_WIDTH
+			if (_aTargetX[i] !== targetX) {
+				_aStartX[i] = analyserAnimX[i] ?? targetX
+				_aTargetX[i] = targetX
+				_aAnimT[i] = 0
+			}
+			if (_aAnimT[i] < ANIM_DUR) {
+				_aAnimT[i] = Math.min(ANIM_DUR, (_aAnimT[i] ?? ANIM_DUR) + delta)
+				const t = _aAnimT[i] / ANIM_DUR
+				analyserAnimX[i] = _aStartX[i] + (targetX - _aStartX[i]) * easeInCubic(t) // easeInQuad
+				animXChanged = true
+			}
+		}
+		if (animXChanged) analyserAnimX = [...analyserAnimX]
 
 		// Idle timer + fade
 		idleTimer += delta
@@ -302,11 +380,11 @@
 	{@const y = $viewport.height / 2 - sphereR * 2.5 - i * rowSpacing}
 	{@const analyzerType = resolveAnalyzerType(row.chain.config.analyzer, defaultAnalyser)}
 	{@const label = labels[i] ?? ''}
-
-	<!-- Impact sphere -->
-	<!--	<T.Mesh position={[x - sp, y, 0]} material={row.fx.mat}>-->
-	<!--		<T.SphereGeometry args={[sphereR / 4]} />-->
-	<!--	</T.Mesh>-->
+	{@const analyserEndX = row.chain.analyzer
+		? x + sphereR * 4 + (sequencerMode === 'time' ? 0 : 4) * sphereR + sphereR * 2
+		: x + (sequencerMode === 'time' ? 0 : 4) * sphereR}
+	{@const seqX = analyserEndX + sphereR}
+	{@const seqWidth = $viewport.width / 2 - sphereR * 2 - seqX}
 
 	<!-- Note/chord label -->
 	{#if label}
@@ -325,11 +403,26 @@
 			height={sphereR * 2}
 			width={sphereR * 2}
 			position={[
-				x + sphereR * 4 + Math.max(label.length - 2, 0) * sphereR * 0.8,
+				analyserAnimX[i] ?? x + sphereR * 4 + Math.max(label.length - 2, 0) * sphereR * CHAR_WIDTH,
 				y - sphereR / 2,
 				0
 			]}
 			{baseColor}
+		/>
+	{/if}
+
+	{#if sequencerMode && seqEvents[i] && seqWidth > 0}
+		<SequencerView
+			events={seqEvents[i]}
+			mode={sequencerMode}
+			width={seqWidth}
+			height={sphereR * 2}
+			charWidth={CHAR_WIDTH / 2}
+			position={[seqX, y - sphereR / 2 + sphereR * 0.075, 0]}
+			{beatsVisible}
+			{bpm}
+			{baseColor}
+			{freeze}
 		/>
 	{/if}
 {/each}

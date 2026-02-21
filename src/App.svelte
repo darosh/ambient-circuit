@@ -66,6 +66,7 @@
 	let wireframe = $state(false)
 	let showStats = $state(false)
 	let showHud = $state(true)
+	let useFreeze = $state(false)
 	let fxPost = $state(true)
 	let fxHud = $state(true)
 	let fxRails = $state(true)
@@ -580,6 +581,7 @@
 			<Checkbox label="Beats" bind:value={showBeats} />
 			<Checkbox label="Names" bind:value={showNames} />
 			<Checkbox label="Wireframe" bind:value={wireframe} />
+			<Checkbox label="Freeze" bind:value={useFreeze} />
 			<Checkbox label="Audio" bind:value={showAudio} />
 			<Checkbox label="MIDI" bind:value={midiEnabled} />
 			{#if midiEnabled && midiState && midiState.outputs.length > 0}
@@ -645,6 +647,7 @@
 		{wireframe}
 		{showStats}
 		{showHud}
+		freeze={useFreeze && !tempo.isPlaying}
 		fxPost={fxPost && !wireframe}
 		fxRails={fxRails && !wireframe}
 		fxMarbles={fxMarbles && !wireframe}

@@ -209,7 +209,17 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Marble audio signal links: tubes from marble positions → AudioView generator nodes, flash on collision (`audioView.marbleLinks`)
   - [x] AudioView generator node color flash on trigger (instrument color → rail color fallback, easeOutQuart decay)
   - [ ] Future: chain representations in separate layer, waveform rays, rail displacement by waveform
-- [ ] Event log system (global trigger/audio events, tracker-style display)
+- [x] Event log / sequencer HUD
+  - [x] SequencerView component: per-chain note history in HUD
+  - [x] Two modes: `'time'` (beat-mapped scroll) and `'compact'` (newest pinned left, stack right)
+  - [x] Ring buffer (MAX_SLOTS=48) with pooled materials for zero-alloc updates
+  - [x] Per-slot slide animation (exponential decay) for smooth note insertion
+  - [x] Collapse overlapping notes to dots
+  - [x] Fade threshold (alpha ramp across width)
+  - [x] GeoText: cached TextGeometry mode (`cache` prop) with module-level geometry cache
+  - [x] SceneConfig: `sequencerMode` ('time'|'compact'), `sequencerBeats` (visible beat window)
+  - [x] Animated analyser X position (easeInCubic, avoids label/analyser overlap)
+  - [x] Freeze prop: pause HUD animations when not playing
 
 **Next Steps:**
 
@@ -272,7 +282,9 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/helpers/audio-params.ts - readChainParams, readBusParams, ParamInfo type
 /src/components/Bloom.svelte        - Post-processing bloom (scene only)
 /src/components/BloomHud.svelte     - Post-processing bloom + HUD compositing
-/src/components/HudScene.svelte     - HUD overlay content (ortho camera)
+/src/components/HudScene.svelte     - HUD overlay content (ortho camera, transport, sequencer rows)
+/src/components/SequencerView.svelte - Per-chain note history (ring buffer, two display modes)
+/src/components/GeoText.svelte      - 3D text with optional geometry cache (module-level Map)
 /src/components/AudioView.svelte - 3D audio chain topology visualization
 /src/components/AnalyserView.svelte - per-frame VU meter (FFT/waveform/meter)
 /src/components/Scene.svelte    - 3D scene with rails, marbles, tempo integration
@@ -421,6 +433,37 @@ globalBeatHandler(ctx) {
 - `/src/components/BloomHud.svelte` — bloom + HUD compositing pipeline
 - `/src/components/HudScene.svelte` — HUD content (OrthographicCamera + overlay elements)
 - `/src/components/HUD.svelte` — original threlte HUD copy (reference, not used with bloom)
+
+### Sequencer HUD
+
+**Architecture:**
+
+- `SequencerView.svelte` renders per-chain note history as 3D text in the HUD layer
+- Ring buffer (48 slots) with pre-allocated material pool — only head slot changes text per note
+- Two display modes configured via `SceneConfig.sequencerMode`:
+  - `'time'`: beat-mapped horizontal scroll using wall-clock elapsed time
+  - `'compact'`: newest note pinned left, older notes stack right with slide animation
+- `SceneConfig.sequencerBeats`: visible beat window (default 8)
+
+**GeoText caching:**
+
+- `cache` prop on `GeoText` uses module-level `Map<string, BufferGeometry>` keyed by `text_size`
+- Creates `TextGeometry` directly (not `Text3DGeometry`) for synchronous cache hits
+- `clearGeoTextCache()` exported for cleanup
+- Font loaded once at module level (shared across all instances)
+
+**Slide animation (compact mode):**
+
+- Per-slot `Float32Array` offsets (`ringSlides[]`), not a uniform value
+- On new note: existing slots get `slide -= totalNewWidth`, new slots get `slide = 0`
+- Each frame: exponential decay toward 0 (`slide *= exp(-speed * delta)`)
+- Grid position (`.x`) and animation offset (`.slide`) are separate; combined only at render (`x + slide`)
+
+**HudScene integration:**
+
+- `seqEvents[]`: per-chain `NoteEvent[]` arrays, pushed on `chain.lastTrigger` change
+- Animated analyser X position (easeInCubic) to avoid label/analyser/sequencer overlap
+- `freeze` prop pauses HUD animations when not playing
 
 ### MIDI System
 

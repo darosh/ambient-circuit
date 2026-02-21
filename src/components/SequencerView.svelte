@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	// import { MeshStandardNodeMaterial } from 'three/webgpu'
 	import { SphereGeometry } from 'three/webgpu'
 	import { buildImpactMaterial } from '../lib/video/material-impact'
 	import GeoText from './GeoText.svelte'
-	// import { DoubleSide } from 'three/src/constants'
 
 	export type NoteEvent = {
 		label: string
@@ -42,8 +40,6 @@
 		freeze?: boolean
 	} = $props()
 
-	// Match HudScene: size = sphereR = height/2, charWidth = sphereR * 0.8 = height * 0.4
-	// Gap between notes = 1 * sphereR = height * 0.5
 	function labelWidth(label: string, isTime: boolean) {
 		return (
 			Math.max(label.length, isTime ? 1 : 6) * height * charWidth +
@@ -83,33 +79,26 @@
 
 	// Pre-allocate material pool — stable indices, never reallocated
 	const pool = Array.from({ length: MAX_SLOTS }, () =>
-		// new MeshStandardNodeMaterial({
-		// 	transparent: true,
-		// 	side: DoubleSide,
-		// 	opacity: .5,
-		// 	alphaToCoverage: true,
-		// 	emissive: '#ffffff',
-		// 	emissiveIntensity: 1,
-		// 	color: '#ffffff',
-		// })
 		buildImpactMaterial(baseColor, baseColor, 0, true, 0.9, 0.5, 0.5)
 	)
 
 	// ─── Reactive display list ───────────────────────────────────────────────────
 	// Updated only when new note arrives (compact) or every frame (time mode).
 	// Keyed by poolIdx so Svelte only patches the one changed slot.
-	type DisplaySlot = { poolIdx: number; text: string; x: number; collapsed?: boolean }
+	type DisplaySlot = {
+		poolIdx: number
+		text: string
+		x: number
+		slide: number
+		collapsed?: boolean
+	}
 	let displaySlots = $state<DisplaySlot[]>([])
 
 	function rebuildDisplay() {
 		const result: DisplaySlot[] = []
 		if (mode === 'time') {
-			// Beat-mapped using wall-clock time for smooth per-frame movement
-			// elapsed beats = (Date.now() - ev.time) / ms_per_beat
 			const msPerBeat = 60000 / bpm
 			const now = Date.now()
-
-			// Track rightEdge to detect overlapping notes (collapse to dots)
 			let rightEdge = -Infinity
 
 			for (let d = 0; d < fillCount; d++) {
@@ -118,7 +107,6 @@
 				if (elapsed < 0) continue
 				const x = position[0] + (elapsed / beatsVisible) * width
 				if (x > position[0] + width) {
-					// pool[idx].opacity = 0
 					pool[idx].alpha.value = 0
 					continue
 				}
@@ -127,41 +115,34 @@
 					pool[idx].alpha.value = 0
 					continue
 				}
-				// pool[idx].opacity = alpha
 				pool[idx].alpha.value = alpha
-				// pool[idx].emissive.set(ring[idx].color)
-				// pool[idx].emissiveColor.value.set(ring[idx].color)
 				const noteW = ringWidths[idx]
 				const collapsed = x < rightEdge
 				if (!collapsed) rightEdge = x + noteW
-				result.push({ poolIdx: idx, text: ring[idx].text, x, collapsed })
+				result.push({ poolIdx: idx, text: ring[idx].text, x, slide: 0, collapsed })
 			}
 		} else {
-			// Compact: newest (d=0) pinned to position[0]; older notes (d>=1) shift by _oldOffset
+			// Compact: .x = pure grid layout, .slide = per-slot animation offset
 			let x = position[0]
 			let rightEdge = -Infinity
-
 			for (let d = 0; d < fillCount; d++) {
 				const idx = (headIdx + d) % MAX_SLOTS
-				// d=0 is always at position[0]; older notes carry the slide offset
-				const xPos = d > 0 ? x + _oldOffset : x
-				if (xPos > position[0] + width) {
+				const noteW = ringWidths[idx]
+				const slide = ringSlides[idx]
+
+				if (x + slide > position[0] + width) {
 					for (let r = d; r < fillCount; r++) pool[(headIdx + r) % MAX_SLOTS].alpha.value = 0
-					// for (let r = d; r < fillCount; r++) pool[(headIdx + r) % MAX_SLOTS].opacity = 0
 					break
 				}
-				const alpha = getAlpha(xPos)
-				// pool[idx].opacity = alpha
+				const alpha = getAlpha(x + slide)
 				pool[idx].alpha.value = alpha
-				// pool[idx].color.set(ring[idx].color)
 				pool[idx].emissiveColor.value.set(ring[idx].color)
 				if (alpha > 0.01) {
-					// Collapse uses final x (not animated xPos) — prevents false dots during slide
 					const collapsed = x < rightEdge
-					if (!collapsed) rightEdge = x + ringWidths[idx]
-					result.push({ poolIdx: idx, text: ring[idx].text, x: xPos, collapsed })
+					if (!collapsed) rightEdge = x + noteW
+					result.push({ poolIdx: idx, text: ring[idx].text, x, slide, collapsed })
 				}
-				x += ringWidths[idx]
+				x += noteW
 			}
 		}
 		displaySlots = result
@@ -169,26 +150,33 @@
 
 	let lastSeenTime = -1
 
-	// Compact slide animation — offset applied uniformly to all notes, eased once per frame
-	const COMPACT_ANIM_DUR = 0.2
-	let _oldOffset = 0
-	let _oldOffsetFrom = 0
-	let _oldOffsetAnimT = COMPACT_ANIM_DUR // start as done
+	// Per-slot slide animation — each slot has its own offset that decays to 0
+	const ringSlides = new Float32Array(MAX_SLOTS)
+	const SLIDE_SPEED = 12 // higher = faster settle
+
+	let _sliding = false // true while any slot has non-zero slide
 
 	useTask((delta) => {
 		if (freeze) return
 
-		// Advance compact slide animation (computed once, applied to all notes in rebuildDisplay)
-		if (mode === 'compact' && _oldOffsetAnimT < COMPACT_ANIM_DUR) {
-			_oldOffsetAnimT = Math.min(COMPACT_ANIM_DUR, _oldOffsetAnimT + delta)
-			const t = _oldOffsetAnimT / COMPACT_ANIM_DUR
-			_oldOffset = _oldOffsetFrom * (1 - t * t * t) // easeInCubic toward 0
+		// Decay per-slot slides toward 0
+		if (mode === 'compact' && _sliding) {
+			const decay = Math.exp(-SLIDE_SPEED * delta)
+			_sliding = false
+			for (let d = 0; d < fillCount; d++) {
+				const idx = (headIdx + d) % MAX_SLOTS
+				if (ringSlides[idx] !== 0) {
+					ringSlides[idx] *= decay
+					if (Math.abs(ringSlides[idx]) < 0.001) ringSlides[idx] = 0
+					else _sliding = true
+				}
+			}
 		}
 
 		const len = events?.length ?? 0
 		const newest = len > 0 ? events[len - 1] : null
 		if (!newest || newest.time <= lastSeenTime) {
-			if (mode === 'time' || _oldOffsetAnimT < COMPACT_ANIM_DUR) rebuildDisplay()
+			if (mode === 'time' || _sliding) rebuildDisplay()
 			return
 		}
 		// Collect all new events (time > lastSeenTime), scanning backwards from end
@@ -196,7 +184,19 @@
 		while (firstNew > 0 && events[firstNew - 1] && events[firstNew - 1].time > lastSeenTime) {
 			firstNew--
 		}
+		// Pre-compute total width of new events
 		let totalNewWidth = 0
+		for (let i = firstNew; i < len; i++) {
+			if (events[i]) totalNewWidth += labelWidth(events[i].label, mode === 'time')
+		}
+		// Shift existing slots' slides so they stay at their current visual position
+		if (mode === 'compact' && totalNewWidth > 0) {
+			for (let d = 0; d < fillCount; d++) {
+				ringSlides[(headIdx + d) % MAX_SLOTS] -= totalNewWidth
+			}
+			_sliding = true
+		}
+		// Insert new events into ring buffer
 		for (let i = firstNew; i < len; i++) {
 			const ev = events[i]
 			if (!ev) continue
@@ -206,16 +206,10 @@
 			ring[headIdx].beat = ev.beat
 			ring[headIdx].time = ev.time
 			ringWidths[headIdx] = labelWidth(ev.label, mode === 'time')
-			totalNewWidth += ringWidths[headIdx]
+			ringSlides[headIdx] = 0 // new notes appear at grid position immediately
 			fillCount = Math.min(fillCount + 1, MAX_SLOTS)
 		}
 		lastSeenTime = newest.time
-		// Trigger slide: all notes start at old positions, ease into new ones
-		// if (mode === 'compact' && totalNewWidth > 0) {
-		// 	_oldOffsetFrom = -totalNewWidth // always reset: no accumulation across rapid fires
-		// 	_oldOffset = _oldOffsetFrom
-		// 	_oldOffsetAnimT = 0
-		// }
 		rebuildDisplay()
 	})
 </script>
@@ -225,17 +219,11 @@
 		<T.Mesh
 			geometry={dotGeom}
 			material={pool[ds.poolIdx].mat}
-			position={[ds.x + dotRadius, position[1] - dotRadius * 2.5, position[2]]}
+			position={[ds.x + ds.slide + dotRadius, position[1] - dotRadius * 2.5, position[2]]}
 		/>
 	{:else}
 		{#key ds.text}
-			<T.Group position={[ds.x, position[1], position[2]]}>
-				<!--				<GeoText-->
-				<!--					cache-->
-				<!--					material={pool[ds.poolIdx].mat}-->
-				<!--					text={ds.x.toFixed(2).toUpperCase() || '0' || ds.text.toUpperCase()}-->
-				<!--					size={height / 2}-->
-				<!--				/>-->
+			<T.Group position={[ds.x + ds.slide, position[1], position[2]]}>
 				<GeoText
 					cache
 					material={pool[ds.poolIdx].mat}

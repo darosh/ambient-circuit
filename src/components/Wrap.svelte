@@ -36,7 +36,8 @@
 		onStop,
 		onRewind,
 		onNextScene,
-		onPrevScene
+		onPrevScene,
+		freeze = false
 	} = $props()
 </script>
 
@@ -94,11 +95,16 @@
 				engine={audioEngineRef}
 				defaultAnalyser={activeScene?.audioView?.defaultAnalyser}
 				title={sceneId.replace('scene-', '')}
+				currentBeat={tempo?.currentBeat ?? 0}
+				bpm={tempo?.config?.bpm ?? 120}
+				beatsVisible={activeScene.sequencerBeats}
+				sequencerMode={activeScene.sequencerMode}
 				{onPlay}
 				{onStop}
 				{onRewind}
 				{onNextScene}
 				{onPrevScene}
+				{freeze}
 			/>
 		{/if}
 	</BloomHud>

@@ -63,6 +63,8 @@ export type SceneConfig = {
 	polar?: boolean
 	stars?: boolean
 	names?: boolean
+	sequencerBeats?: number
+	sequencerMode?: 'time' | 'compact'
 	renderPlayOnly?: boolean
 	rotatePlay?: boolean | number
 	pitch?: number
