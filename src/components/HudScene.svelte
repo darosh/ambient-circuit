@@ -1,23 +1,38 @@
 <script lang="ts">
 	import { extend, T, useTask } from '@threlte/core'
-	import { useViewport } from '@threlte/extras'
+	import { interactivity, useViewport, Align } from '@threlte/extras'
 	import type { AudioEngine, AudioChain } from '../lib/audio'
-	import { resolveAnalyzerType, getChainLabel } from '../lib/audio/engine'
+	import { resolveAnalyzerType, getChainLabel, toggleMute } from '../lib/audio/engine'
 	import { buildImpactMaterial } from '../lib/video/material-impact'
+	import { createInstrumentGeometry, type ArrowKind } from '../lib/video/instrument-geometry'
 	import AnalyserView from './AnalyserView.svelte'
-	import { Color, MeshStandardNodeMaterial, MeshStandardMaterial } from 'three/webgpu'
-	import TubeText from './TubeText.svelte'
+	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
+	import GeoText from './GeoText.svelte'
 
-	extend({ MeshStandardNodeMaterial, MeshStandardMaterial })
+	extend({ MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial })
+
+	interactivity()
 
 	let {
 		engine,
 		defaultAnalyser,
-		baseColor = '#ffffff'
+		baseColor = '#ffffff',
+		title = 'Scene-Title',
+		onPlay,
+		onStop,
+		onRewind,
+		onNextScene,
+		onPrevScene
 	}: {
 		engine: AudioEngine | null
 		defaultAnalyser: string | undefined
 		baseColor: string
+		title: string
+		onPlay: () => void
+		onStop: () => void
+		onRewind: () => void
+		onNextScene: () => void
+		onPrevScene: () => void
 	} = $props()
 
 	const viewport = useViewport()
@@ -48,6 +63,111 @@
 	const availHeight = $derived($viewport.height - 1)
 	const sphereR = $derived(Math.max(MIN_SPHERE_R, Math.min(BASE_SPHERE_R, availHeight / rowCount)))
 	const rowSpacing = $derived(sphereR * 2 + 0.25)
+
+	// --- Transport controls ---
+	const TRANSPORT_FLASH = 0.4
+	const SPIN_DURATION = 0.2 // seconds for full 360°
+	const THROTTLE_DURATION = SPIN_DURATION + 0.05
+	const SPIN = Math.PI
+	const HOVER_INTENSITY = 0.3
+	const IDLE_TIMEOUT = 6 // seconds before fade
+	const FADE_DURATION = 0.4 // seconds for fade in/out
+
+	let idleTimer = 0
+	let controlsOpacity = $state(1)
+	let targetOpacity = 1
+
+	function onMouseActivity() {
+		idleTimer = 0
+		targetOpacity = 1
+	}
+
+	$effect(() => {
+		window.addEventListener('pointermove', onMouseActivity)
+		window.addEventListener('pointerdown', onMouseActivity)
+		return () => {
+			window.removeEventListener('pointermove', onMouseActivity)
+			window.removeEventListener('pointerdown', onMouseActivity)
+		}
+	})
+
+	type BtnDef = { kind: ArrowKind; action: () => void; rotY?: number; rotX?: number }
+
+	let isMuted = $state(false)
+
+	const btnDefs: BtnDef[] = [
+		{
+			kind: 'plain',
+			rotY: Math.PI,
+			action: () => setTimeout(onPrevScene, THROTTLE_DURATION * 1000)
+		},
+		{
+			kind: 'plain',
+			action: () => setTimeout(onNextScene, THROTTLE_DURATION * 1000)
+		},
+		{
+			kind: 'repro',
+			// rotX: Math.PI,
+			action: () => {
+				isMuted = toggleMute(engine)
+			}
+		},
+		{
+			kind: 'fwd',
+			rotY: Math.PI,
+			action: () => onRewind()
+		},
+		{
+			kind: 'stop',
+			action: () => onStop()
+		},
+		{
+			kind: 'play',
+			action: () => onPlay()
+		}
+	]
+
+	type BtnState = {
+		fx: ReturnType<typeof buildImpactMaterial>
+		animTime: number
+		spinFrom: number
+		spinTo: number
+		spinT: number // 0=idle, >0=animating (counts down from SPIN_DURATION)
+		hovered: boolean
+	}
+
+	const btnStates: BtnState[] = btnDefs.map(() => ({
+		fx: buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.5, 2),
+		animTime: 0,
+		spinFrom: 0,
+		spinTo: 0,
+		spinT: 0,
+		hovered: false
+	}))
+
+	// Reactive spin angles for template
+	let btnSpinAngles = $state<number[]>(btnDefs.map(() => 0))
+
+	function onBtnClick(i: number) {
+		onMouseActivity()
+		btnDefs[i].action()
+		const b = btnStates[i]
+		b.animTime = TRANSPORT_FLASH
+		b.fx.impactColor.value.set(baseColor)
+		// Start spin: from current angle to next full 360°
+		b.spinFrom =
+			b.spinT > 0 ? b.spinFrom + (b.spinTo - b.spinFrom) * (1 - b.spinT / SPIN_DURATION) : b.spinTo
+		b.spinTo = b.spinFrom + SPIN
+		b.spinT = SPIN_DURATION
+	}
+
+	function onBtnEnter(i: number) {
+		btnStates[i].hovered = true
+	}
+
+	function onBtnLeave(i: number) {
+		btnStates[i].hovered = false
+	}
 
 	// Poll for chain changes
 	useTask(() => {
@@ -81,7 +201,7 @@
 				const fx = buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.5, 2)
 				nextStates.push({ chain: chains[i], fx, animTime: 0, lastSeen: 0 })
 				nextRows.push({ chain: chains[i], fx })
-				nextLabels.push('_')
+				nextLabels.push('.')
 				nextFlashing.push(false)
 			}
 			rowStates = nextStates
@@ -102,7 +222,7 @@
 			if (chain.lastTrigger > s.lastSeen) {
 				s.lastSeen = chain.lastTrigger
 				s.animTime = FLASH_DURATION
-				s.fx.impactColor.value = new Color(chain.audioSignal.color)
+				s.fx.impactColor.value.set(chain.audioSignal.color)
 				const newLabel = getChainLabel(chain) || '*'
 				if (labels[i] !== newLabel) {
 					labels[i] = newLabel
@@ -125,6 +245,53 @@
 		}
 		if (labelsChanged) labels = [...labels]
 		if (flashChanged) flashing = [...flashing]
+
+		// Idle timer + fade
+		idleTimer += delta
+		if (idleTimer >= IDLE_TIMEOUT) targetOpacity = 0
+		const opacityStep = delta / FADE_DURATION
+		if (controlsOpacity < targetOpacity) {
+			controlsOpacity = Math.min(targetOpacity, controlsOpacity + opacityStep)
+		} else if (controlsOpacity > targetOpacity) {
+			controlsOpacity = Math.max(targetOpacity, controlsOpacity - opacityStep)
+		}
+		for (let i = 0; i < btnStates.length; i++) {
+			btnStates[i].fx.alpha.value = controlsOpacity
+		}
+
+		// Transport button animation
+		let spinsChanged = false
+		for (let i = 0; i < btnStates.length; i++) {
+			const b = btnStates[i]
+
+			// Flash decay
+			if (b.animTime > 0) {
+				b.animTime = Math.max(0, b.animTime - delta)
+				b.fx.impactT.value = b.animTime / TRANSPORT_FLASH + (b.hovered ? HOVER_INTENSITY : 0)
+			} else {
+				b.fx.impactT.value = b.hovered ? HOVER_INTENSITY : 0
+			}
+
+			// Spin tween (easeOut)
+			if (b.spinT > 0) {
+				b.spinT = Math.max(0, b.spinT - delta)
+				const t = 1 - b.spinT / SPIN_DURATION
+				const eased = 1 - (1 - t) * (1 - t) // easeOutQuad
+				const angle = b.spinFrom + (b.spinTo - b.spinFrom) * eased
+				if (btnSpinAngles[i] !== angle) {
+					btnSpinAngles[i] = angle
+					spinsChanged = true
+				}
+			}
+		}
+		if (spinsChanged) btnSpinAngles = [...btnSpinAngles]
+	})
+
+	$effect(() => {
+		for (const { fx } of btnStates) {
+			fx.emissiveColor.value.set(baseColor)
+			fx.impactColor.value.set(baseColor)
+		}
 	})
 </script>
 
@@ -144,22 +311,8 @@
 	<!-- Note/chord label -->
 	{#if label}
 		{#key label}
-			<T.Group position={[x, y - sphereR / 2, 0]}>
-				<TubeText
-					fx={true}
-					material={row.fx.mat}
-					id={`hud-${i}`}
-					text={label.toUpperCase()}
-					color={baseColor}
-					spacing={2}
-					size={sphereR}
-					width={4}
-				/>
-				<!--			<Suspense>-->
-				<!--					<T.Mesh material={row.fx.mat}>-->
-				<!--						<Text3DGeometry size={sphereR} text={label.toUpperCase()} />-->
-				<!--					</T.Mesh>-->
-				<!--			</Suspense>-->
+			<T.Group position={[x, y - sphereR / 2 + sphereR * 0.075, 0]}>
+				<GeoText material={row.fx.mat} text={label.toUpperCase()} size={sphereR} />
 			</T.Group>
 		{/key}
 	{/if}
@@ -179,4 +332,45 @@
 			{baseColor}
 		/>
 	{/if}
+{/each}
+
+<T.Group position={[$viewport.width / 2 - sphereR * 1.25, -$viewport.height / 2 + sphereR * 5, 0]}>
+	{#key title}
+		<Align x={-1} y={1} z={false}>
+			<GeoText material={btnStates[5].fx.mat} text={title.toUpperCase()} size={sphereR * 1.8} />
+		</Align>
+	{/key}
+</T.Group>
+
+<!-- Transport controls (bottom-right) -->
+{#each btnDefs as btn, i (i)}
+	{@const btnSize = sphereR * 3}
+	{@const btnMargin = sphereR * 0.5}
+	{@const bx = $viewport.width / 2 - sphereR * 2}
+	{@const by = -$viewport.height / 2 + sphereR * 2}
+	{@const kind = btn.kind === 'repro' && isMuted ? 'muted' : btn.kind}
+	{@const geom = createInstrumentGeometry({
+		type: 'arrow',
+		kind,
+		size: btnSize / 2,
+		width: btnSize * 0.06,
+		cornerRadius: btnSize * 0.075
+	})}
+	<T.Group position={[bx - (btnDefs.length - 1 - i) * (btnSize + btnMargin), by, 0]}>
+		<T.Mesh
+			geometry={geom}
+			material={btnStates[i].fx.mat}
+			rotation.x={(btn.rotX ?? 0) + btnSpinAngles[i]}
+			rotation.y={(btn.rotY ?? 0) + Math.PI / 2}
+		/>
+		<!-- Invisible hitbox -->
+		<T.Mesh
+			onclick={() => onBtnClick(i)}
+			onpointerenter={() => onBtnEnter(i)}
+			onpointerleave={() => onBtnLeave(i)}
+		>
+			<T.BoxGeometry args={[btnSize, btnSize, btnSize]} />
+			<T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
+		</T.Mesh>
+	</T.Group>
 {/each}

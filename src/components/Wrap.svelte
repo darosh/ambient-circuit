@@ -31,7 +31,12 @@
 		selectedAudioChain,
 		allAudioChains = $bindable(),
 		audioEngineRef,
-		autoRotate
+		autoRotate,
+		onPlay,
+		onStop,
+		onRewind,
+		onNextScene,
+		onPrevScene
 	} = $props()
 </script>
 
@@ -88,6 +93,12 @@
 				baseColor={activeScene?.audioView?.color}
 				engine={audioEngineRef}
 				defaultAnalyser={activeScene?.audioView?.defaultAnalyser}
+				title={sceneId.replace('scene-', '')}
+				{onPlay}
+				{onStop}
+				{onRewind}
+				{onNextScene}
+				{onPrevScene}
 			/>
 		{/if}
 	</BloomHud>

@@ -661,6 +661,17 @@
 		bind:allAudioChains
 		{audioEngineRef}
 		{autoRotate}
+		onPlay={() => (tempo.isPlaying = true)}
+		onStop={() => (tempo.isPlaying = false)}
+		onRewind={() => {
+			tempo.currentBeat = 0
+			tempo.beatProgress = 0
+		}}
+		onNextScene={() =>
+			(sceneId = scenes[(scenes.findIndex((d) => d.id === sceneId) + 1) % scenes.length].id)}
+		onPrevScene={() =>
+			(sceneId =
+				scenes[(scenes.findIndex((d) => d.id === sceneId) - 1 + scenes.length) % scenes.length].id)}
 	></Wrap>
 </Canvas>
 
