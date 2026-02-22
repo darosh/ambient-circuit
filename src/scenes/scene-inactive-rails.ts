@@ -5,11 +5,11 @@ import { globalHandlerFactory, triggerHandler } from '../lib/trigger-handler'
 const c = colorFactory()
 const globalBeatHandler = globalHandlerFactory((ctx) => {
 	ctx.scene.rails.forEach((_m) => {
-		if (Math.random() < .9) {
+		if (Math.random() < 0.9) {
 			return
 		}
-		
-		const state = Math.floor(ctx.beat / 3)  % 2
+
+		const state = Math.floor(ctx.beat / 3) % 2
 		_m.state.active = !state
 	})
 })
@@ -100,12 +100,12 @@ export const scene: SceneConfig = {
 				{
 					type: 'sun',
 					beat: 2,
-					rays: 12,
+					rays: 12
 				},
 				{
 					type: 'sun',
 					beat: 4,
-					rays: 12,
+					rays: 12
 				}
 			]
 		}
