@@ -32,7 +32,10 @@ export const scene: SceneConfig = {
 		master: {
 			fx: [
 				{
-					tone: 'Compressor'
+					tone: 'Compressor',
+					params: {
+						threshold: -30
+					}
 				}
 			]
 		},

@@ -78,7 +78,7 @@ export const scene: SceneConfig = {
 				},
 				{
 					tone: 'Volume',
-					params: { volume: 24 }
+					params: { volume: 36 }
 				},
 				{
 					tone: 'Limiter'
