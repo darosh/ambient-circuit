@@ -21,7 +21,6 @@
 		width,
 		height,
 		charWidth,
-		position,
 		fadeThreshold = 0,
 		beatsVisible = 8,
 		bpm = 120,
@@ -34,7 +33,6 @@
 		width: number
 		height: number
 		charWidth: number
-		position: [number, number, number]
 		fadeThreshold?: number
 		beatsVisible?: number
 		bpm?: number
@@ -51,7 +49,7 @@
 	}
 
 	function getAlpha(x: number): number {
-		const nx = (x - position[0]) / width
+		const nx = (x - 0) / width
 		const clamped = Math.max(0, Math.min(1, (nx - fadeThreshold) / (1 - fadeThreshold)))
 		return 1 - clamped
 	}
@@ -138,8 +136,8 @@
 					mesh.visible = false
 					continue
 				}
-				const x = position[0] + (elapsed / beatsVisible) * width
-				if (x > position[0] + width) {
+				const x = 0 + (elapsed / beatsVisible) * width
+				if (x > 0 + width) {
 					pool[idx].alpha.value = 0
 					mesh.visible = false
 					continue
@@ -160,12 +158,12 @@
 
 				if (collapsed) {
 					mesh.geometry = dotGeom!
-					mesh.position.set(x + dotRadius, position[1] - dotRadius * 2.5, position[2])
+					mesh.position.set(x + dotRadius, -dotRadius * 2.5, 0)
 				} else {
 					const geom = getCachedTextGeometry(ring[idx].text.toUpperCase(), textSize)
 					if (geom) {
 						mesh.geometry = geom
-						mesh.position.set(x, position[1], position[2])
+						mesh.position.set(x, 0, 0)
 					} else {
 						mesh.visible = false
 						continue
@@ -175,7 +173,7 @@
 			}
 		} else {
 			// Compact mode
-			let x = position[0]
+			let x = 0
 			let rightEdge = -Infinity
 			let d = 0
 			for (; d < fillCount && d < MAX_SLOTS; d++) {
@@ -186,7 +184,7 @@
 				const noteW = ringWidths[idx]
 				const slide = ringSlides[idx]
 
-				if (x + slide > position[0] + width) {
+				if (x + slide > 0 + width) {
 					for (let r = d; r < fillCount && r < MAX_SLOTS; r++) {
 						pool[(headIdx + r) % MAX_SLOTS].alpha.value = 0
 						if (slotMeshes[r]) slotMeshes[r].visible = false
@@ -214,12 +212,12 @@
 
 				if (collapsed) {
 					mesh.geometry = dotGeom!
-					mesh.position.set(x + slide + dotRadius, position[1] - dotRadius * 2.5, position[2])
+					mesh.position.set(x + slide + dotRadius, -dotRadius * 2.5, 0)
 				} else {
 					const geom = getCachedTextGeometry(ring[idx].text.toUpperCase(), textSize)
 					if (geom) {
 						mesh.geometry = geom
-						mesh.position.set(x + slide, position[1], position[2])
+						mesh.position.set(x + slide, 0, 0)
 					} else {
 						mesh.visible = false
 						x += noteW

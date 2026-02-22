@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { extend, T, useTask } from '@threlte/core'
-	import { interactivity, useViewport, Align } from '@threlte/extras'
+	import { extend, T, useTask, useThrelte } from '@threlte/core'
+	import { interactivity, Align } from '@threlte/extras'
 	import type { AudioEngine, AudioChain } from '../lib/audio'
 	import { resolveAnalyzerType, getChainLabel, toggleMute } from '../lib/audio/engine'
 	import { buildImpactMaterial } from '../lib/video/material-impact'
@@ -50,7 +50,8 @@
 		freeze?: boolean
 	} = $props()
 
-	const viewport = useViewport()
+	const { size } = useThrelte()
+	const HUD_ZOOM = 80
 
 	const MIN_SPHERE_R = 0.08
 	const BASE_SPHERE_R = 0.2
@@ -80,8 +81,8 @@
 
 	// Adaptive layout
 	const rowCount = $derived(rows.length)
-	const availHeight = $derived($viewport.height - 1)
-	const vpWidth = $derived($viewport.width)
+	const availHeight = $derived($size.height / HUD_ZOOM - 1)
+	const vpWidth = $derived($size.width / HUD_ZOOM)
 	const sphereR = $derived(Math.max(MIN_SPHERE_R, Math.min(BASE_SPHERE_R, availHeight / rowCount)))
 	const rowSpacing = $derived(sphereR * 2 + 0.25)
 
@@ -367,8 +368,8 @@
 <T.OrthographicCamera makeDefault zoom={80} position={[0, 0, 10]} />
 
 {#each rows as row, i (i)}
-	{@const x = -$viewport.width / 2 + sphereR * 2}
-	{@const y = $viewport.height / 2 - sphereR * 2.5 - i * rowSpacing}
+	{@const x = -$size.width / HUD_ZOOM / 2 + sphereR * 2}
+	{@const y = $size.height / HUD_ZOOM / 2 - sphereR * 2.5 - i * rowSpacing}
 	{@const analyzerType = resolveAnalyzerType(row.chain.config.analyzer, defaultAnalyser)}
 	{@const label = labels[i] ?? ''}
 
@@ -377,7 +378,7 @@
 		: x + (sequencerMode === 'time' ? 0 : 4) * sphereR}
 
 	{@const seqX = analyserEndX + sphereR}
-	{@const seqWidth = $viewport.width / 2 - sphereR * 2 - seqX}
+	{@const seqWidth = $size.width / HUD_ZOOM / 2 - sphereR * 2 - seqX}
 
 	<!-- Note/chord label -->
 	{#if label}
@@ -402,23 +403,30 @@
 	{/if}
 
 	{#if sequencerMode && seqEvents[i] && seqWidth > 0}
-		<SequencerView
-			events={seqEvents[i]}
-			mode={sequencerMode}
-			width={seqWidth}
-			height={sphereR * 2}
-			charWidth={CHAR_WIDTH / 2}
-			position={[seqX, y - sphereR / 2 + sphereR * 0.075, 0]}
-			colors={sequencerColors}
-			{beatsVisible}
-			{bpm}
-			{baseColor}
-			{freeze}
-		/>
+		<T.Group position={[seqX, y - sphereR / 2 + sphereR * 0.075, 0]}>
+			<SequencerView
+				events={seqEvents[i]}
+				mode={sequencerMode}
+				width={seqWidth}
+				height={sphereR * 2}
+				charWidth={CHAR_WIDTH / 2}
+				colors={sequencerColors}
+				{beatsVisible}
+				{bpm}
+				{baseColor}
+				{freeze}
+			/>
+		</T.Group>
 	{/if}
 {/each}
 
-<T.Group position={[$viewport.width / 2 - sphereR * 1.25, -$viewport.height / 2 + sphereR * 5, 0]}>
+<T.Group
+	position={[
+		$size.width / HUD_ZOOM / 2 - sphereR * 1.25,
+		-$size.height / HUD_ZOOM / 2 + sphereR * 5,
+		0
+	]}
+>
 	{#key title}
 		<Align x={-1} y={1} z={false}>
 			<GeoText
@@ -435,8 +443,8 @@
 {#each btnDefs as btn, i (i)}
 	{@const btnSize = sphereR * 3}
 	{@const btnMargin = sphereR * 0.5}
-	{@const bx = $viewport.width / 2 - sphereR * 2}
-	{@const by = -$viewport.height / 2 + sphereR * 2}
+	{@const bx = $size.width / HUD_ZOOM / 2 - sphereR * 2}
+	{@const by = -$size.height / HUD_ZOOM / 2 + sphereR * 2}
 	{@const kind = btn.kind === 'repro' && isMuted ? 'muted' : btn.kind}
 	{@const geom = createInstrumentGeometry({
 		type: 'arrow',
