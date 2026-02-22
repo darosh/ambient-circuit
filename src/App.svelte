@@ -39,6 +39,7 @@
 	import Wrap from './components/Wrap.svelte'
 	import { createKeydownHandler } from './lib/helpers/keyboard'
 	import { readChainParams, readBusParams, type ParamInfo } from './lib/helpers/audio-params'
+	import { onMount } from 'svelte'
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
@@ -65,7 +66,7 @@
 	let showNames = $state(false)
 	let wireframe = $state(false)
 	let showStats = $state(false)
-	let showHud = $state(true)
+	let showHud = $state(false)
 	let useFreeze = $state(false)
 	let fxPost = $state(true)
 	let fxHud = $state(true)
@@ -94,6 +95,12 @@
 	let audioEngineRef = $state<AudioEngine | null>(null)
 	let selectedAudioTarget = $state<string>('')
 	let analyzerRafId = 0
+
+	onMount(() => {
+		setTimeout(() => {
+			showHud = true
+		}, 0)
+	})
 
 	// Build dropdown options for chain/bus/master selector
 	let audioTargetOptions = $derived(

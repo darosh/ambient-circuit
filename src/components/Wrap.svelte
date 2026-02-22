@@ -78,7 +78,7 @@
 
 <!-- Example: <BloomHud hudFx={fxPost ? (color) => gaussianBlur(color, null, 2) : undefined} -->
 
-{#if fxPost && !showHud}
+{#if fxPost && !(showHud && activeScene && tempo)}
 	<Bloom strength={0.5} radius={0.2} threshold={0.5} tint={activeScene.tint} />
 {:else}
 	<BloomHud
@@ -89,7 +89,7 @@
 		threshold={0.5}
 		tint={activeScene.tint}
 	>
-		{#if showHud}
+		{#if showHud && activeScene && tempo}
 			<HudScene
 				baseColor={activeScene?.audioView?.color}
 				engine={audioEngineRef}

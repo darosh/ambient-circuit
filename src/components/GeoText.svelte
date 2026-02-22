@@ -19,6 +19,19 @@
 		geoCache.clear()
 		cacheVersion++
 	}
+
+	export function getCachedTextGeometry(text: string, size: number): BufferGeometry | undefined {
+		if (!loadedFont) return undefined
+		const key = `${text}_${size}`
+		if (!geoCache.has(key)) {
+			geoCache.set(
+				key,
+				new TextGeometry(text, { font: loadedFont, size, depth: 0, curveSegments: 3 })
+			)
+			cacheVersion++
+		}
+		return geoCache.get(key)
+	}
 </script>
 
 <script lang="ts">

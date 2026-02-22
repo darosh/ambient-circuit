@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import type { AudioEngine, AnalyzerType } from '../lib/audio'
-	import { type Vector3Tuple } from 'three/webgpu'
-	import { Vector3, LineCurve3, CubicBezierCurve3 } from 'three/webgpu'
+	import { type Vector3Tuple, type Material } from 'three/webgpu'
+	import { Vector3, LineCurve3, CubicBezierCurve3, MeshStandardMaterial } from 'three/webgpu'
 	import AnalyserView from './AnalyserView.svelte'
 	import { MathUtils } from 'three/webgpu'
 	import { audioLayout } from '../lib/audio-layout'
@@ -55,6 +55,19 @@
 
 	let fxArr: ReturnType<typeof buildImpactMaterial>[] = $state([])
 	const animTimes: number[] = []
+	let analyzerMaterial: Material
+
+	$effect(() => {
+		analyzerMaterial = new MeshStandardMaterial({
+			color: baseColor,
+			emissive: baseColor,
+			emissiveIntensity: 0.5
+		})
+
+		return () => {
+			analyzerMaterial?.dispose()
+		}
+	})
 
 	// Derive layout from engine state
 	const layout = $derived.by(() => {
@@ -221,7 +234,7 @@
 				<T.Group position={info.pos} rotation.x={DEG_90}>
 					<!--				<Billboard>-->
 					<AnalyserView
-						{baseColor}
+						material={analyzerMaterial}
 						analyzer={info.analyzer}
 						type={info.type}
 						height={info.height}

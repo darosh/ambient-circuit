@@ -225,8 +225,7 @@ Create a "marble-machine-inspired" music sequencer where:
 
 1. Multi-marble interaction patterns
 2. Investigate 627 MeshBasicMaterial instances in heap (likely default materials from `new Mesh()` without material arg)
-3. Fix skipped `tests/marble-state.test.ts`
-4. Visual polishing and effects (lightning on collision)
+3. Visual polishing and effects (lightning on collision)
 
 **Blocked/Questions:**
 

@@ -10,6 +10,7 @@
 	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
 	import GeoText from './GeoText.svelte'
 	import { easeInCubic } from '../lib/easing'
+	import { onDestroy } from 'svelte'
 
 	extend({ MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial })
 
@@ -67,9 +68,8 @@
 	let rowStates: RowState[] = []
 	let prevChainRefs: AudioChain[] = []
 
-	// Reactive labels + flash state (written from useTask via assignment)
+	// Reactive labels (written from useTask via in-place mutation)
 	let labels = $state<string[]>([])
-	let flashing = $state<boolean[]>([])
 	// Reactive rows for template (rebuilt on chain change)
 	let rows = $state<{ chain: AudioChain; fx: ReturnType<typeof buildImpactMaterial> }[]>([])
 
@@ -212,7 +212,6 @@
 				prevChainRefs = []
 				rows = []
 				labels = []
-				flashing = []
 				seqEvents = []
 				seqLastSeen = []
 			}
@@ -229,22 +228,21 @@
 			}
 		}
 		if (changed) {
+			// Dispose old row materials
+			for (const s of rowStates) s.fx.mat.dispose()
 			prevChainRefs = chains
 			const nextStates: RowState[] = []
 			const nextRows: typeof rows = []
 			const nextLabels: string[] = []
-			const nextFlashing: boolean[] = []
 			for (let i = 0; i < chains.length; i++) {
 				const fx = buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.5, 2)
 				nextStates.push({ chain: chains[i], fx, animTime: 0, lastSeen: 0 })
 				nextRows.push({ chain: chains[i], fx })
 				nextLabels.push('.')
-				nextFlashing.push(false)
 			}
 			rowStates = nextStates
 			rows = nextRows
 			labels = nextLabels
-			flashing = nextFlashing
 			seqEvents = chains.map(() => [])
 			seqLastSeen = chains.map(() => 0)
 			// Init animated X — no animation on chain setup, snap to target
@@ -265,8 +263,6 @@
 
 	// Animation + label update
 	useTask((delta) => {
-		let labelsChanged = false
-		let flashChanged = false
 		for (let i = 0; i < rowStates.length; i++) {
 			const s = rowStates[i]
 			const chain = s.chain
@@ -276,13 +272,11 @@
 				s.animTime = FLASH_DURATION
 				s.fx.impactColor.value.set(chain.audioSignal.color)
 				const newLabel = getChainLabel(chain) || '*'
-				if (labels[i] !== newLabel) {
-					labels[i] = newLabel
-					labelsChanged = true
-				}
+				// In-place mutation — Svelte 5 $state proxy tracks element-level changes
+				if (labels[i] !== newLabel) labels[i] = newLabel
 			}
 
-			// Sequencer: detect new trigger per-row (no outer array reassignment needed)
+			// Sequencer: detect new trigger per-row
 			if (i < seqLastSeen.length && chain.lastTrigger > seqLastSeen[i]) {
 				seqLastSeen[i] = chain.lastTrigger
 				const ev: NoteEvent = {
@@ -294,28 +288,16 @@
 				const arr = seqEvents[i]
 				arr.push(ev)
 				if (arr.length > SEQ_MAX) arr.splice(0, arr.length - SEQ_MAX)
-				// Svelte 5 tracks arr mutation directly — no outer seqEvents reassignment needed
 			}
 
-			const wasFlashing = flashing[i]
 			if (s.animTime > 0) {
 				s.animTime = Math.max(0, s.animTime - delta)
 				s.fx.impactT.value = s.animTime / FLASH_DURATION
-				if (!wasFlashing) {
-					flashing[i] = true
-					flashChanged = true
-				}
-			} else if (wasFlashing) {
-				flashing[i] = false
-				flashChanged = true
 			}
 		}
-		if (labelsChanged) labels = [...labels]
-		if (flashChanged) flashing = [...flashing]
 
-		// Animate analyser X positions (easeInQuad 200ms)
+		// Animate analyser X positions (easeInCubic 100ms)
 		const baseX = -vpWidth / 2 + sphereR * 2
-		let animXChanged = false
 		for (let i = 0; i < rowStates.length; i++) {
 			const label = labels[i] ?? ''
 			const targetX = baseX + sphereR * 4 + Math.max(label.length - 2, 0) * sphereR * CHAR_WIDTH
@@ -327,11 +309,10 @@
 			if (_aAnimT[i] < ANIM_DUR) {
 				_aAnimT[i] = Math.min(ANIM_DUR, (_aAnimT[i] ?? ANIM_DUR) + delta)
 				const t = _aAnimT[i] / ANIM_DUR
-				analyserAnimX[i] = _aStartX[i] + (targetX - _aStartX[i]) * easeInCubic(t) // easeInQuad
-				animXChanged = true
+				// In-place mutation — no array spread
+				analyserAnimX[i] = _aStartX[i] + (targetX - _aStartX[i]) * easeInCubic(t)
 			}
 		}
-		if (animXChanged) analyserAnimX = [...analyserAnimX]
 
 		// Idle timer + fade
 		idleTimer += delta
@@ -347,7 +328,6 @@
 		}
 
 		// Transport button animation
-		let spinsChanged = false
 		for (let i = 0; i < btnStates.length; i++) {
 			const b = btnStates[i]
 
@@ -365,13 +345,10 @@
 				const t = 1 - b.spinT / SPIN_DURATION
 				const eased = 1 - (1 - t) * (1 - t) // easeOutQuad
 				const angle = b.spinFrom + (b.spinTo - b.spinFrom) * eased
-				if (btnSpinAngles[i] !== angle) {
-					btnSpinAngles[i] = angle
-					spinsChanged = true
-				}
+				// In-place mutation — no array spread
+				btnSpinAngles[i] = angle
 			}
 		}
-		if (spinsChanged) btnSpinAngles = [...btnSpinAngles]
 	})
 
 	$effect(() => {
@@ -379,6 +356,11 @@
 			fx.emissiveColor.value.set(baseColor)
 			fx.impactColor.value.set(baseColor)
 		}
+	})
+
+	onDestroy(() => {
+		for (const s of rowStates) s.fx.mat.dispose()
+		for (const b of btnStates) b.fx.mat.dispose()
 	})
 </script>
 
@@ -397,11 +379,9 @@
 
 	<!-- Note/chord label -->
 	{#if label}
-		{#key label}
-			<T.Group position={[x, y - sphereR / 2 + sphereR * 0.075, 0]}>
-				<GeoText material={row.fx.mat} text={label.toUpperCase()} size={sphereR} />
-			</T.Group>
-		{/key}
+		<T.Group position={[x, y - sphereR / 2 + sphereR * 0.075, 0]}>
+			<GeoText cache material={row.fx.mat} text={label.toUpperCase()} size={sphereR} />
+		</T.Group>
 	{/if}
 
 	{#if row.chain.analyzer}
@@ -416,7 +396,6 @@
 				y - sphereR / 2,
 				0
 			]}
-			{baseColor}
 		/>
 	{/if}
 
@@ -440,7 +419,12 @@
 <T.Group position={[$viewport.width / 2 - sphereR * 1.25, -$viewport.height / 2 + sphereR * 5, 0]}>
 	{#key title}
 		<Align x={-1} y={1} z={false}>
-			<GeoText material={btnStates[5].fx.mat} text={title.toUpperCase()} size={sphereR * 1.8} />
+			<GeoText
+				cache
+				material={btnStates[5].fx.mat}
+				text={title.toUpperCase()}
+				size={sphereR * 1.8}
+			/>
 		</Align>
 	{/key}
 </T.Group>

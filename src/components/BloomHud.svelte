@@ -46,10 +46,16 @@
 	let bloomNode: TslNode = null
 
 	// Build pipeline once (recompiles only when camera/HUD structure changes)
+	// Guarded: skip until main camera is ready (avoids wasteful build during init)
+	// strength/radius/threshold are untracked — handled by uniform updates in second $effect
 	$effect(() => {
+		if (!camera.current) return
+		const s = untrack(() => strength)
+		const r = untrack(() => radius)
+		const th = untrack(() => threshold)
 		const scenePass = pass(scene, camera.current)
 		const scenePassColor = scenePass.getTextureNode('output')
-		bloomNode = bloom(scenePassColor, strength, radius, threshold)
+		bloomNode = bloom(scenePassColor, s, r, th)
 
 		let output: TslNode
 
@@ -65,8 +71,8 @@
 			if (hudBloom) {
 				// Composite HUD before bloom — both get bloomed
 				const combined = add(
-					scenePassColor.add(bloom(scenePassColor, strength, radius, threshold)),
-					hudColor.add(bloom(hudColor, strength, radius, threshold))
+					scenePassColor.add(bloom(scenePassColor, s, r, th)),
+					hudColor.add(bloom(hudColor, s, r, th))
 				)
 
 				output = combined.mul(tintUniform)
