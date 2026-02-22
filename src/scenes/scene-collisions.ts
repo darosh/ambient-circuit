@@ -10,7 +10,7 @@ export const scene: SceneConfig = {
 	description: 'Marble collisions\ntest',
 	bpm: 160,
 	sequencerBeats: 12,
-	sequencerMode: 'compact',
+	sequencerMode: 'time',
 	triggerHandler,
 	bounceHandler: (ctx) => {
 		bouncerHandler(ctx)
