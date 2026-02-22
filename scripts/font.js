@@ -6,51 +6,55 @@ const convertFont = (font, { weight, variant, characters }) => {
 	const scale = (1000 * 100) / ((font.unitsPerEm || 2048) * 72)
 	const result = { glyphs: {} }
 
-	Object.values(font.glyphs.glyphs).forEach(function (glyph) {
-		if (glyph.unicode !== undefined) {
-			const glyphCharacter = String.fromCharCode(glyph.unicode)
-			let needToExport = true
-
-			// If characters restriction is provided, only export those characters
-			if (characters) {
-				needToExport = characters.indexOf(glyphCharacter) !== -1
+	const exportGlyph = (char, glyph) => {
+		const token = {}
+		token.ha = Math.round(glyph.advanceWidth * scale)
+		token.x_min = Math.round(glyph.xMin * scale)
+		token.x_max = Math.round(glyph.xMax * scale)
+		token.o = ''
+		glyph.path.commands.forEach(function (command) {
+			if (command.type.toLowerCase() === 'c') {
+				command.type = 'b'
 			}
+			token.o += command.type.toLowerCase()
+			token.o += ' '
+			if (command.x !== undefined && command.y !== undefined) {
+				token.o += Math.round(command.x * scale)
+				token.o += ' '
+				token.o += Math.round(command.y * scale)
+				token.o += ' '
+			}
+			if (command.x1 !== undefined && command.y1 !== undefined) {
+				token.o += Math.round(command.x1 * scale)
+				token.o += ' '
+				token.o += Math.round(command.y1 * scale)
+				token.o += ' '
+			}
+			if (command.x2 !== undefined && command.y2 !== undefined) {
+				token.o += Math.round(command.x2 * scale)
+				token.o += ' '
+				token.o += Math.round(command.y2 * scale)
+				token.o += ' '
+			}
+		})
+		result.glyphs[char] = token
+	}
 
-			if (needToExport) {
-				const token = {}
-				token.ha = Math.round(glyph.advanceWidth * scale)
-				token.x_min = Math.round(glyph.xMin * scale)
-				token.x_max = Math.round(glyph.xMax * scale)
-				token.o = ''
-				glyph.path.commands.forEach(function (command) {
-					if (command.type.toLowerCase() === 'c') {
-						command.type = 'b'
-					}
-					token.o += command.type.toLowerCase()
-					token.o += ' '
-					if (command.x !== undefined && command.y !== undefined) {
-						token.o += Math.round(command.x * scale)
-						token.o += ' '
-						token.o += Math.round(command.y * scale)
-						token.o += ' '
-					}
-					if (command.x1 !== undefined && command.y1 !== undefined) {
-						token.o += Math.round(command.x1 * scale)
-						token.o += ' '
-						token.o += Math.round(command.y1 * scale)
-						token.o += ' '
-					}
-					if (command.x2 !== undefined && command.y2 !== undefined) {
-						token.o += Math.round(command.x2 * scale)
-						token.o += ' '
-						token.o += Math.round(command.y2 * scale)
-						token.o += ' '
-					}
-				})
-				result.glyphs[String.fromCharCode(glyph.unicode)] = token
+	if (characters) {
+		// Use charmap lookup so glyphs like space (unicode=0 in glyph but mapped from char 32) are found correctly
+		for (const char of characters) {
+			const glyph = font.charToGlyph(char)
+			if (glyph && glyph.advanceWidth) {
+				exportGlyph(char, glyph)
 			}
 		}
-	})
+	} else {
+		Object.values(font.glyphs.glyphs).forEach(function (glyph) {
+			if (glyph.unicode !== undefined) {
+				exportGlyph(String.fromCharCode(glyph.unicode), glyph)
+			}
+		})
+	}
 
 	result.familyName = font.familyName
 	result.ascender = Math.round(font.ascender * scale)
