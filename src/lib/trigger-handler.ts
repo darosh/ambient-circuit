@@ -1,11 +1,11 @@
 import { sendMidiNote, getMidiState } from './midi/midi'
 import { triggerChain } from './audio'
 import type { BounceContext, GlobalBeatContext, TriggerContext } from './scene'
-import midiNotes from '../scenes/utils/notes'
+import {notes} from '../scenes/utils/notes'
 
 const VELOCITY = 100
 const DURATION = 200
-const NOTE = midiNotes.C4
+const NOTE = notes.C4
 
 export function triggerHandler(ctx: TriggerContext) {
 	// console.log('TRIGGER', ctx.railId, ctx.beat)

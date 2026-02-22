@@ -1044,9 +1044,7 @@ function midiToFreq(note: number): number {
 // --- Chord / note label ---
 
 import { detect } from '@tonaljs/chord-detect'
-import tones from '../../scenes/utils/tones'
-
-const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+import { tones, toneNames } from '../../scenes/utils/tones'
 
 /**
  * Get a label for a chain: chord name if 3+ unique pitch classes sounding, else note name
@@ -1065,7 +1063,7 @@ export function getChainLabel(chain: AudioChain): string {
 	// Collect unique pitch classes
 	const pcs = new Set<string>()
 	for (let i = 0; i < alive.length; i++) {
-		pcs.add(NOTE_NAMES[alive[i].midi % 12])
+		pcs.add(toneNames[alive[i].midi % 12])
 	}
 
 	if (pcs.size >= 2) {
