@@ -48,6 +48,7 @@ export type BounceHandler = (ctx: BounceContext) => void
 
 export type SceneConfig = {
 	id: string
+	description?: string
 	bpm: number
 	rails: RailData[]
 	/** Arbitrary scene-level state, passed through to all handler contexts as ctx.user */

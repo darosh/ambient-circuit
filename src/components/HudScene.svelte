@@ -11,6 +11,7 @@
 	import GeoText from './GeoText.svelte'
 	import { easeInCubic } from '../lib/easing'
 	import { onDestroy } from 'svelte'
+	import type { TempoState } from '../lib/tempo'
 
 	extend({ MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial })
 
@@ -31,6 +32,8 @@
 		beatsVisible = 8,
 		sequencerColors,
 		bpm = 120,
+		tempo,
+		description,
 		freeze = false
 	}: {
 		engine: AudioEngine | null
@@ -47,7 +50,9 @@
 		sequencerColors?: boolean
 		beatsVisible?: number
 		bpm?: number
+		tempo: TempoState
 		freeze?: boolean
+		description?: string
 	} = $props()
 
 	const { size } = useThrelte()
@@ -56,7 +61,7 @@
 	const MIN_SPHERE_R = 0.08
 	const BASE_SPHERE_R = 0.2
 	const FLASH_DURATION = 0.8
-	const CHAR_WIDTH = 0.68
+	const CHAR_WIDTH = 0.69
 
 	type RowState = {
 		chain: AudioChain
@@ -84,7 +89,8 @@
 	const availHeight = $derived($size.height / HUD_ZOOM - 1)
 	const vpWidth = $derived($size.width / HUD_ZOOM)
 	const sphereR = $derived(Math.max(MIN_SPHERE_R, Math.min(BASE_SPHERE_R, availHeight / rowCount)))
-	const rowSpacing = $derived(sphereR * 2 + 0.25)
+	const rowSpacing = $derived(sphereR * 3)
+	const otherSpacing = $derived(sphereR * 2.5)
 
 	// Animated analyser X positions (easeInQuad, 200ms)
 	const ANIM_DUR = 0.1
@@ -105,6 +111,9 @@
 	let idleTimer = 0
 	let controlsOpacity = $state(1)
 	let targetOpacity = 1
+
+	const textMat = $derived(buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.4, 2))
+	const textMatLarge = $derived(buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.2, 2))
 
 	function onMouseActivity() {
 		idleTimer = 0
@@ -328,6 +337,9 @@
 			btnStates[i].fx.alpha.value = controlsOpacity
 		}
 
+		textMat.alpha.value = controlsOpacity
+		textMatLarge.alpha.value = controlsOpacity
+
 		// Transport button animation
 		for (let i = 0; i < btnStates.length; i++) {
 			const b = btnStates[i]
@@ -357,11 +369,17 @@
 			fx.emissiveColor.value.set(baseColor)
 			fx.impactColor.value.set(baseColor)
 		}
+		textMat.impactColor.value.set(baseColor)
+		textMat.emissiveColor.value.set(baseColor)
+		textMatLarge.impactColor.value.set(baseColor)
+		textMatLarge.emissiveColor.value.set(baseColor)
 	})
 
 	onDestroy(() => {
 		for (const s of rowStates) s.fx.mat.dispose()
 		for (const b of btnStates) b.fx.mat.dispose()
+		textMat?.mat?.dispose()
+		textMatLarge?.mat?.dispose()
 	})
 </script>
 
@@ -369,7 +387,7 @@
 
 {#each rows as row, i (i)}
 	{@const x = -$size.width / HUD_ZOOM / 2 + sphereR * 2}
-	{@const y = $size.height / HUD_ZOOM / 2 - sphereR * 2.5 - i * rowSpacing}
+	{@const y = $size.height / HUD_ZOOM / 2 - sphereR / 2 - i * rowSpacing - otherSpacing}
 	{@const analyzerType = resolveAnalyzerType(row.chain.config.analyzer, defaultAnalyser)}
 	{@const label = labels[i] ?? ''}
 
@@ -422,28 +440,57 @@
 
 <T.Group
 	position={[
-		$size.width / HUD_ZOOM / 2 - sphereR * 1.25,
-		-$size.height / HUD_ZOOM / 2 + sphereR * 5,
+		$size.width / HUD_ZOOM / 2 - otherSpacing,
+		-$size.height / HUD_ZOOM / 2 + sphereR * 3 + otherSpacing,
 		0
 	]}
 >
 	{#key title}
 		<Align x={-1} y={1} z={false}>
-			<GeoText
-				cache
-				material={btnStates[5].fx.mat}
-				text={title.toUpperCase()}
-				size={sphereR * 1.8}
-			/>
+			<GeoText cache material={textMatLarge.mat} text={title.toUpperCase()} size={sphereR * 1.8} />
 		</Align>
 	{/key}
 </T.Group>
+
+{#if description}
+	{#each description.split('\n') as line, idx (line)}
+		{@const textSize = sphereR * 1.2}
+		{@const marginX = 2.5 * sphereR}
+		{@const marginY = marginX + textSize}
+		<T.Group
+			position={[
+				$size.width / HUD_ZOOM / 2 - marginX - line.length * textSize * CHAR_WIDTH,
+				$size.height / HUD_ZOOM / 2 - marginY - rowSpacing * idx + sphereR * 0.08,
+				0
+			]}
+		>
+			<GeoText cache material={textMat.mat} text={line.toUpperCase()} size={textSize} />
+		</T.Group>
+	{/each}
+{/if}
+
+{#if tempo.isPlaying}
+	{@const beatSize = sphereR * 1.2}
+	{@const beatText = tempo.currentBeat.toString()}
+	<T.Group
+		position={[
+			$size.width / HUD_ZOOM / 2 -
+				otherSpacing -
+				sphereR * 21.9 -
+				beatText.length * beatSize * CHAR_WIDTH,
+			-$size.height / HUD_ZOOM / 2 + sphereR * 1.5,
+			0
+		]}
+	>
+		<GeoText cache material={textMat.mat} text={beatText} size={beatSize} />
+	</T.Group>
+{/if}
 
 <!-- Transport controls (bottom-right) -->
 {#each btnDefs as btn, i (i)}
 	{@const btnSize = sphereR * 3}
 	{@const btnMargin = sphereR * 0.5}
-	{@const bx = $size.width / HUD_ZOOM / 2 - sphereR * 2}
+	{@const bx = $size.width / HUD_ZOOM / 2 - otherSpacing - sphereR * 0.9}
 	{@const by = -$size.height / HUD_ZOOM / 2 + sphereR * 2}
 	{@const kind = btn.kind === 'repro' && isMuted ? 'muted' : btn.kind}
 	{@const geom = createInstrumentGeometry({

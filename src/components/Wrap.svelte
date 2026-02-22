@@ -97,6 +97,8 @@
 				title={sceneId.replace('scene-', '')}
 				currentBeat={tempo?.currentBeat ?? 0}
 				bpm={tempo?.config?.bpm ?? 120}
+				{tempo}
+				description={activeScene.description}
 				beatsVisible={activeScene.sequencerBeats}
 				sequencerMode={activeScene.sequencerMode}
 				sequencerColors={activeScene.sequencerColors}
