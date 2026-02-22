@@ -41,6 +41,7 @@
 - [ ] version in app
 - [ ] negative Z audio view
 - [ ] HUD
+- [ ] fix sequencer offset in scene-rings
 
 The 627 MeshBasicMaterial count likely comes from new Mesh() without material arg (Three.js creates a default
 MeshBasicMaterial per mesh): 48 × N_rows SequencerView + 16 × N_rows AnalyserView + transport hitboxes. A future
