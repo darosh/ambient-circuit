@@ -136,6 +136,19 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Active state enforcement (skip inactive marbles in triggers)
   - [x] Scene-level easing prop with runtime override support
   - [x] Demo scene (scene-easing) with runtime easing changes
+  - [x] Active/running state system
+    - [x] `active` in MarbleConfig/MarbleDataBase/RailData (initial off state)
+    - [x] `running` in MarbleConfig/MarbleDataBase/RailData (movement freeze)
+    - [x] `MarbleState.active` setter writes both ref + `runtime.active`
+    - [x] `MarbleState.running` getter/setter
+    - [x] `RailState.active` setter writes both ref + `runtime.active`
+    - [x] `RailState.running` getter/setter
+    - [x] `InstrumentState.active` setter writes both ref + `runtime.active`
+    - [x] Rail active → children (marbles + instruments) visually desaturate, triggers skip
+    - [x] Rail running=false → all marbles on rail freeze
+    - [x] Bouncer collision starts non-running marble (flee direction)
+    - [x] Visual desaturation via `activeUniform` in all shared materials (rail, marble, instrument, beat/name text)
+    - [x] Test suite (marble-running.test.ts)
 - [ ] Non-linear sequencing - advanced
   - [x] Change instrument params in TriggerHandler
   - [x] Rail switching API (teleport between rails)
