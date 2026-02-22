@@ -380,7 +380,7 @@
 	<!-- Note/chord label -->
 	{#if label}
 		<T.Group position={[x, y - sphereR / 2 + sphereR * 0.075, 0]}>
-			<GeoText cache material={row.fx.mat} text={label.toUpperCase()} size={sphereR} />
+			<GeoText material={row.fx.mat} text={label.toUpperCase()} size={sphereR} />
 		</T.Group>
 	{/if}
 

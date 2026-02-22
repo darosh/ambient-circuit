@@ -40,6 +40,9 @@
 	import { createKeydownHandler } from './lib/helpers/keyboard'
 	import { readChainParams, readBusParams, type ParamInfo } from './lib/helpers/audio-params'
 	import { onMount } from 'svelte'
+	import './components/GeoText.svelte'
+	import { font, fontCache } from './lib/video/geo-geometry'
+	import { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
@@ -96,7 +99,8 @@
 	let selectedAudioTarget = $state<string>('')
 	let analyzerRafId = 0
 
-	onMount(() => {
+	onMount(async () => {
+		fontCache.font = <Font>await font
 		setTimeout(() => {
 			showHud = true
 		}, 0)

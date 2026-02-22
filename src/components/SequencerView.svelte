@@ -2,7 +2,7 @@
 	import { T, useTask } from '@threlte/core'
 	import { SphereGeometry, Mesh, Group } from 'three/webgpu'
 	import { buildImpactMaterial } from '../lib/video/material-impact'
-	import { getCachedTextGeometry } from './GeoText.svelte'
+	import { getCachedTextGeometry } from '../lib/video/geo-geometry'
 	import { onDestroy } from 'svelte'
 
 	export type NoteEvent = {
