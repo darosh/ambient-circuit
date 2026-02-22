@@ -381,22 +381,31 @@
 		textMat?.mat?.dispose()
 		textMatLarge?.mat?.dispose()
 	})
+
+	const anal = $derived(rows?.[0].chain.analyzer)
+	const x = $derived(-$size.width / HUD_ZOOM / 2 + sphereR * 2)
+	const analyserEndX = $derived(
+		anal
+			? x + sphereR * 4 + (sequencerMode === 'time' ? 2 : 5) * sphereR
+			: x + (sequencerMode === 'time' ? 0 : 4) * sphereR
+	)
+
+	const seqX = $derived(analyserEndX + sphereR)
+	const seqWidth = $derived($size.width / HUD_ZOOM / 2 - otherSpacing - seqX)
+
+	const lines = $derived(description?.split('/n') || [])
+	const descWidth = $derived(Math.max(0, ...lines.map((l) => l.length)) * sphereR * CHAR_WIDTH)
+	const reduceWidth = $derived((descWidth + otherSpacing) * (controlsOpacity > 0.2 ? 1 : 0))
+
+	const reduceVisibleBeats = $derived(reduceWidth * (beatsVisible / seqWidth))
 </script>
 
 <T.OrthographicCamera makeDefault zoom={80} position={[0, 0, 10]} />
 
 {#each rows as row, i (i)}
-	{@const x = -$size.width / HUD_ZOOM / 2 + sphereR * 2}
-	{@const y = $size.height / HUD_ZOOM / 2 - sphereR / 2 - i * rowSpacing - otherSpacing}
 	{@const analyzerType = resolveAnalyzerType(row.chain.config.analyzer, defaultAnalyser)}
+	{@const y = $size.height / HUD_ZOOM / 2 - sphereR / 2 - i * rowSpacing - otherSpacing}
 	{@const label = labels[i] ?? ''}
-
-	{@const analyserEndX = row.chain.analyzer
-		? x + sphereR * 4 + (sequencerMode === 'time' ? 2 : 5) * sphereR
-		: x + (sequencerMode === 'time' ? 0 : 4) * sphereR}
-
-	{@const seqX = analyserEndX + sphereR}
-	{@const seqWidth = $size.width / HUD_ZOOM / 2 - sphereR * 2 - seqX}
 
 	<!-- Note/chord label -->
 	{#if label}
@@ -425,11 +434,11 @@
 			<SequencerView
 				events={seqEvents[i]}
 				mode={sequencerMode}
-				width={seqWidth}
+				width={seqWidth - reduceWidth}
 				height={sphereR * 2}
 				charWidth={CHAR_WIDTH / 2}
 				colors={sequencerColors}
-				{beatsVisible}
+				beatsVisible={beatsVisible - reduceVisibleBeats}
 				{bpm}
 				{baseColor}
 				{freeze}
