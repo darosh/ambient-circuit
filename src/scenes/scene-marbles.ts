@@ -7,7 +7,9 @@ const c = () => colors[ci++ % colors.length]
 
 export const scene: SceneConfig = {
 	id: 'scene-marbles',
+	description: 'Various marble types',
 	bpm: 120,
+	names: true,
 	triggerHandler,
 	rails: [
 		{

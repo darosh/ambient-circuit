@@ -7,6 +7,7 @@ const c = () => colors[ci++ % colors.length]
 
 export const scene: SceneConfig = {
 	id: 'scene-instruments',
+	description: 'Various instrument types',
 	bpm: 120,
 	triggerHandler,
 	camera: [3, 16, 7],

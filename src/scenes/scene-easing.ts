@@ -6,6 +6,7 @@ const c = colorFactory()
 
 export const scene: SceneConfig = {
 	id: 'scene-easing',
+	description: 'Marble movement easing\nbetween beat positions',
 	bpm: 120,
 	camera: [0, 17, 6],
 	target: [0, 0, 0],

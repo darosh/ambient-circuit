@@ -4,6 +4,7 @@ import { globalHandlerFactory, triggerHandler } from '../lib/trigger-handler'
 
 export const scene: SceneConfig = {
 	id: 'scene-font',
+	description: 'Eo-Okyo fontface',
 	bpm: 120,
 	globalBeatHandler: globalHandlerFactory(),
 	camera: [0, 6, 10],

@@ -10,6 +10,7 @@ const r = randomizer(2)
 
 export const scene: SceneConfig = {
 	id: 'scene-structure',
+	description: 'Test scene\nwith 36 marbles\nand 36 instruments',
 	bpm: 120,
 	triggerHandler,
 	camera: [12, 7, -17],

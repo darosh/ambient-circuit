@@ -7,6 +7,7 @@ const c = () => colors[ci++ % colors.length]
 
 export const scene: SceneConfig = {
 	id: 'scene-collisions',
+	description: 'Marble collisions\ntest',
 	bpm: 160,
 	sequencerBeats: 12,
 	sequencerMode: 'compact',

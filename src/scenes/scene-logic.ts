@@ -7,8 +7,10 @@ const c = () => colors[ci++ % colors.length]
 
 export const scene: SceneConfig = {
 	id: 'scene-logic',
+	description: 'Demo of various\ninstrument trigger actions',
 	bpm: 120,
 	camera: [0, 17, 15],
+	names: true,
 	triggerHandler,
 	rails: [
 		// Example 1: Direction reversal

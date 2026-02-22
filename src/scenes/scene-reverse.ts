@@ -9,6 +9,7 @@ let prev = Date.now()
 
 export const scene: SceneConfig = {
 	id: 'scene-reverse',
+	description: 'Instrument trigger is reversing\ndirection of all marbles',
 	bpm: 120,
 	camera: [0, 12, 7],
 	names: true,

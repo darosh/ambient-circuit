@@ -3,6 +3,7 @@ import { triggerHandler } from '../lib/trigger-handler'
 
 export const scene: SceneConfig = {
 	id: 'scene-audio',
+	description: 'Scene with sequencer\nin compact mode',
 	bpm: 120,
 	camera: [0, 8, 12],
 	sequencerBeats: 16,

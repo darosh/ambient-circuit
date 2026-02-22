@@ -4,6 +4,7 @@ import { triggerHandler } from '../lib/trigger-handler'
 
 export const scene: SceneConfig = {
 	id: 'scene-rail-switch',
+	description: 'Instrument trigger\ncan teleport marble\nto different rail',
 	bpm: 40,
 	camera: [0, 13, 7],
 	triggerHandler,
