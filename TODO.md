@@ -4,15 +4,16 @@
 - [ ] review need for lazy instruments load
 - [ ] use gigaverb from examples
 - [ ] freeverb too
-- [ ] transport rewind
 - [ ] rail deactivation -> inherited by instruments and marbler
 - [ ] active uniform reducing lightness in rail material
-- [ ] ball destruction and creation in handlers
+- [ ] ball destruction and creation in handlers (reset on rewind)
+- [ ] chord info in context, global chord
 - [ ] try <Float> on rails
 - [ ] replace the Perlin texture with procedural generation
 - [ ] make RNBO synth
 - [ ] make RNBO karplus-strong synth https://rnbo.cycling74.com/explore/synth-building-blocks-intro
 - [ ] use rails for camera path? or scene path? and keep the camera for user only
+- [x] transport rewind
 - [x] scene description
 - [x] global handler factory
 - [x] refactor MIDI
@@ -47,4 +48,3 @@
 The 627 MeshBasicMaterial count likely comes from new Mesh() without material arg (Three.js creates a default
 MeshBasicMaterial per mesh): 48 × N_rows SequencerView + 16 × N_rows AnalyserView + transport hitboxes. A future
 task could share a single dummy material or pass pool materials at construction time.
-

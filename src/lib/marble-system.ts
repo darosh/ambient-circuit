@@ -621,6 +621,31 @@ function checkInstrumentTriggers(
 }
 
 /**
+ * Reset sequencing state of a marble after a rewind.
+ * Mutates in-place. Does NOT reset user-set overrides (speed, note, color, easing, visible).
+ */
+export function rewindMarble(marble: Marble, globalBeat: number): void {
+	const speed = marble.runtime.speed ?? marble.config.speed ?? 1
+	const rawBeat =
+		marble.config.startBeat +
+		(marble.direction === 'forward' ? globalBeat * speed : -globalBeat * speed)
+
+	marble.runtime.lastTriggeredBeat = undefined
+	marble.runtime.lastTriggeredDirection = undefined
+	marble.runtime.jumpedToBeat = undefined
+	marble.runtime.targetBeat = undefined
+	marble.runtime.targetRailId = undefined
+	marble.runtime.lastCollisionTime = undefined
+	marble.branchIndex = null
+	marble.routingCounter = 0
+	marble.signal.intensity = 0
+
+	// Set previousBeat = currentBeat = rawBeat so hasMoved = false on this frame
+	marble.currentBeat = rawBeat
+	marble.previousBeat = rawBeat
+}
+
+/**
  * Update marble position based on current global beat.
  * Uses arc-length beat positions + rail curve for smooth motion.
  */
@@ -640,7 +665,18 @@ export function updateMarble(
 	// Calculate delta from last update
 	const globalBeat = tempo.currentBeat + tempo.beatProgress
 	const isFirstUpdate = marble.lastGlobalBeat < 0
-	const deltaBeat = isFirstUpdate ? 0 : (globalBeat - marble.lastGlobalBeat) * speed
+	const globalBeatDelta = isFirstUpdate ? 0 : globalBeat - marble.lastGlobalBeat
+
+	// Detect rewind: large negative jump in globalBeat (> 1 beat backward)
+	if (!isFirstUpdate && globalBeatDelta < -1) {
+		rewindMarble(marble, globalBeat)
+		marble.lastGlobalBeat = globalBeat
+		const points = getCurrentPathPoints(marble)
+		calculateMarblePosition(marble, marble.currentBeat, points, easing)
+		return
+	}
+
+	const deltaBeat = isFirstUpdate ? 0 : globalBeatDelta * speed
 	marble.lastGlobalBeat = globalBeat
 
 	// Update position based on delta, not absolute recalculation
