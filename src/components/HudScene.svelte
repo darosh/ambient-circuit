@@ -371,9 +371,11 @@
 	{@const y = $viewport.height / 2 - sphereR * 2.5 - i * rowSpacing}
 	{@const analyzerType = resolveAnalyzerType(row.chain.config.analyzer, defaultAnalyser)}
 	{@const label = labels[i] ?? ''}
+
 	{@const analyserEndX = row.chain.analyzer
-		? x + sphereR * 4 + (sequencerMode === 'time' ? 0 : 5) * sphereR
+		? x + sphereR * 4 + (sequencerMode === 'time' ? 2 : 5) * sphereR
 		: x + (sequencerMode === 'time' ? 0 : 4) * sphereR}
+
 	{@const seqX = analyserEndX + sphereR}
 	{@const seqWidth = $viewport.width / 2 - sphereR * 2 - seqX}
 
