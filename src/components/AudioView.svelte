@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import type { AudioEngine, AnalyzerType } from '../lib/audio'
-	import { type Vector3Tuple, type Material } from 'three/webgpu'
+	import { type Vector3Tuple } from 'three/webgpu'
 	import { Vector3, LineCurve3, CubicBezierCurve3, MeshStandardMaterial } from 'three/webgpu'
 	import AnalyserView from './AnalyserView.svelte'
 	import { MathUtils } from 'three/webgpu'
@@ -55,14 +55,19 @@
 
 	let fxArr: ReturnType<typeof buildImpactMaterial>[] = $state([])
 	const animTimes: number[] = []
-	let analyzerMaterial: Material
+	let analyzerMaterial = $state<MeshStandardMaterial | undefined>(undefined)
 
 	$effect(() => {
-		analyzerMaterial = new MeshStandardMaterial({
-			color: baseColor,
-			emissive: baseColor,
-			emissiveIntensity: 0.5
-		})
+		if (!analyzerMaterial) {
+			analyzerMaterial = new MeshStandardMaterial({
+				color: baseColor,
+				emissive: baseColor,
+				emissiveIntensity: 0.5
+			})
+		} else {
+			analyzerMaterial?.color.set(baseColor)
+			analyzerMaterial?.emissive.set(baseColor)
+		}
 
 		return () => {
 			analyzerMaterial?.dispose()
