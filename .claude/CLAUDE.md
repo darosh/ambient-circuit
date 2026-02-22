@@ -224,6 +224,7 @@ Create a "marble-machine-inspired" music sequencer where:
 **Next Steps:**
 
 1. Multi-marble interaction patterns
+2. Investigate 627 MeshBasicMaterial instances in heap (likely default materials from `new Mesh()` without material arg)
 3. Fix skipped `tests/marble-state.test.ts`
 4. Visual polishing and effects (lightning on collision)
 
@@ -370,6 +371,14 @@ globalBeatHandler(ctx) {
 - **No per-frame allocation in `calculateMarblePosition`**: uses reusable `_tmp0/_tmp1/_tmpRight` scratch vectors; `getCurve` hits cache; writes marble position via `x/y/z` not `new Vector3()`.
 - **`RailData.render` fills `out: Matrix4` in-place** — no allocation in the render fn body; pre-allocate axes/scratch matrices at module level. RailView uses `_renderOut` + `_renderVersion` counter; stores both on `railData.runtime` (`renderMatrix` = same ref, `renderVersion` = counter). Scene.svelte reads `runtime.renderVersion` in derived to force re-runs. `MarbleView` re-runs naturally because `marble.position` changes every frame.
 - **`SceneConfig.user`** — arbitrary scene state object passed through unchanged to all handler contexts (`ctx.user`) and render fns (`ctx.user` via SceneCtx). Use for mutable state (counters, flags) and to cache per-scene math objects (pre-allocated `Vector3`/`Matrix4`).
+
+### HUD Performance
+
+- **Imperative mesh pools**: AnalyserView and SequencerView use plain `new Mesh()` added to a `<T.Group>` — zero Svelte context overhead. Never use `{#each}` with `<T.Mesh bind:ref>` for per-frame-updated meshes.
+- **No reactive array spreads**: never do `arr = [...arr]` to trigger Svelte 5 updates. `$state` proxy tracks in-place `arr[i] = val` mutations — spreads create new proxies + contexts every frame.
+- **No `{#key}` for text changes**: use `<GeoText cache>` which swaps geometry reactively via the cache — no component remount needed.
+- **BloomHud init timing**: HUD must mount after main scene camera is ready. `showHud` deferred via `setTimeout(0)` in App `onMount`, guarded by `showHud && activeScene && tempo` in Wrap. BloomHud pipeline `$effect` guarded by `if (!camera.current) return` to skip wasteful builds before camera mounts.
+- **BloomHud `$effect` untrack**: `strength/radius/threshold` are `untrack()`ed in pipeline build effect — they're handled by uniform updates in a separate effect, shouldn't trigger shader recompilation.
 
 ### Memory / Scene Switch
 
