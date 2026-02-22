@@ -74,6 +74,8 @@ export function createMarbleConfigs(
 						angle: (<EaterMarbleData>m)?.angle ?? 60,
 						bouncer: m.bouncer ?? false,
 						snake: m.snake ?? false,
+						active: m.active,
+						running: m.running,
 						...('sides' in m ? { sides: m.sides } : {}),
 						...(m.type === 'coil' ? { rounds: m.rounds } : {})
 					},

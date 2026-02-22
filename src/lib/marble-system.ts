@@ -710,8 +710,7 @@ export function updateMarble(
 	const marbleRunning = marble.runtime.running ?? marble.config.running ?? true
 	const isRunning = railRunning && marbleRunning
 
-	if (!isRunning && !isFirstUpdate) {
-		// Frozen: advance lastGlobalBeat to prevent jump on resume
+	if (!isRunning) {
 		marble.lastGlobalBeat = globalBeat
 		const pts = getCurrentPathPoints(marble)
 		calculateMarblePosition(marble, marble.currentBeat, pts, easing)

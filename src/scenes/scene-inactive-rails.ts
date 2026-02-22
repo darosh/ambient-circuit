@@ -4,13 +4,20 @@ import { globalHandlerFactory, triggerHandler } from '../lib/trigger-handler'
 
 const c = colorFactory()
 const globalBeatHandler = globalHandlerFactory((ctx) => {
+	const state = Math.floor(ctx.beat / 3) % 2
+
 	ctx.scene.rails.forEach((_m) => {
 		if (Math.random() < 0.9) {
 			return
 		}
 
-		const state = Math.floor(ctx.beat / 3) % 2
 		_m.state.active = !state
+		// _m.state.running = !state
+		ctx.scene.marbles.forEach((m) => {
+			if (m.state.railId === _m.id) {
+				m.state.running = !state
+			}
+		})
 	})
 })
 
@@ -29,8 +36,9 @@ export const scene: SceneConfig = {
 				offset: [-3, 0, 2],
 				nodes: [[0, 0, 0], 'r r r r r r']
 			},
+			// running: false,
 			color: c(),
-			marbles: [{ type: 'ball', start: 0 }],
+			marbles: [{ type: 'ball', start: 0, running: false }],
 			instruments: [
 				{
 					type: 'sun',
