@@ -45,3 +45,15 @@
 The 627 MeshBasicMaterial count likely comes from new Mesh() without material arg (Three.js creates a default
 MeshBasicMaterial per mesh): 48 × N_rows SequencerView + 16 × N_rows AnalyserView + transport hitboxes. A future
 task could share a single dummy material or pass pool materials at construction time.
+
+Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'getWorldPosition')
+at useViewport.js:52:34
+at Array.<anonymous> (watch.js:52:26)
+at Object.set2 [as set] (index.js:57:28)
+at Object.set (currentWritable.js:23:19)
+at useCamera.svelte.js:20:31
+at execute_effect_teardown (effects.js:433:13)
+at destroy_effect (effects.js:517:2)
+at destroy_effect_children (effects.js:465:4)
+at destroy_effect (effects.js:505:2)
+at destroy_effect_children (effects.js:465:4)
