@@ -12,6 +12,7 @@ import { scene as sceneCtxTest } from './scene-ctx-test'
 import { scene as sceneReverse } from './scene-reverse'
 import { scene as sceneGlobalBeat } from './scene-global-beat'
 import { scene as sceneActiveVisible } from './scene-active-visible'
+import { scene as sceneInactiveRails } from './scene-inactive-rails'
 import { scene as sceneRings } from './scene-rings'
 import { scene as sceneBeats } from './scene-beats'
 import { scene as sceneFont } from './scene-font'
@@ -30,6 +31,7 @@ export const scenes: SceneConfig[] = [
 	sceneOrientation,
 	sceneLogic,
 	sceneActiveVisible,
+	sceneInactiveRails,
 	sceneMarbles,
 	sceneCtxTest,
 	sceneReverse,

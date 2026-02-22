@@ -111,6 +111,13 @@
 		}
 	})
 
+	const effectiveActive = $derived(railData.runtime?.active ?? true)
+
+	$effect(() => {
+		fxMaterialObj.activeUniform.value = effectiveActive ? 1.0 : 0.0
+		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1.0 : 0.3
+	})
+
 	// Runtime render transform (pre-allocated, filled in-place by render fn)
 	const _renderOut = new Matrix4()
 	let _renderVersion = $state(0) // incremented each frame to trigger $derived
@@ -381,6 +388,7 @@
 					{id}
 					text={bp.beat.toString()}
 					{color}
+					active={effectiveActive}
 					spacing={1}
 					size={BEAT_TEXT_SIZE}
 					width={BEAT_TEXT_WIDTH}
@@ -401,6 +409,7 @@
 				{id}
 				text={rail.id.toUpperCase()}
 				{color}
+				active={effectiveActive}
 				size={RAIL_TEXT_SIZE}
 				width={RAIL_TEXT_WIDTH}
 				spacing={2}
@@ -438,6 +447,7 @@
 			{color}
 			size={0.5}
 			{instrument}
+			{railData}
 			rail={displayRail}
 			bind:signal={instrument.signal}
 			{fxInstruments}

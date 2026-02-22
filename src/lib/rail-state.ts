@@ -28,6 +28,14 @@ export class RailState {
 	}
 	set active(v: boolean) {
 		this.activity.value = v
+		this.rail.runtime!.active = v
+	}
+
+	get running(): boolean {
+		return this.rail.runtime?.running ?? this.rail.running ?? true
+	}
+	set running(v: boolean) {
+		this.rail.runtime!.running = v
 	}
 
 	get id(): string {

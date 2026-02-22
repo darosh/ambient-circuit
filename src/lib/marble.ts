@@ -35,6 +35,8 @@ export interface MarbleConfig {
 	angle?: number // For eater type: mouth opening in degrees (default 60)
 	bouncer?: boolean // Reverses direction on collision with other marbles (default false)
 	snake?: boolean | number // Sinusoidal oscillation perpendicular to rail (default false)
+	active?: boolean // Functional on/off (default true)
+	running?: boolean // Movement on/off (default true)
 }
 
 export interface MarbleRuntime {
@@ -63,6 +65,8 @@ export interface MarbleRuntime {
 	color?: string // hex color override (e.g. '#ff0000')
 	easing?: EasingMode // overrides config.easing
 	visible?: boolean // visibility override
+	active?: boolean // functional on/off override
+	running?: boolean // movement on/off override
 }
 
 export interface Marble {

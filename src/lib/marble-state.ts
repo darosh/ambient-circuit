@@ -142,5 +142,13 @@ export class MarbleState {
 	}
 	set active(v: boolean) {
 		if (this.activity) this.activity.value = v
+		this.marble.runtime.active = v
+	}
+
+	get running(): boolean {
+		return this.marble.runtime.running ?? this.marble.config.running ?? true
+	}
+	set running(v: boolean) {
+		this.marble.runtime.running = v
 	}
 }

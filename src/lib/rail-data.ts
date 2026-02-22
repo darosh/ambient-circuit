@@ -19,6 +19,8 @@ type MarbleDataBase = {
 	color?: string
 	bouncer?: boolean
 	snake?: boolean | number
+	active?: boolean
+	running?: boolean
 }
 
 type BallMarbleData = MarbleDataBase & {
@@ -46,6 +48,8 @@ export type RailRuntime = {
 	color?: string
 	renderMatrix?: unknown // Matrix4
 	renderVersion?: number
+	active?: boolean
+	running?: boolean
 }
 
 export type RailData = {
@@ -54,6 +58,8 @@ export type RailData = {
 	marbles?: MarbleData[] | false
 	instruments?: Instrument[]
 	runtime?: RailRuntime
+	active?: boolean
+	running?: boolean
 	/** Runtime animation function: fills `out` matrix in-place (no allocation) */
 	render?: (out: Matrix4, ctx: SceneCtx, beat: number, tempo: TempoState, delta: number) => void
 }

@@ -17,6 +17,7 @@
 		spacing = 1,
 		id,
 		fx = true,
+		active = true,
 		...props
 	}: {
 		text: string
@@ -27,6 +28,7 @@
 		spacing?: number
 		id: string
 		fx?: boolean
+		active?: boolean
 	} = $props()
 
 	const paths = $derived.by(() => getTextPathsCached(text, spacing))
@@ -51,6 +53,11 @@
 		if (plainMaterial && !plainMaterial.color.equals(colorValue)) {
 			plainMaterial.color = colorValue
 		}
+	})
+
+	$effect(() => {
+		if (material) material.activeUniform.value = active ? 1.0 : 0.0
+		if (plainMaterial) plainMaterial.opacity = active ? 1.0 : 0.3
 	})
 
 	// Build tube geometries from character paths

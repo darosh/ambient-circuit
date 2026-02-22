@@ -21,15 +21,21 @@ export function createSceneCtx(
 ): SceneCtx {
 	// Build marble entities with pre-created State wrappers
 	const marbleVisRefs = marbles.map(() => ({ value: true }))
-	const marbleActRefs = marbles.map(() => ({ value: true }))
+	const marbleActRefs = marbles.map((m) => ({ value: m.config.active ?? true }))
 
-	const marbleEntities: MarbleEntity[] = marbles.map((m, i) => ({
-		id: i,
-		marble: m,
-		state: new MarbleState(m, undefined, marbleVisRefs[i], marbleActRefs[i]),
-		visibility: marbleVisRefs[i],
-		activity: marbleActRefs[i]
-	}))
+	const marbleEntities: MarbleEntity[] = marbles.map((m, i) => {
+		// Init runtime.running from config
+		if (m.runtime.running === undefined && m.config.running !== undefined) {
+			m.runtime.running = m.config.running
+		}
+		return {
+			id: i,
+			marble: m,
+			state: new MarbleState(m, undefined, marbleVisRefs[i], marbleActRefs[i]),
+			visibility: marbleVisRefs[i],
+			activity: marbleActRefs[i]
+		}
+	})
 
 	// Build flat instrument list (from per-rail arrays)
 	const instrumentEntities: InstrumentEntity[] = []
@@ -57,9 +63,18 @@ export function createSceneCtx(
 
 	// Build rail entities
 	const railVisRefs = rails.map(() => ({ value: true }))
-	const railActRefs = rails.map(() => ({ value: true }))
+	const railActRefs = rails.map((rd) => ({ value: rd.active ?? true }))
 
 	const railEntities: RailEntity[] = rails.map((rd, i) => {
+		// Init runtime for running/active from config
+		if (!rd.runtime) rd.runtime = {}
+		if (rd.runtime.running === undefined && rd.running !== undefined) {
+			rd.runtime.running = rd.running
+		}
+		if (rd.runtime.active === undefined && rd.active !== undefined) {
+			rd.runtime.active = rd.active
+		}
+
 		// Find resolved rail from marble configs, or resolve it if not found
 		let resolvedRail = marbles.find((m) => m.config.resolvedRail.id === rd.rail.id)?.config
 			.resolvedRail

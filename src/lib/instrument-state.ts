@@ -167,5 +167,6 @@ export class InstrumentState {
 	}
 	set active(v: boolean) {
 		if (this.activity) this.activity.value = v
+		this.instrument.runtime!.active = v
 	}
 }

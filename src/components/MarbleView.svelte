@@ -57,6 +57,9 @@
 
 	const effectiveColor = $derived(marble.runtime.color ?? color)
 	const effectiveVisible = $derived(marble.runtime.visible ?? true)
+	const effectiveActive = $derived(
+		(marble.runtime.active ?? true) && (railData.runtime?.active ?? true)
+	)
 
 	// Apply rail render transform to marble position
 	const transformedPosition = $derived.by(() => {
@@ -83,6 +86,11 @@
 		if (plainMaterial) {
 			plainMaterial.color.set(effectiveColor)
 		}
+	})
+
+	$effect(() => {
+		if (fx) fx.activeUniform.value = effectiveActive ? 1.0 : 0.0
+		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1.0 : 0.3
 	})
 
 	$effect(() => {

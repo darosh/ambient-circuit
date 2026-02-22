@@ -4,6 +4,7 @@ import { TextureLoader, MeshBasicNodeMaterial, RepeatWrapping, DoubleSide } from
 import {
 	luminance,
 	min,
+	mix,
 	time,
 	uniform,
 	color,
@@ -11,6 +12,7 @@ import {
 	Fn,
 	uv,
 	vec2,
+	vec3,
 	vec4,
 	positionWorld
 } from 'three/tsl'
@@ -30,7 +32,10 @@ const toSkewedUv = Fn(([uvCoord, skew]: any[]) => {
 
 // Material cache: key = `${color}_${intensity}_${transparent}`
 /* eslint-disable @typescript-eslint/no-explicit-any */
-const materialCache = new Map<string, { mat: MeshBasicNodeMaterial; impactIntensity: any }>()
+const materialCache = new Map<
+	string,
+	{ mat: MeshBasicNodeMaterial; impactIntensity: any; emissiveColor: any; activeUniform: any }
+>()
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 function getMaterialCacheKey(
@@ -78,6 +83,7 @@ export function buildRailMaterial(
 ) {
 	const emissiveColor = uniform(color(hexColor))
 	const impactIntensity = uniform(0.0)
+	const activeUniform = uniform(1.0)
 
 	const mat = new MeshBasicNodeMaterial({
 		transparent,
@@ -119,12 +125,16 @@ export function buildRailMaterial(
 			.mul(impactIntensity.add(initialIntensity * 0.8))
 
 		const emissiveColorLuminance = luminance(emissiveColor)
+		const baseColor = emissiveColor
+			.mul(impactIntensity.add(initialIntensity))
+			.div(emissiveColorLuminance)
 
-		return vec4(
-			emissiveColor.mul(impactIntensity.add(initialIntensity)).div(emissiveColorLuminance),
-			effect.smoothstep(0, 0.03)
-		)
+		// Desaturate when inactive: mix toward dim gray
+		const grayColor = vec3(emissiveColorLuminance.mul(0.3))
+		const activeColor = mix(grayColor, baseColor, activeUniform.oneMinus().mul(0.7).oneMinus())
+
+		return vec4(activeColor, effect.smoothstep(0, 0.03))
 	})()
 
-	return { mat, impactIntensity, emissiveColor }
+	return { mat, impactIntensity, emissiveColor, activeUniform }
 }

@@ -373,6 +373,38 @@ function checkMarbleCollisions(
 				// Collision detected!
 				const collisionBeat = (m1.currentBeat + m2.currentBeat) / 2
 
+				// Check if either marble is non-running — bouncer starts it
+				const rail1Running =
+					sceneCtx?.railById.get(m1.runtime.railId ?? m1.config.resolvedRail.id)?.railData.runtime
+						?.running ?? true
+				const rail2Running =
+					sceneCtx?.railById.get(m2.runtime.railId ?? m2.config.resolvedRail.id)?.railData.runtime
+						?.running ?? true
+				const m1Running = (m1.runtime.running ?? m1.config.running ?? true) && rail1Running
+				const m2Running = (m2.runtime.running ?? m2.config.running ?? true) && rail2Running
+
+				if (!m1Running && m2.config.bouncer) {
+					m1.runtime.running = true
+					m1.direction = m2.direction === 'forward' ? 'backward' : 'forward'
+					m1.runtime.lastCollisionTime = globalBeat
+					m1.runtime.lastTriggeredBeat = undefined
+					m1.runtime.lastTriggeredDirection = undefined
+					m1.signal.intensity = 1
+					m2.runtime.lastCollisionTime = globalBeat
+					continue
+				}
+
+				if (!m2Running && m1.config.bouncer) {
+					m2.runtime.running = true
+					m2.direction = m1.direction === 'forward' ? 'backward' : 'forward'
+					m2.runtime.lastCollisionTime = globalBeat
+					m2.runtime.lastTriggeredBeat = undefined
+					m2.runtime.lastTriggeredDirection = undefined
+					m2.signal.intensity = 1
+					m1.runtime.lastCollisionTime = globalBeat
+					continue
+				}
+
 				// Determine collision response based on directions
 				const sameDirection = m1.direction === m2.direction
 
@@ -470,6 +502,12 @@ function checkInstrumentTriggers(
 	sceneCtx?: SceneCtx
 ): void {
 	if (instruments.length === 0) return
+
+	// Skip if rail is inactive
+	if (sceneCtx) {
+		const railEntity = sceneCtx.railById.get(railId)
+		if (railEntity && !railEntity.activity.value) return
+	}
 
 	const beatDelta = currentBeat - previousBeat
 
@@ -666,6 +704,19 @@ export function updateMarble(
 	const globalBeat = tempo.currentBeat + tempo.beatProgress
 	const isFirstUpdate = marble.lastGlobalBeat < 0
 	const globalBeatDelta = isFirstUpdate ? 0 : globalBeat - marble.lastGlobalBeat
+
+	// Check running state (rail overrides marble)
+	const railRunning = sceneCtx?.railById.get(railId)?.railData.runtime?.running ?? true
+	const marbleRunning = marble.runtime.running ?? marble.config.running ?? true
+	const isRunning = railRunning && marbleRunning
+
+	if (!isRunning && !isFirstUpdate) {
+		// Frozen: advance lastGlobalBeat to prevent jump on resume
+		marble.lastGlobalBeat = globalBeat
+		const pts = getCurrentPathPoints(marble)
+		calculateMarblePosition(marble, marble.currentBeat, pts, easing)
+		return
+	}
 
 	// Detect rewind: large negative jump in globalBeat (> 1 beat backward)
 	if (!isFirstUpdate && globalBeatDelta < -1) {

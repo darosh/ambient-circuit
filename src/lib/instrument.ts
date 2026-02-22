@@ -7,6 +7,7 @@ export type InstrumentSignal = { intensity: number }
 export interface InstrumentRuntime {
 	type?: string
 	color?: string
+	active?: boolean
 	sides?: number
 	rounds?: number
 	brightness?: number

@@ -20,9 +20,12 @@
 	const _ROT_HALF_PI = new Matrix4().makeRotationZ(Math.PI / 2)
 	const _ROT_NEG_PI = new Matrix4().makeRotationZ(-Math.PI)
 
+	import type { RailData } from '../lib/rail-data'
+
 	type Props = {
 		instrument: Instrument
 		rail: ResolvedRail
+		railData?: RailData
 		color: string
 		signal?: { intensity: number }
 		size?: number
@@ -37,6 +40,7 @@
 	let {
 		instrument,
 		rail,
+		railData,
 		size = 1,
 		color,
 		signal = $bindable(),
@@ -79,6 +83,9 @@
 		!fxInstruments ? makeStandardMaterial(untrack(() => effectiveColor)) : null
 	)
 	const effectiveVisible = $derived(instrument.runtime?.visible ?? true)
+	const effectiveActive = $derived(
+		(instrument.runtime?.active ?? instrument.active ?? true) && (railData?.runtime?.active ?? true)
+	)
 	const colorValue = new Color()
 
 	$effect(() => {
@@ -105,6 +112,11 @@
 
 	$effect(() => {
 		fxMaterial.mat.transparent = isTransparent
+	})
+
+	$effect(() => {
+		fxMaterial.activeUniform.value = effectiveActive ? 1.0 : 0.0
+		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1.0 : 0.3
 	})
 
 	// Get points for the instrument's path
