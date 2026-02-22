@@ -410,7 +410,18 @@
 	}
 
 	const handleKeydown = createKeydownHandler([
-		{ code: 'Space', action: () => (tempo.isPlaying = !tempo.isPlaying) },
+		{
+			code: 'Space',
+			action: (event) => {
+				tempo.isPlaying = !tempo.isPlaying
+
+				if (!tempo.isPlaying && event.shiftKey) {
+					useFreeze = true
+				} else if (!tempo.isPlaying && !event.shiftKey) {
+					useFreeze = false
+				}
+			}
+		},
 		{ code: 'KeyW', action: () => (wireframe = !wireframe) },
 		{ code: 'KeyR', action: () => (autoRotate = !autoRotate) },
 		{
@@ -453,7 +464,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 {#if debugEnabled}
-	<Pane title="Debug" position="fixed" width={320} theme={customizedTheme}>
+	<Pane title={`Debug v${__APP_VERSION__}`} position="fixed" width={320} theme={customizedTheme}>
 		<List
 			label="Scene"
 			bind:value={sceneId}
@@ -675,8 +686,24 @@
 		bind:allAudioChains
 		{audioEngineRef}
 		{autoRotate}
-		onPlay={() => (tempo.isPlaying = true)}
-		onStop={() => (tempo.isPlaying = false)}
+		onPlay={(event: MouseEvent) => {
+			tempo.isPlaying = !tempo.isPlaying
+
+			if (!tempo.isPlaying && event.shiftKey) {
+				useFreeze = true
+			} else if (!tempo.isPlaying && !event.shiftKey) {
+				useFreeze = false
+			}
+		}}
+		onStop={(event: MouseEvent) => {
+			tempo.isPlaying = false
+
+			if (!tempo.isPlaying && event.shiftKey) {
+				useFreeze = true
+			} else if (!tempo.isPlaying && !event.shiftKey) {
+				useFreeze = false
+			}
+		}}
 		onRewind={() => {
 			tempo.currentBeat = 0
 			tempo.beatProgress = 0

@@ -31,18 +31,18 @@
 - [x] preserve hash params
 - [x] collision examples
 - [x] tone PolySynth
+- [x] check all new obj and reusability
+- [x] hide debug
+- [x] hide fps
+- [x] negative Z audio view
+- [x] HUD
+- [x] fix sequencer offset in scene-rings
+- [x] shift + play -> freeze
+- [x] version in app
 - [ ] scene switch leaks
-- [ ] check all new obj and reusability
 - [ ] review need for lazy instruments load
-- [ ] hide debug
-- [ ] hide fps
 - [ ] use gigaverb from examples
 - [ ] freeverb too
-- [ ] version in app
-- [ ] negative Z audio view
-- [ ] HUD
-- [ ] fix sequencer offset in scene-rings
-- [ ] shift + play -> freeze
 
 The 627 MeshBasicMaterial count likely comes from new Mesh() without material arg (Three.js creates a default
 MeshBasicMaterial per mesh): 48 × N_rows SequencerView + 16 × N_rows AnalyserView + transport hitboxes. A future

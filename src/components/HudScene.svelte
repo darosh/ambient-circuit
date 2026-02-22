@@ -37,8 +37,8 @@
 		defaultAnalyser: string | undefined
 		baseColor: string
 		title: string
-		onPlay: () => void
-		onStop: () => void
+		onPlay: (event: MouseEvent) => void
+		onStop: (event: MouseEvent) => void
 		onRewind: () => void
 		onNextScene: () => void
 		onPrevScene: () => void
@@ -126,7 +126,7 @@
 		}
 	})
 
-	type BtnDef = { kind: ArrowKind; action: () => void; rotY?: number; rotX?: number }
+	type BtnDef = { kind: ArrowKind; action: (e: unknown) => void; rotY?: number; rotX?: number }
 
 	let isMuted = $state(false)
 
@@ -154,11 +154,11 @@
 		},
 		{
 			kind: 'stop',
-			action: () => onStop()
+			action: (event) => onStop((<{ nativeEvent: MouseEvent }>event).nativeEvent)
 		},
 		{
 			kind: 'play',
-			action: () => onPlay()
+			action: (event) => onPlay((<{ nativeEvent: MouseEvent }>event).nativeEvent)
 		}
 	]
 
@@ -183,9 +183,9 @@
 	// Reactive spin angles for template
 	let btnSpinAngles = $state<number[]>(btnDefs.map(() => 0))
 
-	function onBtnClick(i: number) {
+	function onBtnClick(event: unknown, i: number) {
 		onMouseActivity()
-		btnDefs[i].action()
+		btnDefs[i].action(event)
 		const b = btnStates[i]
 		b.animTime = TRANSPORT_FLASH
 		b.fx.impactColor.value.set(baseColor)
@@ -454,7 +454,7 @@
 		/>
 		<!-- Invisible hitbox -->
 		<T.Mesh
-			onclick={() => onBtnClick(i)}
+			onclick={(event: MouseEvent) => onBtnClick(event, i)}
 			onpointerenter={() => onBtnEnter(i)}
 			onpointerleave={() => onBtnLeave(i)}
 		>

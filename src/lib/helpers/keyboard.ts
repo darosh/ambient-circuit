@@ -1,10 +1,10 @@
 type KeyBinding = {
 	code: string
-	action: () => void
+	action: (e: KeyboardEvent) => void
 }
 
 export function createKeydownHandler(bindings: KeyBinding[]): (e: KeyboardEvent) => void {
-	const map = new Map<string, () => void>()
+	const map = new Map<string, (e: KeyboardEvent) => void>()
 	for (const b of bindings) map.set(b.code, b.action)
 
 	return (e: KeyboardEvent) => {
@@ -12,7 +12,7 @@ export function createKeydownHandler(bindings: KeyBinding[]): (e: KeyboardEvent)
 		const action = map.get(e.code)
 		if (action) {
 			if (e.code === 'Space') e.preventDefault()
-			action()
+			action(e)
 		}
 	}
 }

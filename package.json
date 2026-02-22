@@ -1,6 +1,6 @@
 {
 	"name": "ambient-circuit",
-	"version": "0.0.1",
+	"version": "0.0.3",
 	"dependencies": {
 		"@dimforge/rapier3d-compat": "^0.19.3",
 		"@rnbo/js": "^1.4.2",
@@ -42,6 +42,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
+		"bump": "npm version patch --no-git-tag-version",
 		"build": "vite build",
 		"check": "svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
