@@ -14,8 +14,10 @@
 		showPoints,
 		showBeats,
 		showNames,
-		wireframe,
-		showStats,
+		wireframe = $bindable(false),
+		showStats = $bindable(false),
+		showAnalyzers = $bindable(true),
+		showAudio = $bindable(true),
 		showHud,
 		fxHud,
 		fxPost,
@@ -23,7 +25,6 @@
 		fxMarbles,
 		fxText,
 		fxInstruments,
-		showAudio,
 		tempo = $bindable(),
 		easing,
 		railVisibility = $bindable(),
@@ -54,6 +55,7 @@
 		showNames={activeScene.names ?? showNames}
 		{wireframe}
 		{showStats}
+		{showAnalyzers}
 		fxPost={fxPost && !wireframe}
 		fxRails={fxRails && !wireframe}
 		fxMarbles={fxMarbles && !wireframe}
@@ -114,6 +116,10 @@
 				{freeze}
 				{sceneCtx}
 				{fps}
+				bind:showStats
+				bind:wireframe
+				bind:showAnalyzers
+				bind:showAudio
 			/>
 		{/if}
 	</BloomHud>

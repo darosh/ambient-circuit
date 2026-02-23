@@ -102,6 +102,13 @@ export function createSceneCtx(
 	const instrumentByRef = new WeakMap<import('./instrument').Instrument, InstrumentEntity>()
 	for (const ie of instrumentEntities) instrumentByRef.set(ie.instrument, ie)
 
+	// Derive hasAnalyzers from config
+	const hasAnalyzerChains =
+		rails.some((rd) => rd.instruments?.some((inst) => inst.audio?.analyzer)) ||
+		Object.values(scene.audio?.chains ?? {}).some((c) => c.analyzer)
+	const hasAnalyzerBusses = Object.values(scene.audio?.buses ?? {}).some((b) => b.analyzer)
+	const hasAnalyzerMaster = !!scene.audio?.master?.analyzer
+
 	return {
 		marbles: marbleEntities,
 		instruments: instrumentEntities,
@@ -114,6 +121,11 @@ export function createSceneCtx(
 			bpm: tempo.config.bpm
 		},
 		config: scene,
+		hasAnalyzers: {
+			chains: hasAnalyzerChains,
+			busses: hasAnalyzerBusses,
+			master: hasAnalyzerMaster
+		},
 		user,
 		chord: {
 			current: { notes: [], chord: '', time: 0 },

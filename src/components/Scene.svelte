@@ -22,6 +22,7 @@
 	import { getMarbleSignalLinks, getMidiSignalLinks } from '../lib/helpers/links'
 	import Stars from './Stars.svelte'
 	import type { SceneCtx } from '../lib/scene-ctx'
+	import { toggleMute } from '../lib/audio/engine'
 
 	export type SelectedEntity = {
 		type: 'instrument' | 'marble'
@@ -38,6 +39,7 @@
 		showBeats = false,
 		showNames = false,
 		showAudio = false,
+		showAnalyzers = true,
 		wireframe = false,
 		fxRails = true,
 		fxMarbles = true,
@@ -59,6 +61,7 @@
 		showBeats?: boolean
 		showNames?: boolean
 		showAudio?: boolean
+		showAnalyzers?: boolean
 		wireframe?: boolean
 		fxPost?: boolean
 		fxRails?: boolean
@@ -170,6 +173,11 @@
 
 	// Audio engine (lazy init on first play)
 	const audioEngine: AudioEngine = createAudioEngine()
+
+	if (localStorage.getItem('ac-muted') === 'true') {
+		toggleMute(audioEngine, true)
+	}
+
 	let audioInitGuard = false
 	let audioInitialized = $state(false)
 	let noAudioScene = $derived(!hasAudioConfig(scene, rails))
@@ -402,7 +410,7 @@
 {#if audioInitialized}
 	<AudioView
 		showAllNodes={scene?.audioView?.all}
-		showAnalysers={scene?.audioView?.analyzers}
+		showAnalysers={showAnalyzers && (scene?.audioView?.analyzers ?? true)}
 		showText={scene?.audioView?.text}
 		defaultAnalyser={scene?.audioView?.defaultAnalyser}
 		baseColor={scene?.audioView?.color}

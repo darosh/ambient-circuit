@@ -69,6 +69,7 @@
 	let showNames = $state(false)
 	let wireframe = $state(false)
 	let showStats = $state(false)
+	let showAnalyzers = $state(true)
 	let showHud = $state(false)
 	let useFreeze = $state(false)
 	let fxPost = $state(true)
@@ -666,8 +667,9 @@
 		{showPoints}
 		{showBeats}
 		{showNames}
-		{wireframe}
-		{showStats}
+		bind:wireframe
+		bind:showStats
+		bind:showAnalyzers
 		{showHud}
 		freeze={useFreeze && !tempo.isPlaying}
 		fxPost={fxPost && !wireframe}
@@ -716,23 +718,7 @@
 	></Wrap>
 </Canvas>
 
-{#if showStats}
-	<div class="fps">{fps}</div>
-{/if}
-
 <style>
-	.fps {
-		position: fixed;
-		bottom: 8px;
-		left: 8px;
-		color: white;
-		opacity: 0.5;
-		font-size: 32px;
-		pointer-events: none;
-		text-shadow: 0 0 4px rgba(0, 0, 0, 0.8);
-		z-index: 1000;
-	}
-
 	.help {
 		font-family: 'Roboto Mono', 'Source Code Pro', Menlo, Courier, monospace;
 		font-size: 12px;

@@ -10,9 +10,27 @@
 	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
 	import GeoText from './GeoText.svelte'
 	import { easeInCubic } from '../lib/easing'
-	import { onDestroy } from 'svelte'
+	import { onDestroy, onMount } from 'svelte'
 	import type { TempoState } from '../lib/tempo'
 	import type { SceneCtx } from '../lib/scene-ctx'
+
+	function readLS(key: string, def: boolean): boolean {
+		if (typeof localStorage === 'undefined') return def
+		const v = localStorage.getItem(key)
+		return v === null ? def : v === 'true'
+	}
+	function writeLS(key: string, v: boolean) {
+		localStorage.setItem(key, v ? 'true' : 'false')
+	}
+
+	type MenuItem = {
+		label: string
+		lsKey: string
+		def: boolean
+		condition?: () => boolean
+		get: () => boolean
+		set: (v: boolean) => void
+	}
 
 	extend({ MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial })
 
@@ -37,7 +55,11 @@
 		description,
 		freeze = false,
 		sceneCtx,
-		fps = 0
+		fps = 0,
+		showStats = $bindable(true),
+		wireframe = $bindable(false),
+		showAnalyzers = $bindable(true),
+		showAudio = $bindable(true)
 	}: {
 		engine: AudioEngine | null
 		defaultAnalyser: string | undefined
@@ -58,6 +80,10 @@
 		description?: string
 		sceneCtx?: SceneCtx
 		fps: number
+		showStats?: boolean
+		wireframe?: boolean
+		showAnalyzers?: boolean
+		showAudio?: boolean
 	} = $props()
 
 	const { size } = useThrelte()
@@ -117,12 +143,176 @@
 	let controlsOpacity = $state(1)
 	let targetOpacity = 1
 
+	// Edge proximity for right menu
+	let mouseXNorm = 0
+	let edgeFade = $state(0)
+	let targetEdgeFade = 0
+
+	// Local toggles (from localStorage)
+	let pinHud = $state(false)
+	let showTracker = $state(true)
+	let showScale = $state(true)
+	let showHarmony = $state(true)
+	let showDescription = $state(true)
+	let showNotes = $state(true)
+
+	// Single source-of-truth menu config — reorder freely, no index handling needed
+	const MENU_ITEMS: MenuItem[] = [
+		{
+			label: 'HUD',
+			lsKey: 'ac-pin-hud',
+			def: false,
+			get: () => pinHud,
+			set: (v) => {
+				pinHud = v
+			}
+		},
+		{
+			label: 'INFO',
+			lsKey: 'ac-show-desc',
+			def: true,
+			get: () => showDescription,
+			set: (v) => {
+				showDescription = v
+			}
+		},
+		{
+			label: 'HARMONY',
+			lsKey: 'ac-show-harmony',
+			def: true,
+			condition: () => !!sequencerMode,
+			get: () => showHarmony,
+			set: (v) => {
+				showHarmony = v
+			}
+		},
+		{
+			label: 'SCALE',
+			lsKey: 'ac-show-scale',
+			def: true,
+			condition: () => !!sequencerMode,
+			get: () => showScale,
+			set: (v) => {
+				showScale = v
+			}
+		},
+		{
+			label: 'TRACKER',
+			lsKey: 'ac-show-tracker',
+			def: true,
+			condition: () => !!sequencerMode,
+			get: () => showTracker,
+			set: (v) => {
+				showTracker = v
+			}
+		},
+		{
+			label: 'ANALYZERS',
+			lsKey: 'ac-show-analyzers',
+			def: true,
+			condition: () => !!sequencerMode && !!sceneCtx?.hasAnalyzers?.chains,
+			get: () => showAnalyzers,
+			set: (v) => {
+				showAnalyzers = v
+			}
+		},
+		{
+			label: 'NOTES',
+			lsKey: 'ac-show-notes',
+			def: true,
+			condition: () => !!sequencerMode,
+			get: () => showNotes,
+			set: (v) => {
+				showNotes = v
+			}
+		},
+		{
+			label: 'GRAPH',
+			lsKey: 'ac-show-audio',
+			def: true,
+			condition: () => !!sequencerMode && !!sceneCtx?.config?.audioView,
+			get: () => showAudio,
+			set: (v) => {
+				showAudio = v
+			}
+		},
+		{
+			label: 'FPS',
+			lsKey: 'ac-show-fps',
+			def: true,
+			get: () => showStats,
+			set: (v) => {
+				showStats = v
+			}
+		},
+		{
+			label: 'OUTLINE',
+			lsKey: 'ac-wireframe',
+			def: false,
+			get: () => wireframe,
+			set: (v) => {
+				wireframe = v
+			}
+		}
+	]
+
+	onMount(() => {
+		for (const item of MENU_ITEMS) item.set(readLS(item.lsKey, item.def))
+		isMuted = readLS('ac-muted', false)
+	})
+
+	// Per-item menu material states (parallel to MENU_ITEMS)
+	type MenuItemState = {
+		label: string
+		fx: ReturnType<typeof buildImpactMaterial>
+		hovered: boolean
+		animTime: number
+	}
+	const menuItemStates: MenuItemState[] = MENU_ITEMS.map(({ label }) => ({
+		label,
+		fx: buildImpactMaterial(baseColor, baseColor, 1, true, 0.9, 0.5, 1.3),
+		hovered: false,
+		animTime: 0
+	}))
+
+	function resetMats() {
+		for (const s of menuItemStates) {
+			s.fx.impactT.value = 0
+			s.hovered = false
+			s.animTime = 0
+		}
+	}
+
+	let prevLength = 0
+
+	$effect(() => {
+		if (menuItems.length !== prevLength) {
+			prevLength = menuItems.length
+			resetMats()
+		}
+	})
+
+	const menuItemDic: Record<string, MenuItemState> = Object.fromEntries(
+		menuItemStates.map((state) => [state.label, state])
+	)
+
+	function toggleMenuItem(idx: number) {
+		const item = menuItems[idx]
+		const v = !item.get()
+		item.set(v)
+		writeLS(item.lsKey, v)
+		menuItemDic[item.label].animTime = TRANSPORT_FLASH
+	}
+
+	const menuItems = $derived(MENU_ITEMS.filter((item) => !item.condition || item.condition()))
+
 	const textMat = $derived(buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.4, 2))
 	const textMatLarge = $derived(buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.2, 2))
 
-	function onMouseActivity() {
+	function onMouseActivity(event?: PointerEvent) {
 		idleTimer = 0
 		targetOpacity = 1
+		if (event?.clientX != null) mouseXNorm = event.clientX / window.innerWidth
 	}
 
 	$effect(() => {
@@ -162,7 +352,9 @@
 			kind: 'repro',
 			// rotX: Math.PI,
 			action: () => {
-				isMuted = toggleMute(engine)
+				isMuted = !isMuted
+				writeLS('ac-muted', isMuted)
+				toggleMute(engine, isMuted)
 			}
 		},
 		{
@@ -334,7 +526,7 @@
 
 		// Idle timer + fade
 		idleTimer += delta
-		if (idleTimer >= IDLE_TIMEOUT) targetOpacity = 0
+		if (idleTimer >= IDLE_TIMEOUT && !pinHud) targetOpacity = 0
 		const opacityStep = delta / FADE_DURATION
 		if (controlsOpacity < targetOpacity) {
 			controlsOpacity = Math.min(targetOpacity, controlsOpacity + opacityStep)
@@ -343,6 +535,25 @@
 		}
 		for (let i = 0; i < btnStates.length; i++) {
 			btnStates[i].fx.alpha.value = controlsOpacity
+		}
+
+		// Edge fade for right menu
+		targetEdgeFade = mouseXNorm > 0.85 ? 1 : 0
+		if (edgeFade < targetEdgeFade) {
+			edgeFade = Math.min(targetEdgeFade, edgeFade + delta / FADE_DURATION)
+		} else if (edgeFade > targetEdgeFade) {
+			edgeFade = Math.max(targetEdgeFade, edgeFade - delta / FADE_DURATION)
+		}
+		const menuAlpha = controlsOpacity * edgeFade
+		for (let i = 0; i < menuItemStates.length; i++) {
+			const ms = menuItemStates[i]
+			ms.fx.alpha.value = menuAlpha
+			if (ms.animTime > 0) {
+				ms.animTime = Math.max(0, ms.animTime - delta)
+				ms.fx.impactT.value = ms.animTime / TRANSPORT_FLASH + (ms.hovered ? HOVER_INTENSITY : 0)
+			} else {
+				ms.fx.impactT.value = ms.hovered ? HOVER_INTENSITY : 0
+			}
 		}
 
 		textMat.alpha.value = controlsOpacity
@@ -377,6 +588,10 @@
 			fx.emissiveColor.value.set(baseColor)
 			fx.impactColor.value.set(baseColor)
 		}
+		for (const ms of menuItemStates) {
+			ms.fx.emissiveColor.value.set(baseColor)
+			ms.fx.impactColor.value.set(baseColor)
+		}
 		textMat.impactColor.value.set(baseColor)
 		textMat.emissiveColor.value.set(baseColor)
 		textMatLarge.impactColor.value.set(baseColor)
@@ -386,6 +601,7 @@
 	onDestroy(() => {
 		for (const s of rowStates) s.fx.mat.dispose()
 		for (const b of btnStates) b.fx.mat.dispose()
+		for (const ms of menuItemStates) ms.fx.mat.dispose()
 		textMat?.mat?.dispose()
 		textMatLarge?.mat?.dispose()
 	})
@@ -403,13 +619,19 @@
 
 	const lines = $derived(description?.split('\n') || [])
 	const descWidth = $derived(
-		Math.max(0, ...lines.map((l) => l.length)) * sphereR * 1.2 * CHAR_WIDTH
+		showDescription ? Math.max(0, ...lines.map((l) => l.length)) * sphereR * 1.2 * CHAR_WIDTH : 0
 	)
 	const reduceWidth = $derived((descWidth + otherSpacing) * (controlsOpacity > 0.2 ? 1 : 0))
 
 	const reduceVisibleBeats = $derived(
 		sequencerMode === 'time' ? reduceWidth * (beatsVisible / seqWidth) : 0
 	)
+
+	const widthFps = 8
+	const widthChords = 6
+
+	const posChord = $derived(showStats ? widthFps : 0)
+	const posScale = $derived(showHarmony ? posChord + widthChords : showStats ? widthFps : 0)
 </script>
 
 <T.OrthographicCamera makeDefault zoom={80} position={[0, 0, 10]} />
@@ -420,13 +642,13 @@
 	{@const label = labels[i] ?? ''}
 
 	<!-- Note/chord label -->
-	{#if label}
+	{#if showNotes}
 		<T.Group position={[x, y - sphereR / 2 + sphereR * 0.075, 0]}>
-			<GeoText material={row.fx.mat} text={label.toUpperCase()} size={sphereR} />
+			<GeoText cache material={row.fx.mat} text={label.toUpperCase()} size={sphereR} />
 		</T.Group>
 	{/if}
 
-	{#if row.chain.analyzer}
+	{#if showAnalyzers && row.chain.analyzer}
 		<AnalyserView
 			material={row.fx.mat}
 			analyzer={row.chain.analyzer}
@@ -434,14 +656,15 @@
 			height={sphereR * 2}
 			width={sphereR * 2}
 			position={[
-				analyserAnimX[i] ?? x + sphereR * 4 + Math.max(label.length - 2, 0) * sphereR * CHAR_WIDTH,
+				(showNotes ? analyserAnimX[i] : x + sphereR * 1.5) ??
+					x + sphereR * 4 + Math.max(label.length - 2, 0) * sphereR * CHAR_WIDTH,
 				y - sphereR / 2,
 				0
 			]}
 		/>
 	{/if}
 
-	{#if sequencerMode && seqEvents[i] && seqWidth > 0}
+	{#if sequencerMode && showTracker && seqEvents[i] && seqWidth > 0}
 		<T.Group position={[seqX, y - sphereR / 2 + sphereR * 0.075, 0]}>
 			<SequencerView
 				events={seqEvents[i]}
@@ -473,7 +696,7 @@
 	{/key}
 </T.Group>
 
-{#if description}
+{#if showDescription && description}
 	{#each lines as line, idx (line)}
 		{@const textSize = sphereR * 1.2}
 		{@const marginX = 2.5 * sphereR}
@@ -510,12 +733,12 @@
 	</T.Group>
 {/if}
 
-{#if chord}
+{#if showHarmony && chord}
 	{@const beatSize = sphereR}
 	{@const beatText = chord.toUpperCase()}
 	<T.Group
 		position={[
-			-$size.width / HUD_ZOOM / 2 + sphereR * 2 + beatSize * CHAR_WIDTH * 10 + sphereR * 2,
+			-$size.width / HUD_ZOOM / 2 + sphereR * (posChord + 2),
 			-$size.height / HUD_ZOOM / 2 + sphereR * 1.5,
 			0
 		]}
@@ -524,18 +747,13 @@
 	</T.Group>
 {/if}
 
-{#if scale}
+{#if showScale && scale}
 	{@const beatSize = sphereR}
 	{@const beatText =
 		scale.toUpperCase() + (scaleNotes?.length ? ` (${scaleNotes?.join(', ')})` : '')}
 	<T.Group
 		position={[
-			-$size.width / HUD_ZOOM / 2 +
-				sphereR * 2 +
-				beatSize * CHAR_WIDTH * 6 +
-				sphereR * 2 +
-				beatSize * CHAR_WIDTH * 11 +
-				sphereR * 2,
+			-$size.width / HUD_ZOOM / 2 + sphereR * (posScale + 2),
 			-$size.height / HUD_ZOOM / 2 + sphereR * 1.5,
 			0
 		]}
@@ -544,7 +762,7 @@
 	</T.Group>
 {/if}
 
-{#if fps}
+{#if showStats && fps}
 	{@const beatSize = sphereR}
 	{@const beatText = `${fps} FPS`.toString()}
 	<T.Group
@@ -557,6 +775,39 @@
 		<GeoText cache material={textMat.mat} text={beatText} size={beatSize} />
 	</T.Group>
 {/if}
+
+<!-- Right-side settings menu (edge proximity + HUD fade) -->
+{#each menuItems as item, i (item.label)}
+	{@const val = item.get()}
+	{@const itemText = item.label + (val ? ' *' : '  ')}
+	{@const menuSize = sphereR}
+	{@const menuMarginX = otherSpacing}
+	{@const menuRowSpacing = (1 + 1.5 * CHAR_WIDTH) * menuSize}
+	{@const width = itemText.length * menuSize * CHAR_WIDTH}
+	{@const mx = $size.width / HUD_ZOOM / 2 - width - menuMarginX}
+	{@const my =
+		-$size.height / HUD_ZOOM / 2 + (menuItems.length - i - 1) * menuRowSpacing + otherSpacing * 5}
+	{@const overlay = 11 * menuSize * CHAR_WIDTH + menuSize + otherSpacing}
+	{@const overlayX = width - overlay / 2 + otherSpacing}
+	<T.Group position={[mx, my, 0]}>
+		<GeoText cache material={menuItemDic[item.label].fx.mat} text={itemText} size={menuSize} />
+		<!-- Invisible hitbox -->
+		<T.Mesh
+			position.x={overlayX}
+			position.y={sphereR * 0.4}
+			onclick={() => toggleMenuItem(i)}
+			onpointerenter={() => {
+				menuItemDic[item.label].hovered = true
+			}}
+			onpointerleave={() => {
+				menuItemDic[item.label].hovered = false
+			}}
+		>
+			<T.BoxGeometry args={[overlay, menuSize * 2, menuSize]} />
+			<T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
+		</T.Mesh>
+	</T.Group>
+{/each}
 
 <!-- Transport controls (bottom-right) -->
 {#each btnDefs as btn, i (i)}

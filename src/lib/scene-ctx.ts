@@ -67,6 +67,8 @@ export type SceneCtx = {
 	}
 
 	config: SceneConfig
+	/** Whether analyzers are configured per audio layer */
+	hasAnalyzers: { chains: boolean; busses: boolean; master: boolean }
 	/** Arbitrary scene-level data, passed through to all handler contexts */
 	user: Record<string, unknown>
 	chord: {

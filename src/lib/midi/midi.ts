@@ -10,7 +10,7 @@ export type MidiState = {
 	enabled: boolean
 }
 
-const STORAGE_KEY = 'ambient-circuit-midi-port'
+const STORAGE_KEY = 'ac-midi-port'
 
 let midiState: MidiState
 

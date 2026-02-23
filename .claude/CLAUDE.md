@@ -499,7 +499,7 @@ globalBeatHandler(ctx) {
 - Web MIDI API via `midi.ts` (init, port selection, sendNote)
 - Instrument MIDI properties: channel (default 1), note (default C4/60), length (default 200ms), velocity (default 100)
 - Marble note override: `marble.config.note` takes precedence over instrument default
-- Port selection saved to localStorage (`ambient-circuit-midi-port`)
+- Port selection saved to localStorage (`ac-midi-port`)
 - Lazy initialization: MIDI only initialized when checkbox enabled
 
 **onTrigger Handlers:**
