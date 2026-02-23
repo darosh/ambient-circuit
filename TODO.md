@@ -4,7 +4,6 @@
 - [ ] review need for lazy instruments load
 - [ ] use gigaverb from examples
 - [ ] freeverb too
-- [ ] ball destruction and creation in handlers (should correctly and resource-efficiently reset on rewind)
 - [ ] try <Float> on rails
 - [ ] replace the Perlin texture with procedural generation
 - [ ] make RNBO synth
@@ -12,6 +11,7 @@
 - [ ] use rails for camera path? or scene path? and keep the camera for user only
 - [ ] `onSceneCtx={(ctx) => (sceneCtx = ctx)}` might be suboptimal
 - [ ] optimize scale update
+- [x] ball destruction and creation in handlers (should correctly and resource-efficiently reset on rewind)
 - [x] chord info in context for handlers, including individual notes, with recent history (const KEEP_PAST = 10)
 - [x] global chord from all chains (will be displayed in HUD), including individual notes
 - [x] global scale
