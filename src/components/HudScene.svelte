@@ -246,15 +246,15 @@
 				showStats = v
 			}
 		},
-		{
-			label: 'OUTLINE',
-			lsKey: 'ac-wireframe',
-			def: false,
-			get: () => wireframe,
-			set: (v) => {
-				wireframe = v
-			}
-		}
+		// {
+		// 	label: 'OUTLINE',
+		// 	lsKey: 'ac-wireframe',
+		// 	def: false,
+		// 	get: () => wireframe,
+		// 	set: (v) => {
+		// 		wireframe = v
+		// 	}
+		// }
 	]
 
 	onMount(() => {
