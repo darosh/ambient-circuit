@@ -111,7 +111,12 @@
 	const ringSlides = new Float32Array(MAX_SLOTS)
 	const SLIDE_SPEED = 6
 
+	// Per-slot fade-in (0=just inserted, 1=fully visible)
+	const ringFadeIns = new Float32Array(MAX_SLOTS).fill(1)
+	const FADE_IN_SPEED = $derived(mode === 'time' ? 2 : 0.5)
+
 	let _sliding = false
+	let _fadingIn = false
 
 	function updateVisuals() {
 		const textSize = height / 2
@@ -142,7 +147,7 @@
 					mesh.visible = false
 					continue
 				}
-				const alpha = getAlpha(x)
+				const alpha = getAlpha(x) * ringFadeIns[idx]
 				if (alpha <= 0.01) {
 					pool[idx].alpha.value = 0
 					mesh.visible = false
@@ -192,7 +197,7 @@
 					d = fillCount
 					break
 				}
-				const alpha = getAlpha(x + slide)
+				const alpha = getAlpha(x + slide) * ringFadeIns[idx]
 				pool[idx].alpha.value = alpha
 
 				if (colors) {
@@ -237,6 +242,18 @@
 	useTask((delta) => {
 		if (freeze) return
 
+		// Advance per-slot fade-ins toward 1
+		if (_fadingIn) {
+			_fadingIn = false
+			for (let d = 0; d < fillCount; d++) {
+				const idx = (headIdx + d) % MAX_SLOTS
+				if (ringFadeIns[idx] < 1) {
+					ringFadeIns[idx] = Math.min(1, ringFadeIns[idx] + FADE_IN_SPEED * delta)
+					if (ringFadeIns[idx] < 1) _fadingIn = true
+				}
+			}
+		}
+
 		// Decay per-slot slides toward 0
 		if (mode === 'compact' && _sliding) {
 			const decay = Math.exp(-SLIDE_SPEED * delta)
@@ -254,7 +271,7 @@
 		const len = events?.length ?? 0
 		const newest = len > 0 ? events[len - 1] : null
 		if (!newest || newest.time <= lastSeenTime) {
-			if (mode === 'time' || _sliding) updateVisuals()
+			if (mode === 'time' || _sliding || _fadingIn) updateVisuals()
 			return
 		}
 		// Collect all new events
@@ -285,6 +302,8 @@
 			ring[headIdx].time = ev.time
 			ringWidths[headIdx] = labelWidth(ev.label, mode === 'time')
 			ringSlides[headIdx] = 0
+			ringFadeIns[headIdx] = 0
+			_fadingIn = true
 			fillCount = Math.min(fillCount + 1, MAX_SLOTS)
 		}
 		lastSeenTime = newest.time
