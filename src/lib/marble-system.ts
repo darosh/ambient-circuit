@@ -1,4 +1,5 @@
-import type { Marble } from './marble'
+import type { Marble, MarbleConfig, MarbleType } from './marble'
+import { createMarble } from './marble'
 import type { TempoState } from './tempo'
 import type { Instrument } from './instrument'
 import type { TriggerHandler, GlobalBeatHandler } from './scene'
@@ -684,6 +685,24 @@ export function rewindMarble(marble: Marble, globalBeat: number): void {
 }
 
 /**
+ * Full reset of marble to snapshot config. Reuses object identity (preserves id).
+ * Clears ALL runtime overrides — returns marble to initial state.
+ */
+export function resetMarbleToConfig(marble: Marble, config: MarbleConfig): void {
+	marble.config = config
+	marble.runtime = { color: config.color }
+	if (config.running !== undefined) marble.runtime.running = config.running
+	marble.currentBeat = config.startBeat
+	marble.previousBeat = config.startBeat
+	marble.direction = config.direction
+	marble.branchIndex = null
+	marble.routingCounter = 0
+	marble.lastGlobalBeat = -1
+	marble.signal.intensity = 0
+	marble.midiSignal.intensity = 0
+}
+
+/**
  * Update marble position based on current global beat.
  * Uses arc-length beat positions + rail curve for smooth motion.
  */
@@ -717,14 +736,7 @@ export function updateMarble(
 		return
 	}
 
-	// Detect rewind: large negative jump in globalBeat (> 1 beat backward)
-	if (!isFirstUpdate && globalBeatDelta < -1) {
-		rewindMarble(marble, globalBeat)
-		marble.lastGlobalBeat = globalBeat
-		const points = getCurrentPathPoints(marble)
-		calculateMarblePosition(marble, marble.currentBeat, points, easing)
-		return
-	}
+	// NOTE: rewind detection moved to updateMarbles() level — handles snapshot reset
 
 	const deltaBeat = isFirstUpdate ? 0 : globalBeatDelta * speed
 	marble.lastGlobalBeat = globalBeat
@@ -999,6 +1011,12 @@ export function updateMarble(
 	calculateMarblePosition(marble, marble.currentBeat, points, easing)
 }
 
+export type MarbleMutations = {
+	destroyed: boolean // any marbles flagged for removal
+	created: { marble: Marble; railIndex: number }[]
+	rewind?: boolean // full reset to snapshot
+} | null
+
 export function updateMarbles(
 	marbles: Marble[],
 	tempo: TempoState,
@@ -1011,31 +1029,97 @@ export function updateMarbles(
 	bounceHandler?: import('./scene').BounceHandler,
 	bouncerOnlyMode?: boolean,
 	noBouncers?: boolean
-): void {
+): MarbleMutations {
 	// Fire global beat handler first (before marble updates)
 	if (sceneCtx && globalHandler) {
 		checkGlobalBeatTrigger(tempo, sceneCtx, globalHandler, globalBeatResolution)
 	}
 
-	// Update each marble
+	const globalBeat = tempo.currentBeat + tempo.beatProgress
+
+	// Detect rewind before per-marble loop: if ANY marble has large negative jump
 	for (let i = 0; i < marbles.length; i++) {
+		const m = marbles[i]
+		if (m.lastGlobalBeat >= 0 && globalBeat - m.lastGlobalBeat < -1) {
+			// Reset lastGlobalBeat on all marbles so individual updateMarble won't double-rewind
+			for (const marble of marbles) marble.lastGlobalBeat = globalBeat
+			return { destroyed: false, created: [], rewind: true }
+		}
+	}
+
+	// Update each marble (skip destroyed)
+	for (let i = 0; i < marbles.length; i++) {
+		if (marbles[i].runtime.destroyed) continue
 		const instruments = instrumentsPerRail[i] || []
 		const railId = railIds[i] || ''
 		updateMarble(marbles[i], tempo, instruments, railId, i, triggerHandler, sceneCtx)
 	}
 
-	// Check for marble collisions (after all positions updated)
-	if (noBouncers) {
-		return
+	// Check for marble collisions (after all positions updated, skip destroyed)
+	if (!noBouncers) {
+		const activeMarbles = marbles.filter((m) => !m.runtime.destroyed)
+		const activeRailIds = railIds.filter((_, i) => !marbles[i]?.runtime.destroyed)
+		checkMarbleCollisions(
+			activeMarbles,
+			activeRailIds,
+			globalBeat,
+			sceneCtx,
+			bounceHandler,
+			bouncerOnlyMode ?? true
+		)
 	}
 
-	const globalBeat = tempo.currentBeat + tempo.beatProgress
-	checkMarbleCollisions(
-		marbles,
-		railIds,
-		globalBeat,
-		sceneCtx,
-		bounceHandler,
-		bouncerOnlyMode ?? true
-	)
+	// Collect mutations
+	// NOTE: destroyed flag scan moved to Scene.svelte (bypasses $state proxy issues)
+	const hasDestroyed = sceneCtx ? sceneCtx.marbles.some((e) => e.marble.runtime.destroyed) : false
+
+	const created: { marble: Marble; railIndex: number }[] = []
+	if (sceneCtx && sceneCtx.pendingCreations.length > 0) {
+		for (const req of sceneCtx.pendingCreations) {
+			const railEntity = sceneCtx.railById.get(req.railId)
+			if (!railEntity) {
+				console.warn(`[marble-create] Rail "${req.railId}" not found`)
+				continue
+			}
+			const resolved = railEntity.resolvedRail
+			/* eslint-disable @typescript-eslint/no-explicit-any */
+			const d = req.data as any
+			/* eslint-enable @typescript-eslint/no-explicit-any */
+			const config: MarbleConfig = {
+				resolvedRail: resolved,
+				startBeat: d.start ?? resolved.points[0]?.beat ?? 0,
+				direction: d.direction ?? 'forward',
+				sequenceMode: d.mode ?? 'looping',
+				easing: d.easing ?? 'linear',
+				color: d.color,
+				speed: d.speed,
+				note: d.note,
+				velocity: d.velocity,
+				duration: d.duration,
+				type: d.type as MarbleType | undefined,
+				sides: d.sides,
+				rounds: d.rounds,
+				angle: d.angle,
+				bouncer: d.bouncer,
+				snake: d.snake,
+				active: d.active,
+				running: d.running
+			}
+			const marble = createMarble(config, marbles.length + created.length)
+			marble.runtime.created = true
+			marble.lastGlobalBeat = globalBeat
+			// Position marble at startBeat
+			const points = resolved.points
+			if (points.length > 1) {
+				calculateMarblePosition(marble, marble.currentBeat, points, config.easing)
+			}
+			created.push({ marble, railIndex: railEntity.index })
+		}
+		sceneCtx.pendingCreations.length = 0
+	}
+
+	if (hasDestroyed || created.length > 0) {
+		return { destroyed: hasDestroyed, created }
+	}
+	return null
 }

@@ -40,6 +40,8 @@ export interface MarbleConfig {
 }
 
 export interface MarbleRuntime {
+	destroyed?: boolean // marked for removal
+	created?: boolean // created at runtime (removed on rewind)
 	speed?: number // overrides config.speed
 	note?: number // overrides config.note
 	velocity?: number // overrides config.velocity
@@ -70,6 +72,7 @@ export interface MarbleRuntime {
 }
 
 export interface Marble {
+	id: number // stable ID (survives array mutations)
 	index: number
 	config: MarbleConfig
 	runtime: MarbleRuntime
@@ -87,8 +90,15 @@ export interface Marble {
 	midiSignal: InstrumentSignal
 }
 
+let _nextId = 0
+
+export function resetMarbleIdCounter(): void {
+	_nextId = 0
+}
+
 export function createMarble(config: MarbleConfig, index = 0): Marble {
 	return {
+		id: _nextId++,
 		index,
 		config,
 		runtime: {

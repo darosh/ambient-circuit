@@ -1,6 +1,6 @@
-import type { Marble } from './marble'
+import type { Marble, MarbleConfig } from './marble'
 import type { Instrument } from './instrument'
-import type { RailData } from './rail-data'
+import type { RailData, MarbleData } from './rail-data'
 import type { ResolvedRail } from './rail'
 import type { MarbleState } from './marble-state'
 import type { InstrumentState } from './instrument-state'
@@ -79,6 +79,11 @@ export type SceneCtx = {
 		current: ChordInfo
 		history: ChordInfo[]
 	}
+
+	// Deferred marble mutations
+	pendingCreations: { railId: string; data: MarbleData }[]
+	// Snapshot for rewind (restore initial state)
+	initialSnapshot: { configs: MarbleConfig[]; railIndices: number[]; originalIds: number[] }
 }
 
 /**

@@ -6,7 +6,7 @@ import type { SceneCtx } from './scene-ctx'
 import type { TempoState } from './tempo'
 import type { Matrix4 } from 'three/webgpu'
 
-type MarbleDataBase = {
+export type MarbleDataBase = {
 	audio?: AudioChainConfig
 	direction?: MarbleDirection
 	mode?: MarbleSequenceMode

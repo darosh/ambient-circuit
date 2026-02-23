@@ -1,9 +1,8 @@
 import type { SceneConfig } from '../lib/scene'
-import { colors } from './utils/colors'
+import { colorFactory } from './utils/colors'
 import { globalHandlerFactory, triggerHandler } from '../lib/trigger-handler'
 
-let ci = 0
-const c = () => colors[ci++ % colors.length]
+const c = colorFactory()
 
 export const scene: SceneConfig = {
 	id: 'scene-beats',

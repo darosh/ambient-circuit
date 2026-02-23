@@ -162,6 +162,7 @@
 	const glowBaseline = $derived(selected ? 0.4 : hovered ? 0.2 : 0)
 
 	useTask((delta) => {
+		if (!marble?.signal) return
 		if (marble.signal.intensity > 0) {
 			impactTime = IMPACT_DURATION
 			marble.signal.intensity = 0

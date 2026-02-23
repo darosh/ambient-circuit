@@ -5,9 +5,22 @@
 	import RailView from './RailView.svelte'
 	import MarbleView from './MarbleView.svelte'
 	import { createTempoState, updateTempo, type TempoState } from '../lib/tempo'
-	import { updateMarbles, fireGlobalBeatInit, fireGlobalBeatDestroy } from '../lib/marble-system'
+	import {
+		updateMarbles,
+		fireGlobalBeatInit,
+		fireGlobalBeatDestroy,
+		resetMarbleToConfig,
+		type MarbleMutations
+	} from '../lib/marble-system'
 	import type { SceneConfig } from '../lib/scene'
-	import { createSceneCtx, updateSceneCtx } from '../lib/scene-ctx-factory'
+	import {
+		createSceneCtx,
+		updateSceneCtx,
+		addMarbleEntity,
+		removeMarbleEntity,
+		reindexMarbles
+	} from '../lib/scene-ctx-factory'
+	import { createMarble, type Marble } from '../lib/marble'
 	import type { Instrument } from '../lib/instrument'
 	import { createAudioEngine, disposeScene } from '../lib/audio'
 	import type { AudioEngine, AudioChain } from '../lib/audio'
@@ -256,6 +269,111 @@
 		disposeScene(audioEngine)
 	})
 
+	function applyMutations(mutations: MarbleMutations) {
+		if (!mutations) return
+
+		if (mutations.rewind) {
+			const snap = sceneCtx.initialSnapshot
+
+			// 1. Remove runtime-created marbles (reverse order to keep indices valid)
+			for (let i = marbles.length - 1; i >= 0; i--) {
+				if (marbles[i].runtime.created) {
+					removeMarbleEntity(sceneCtx, marbles[i].id)
+					marbles.splice(i, 1)
+				}
+			}
+
+			// 2. Collect surviving marble IDs mapped by original snapshot index
+			//    Destroyed marbles were already spliced out — need to re-create those
+			const survivingById: Record<number, Marble> = {}
+			for (const m of marbles) survivingById[m.id] = m
+
+			// 3. Build final array: reuse existing, recreate destroyed
+			const finalMarbles: Marble[] = []
+			for (let i = 0; i < snap.configs.length; i++) {
+				const origId = snap.originalIds[i]
+				const existing = survivingById[origId]
+				if (existing) {
+					resetMarbleToConfig(existing, { ...snap.configs[i] })
+					existing.index = i
+					finalMarbles.push(existing)
+					delete survivingById[origId]
+				} else {
+					// Was destroyed — recreate with same ID
+					const m = createMarble({ ...snap.configs[i] }, i)
+					// Overwrite auto-generated ID to reuse original (stable key)
+					m.id = origId
+					finalMarbles.push(m)
+					addMarbleEntity(sceneCtx, m)
+				}
+			}
+
+			// 4. Replace marbles array in-place
+			marbles.length = 0
+			for (const m of finalMarbles) marbles.push(m)
+
+			// 5. Reset parallel arrays from snapshot
+			liveRailIndices.length = snap.railIndices.length
+			instrumentsPerRail.length = snap.railIndices.length
+			railIds.length = snap.railIndices.length
+			for (let i = 0; i < snap.railIndices.length; i++) {
+				const ri = snap.railIndices[i]
+				liveRailIndices[i] = ri
+				instrumentsPerRail[i] = rails[ri].instruments || []
+				railIds[i] = rails[ri].rail.id
+			}
+
+			// 6. Sync sceneCtx.marbles order (reuse existing entities, just reorder)
+			const entityById: Record<number, import('../lib/scene-ctx').MarbleEntity> = {}
+			for (const e of sceneCtx.marbles) entityById[e.id] = e
+			sceneCtx.marbles.length = 0
+			for (const m of marbles) {
+				const e = entityById[m.id]
+				if (e) {
+					e.marble = m
+					sceneCtx.marbles.push(e)
+				}
+			}
+
+			return
+		}
+
+		// Remove destroyed — collect IDs from sceneCtx entities (bypasses $state proxy)
+		const destroyedIds: Record<number, true> = {}
+		let destroyCount = 0
+		for (let i = sceneCtx.marbles.length - 1; i >= 0; i--) {
+			if (sceneCtx.marbles[i].marble.runtime.destroyed) {
+				destroyedIds[sceneCtx.marbles[i].id] = true
+				destroyCount++
+				sceneCtx.marbles.splice(i, 1)
+			}
+		}
+		if (destroyCount > 0) {
+			for (let i = marbles.length - 1; i >= 0; i--) {
+				if (destroyedIds[marbles[i].id]) {
+					marbles.splice(i, 1)
+					liveRailIndices.splice(i, 1)
+					instrumentsPerRail.splice(i, 1)
+					railIds.splice(i, 1)
+				}
+			}
+		}
+
+		// Add created
+		for (const { marble, railIndex } of mutations.created) {
+			marbles.push(marble)
+			liveRailIndices.push(railIndex)
+			instrumentsPerRail.push(rails[railIndex].instruments || [])
+			railIds.push(rails[railIndex].rail.id)
+			addMarbleEntity(sceneCtx, marble)
+		}
+
+		// Re-index
+		if (destroyCount > 0 || mutations.created.length > 0) {
+			reindexMarbles(marbles)
+		}
+	}
+
 	// FPS tracking
 	if (fps === undefined) fps = 0
 	let frames = 0
@@ -305,7 +423,7 @@
 
 		// Sync live rail indices from marble runtime (only changes on rail switch)
 		for (let i = 0; i < marbles.length; i++) {
-			const ri = marbles[i].runtime.railIndex ?? marbleRailIndices[i]
+			const ri = marbles[i].runtime.railIndex ?? liveRailIndices[i] ?? marbleRailIndices[i]
 			if (ri !== liveRailIndices[i]) {
 				liveRailIndices[i] = ri
 				instrumentsPerRail[i] = rails[ri].instruments || []
@@ -313,7 +431,7 @@
 			}
 		}
 
-		updateMarbles(
+		const mutations = updateMarbles(
 			marbles,
 			tempo,
 			instrumentsPerRail,
@@ -326,6 +444,8 @@
 			scene.bouncerOnlyMode,
 			noBouncers
 		)
+
+		if (mutations) applyMutations(mutations)
 	})
 </script>
 
@@ -387,7 +507,7 @@
 	{/if}
 {/each}
 
-{#each marbles as _m, idx (idx)}
+{#each marbles as _m, idx (_m.id)}
 	{@const currentRailId = marbles[idx].runtime.railId ?? marbles[idx].config.resolvedRail.id}
 	{@const railIdx = rails.findIndex((r) => r.rail.id === currentRailId)}
 	{@const railIndex = railIdx >= 0 ? railIdx : marbleRailIndices[idx]}

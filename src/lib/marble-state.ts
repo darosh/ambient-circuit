@@ -65,6 +65,15 @@ export class MarbleState {
 		this.marble.runtime.note = value
 	}
 
+	// Destroy marble (deferred removal at end of update)
+	destroy(): void {
+		this.marble.runtime.destroyed = true
+	}
+
+	get destroyed(): boolean {
+		return this.marble.runtime.destroyed ?? false
+	}
+
 	// Convenience: reverse direction
 	reverse(): void {
 		this.direction = this.direction === 'forward' ? 'backward' : 'forward'

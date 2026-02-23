@@ -170,6 +170,22 @@ Create a "marble-machine-inspired" music sequencer where:
     - [x] bouncerOnlyMode optimization flag
     - [x] Demo scene (scene-collisions) with 4 examples + bounce flash
     - [x] Test suite with 5 test cases
+  - [x] Runtime marble destroy/create
+    - [x] Stable `Marble.id` (auto-increment, separate from array index)
+    - [x] `MarbleState.destroy()` — flags marble for deferred removal
+    - [x] `RailState.create(data)` — queues marble creation on rail
+    - [x] `RailState.marbles` getter — filtered view of marbles on rail
+    - [x] Deferred mutations: destroy/create processed at end of `updateMarbles()`
+    - [x] `MarbleMutations` return type from `updateMarbles()`
+    - [x] Scene.svelte `applyMutations()` — splices arrays, syncs sceneCtx entities
+    - [x] Destroy scan via sceneCtx entities (bypasses Svelte `$state` proxy)
+    - [x] Rewind: in-place reset via `resetMarbleToConfig()` (reuses marble objects/IDs)
+    - [x] Rewind removes runtime-created, restores destroyed (same original IDs)
+    - [x] `initialSnapshot` with configs + railIndices + originalIds
+    - [x] `{#each}` keyed by `_m.id` (stable key, no orphan components)
+    - [x] MarbleView stale-frame guard (`if (!marble?.signal) return`)
+    - [x] Demo scene (scene-create-destroy)
+    - [x] Test suite (marble-destroy-create.test.ts, 11 tests)
   - [ ] Multi-marble interaction patterns
 - [ ] Visual polishing, WebGPU, TSL
   - [x] rails
@@ -279,11 +295,11 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/rail-primitives.ts - circle(), roundedRect(), coil(), spiral() helpers
 /src/lib/tempo.ts          - Global tempo/beat system (BPM, play/pause)
 /src/lib/marble.ts         - Marble types (config, state, direction, easing)
-/src/lib/marble-state.ts   - MarbleState API (safe mutations with visible/active)
+/src/lib/marble-state.ts   - MarbleState API (safe mutations with visible/active/destroy)
 /src/lib/marble-system.ts  - Marble movement logic (direct segment interpolation)
 /src/lib/instrument.ts     - Instrument type with MIDI properties
 /src/lib/instrument-state.ts - InstrumentState API (safe mutations with visible/active)
-/src/lib/rail-state.ts     - RailState API (safe mutations with visible/active)
+/src/lib/rail-state.ts     - RailState API (safe mutations with visible/active/create)
 /src/lib/scene.ts          - TriggerContext, GlobalBeatContext, SceneConfig types
 /src/lib/scene-ctx.ts      - SceneCtx types (MarbleEntity/InstrumentEntity/RailEntity)
 /src/lib/scene-ctx-factory.ts - createSceneCtx(), updateSceneCtx()
@@ -345,6 +361,11 @@ actionHandler(ctx) {
   ctx.scene.marbles.forEach(m => m.state.reverse())
   ctx.scene.instruments[0].state.color = '#00ff00'
 
+  // Destroy/create marbles
+  ctx.marble.state.destroy()  // remove this marble at end of frame
+  ctx.rail.state.create({ type: 'poly', sides: 6 })  // spawn marble on this rail
+  ctx.scene.rails[1].state.marbles  // filtered view of marbles on rail
+
   // Access underlying objects when needed
   ctx.instrument.instrument.signal!.intensity = 1
   ctx.marble.marble.config.note
@@ -389,6 +410,7 @@ globalBeatHandler(ctx) {
 - **No per-frame allocation in `calculateMarblePosition`**: uses reusable `_tmp0/_tmp1/_tmpRight` scratch vectors; `getCurve` hits cache; writes marble position via `x/y/z` not `new Vector3()`.
 - **`RailData.render` fills `out: Matrix4` in-place** — no allocation in the render fn body; pre-allocate axes/scratch matrices at module level. RailView uses `_renderOut` + `_renderVersion` counter; stores both on `railData.runtime` (`renderMatrix` = same ref, `renderVersion` = counter). Scene.svelte reads `runtime.renderVersion` in derived to force re-runs. `MarbleView` re-runs naturally because `marble.position` changes every frame.
 - **`SceneConfig.user`** — arbitrary scene state object passed through unchanged to all handler contexts (`ctx.user`) and render fns (`ctx.user` via SceneCtx). Use for mutable state (counters, flags) and to cache per-scene math objects (pre-allocated `Vector3`/`Matrix4`).
+- **Svelte `$state` proxy vs raw objects**: `MarbleState`/`RailState` hold raw marble/rail references (not `$state` proxies). Flags set via State API (e.g. `runtime.destroyed`) may not be visible when reading through `$state` proxy chain. For destroy detection, scan `sceneCtx.marbles` entities (plain objects) instead of the `$state` marbles array.
 
 ### HUD Performance
 

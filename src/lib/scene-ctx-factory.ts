@@ -1,4 +1,4 @@
-import type { Marble } from './marble'
+import type { Marble, MarbleConfig } from './marble'
 import type { RailData } from './rail-data'
 import type { TempoState } from './tempo'
 import type { SceneCtx, MarbleEntity, InstrumentEntity, RailEntity } from './scene-ctx'
@@ -19,6 +19,16 @@ export function createSceneCtx(
 	scene: SceneConfig,
 	user: Record<string, unknown> = {}
 ): SceneCtx {
+	// Snapshot initial marble configs for rewind
+	const initialSnapshot = {
+		configs: marbles.map((m) => ({ ...m.config }) as MarbleConfig),
+		railIndices: marbleRailIndices.slice(),
+		originalIds: marbles.map((m) => m.id)
+	}
+
+	// Deferred creation queue (shared with RailState instances)
+	const pendingCreations: { railId: string; data: import('./rail-data').MarbleData }[] = []
+
 	// Build marble entities with pre-created State wrappers
 	const marbleVisRefs = marbles.map(() => ({ value: true }))
 	const marbleActRefs = marbles.map((m) => ({ value: m.config.active ?? true }))
@@ -29,7 +39,7 @@ export function createSceneCtx(
 			m.runtime.running = m.config.running
 		}
 		return {
-			id: i,
+			id: m.id,
 			marble: m,
 			state: new MarbleState(m, undefined, marbleVisRefs[i], marbleActRefs[i]),
 			visibility: marbleVisRefs[i],
@@ -89,7 +99,7 @@ export function createSceneCtx(
 			index: i,
 			railData: rd,
 			resolvedRail: resolvedRail!,
-			state: new RailState(rd, railVisRefs[i], railActRefs[i]),
+			state: new RailState(rd, railVisRefs[i], railActRefs[i], pendingCreations),
 			visibility: railVisRefs[i],
 			activity: railActRefs[i]
 		}
@@ -109,7 +119,7 @@ export function createSceneCtx(
 	const hasAnalyzerBusses = Object.values(scene.audio?.buses ?? {}).some((b) => b.analyzer)
 	const hasAnalyzerMaster = !!scene.audio?.master?.analyzer
 
-	return {
+	const ctx: SceneCtx = {
 		marbles: marbleEntities,
 		instruments: instrumentEntities,
 		rails: railEntities,
@@ -131,7 +141,47 @@ export function createSceneCtx(
 			current: { notes: [], chord: '', time: 0 },
 			history: [],
 			scale: { name: '', notes: [] }
-		}
+		},
+		pendingCreations,
+		initialSnapshot
+	}
+
+	// Wire up sceneCtx back-reference for RailState.marbles
+	for (const re of railEntities) re.state._sceneCtx = ctx
+	return ctx
+}
+
+/**
+ * Add a marble entity to sceneCtx (after runtime creation)
+ */
+export function addMarbleEntity(ctx: SceneCtx, marble: Marble): MarbleEntity {
+	const visRef = { value: true }
+	const actRef = { value: marble.config.active ?? true }
+	const entity: MarbleEntity = {
+		id: marble.id,
+		marble,
+		state: new MarbleState(marble, undefined, visRef, actRef),
+		visibility: visRef,
+		activity: actRef
+	}
+	ctx.marbles.push(entity)
+	return entity
+}
+
+/**
+ * Remove a marble entity by marble ID
+ */
+export function removeMarbleEntity(ctx: SceneCtx, marbleId: number): void {
+	const idx = ctx.marbles.findIndex((e) => e.id === marbleId)
+	if (idx >= 0) ctx.marbles.splice(idx, 1)
+}
+
+/**
+ * Re-index marble.index to match array positions
+ */
+export function reindexMarbles(marbles: Marble[]): void {
+	for (let i = 0; i < marbles.length; i++) {
+		marbles[i].index = i
 	}
 }
 
