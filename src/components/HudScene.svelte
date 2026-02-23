@@ -9,7 +9,7 @@
 	import SequencerView, { type NoteEvent } from './SequencerView.svelte'
 	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
 	import GeoText from './GeoText.svelte'
-	import { easeInCubic } from '../lib/easing'
+	import { easeInCubic, easeOutCubic } from '../lib/easing'
 	import { onDestroy, onMount } from 'svelte'
 	import type { TempoState } from '../lib/tempo'
 	import type { SceneCtx } from '../lib/scene-ctx'
@@ -147,6 +147,7 @@
 	let mouseXNorm = 0
 	let edgeFade = $state(0)
 	let targetEdgeFade = 0
+	let menuSlideT = $state(0) // 0=hidden 1=visible, drives slide offset
 
 	// Local toggles (from localStorage)
 	let pinHud = $state(false)
@@ -544,6 +545,12 @@
 		} else if (edgeFade > targetEdgeFade) {
 			edgeFade = Math.max(targetEdgeFade, edgeFade - delta / FADE_DURATION)
 		}
+		// Slide animation — separate speed from fade
+		if (menuSlideT < targetEdgeFade) {
+			menuSlideT = Math.min(targetEdgeFade, menuSlideT + delta / FADE_DURATION)
+		} else if (menuSlideT > targetEdgeFade) {
+			menuSlideT = Math.max(targetEdgeFade, menuSlideT - delta / FADE_DURATION)
+		}
 		const menuAlpha = controlsOpacity * edgeFade
 		for (let i = 0; i < menuItemStates.length; i++) {
 			const ms = menuItemStates[i]
@@ -784,10 +791,12 @@
 	{@const menuMarginX = otherSpacing}
 	{@const menuRowSpacing = (1 + 1.5 * CHAR_WIDTH) * menuSize}
 	{@const width = itemText.length * menuSize * CHAR_WIDTH}
-	{@const mx = $size.width / HUD_ZOOM / 2 - width - menuMarginX}
+	{@const slideEased = easeOutCubic(menuSlideT)}
+	{@const overlay = 11 * menuSize * CHAR_WIDTH + menuSize + otherSpacing}
+	{@const slideOffset = ((1 - slideEased) * sphereR) / 2}
+	{@const mx = $size.width / HUD_ZOOM / 2 - width - menuMarginX + slideOffset}
 	{@const my =
 		-$size.height / HUD_ZOOM / 2 + (menuItems.length - i - 1) * menuRowSpacing + otherSpacing * 5}
-	{@const overlay = 11 * menuSize * CHAR_WIDTH + menuSize + otherSpacing}
 	{@const overlayX = width - overlay / 2 + otherSpacing}
 	<T.Group position={[mx, my, 0]}>
 		<GeoText cache material={menuItemDic[item.label].fx.mat} text={itemText} size={menuSize} />
