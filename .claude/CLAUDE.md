@@ -200,6 +200,12 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Per-chain/bus analyzer config: `boolean | 'fft' | 'waveform' | 'meter'`
   - [x] Demo scene (scene-audio) with buses + master chain
   - [x] RNBO preset support: per-node presets (generator + fx), preset dropdown in UI, param refresh on change
+  - [x] Chord/scale detection in SceneCtx
+    - [x] `ChordInfo` type: `{ notes, chord, time }`
+    - [x] Per-chain: `chain.chordInfo` + `chain.chordHistory` (last 10, updated on trigger)
+    - [x] Global: `ctx.scene.chord.current` + `ctx.scene.chord.history` (all chains combined)
+    - [x] `ctx.scene.chord.scale` — detected scale: `{ name, notes }`
+    - [x] `updateGlobalChord()` called in default trigger/bounce handlers after each trigger
 - [ ] Audio UI & interaction
   - [x] Mouse-over highlight on objects (hover glow via impactIntensity uniform)
   - [ ] Selection with bounding-box corners (smooth transition on change)
