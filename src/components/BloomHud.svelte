@@ -2,7 +2,7 @@
 	import { T, useThrelte, useTask, createSceneContext, createCameraContext } from '@threlte/core'
 	import { onMount, untrack } from 'svelte'
 	import type { Snippet } from 'svelte'
-	import { PostProcessing, type WebGPURenderer } from 'three/webgpu'
+	import { PostProcessing, type WebGPURenderer, type Scene } from 'three/webgpu'
 	import { pass, mix, max, vec3, uniform, add } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 
@@ -19,7 +19,7 @@
 		/** Transform HUD color node with TSL effects (e.g. blur) */
 		tint?: [number, number, number]
 		hudFx?: (color: TslNode) => TslNode
-		children?: Snippet<[{ ref: import('three').Scene }]>
+		children?: Snippet<[{ ref: Scene }]>
 	}
 
 	let {
