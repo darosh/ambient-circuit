@@ -1,3 +1,5 @@
+// usage node ./scripts/font.js ./.fonts/NanumGothicCoding-Regular.ttf ./public/fonts/nanumgothiccoding-regular.json "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-_:.,;|()[]{} #*/'♭♯♪♬♩☆★"
+
 import opentype from 'opentype.js'
 import { readFile, writeFile } from 'node:fs/promises'
 
@@ -94,6 +96,10 @@ async function main(fontPath, jsonPath, characters) {
 
 	const fontAsJson = convertFont(font, { weight, variant, characters })
 
+	if (jsonPath.includes('nanumgothiccoding')) {
+		fontAsJson.glyphs['*'] = shiftGlyphY(fontAsJson.glyphs['*'], -60)
+	}
+
 	await writeFile(jsonPath, JSON.stringify(fontAsJson))
 	console.log(`✓ Converted ${fontPath} → ${jsonPath}`)
 	console.log(`  Characters: ${characters || 'all'}`)
@@ -105,6 +111,72 @@ const [fontPath, jsonPath, characters] = process.argv.slice(2)
 if (!fontPath || !jsonPath) {
 	console.error('Usage: node font.js <fontPath> <jsonPath> [characters]')
 	process.exit(1)
+}
+
+// type Glyph = {
+// 	ha: number;
+// 	x_min: number;
+// 	x_max: number;
+// 	o: string;
+// };
+
+// export function shiftGlyphY(glyph: Glyph, offset: number): Glyph {
+export function shiftGlyphY(glyph, offset) {
+	const commands = glyph.o.trim().split(/\s+/)
+	// const result: string[] = [];
+	const result = []
+
+	let i = 0
+
+	while (i < commands.length) {
+		const cmd = commands[i]
+
+		result.push(cmd)
+		i++
+
+		switch (cmd) {
+			case 'm':
+			case 'l':
+				// x y
+				result.push(commands[i]) // x
+				result.push(String(Number(commands[i + 1]) + offset)) // y shifted
+				i += 2
+				break
+
+			case 'q':
+				// cx cy x y
+				result.push(commands[i]) // cx
+				result.push(String(Number(commands[i + 1]) + offset)) // cy shifted
+				result.push(commands[i + 2]) // x
+				result.push(String(Number(commands[i + 3]) + offset)) // y shifted
+				i += 4
+				break
+
+			case 'b':
+				// cx1 cy1 cx2 cy2 x y
+				result.push(commands[i]) // cx1
+				result.push(String(Number(commands[i + 1]) + offset)) // cy1
+				result.push(commands[i + 2]) // cx2
+				result.push(String(Number(commands[i + 3]) + offset)) // cy2
+				result.push(commands[i + 4]) // x
+				result.push(String(Number(commands[i + 5]) + offset)) // y
+				i += 6
+				break
+
+			case 'z':
+				result.push(commands[i])
+				i += 1
+				break
+
+			default:
+				throw new Error(`Unsupported command: ${cmd}`)
+		}
+	}
+
+	return {
+		...glyph,
+		o: result.join(' ')
+	}
 }
 
 main(fontPath, jsonPath, characters).catch((err) => {
