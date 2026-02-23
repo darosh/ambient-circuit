@@ -11,7 +11,8 @@ export type {
 	AnalyzerType,
 	ParamValue,
 	ParamMap,
-	VoiceTracker
+	VoiceTracker,
+	ChordInfo
 } from './types'
 export {
 	createAudioEngine,
@@ -27,5 +28,6 @@ export {
 	disposeScene,
 	unflattenParams,
 	setNodeParam,
-	getNodeParam
+	getNodeParam,
+	updateGlobalChord
 } from './engine'

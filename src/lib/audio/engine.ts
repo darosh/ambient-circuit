@@ -20,6 +20,8 @@ import { debug } from 'debug'
 
 const log = debug('audio')
 
+const KEEP_PAST = 16
+
 export function resolveAnalyzerType(cfg?: AnalyzerType, def?: string) {
 	if (cfg === 'meter') return 'meter'
 	if (cfg === 'waveform') return 'waveform'
@@ -315,6 +317,8 @@ export async function buildChain(
 		onParamChange: null,
 		audioSignal: { intensity: 0, color: '#ffffff', lastNote: 0, activeNotes: [] },
 		lastTrigger: 0,
+		chordInfo: { notes: [], chord: '', time: 0 },
+		chordHistory: [],
 		setParam(path, value) {
 			if (chain.generator) setNodeParam(chain.generator, path, value)
 		},
@@ -463,6 +467,11 @@ export function triggerChain(
 	}
 	alive.push({ midi: note, end: now + durationMs / 1000 })
 	sig.activeNotes = alive
+
+	const ci = computeChordInfo(alive, now)
+	chain.chordInfo = ci
+	if (chain.chordHistory.length >= KEEP_PAST) chain.chordHistory.shift()
+	chain.chordHistory.push(ci)
 
 	if (isDevice(chain.generator)) {
 		// RNBO: send MIDI events
@@ -1044,7 +1053,95 @@ function midiToFreq(note: number): number {
 // --- Chord / note label ---
 
 import { detect } from '@tonaljs/chord-detect'
+import { detect as scale } from '@tonaljs/scale'
 import { tones, toneNames } from '../../scenes/utils/tones'
+import type { ChordInfo } from './types'
+import type { SceneCtx } from '../scene-ctx'
+
+function computeChordInfo(activeNotes: { midi: number; end: number }[], now: number): ChordInfo {
+	const alive: { midi: number; end: number }[] = []
+	for (let i = 0; i < activeNotes.length; i++) {
+		if (activeNotes[i].end > now) alive.push(activeNotes[i])
+	}
+	const notes: number[] = []
+	const pcs = new Set<string>()
+	let lastNote = 0
+	for (let i = 0; i < alive.length; i++) {
+		notes.push(alive[i].midi)
+		pcs.add(toneNames[alive[i].midi % 12])
+		lastNote = alive[i].midi
+	}
+	let chord = ''
+	if (pcs.size >= 2) {
+		const chords = detect(Array.from(pcs))
+		if (chords.length > 0) chord = chords[0]
+	} else if (lastNote > 0) {
+		chord = tones[lastNote] ?? ''
+	}
+	return { notes, chord, time: now }
+}
+
+function isPerc(note: number) {
+	return note - Math.floor(note) || !note
+}
+
+export function updateGlobalChord(ctx: SceneCtx, audioCtx: BaseAudioContext): void {
+	const now = audioCtx.currentTime
+	const allNotes: { midi: number; end: number }[] = []
+	for (let i = 0; i < ctx.instruments.length; i++) {
+		const chain = ctx.instruments[i].audio
+		if (chain) {
+			for (let j = 0; j < chain.audioSignal.activeNotes.length; j++) {
+				if (!isPerc(chain.audioSignal.activeNotes[j].midi)) {
+					allNotes.push(chain.audioSignal.activeNotes[j])
+				}
+			}
+		}
+	}
+	for (let i = 0; i < ctx.marbles.length; i++) {
+		const chain = ctx.marbles[i].audio
+		if (chain) {
+			for (let j = 0; j < chain.audioSignal.activeNotes.length; j++) {
+				if (!isPerc(chain.audioSignal.activeNotes[j].midi)) {
+					allNotes.push(chain.audioSignal.activeNotes[j])
+				}
+			}
+		}
+	}
+	const ci = computeChordInfo(allNotes, now)
+
+	if (ci.chord) {
+		ctx.chord.current = ci
+	}
+
+	if (ctx.chord.history.length >= KEEP_PAST) ctx.chord.history.shift()
+	ctx.chord.history.push(ci)
+
+	ctx.chord.scale = getScale(ctx)
+}
+
+function getScale(ctx: SceneCtx) {
+	const completeNotes = new Set<number>()
+
+	for (const h of ctx.chord.history) {
+		for (const n of h.notes) {
+			completeNotes.add(n % 12)
+		}
+	}
+
+	const notes = []
+
+	for (const v of Array.from(completeNotes.values()).sort()) {
+		notes.push(toneNames[v])
+	}
+
+	const name = scale(notes)[0]
+
+	return {
+		name,
+		notes
+	}
+}
 
 /**
  * Get a label for a chain: chord name if 3+ unique pitch classes sounding, else note name

@@ -5,7 +5,7 @@ import type { ResolvedRail } from './rail'
 import type { MarbleState } from './marble-state'
 import type { InstrumentState } from './instrument-state'
 import type { RailState } from './rail-state'
-import type { AudioChain } from './audio/types'
+import type { AudioChain, ChordInfo } from './audio'
 import { SceneConfig } from './scene'
 
 /**
@@ -69,6 +69,14 @@ export type SceneCtx = {
 	config: SceneConfig
 	/** Arbitrary scene-level data, passed through to all handler contexts */
 	user: Record<string, unknown>
+	chord: {
+		scale: {
+			name: string
+			notes: string[]
+		}
+		current: ChordInfo
+		history: ChordInfo[]
+	}
 }
 
 /**

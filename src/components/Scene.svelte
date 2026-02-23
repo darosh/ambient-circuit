@@ -21,6 +21,7 @@
 	import MidiSignalView from './MidiSignalView.svelte'
 	import { getMarbleSignalLinks, getMidiSignalLinks } from '../lib/helpers/links'
 	import Stars from './Stars.svelte'
+	import type { SceneCtx } from '../lib/scene-ctx'
 
 	export type SelectedEntity = {
 		type: 'instrument' | 'marble'
@@ -46,6 +47,7 @@
 		easing = $bindable(),
 		railVisibility = $bindable(),
 		fps = $bindable(),
+		onSceneCtx,
 		selectedEntity = $bindable<SelectedEntity>(null),
 		selectedAudioChain = $bindable<AudioChain | undefined>(undefined),
 		allAudioChains = $bindable<AudioChain[]>([]),
@@ -68,6 +70,7 @@
 		easing?: string
 		railVisibility?: boolean[]
 		fps?: number
+		onSceneCtx?: (ctx: SceneCtx) => void
 		selectedEntity?: SelectedEntity
 		selectedAudioChain?: AudioChain | undefined
 		allAudioChains?: AudioChain[]
@@ -117,7 +120,13 @@
 
 	// Create scene context once at mount (non-reactive to avoid loops)
 	const sceneCtx = (() => {
-		return createSceneCtx(marbles, rails, marbleRailIndices, tempo, scene, scene.user ?? {})
+		const ctx = createSceneCtx(marbles, rails, marbleRailIndices, tempo, scene, scene.user ?? {})
+
+		if (onSceneCtx) {
+			onSceneCtx(ctx)
+		}
+
+		return ctx
 	})()
 
 	function onSelectInstrument(railIdx: number, idx: number) {
@@ -273,6 +282,10 @@
 		// Update scene context (beat/play state)
 		if (sceneCtx) {
 			updateSceneCtx(sceneCtx, tempo)
+
+			if (onSceneCtx) {
+				onSceneCtx(sceneCtx)
+			}
 		}
 
 		// Update easing based on prop (respect runtime overrides)

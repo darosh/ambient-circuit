@@ -1,10 +1,11 @@
-<script>
+<script lang="ts">
 	import { T } from '@threlte/core'
 	import { OrbitControls } from '@threlte/extras'
 	import Scene from './Scene.svelte'
 	import Bloom from './Bloom.svelte'
 	import HudScene from './HudScene.svelte'
 	import BloomHud from './BloomHud.svelte'
+	import type { SceneCtx } from '../lib/scene-ctx'
 
 	let {
 		sceneId,
@@ -39,10 +40,13 @@
 		onPrevScene,
 		freeze = false
 	} = $props()
+
+	let sceneCtx = $state<SceneCtx | undefined>(undefined)
 </script>
 
 {#key sceneId}
 	<Scene
+		onSceneCtx={(ctx) => (sceneCtx = ctx)}
 		scene={activeScene}
 		{showGrid}
 		{showPoints}
@@ -108,6 +112,8 @@
 				{onNextScene}
 				{onPrevScene}
 				{freeze}
+				{sceneCtx}
+				{fps}
 			/>
 		{/if}
 	</BloomHud>

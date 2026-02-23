@@ -114,7 +114,12 @@ export function createSceneCtx(
 			bpm: tempo.config.bpm
 		},
 		config: scene,
-		user
+		user,
+		chord: {
+			current: { notes: [], chord: '', time: 0 },
+			history: [],
+			scale: { name: '', notes: [] }
+		}
 	}
 }
 

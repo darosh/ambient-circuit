@@ -35,6 +35,12 @@ export type MasterConfig = {
 	analyzer?: AnalyzerType
 }
 
+export type ChordInfo = {
+	notes: number[]
+	chord: string
+	time: number
+}
+
 // --- Runtime instances ---
 
 export type VoiceTracker = {
@@ -75,6 +81,8 @@ export type AudioChain = {
 		activeNotes: { midi: number; end: number }[]
 	}
 	lastTrigger: number
+	chordInfo: ChordInfo
+	chordHistory: ChordInfo[]
 }
 
 export type NodePresetInfo = {

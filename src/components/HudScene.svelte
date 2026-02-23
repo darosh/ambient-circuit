@@ -12,6 +12,7 @@
 	import { easeInCubic } from '../lib/easing'
 	import { onDestroy } from 'svelte'
 	import type { TempoState } from '../lib/tempo'
+	import type { SceneCtx } from '../lib/scene-ctx'
 
 	extend({ MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial })
 
@@ -34,7 +35,9 @@
 		bpm = 120,
 		tempo,
 		description,
-		freeze = false
+		freeze = false,
+		sceneCtx,
+		fps = 0
 	}: {
 		engine: AudioEngine | null
 		defaultAnalyser: string | undefined
@@ -53,6 +56,8 @@
 		tempo: TempoState
 		freeze?: boolean
 		description?: string
+		sceneCtx?: SceneCtx
+		fps: number
 	} = $props()
 
 	const { size } = useThrelte()
@@ -139,6 +144,9 @@
 	type BtnDef = { kind: ArrowKind; action: (e: unknown) => void; rotY?: number; rotX?: number }
 
 	let isMuted = $state(false)
+	let chord = $derived(sceneCtx?.chord?.current?.chord)
+	let scale = $derived(sceneCtx?.chord?.scale?.name)
+	let scaleNotes = $derived(sceneCtx?.chord?.scale?.notes)
 
 	const btnDefs: BtnDef[] = [
 		{
@@ -382,7 +390,7 @@
 		textMatLarge?.mat?.dispose()
 	})
 
-	const anal = $derived(rows?.[0].chain.analyzer)
+	const anal = $derived(rows?.[0]?.chain?.analyzer)
 	const x = $derived(-$size.width / HUD_ZOOM / 2 + sphereR * 2)
 	const analyserEndX = $derived(
 		anal
@@ -393,11 +401,15 @@
 	const seqX = $derived(analyserEndX + sphereR)
 	const seqWidth = $derived($size.width / HUD_ZOOM / 2 - otherSpacing - seqX)
 
-	const lines = $derived(description?.split('/n') || [])
-	const descWidth = $derived(Math.max(0, ...lines.map((l) => l.length)) * sphereR * CHAR_WIDTH)
+	const lines = $derived(description?.split('\n') || [])
+	const descWidth = $derived(
+		Math.max(0, ...lines.map((l) => l.length)) * sphereR * 1.2 * CHAR_WIDTH
+	)
 	const reduceWidth = $derived((descWidth + otherSpacing) * (controlsOpacity > 0.2 ? 1 : 0))
 
-	const reduceVisibleBeats = $derived(reduceWidth * (beatsVisible / seqWidth))
+	const reduceVisibleBeats = $derived(
+		sequencerMode === 'time' ? reduceWidth * (beatsVisible / seqWidth) : 0
+	)
 </script>
 
 <T.OrthographicCamera makeDefault zoom={80} position={[0, 0, 10]} />
@@ -462,14 +474,17 @@
 </T.Group>
 
 {#if description}
-	{#each description.split('\n') as line, idx (line)}
+	{#each lines as line, idx (line)}
 		{@const textSize = sphereR * 1.2}
 		{@const marginX = 2.5 * sphereR}
 		{@const marginY = marginX + textSize}
 		<T.Group
 			position={[
 				$size.width / HUD_ZOOM / 2 - marginX - line.length * textSize * CHAR_WIDTH,
-				$size.height / HUD_ZOOM / 2 - marginY - rowSpacing * idx + sphereR * 0.08,
+				$size.height / HUD_ZOOM / 2 -
+					marginY -
+					(1 + 1.5 * CHAR_WIDTH) * textSize * idx +
+					sphereR * 0.08,
 				0
 			]}
 		>
@@ -487,6 +502,54 @@
 				otherSpacing -
 				sphereR * 21.9 -
 				beatText.length * beatSize * CHAR_WIDTH,
+			-$size.height / HUD_ZOOM / 2 + sphereR * 1.5,
+			0
+		]}
+	>
+		<GeoText cache material={textMat.mat} text={beatText} size={beatSize} />
+	</T.Group>
+{/if}
+
+{#if chord}
+	{@const beatSize = sphereR}
+	{@const beatText = chord.toUpperCase()}
+	<T.Group
+		position={[
+			-$size.width / HUD_ZOOM / 2 + sphereR * 2 + beatSize * CHAR_WIDTH * 10 + sphereR * 2,
+			-$size.height / HUD_ZOOM / 2 + sphereR * 1.5,
+			0
+		]}
+	>
+		<GeoText cache material={textMat.mat} text={beatText} size={beatSize} />
+	</T.Group>
+{/if}
+
+{#if scale}
+	{@const beatSize = sphereR}
+	{@const beatText =
+		scale.toUpperCase() + (scaleNotes?.length ? ` (${scaleNotes?.join(', ')})` : '')}
+	<T.Group
+		position={[
+			-$size.width / HUD_ZOOM / 2 +
+				sphereR * 2 +
+				beatSize * CHAR_WIDTH * 6 +
+				sphereR * 2 +
+				beatSize * CHAR_WIDTH * 11 +
+				sphereR * 2,
+			-$size.height / HUD_ZOOM / 2 + sphereR * 1.5,
+			0
+		]}
+	>
+		<GeoText cache material={textMat.mat} text={beatText} size={beatSize} />
+	</T.Group>
+{/if}
+
+{#if fps}
+	{@const beatSize = sphereR}
+	{@const beatText = `${fps} FPS`.toString()}
+	<T.Group
+		position={[
+			-$size.width / HUD_ZOOM / 2 + sphereR * 2,
 			-$size.height / HUD_ZOOM / 2 + sphereR * 1.5,
 			0
 		]}

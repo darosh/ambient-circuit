@@ -1,5 +1,5 @@
 import { sendMidiNote, getMidiState } from './midi/midi'
-import { triggerChain } from './audio'
+import { triggerChain, updateGlobalChord } from './audio'
 import type { BounceContext, GlobalBeatContext, TriggerContext } from './scene'
 import { notes } from '../scenes/utils/notes'
 
@@ -59,6 +59,7 @@ export function triggerHandler(ctx: TriggerContext) {
 
 	if (chain?.generator) {
 		triggerChain(chain, note, velocity, duration)
+		updateGlobalChord(ctx.scene, chain.output.context)
 	}
 }
 
@@ -106,6 +107,7 @@ export function bouncerHandler(ctx: BounceContext) {
 
 		// TODO: Marbles should send MIDI too
 		triggerChain(chain1, note, velocity, duration)
+		updateGlobalChord(ctx.scene, chain1.output.context)
 	}
 
 	// Trigger marble2 audio chain
@@ -145,6 +147,7 @@ export function bouncerHandler(ctx: BounceContext) {
 			DURATION
 
 		triggerChain(chain2, note, velocity, duration)
+		updateGlobalChord(ctx.scene, chain2.output.context)
 	}
 }
 
