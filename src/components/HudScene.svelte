@@ -400,9 +400,8 @@
 		const b = btnStates[i]
 		b.animTime = TRANSPORT_FLASH
 		b.fx.impactColor.value.set(baseColor)
-		// Start spin: from current angle to next full 360°
-		b.spinFrom =
-			b.spinT > 0 ? b.spinFrom + (b.spinTo - b.spinFrom) * (1 - b.spinT / SPIN_DURATION) : b.spinTo
+		// Start spin: always from a SPIN-aligned angle
+		b.spinFrom = b.spinTo
 		b.spinTo = b.spinFrom + SPIN
 		b.spinT = SPIN_DURATION
 	}
