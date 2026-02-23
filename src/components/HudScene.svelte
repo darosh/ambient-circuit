@@ -245,7 +245,7 @@
 			set: (v) => {
 				showStats = v
 			}
-		},
+		}
 		// {
 		// 	label: 'OUTLINE',
 		// 	lsKey: 'ac-wireframe',
@@ -471,6 +471,7 @@
 	})
 
 	const SEQ_MAX = 16 // keep only enough for SequencerView to detect; ring buffer handles history
+	let slideEased = $state(0)
 
 	// Animation + label update
 	useTask((delta) => {
@@ -548,10 +549,13 @@
 		// Slide animation — separate speed from fade
 		if (menuSlideT < targetEdgeFade) {
 			menuSlideT = Math.min(targetEdgeFade, menuSlideT + delta / FADE_DURATION)
+			slideEased = easeOutCubic(menuSlideT)
 		} else if (menuSlideT > targetEdgeFade) {
 			menuSlideT = Math.max(targetEdgeFade, menuSlideT - delta / FADE_DURATION)
+			slideEased = easeInCubic(menuSlideT)
 		}
-		const menuAlpha = controlsOpacity * edgeFade
+
+		const menuAlpha = controlsOpacity * slideEased * slideEased
 		for (let i = 0; i < menuItemStates.length; i++) {
 			const ms = menuItemStates[i]
 			ms.fx.alpha.value = menuAlpha
@@ -791,31 +795,33 @@
 	{@const menuMarginX = otherSpacing}
 	{@const menuRowSpacing = (1 + 1.5 * CHAR_WIDTH) * menuSize}
 	{@const width = itemText.length * menuSize * CHAR_WIDTH}
-	{@const slideEased = easeOutCubic(menuSlideT)}
 	{@const overlay = 11 * menuSize * CHAR_WIDTH + menuSize + otherSpacing}
 	{@const slideOffset = ((1 - slideEased) * sphereR) / 2}
 	{@const mx = $size.width / HUD_ZOOM / 2 - width - menuMarginX + slideOffset}
 	{@const my =
 		-$size.height / HUD_ZOOM / 2 + (menuItems.length - i - 1) * menuRowSpacing + otherSpacing * 5}
 	{@const overlayX = width - overlay / 2 + otherSpacing}
-	<T.Group position={[mx, my, 0]}>
-		<GeoText cache material={menuItemDic[item.label].fx.mat} text={itemText} size={menuSize} />
-		<!-- Invisible hitbox -->
-		<T.Mesh
-			position.x={overlayX}
-			position.y={sphereR * 0.4}
-			onclick={() => toggleMenuItem(i)}
-			onpointerenter={() => {
-				menuItemDic[item.label].hovered = true
-			}}
-			onpointerleave={() => {
-				menuItemDic[item.label].hovered = false
-			}}
-		>
-			<T.BoxGeometry args={[overlay, menuSize * 2, menuSize]} />
-			<T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
-		</T.Mesh>
-	</T.Group>
+
+	{#if my < $size.height / HUD_ZOOM / 2 - sphereR * 10}
+		<T.Group position={[mx, my, 0]}>
+			<GeoText cache material={menuItemDic[item.label].fx.mat} text={itemText} size={menuSize} />
+			<!-- Invisible hitbox -->
+			<T.Mesh
+				position.x={overlayX}
+				position.y={sphereR * 0.4}
+				onclick={() => toggleMenuItem(i)}
+				onpointerenter={() => {
+					menuItemDic[item.label].hovered = true
+				}}
+				onpointerleave={() => {
+					menuItemDic[item.label].hovered = false
+				}}
+			>
+				<T.BoxGeometry args={[overlay, menuSize * 2, menuSize]} />
+				<T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
+			</T.Mesh>
+		</T.Group>
+	{/if}
 {/each}
 
 <!-- Transport controls (bottom-right) -->
