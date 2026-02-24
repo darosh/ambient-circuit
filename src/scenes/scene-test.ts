@@ -11,6 +11,7 @@ import {
 	FLOATING_SHAKING,
 	FLOATING_SPINNING,
 	FLOATING_SPRINGING,
+	FLOATING_TRAMPOLINING,
 	railCenter
 } from './utils/floating'
 import { clone } from 'rambdax'
@@ -379,6 +380,10 @@ export const floatingScenes: SceneConfig[] = [
 	Object.assign(clone(scene), <Partial<SceneConfig>>{
 		id: 'scene-bouncing',
 		renderFactory: (_, seed) => createFloating({ seed, ...FLOATING_BOUNCING })
+	}),
+	Object.assign(clone(scene), <Partial<SceneConfig>>{
+		id: 'scene-trampolining',
+		renderFactory: (_, seed) => createFloating({ seed, ...FLOATING_TRAMPOLINING })
 	}),
 	Object.assign(clone(scene), <Partial<SceneConfig>>{
 		id: 'scene-springing',

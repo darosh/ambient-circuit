@@ -4,10 +4,16 @@ import type { SceneCtx } from '../../lib/scene-ctx'
 import type { TempoState } from '../../lib/tempo'
 import {
 	easeInBounce,
+	easeInBounceCustom,
+	easeInBouncePhysical,
 	easeInElastic,
+	easeInElasticCustom,
+	easeInOutBack,
+	easeOutBack,
 	easeOutCirc,
 	easeOutElastic,
-	type EasingFunction
+	type EasingFunction,
+	linear
 } from '../../lib/easing'
 import type { RailData } from '../../lib/rail-data'
 import type { Vec3 } from '../../lib/rail'
@@ -59,14 +65,25 @@ export const FLOATING_SHAKING: FloatingConfig = {
 }
 
 export const FLOATING_BOUNCING: Partial<FloatingConfig> = {
-	speed: 20,
-	floatIntensity: 0.5,
+	speed: 6,
+	floatIntensity: 1,
 	floatingRange: [0, 0.5],
 	rotationSpeed: 0,
 	rotationIntensity: 0,
 	pivotRotationSpeed: 0,
 	pivotRotationIntensity: 0,
-	easing: [easeOutCirc, easeInBounce]
+	easing: [easeOutBack, easeInBounceCustom(7, 3)]
+}
+
+export const FLOATING_TRAMPOLINING: Partial<FloatingConfig> = {
+	speed: 6,
+	floatIntensity: 1,
+	floatingRange: [0, 0.5],
+	rotationSpeed: 0,
+	rotationIntensity: 0,
+	pivotRotationSpeed: 0,
+	pivotRotationIntensity: 0,
+	easing: [easeOutBack, easeInElasticCustom(10, 6)]
 }
 
 export const FLOATING_SPRINGING: Partial<FloatingConfig> = {
@@ -81,12 +98,16 @@ export const FLOATING_SPRINGING: Partial<FloatingConfig> = {
 }
 
 export const FLOATING_ROTATING: Partial<FloatingConfig> = {
+	speed: 10,
+	floatIntensity: 0.1,
 	rotationSpeed: 1,
 	rotationIntensity: Math.PI * 2,
 	waveform: 'saw'
 }
 
 export const FLOATING_ORBITING: Partial<FloatingConfig> = {
+	speed: 10,
+	floatIntensity: 0.1,
 	rotationSpeed: 1,
 	rotationIntensity: Math.PI * 2,
 	pivotRotationSpeed: 8,
@@ -95,6 +116,8 @@ export const FLOATING_ORBITING: Partial<FloatingConfig> = {
 }
 
 export const FLOATING_SPINNING: Partial<FloatingConfig> = {
+	speed: 10,
+	floatIntensity: 0.1,
 	pivotRotationSpeed: 4,
 	pivotRotationIntensity: Math.PI * 2,
 	waveform: 'saw'

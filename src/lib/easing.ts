@@ -77,23 +77,92 @@ export const easeInBounce: EasingFunction = (t) => {
 	return 1 - easeOutBounce(1 - t)
 }
 
-export const easeOutBounce: EasingFunction = (t) => {
+export function easeOutBounce(x: number): number {
 	const n1 = 7.5625
 	const d1 = 2.75
 
-	if (t < 1 / d1) {
-		return n1 * t * t
-	} else if (t < 2 / d1) {
-		return n1 * (t -= 1.5 / d1) * t + 0.75
-	} else if (t < 2.5 / d1) {
-		return n1 * (t -= 2.25 / d1) * t + 0.9375
+	if (x < 1 / d1) {
+		return n1 * x * x
+	} else if (x < 2 / d1) {
+		const t = x - 1.5 / d1
+		return n1 * t * t + 0.75
+	} else if (x < 2.5 / d1) {
+		const t = x - 2.25 / d1
+		return n1 * t * t + 0.9375
 	} else {
-		return n1 * (t -= 2.625 / d1) * t + 0.984375
+		const t = x - 2.625 / d1
+		return n1 * t * t + 0.984375
 	}
 }
 
 export const easeInOutBounce: EasingFunction = (t) =>
 	t < 0.5 ? (1 - easeOutBounce(1 - 2 * t)) / 2 : (1 + easeOutBounce(2 * t - 1)) / 2
+
+export const easeInBouncePhysical: EasingFunction = (t) => {
+	return 1 - easeOutBouncePhysical(1 - t)
+}
+
+function easeOutBouncePhysical(x: number): number {
+	const amplitude = 1
+	const decay = 5
+	const frequency = 20
+
+	return 1 - Math.abs(amplitude * Math.exp(-decay * x) * Math.cos(frequency * x))
+}
+
+export const easeInOutBouncePhysical: EasingFunction = (t) =>
+	t < 0.5 ? (1 - easeOutBouncePhysical(1 - 2 * t)) / 2 : (1 + easeOutBouncePhysical(2 * t - 1)) / 2
+
+export function easeInBounceCustom(bounces = 3, decay = 2): EasingFunction {
+	const easeOut = easeOutBounceCustom(bounces, decay)
+
+	return (t) => {
+		return 1 - easeOut(1 - t)
+	}
+}
+
+export function easeOutBounceCustom(bounces = 3, decay = 2) {
+	const epsilon = 0.0001
+	return (x: number) => {
+		const omega = bounces * Math.PI
+		const v = Math.cos(omega * x) * Math.exp(-decay * x)
+		// smooth abs
+		const smoothAbs = Math.sqrt(v * v + epsilon)
+		return 1 - smoothAbs
+	}
+}
+
+export function easeInOutBounceCustom(bounces = 3, decay = 2): EasingFunction {
+	const easeOut = easeOutBounceCustom(bounces, decay)
+
+	return (t) => (t < 0.5 ? (1 - easeOut(1 - 2 * t)) / 2 : (1 + easeOut(2 * t - 1)) / 2)
+}
+
+export function easeInElasticCustom(bounces = 3, decay = 2): EasingFunction {
+	const easeOut = easeOutElasticCustom(bounces, decay)
+
+	return (t) => {
+		return 1 - easeOut(1 - t)
+	}
+}
+
+export function easeOutElasticCustom(bounces = 3, decay = 2) {
+	return (x: number) => {
+		const omega = bounces * Math.PI
+
+		const f = (t: number) => 1 - Math.exp(-decay * t) * Math.cos(omega * t)
+
+		const end = f(1)
+
+		return f(x) / end
+	}
+}
+
+export function easeInOutElasticCustom(bounces = 3, decay = 2): EasingFunction {
+	const easeOut = easeOutElasticCustom(bounces, decay)
+
+	return (t) => (t < 0.5 ? (1 - easeOut(1 - 2 * t)) / 2 : (1 + easeOut(2 * t - 1)) / 2)
+}
 
 // Back
 export const easeInBack: EasingFunction = (t) => {
