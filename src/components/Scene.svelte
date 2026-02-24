@@ -97,7 +97,15 @@
 	if (!tempo) tempo = createTempoState()
 
 	// Create marbles once at mount (component remounts per scene via {#key})
-	const rails = untrack(() => scene.rails)
+	const rails = untrack(() => {
+		const r = scene.rails
+		if (scene.renderFactory) {
+			for (let i = 0; i < r.length; i++) {
+				if (!r[i].render) r[i].render = scene.renderFactory(r[i], i)
+			}
+		}
+		return r
+	})
 
 	// Create reactive signal and runtime maps
 	const _insSignals = createInstrumentSignals(rails)

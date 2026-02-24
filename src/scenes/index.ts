@@ -1,6 +1,6 @@
 import type { SceneConfig } from '../lib/scene'
 
-import { scene as sceneTest } from './scene-test'
+import { scene as sceneTest, floatingScenes } from './scene-test'
 import { scene as sceneInstruments } from './scene-instruments'
 import { scene as sceneMarbles } from './scene-marbles'
 import { scene as sceneRails } from './scene-rails'
@@ -45,6 +45,7 @@ export const scenes: SceneConfig[] = [
 	sceneSnake,
 	sceneRailSwitch,
 	sceneCreateDestroy,
+	...floatingScenes,
 	sceneAudio,
 	sceneCollisions,
 	sceneToneInstruments

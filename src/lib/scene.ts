@@ -80,6 +80,8 @@ export type SceneConfig = {
 		buses?: Record<string, import('./audio/types').BusConfig>
 		master?: import('./audio/types').MasterConfig
 	}
+	/** Factory to auto-assign render fn to rails without one */
+	renderFactory?: (railData: RailData, index: number) => RailData['render'] | undefined
 	audioView?: {
 		offset?: Vector3Tuple
 		analyzers?: boolean

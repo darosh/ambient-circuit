@@ -1,11 +1,21 @@
 import type { SceneConfig } from '../lib/scene'
-import { color2 as colors } from './utils/colors'
+import { color2 as colors, colorFactory } from './utils/colors'
 import { triggerHandler } from '../lib/trigger-handler'
 
 import { circle, roundedRect, coil, spiral } from '../lib/rail-primitives'
+import {
+	createFloating,
+	FLOATING_BOUNCING,
+	FLOATING_ORBITING,
+	FLOATING_ROTATING,
+	FLOATING_SHAKING,
+	FLOATING_SPINNING,
+	FLOATING_SPRINGING,
+	railCenter
+} from './utils/floating'
+import { clone } from 'rambdax'
 
-let ci = 0
-const c = () => colors[ci++ % colors.length]
+const c = colorFactory(colors)
 
 export const scene: SceneConfig = {
 	id: 'scene-test',
@@ -331,3 +341,62 @@ export const scene: SceneConfig = {
 		}
 	]
 }
+
+const circlesScene: Omit<SceneConfig, 'id'> = {
+	bpm: 120,
+	polar: true,
+	triggerHandler,
+	rails: ((length, y, r1, r2) =>
+		Array.from({ length }).map((_, i) => {
+			return {
+				color: c(),
+				rail: {
+					id: `id-${i}`,
+					nodes: circle({
+						pos: {
+							x: r1 * Math.sin(Math.PI * 2 * (i / length)),
+							y,
+							z: r1 * Math.cos(Math.PI * 2 * (i / length))
+						},
+						radius: r2
+					})
+				},
+				instruments: [{ type: 'star', sides: 5, beat: 2 }]
+			}
+		}))(12, 0, 3, 0.5)
+}
+
+export const floatingScenes: SceneConfig[] = [
+	Object.assign(clone(scene), <Partial<SceneConfig>>{
+		id: 'scene-floating',
+		renderFactory: (_, seed) => createFloating({ seed })
+	}),
+	Object.assign(clone(scene), <Partial<SceneConfig>>{
+		id: 'scene-shaking',
+		renderFactory: (railData, seed) =>
+			createFloating({ seed, rotationSeed: seed, ...FLOATING_SHAKING, pivot: railCenter(railData) })
+	}),
+	Object.assign(clone(scene), <Partial<SceneConfig>>{
+		id: 'scene-bouncing',
+		renderFactory: (_, seed) => createFloating({ seed, ...FLOATING_BOUNCING })
+	}),
+	Object.assign(clone(scene), <Partial<SceneConfig>>{
+		id: 'scene-springing',
+		renderFactory: (_, seed) => createFloating({ seed, ...FLOATING_SPRINGING })
+	}),
+	<SceneConfig>Object.assign(clone(circlesScene), <Partial<SceneConfig>>{
+		id: 'scene-rotating',
+		renderFactory: (railData, seed) =>
+			createFloating({ seed, ...FLOATING_ROTATING, pivot: railCenter(railData) })
+	}),
+	<SceneConfig>Object.assign(clone(circlesScene), <Partial<SceneConfig>>{
+		id: 'scene-orbiting',
+		renderFactory: (railData, seed) =>
+			createFloating({ seed, ...FLOATING_ORBITING, pivot: railCenter(railData) })
+	}),
+	<SceneConfig>Object.assign(clone(circlesScene), <Partial<SceneConfig>>{
+		id: 'scene-spinning',
+		renderFactory: (railData, seed) =>
+			createFloating({ seed, ...FLOATING_SPINNING, pivot: railCenter(railData) })
+	})
+]
