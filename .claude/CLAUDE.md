@@ -168,8 +168,9 @@ Create a "marble-machine-inspired" music sequencer where:
     - [x] Opposite-direction logic (both reverse)
     - [x] BounceHandler in SceneConfig (custom collision response)
     - [x] bouncerOnlyMode optimization flag
+    - [x] Crossover prevention: `preventBouncerCrossovers()` swaps beats when marbles pass through each other (runs independently of cooldown)
     - [x] Demo scene (scene-collisions) with 4 examples + bounce flash
-    - [x] Test suite with 5 test cases
+    - [x] Test suite with 5 test cases + realtime order-preservation test (1 min @ 120fps)
   - [x] Runtime marble destroy/create
     - [x] Stable `Marble.id` (auto-increment, separate from array index)
     - [x] `MarbleState.destroy()` — flags marble for deferred removal

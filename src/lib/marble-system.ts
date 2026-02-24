@@ -487,6 +487,44 @@ function checkMarbleCollisions(
 }
 
 /**
+ * Prevent bouncer marble crossovers: if two bouncer marbles on the same
+ * rail swapped beat order during this frame, swap their beats back.
+ * Elastic collision ≡ pass-through, so cyclic order is invariant.
+ * Runs independently of collision cooldown.
+ */
+function preventBouncerCrossovers(marbles: Marble[]): void {
+	for (let i = 0; i < marbles.length; i++) {
+		const m1 = marbles[i]
+		if (m1.runtime.destroyed) continue
+		if (!m1.config.bouncer) continue
+
+		for (let j = i + 1; j < marbles.length; j++) {
+			const m2 = marbles[j]
+			if (m2.runtime.destroyed) continue
+			if (!m2.config.bouncer) continue
+
+			// Same rail + branch check
+			const rail1 = m1.runtime.railId ?? m1.config.resolvedRail.id
+			const rail2 = m2.runtime.railId ?? m2.config.resolvedRail.id
+			if (rail1 !== rail2) continue
+			if (m1.branchIndex !== m2.branchIndex) continue
+
+			// Skip wrap-around cases (large beat delta = looping boundary)
+			if (Math.abs(m1.previousBeat - m2.previousBeat) > 5) continue
+			if (Math.abs(m1.currentBeat - m2.currentBeat) > 5) continue
+
+			const orderBefore = m1.previousBeat <= m2.previousBeat
+			const orderAfter = m1.currentBeat <= m2.currentBeat
+			if (orderBefore !== orderAfter) {
+				const tmp = m1.currentBeat
+				m1.currentBeat = m2.currentBeat
+				m2.currentBeat = tmp
+			}
+		}
+	}
+}
+
+/**
  * Check if marble crossed any instruments and fire triggers.
  */
 function checkInstrumentTriggers(
@@ -1067,6 +1105,7 @@ export function updateMarbles(
 			bounceHandler,
 			bouncerOnlyMode ?? true
 		)
+		preventBouncerCrossovers(activeMarbles)
 	}
 
 	// Collect mutations
