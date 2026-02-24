@@ -42,6 +42,7 @@
 		tempo?: TempoState
 		sceneCtx?: SceneCtx
 		renderPlayOnly?: boolean
+		visible?: boolean
 		id: string
 		railIdx?: number
 		selectedInstrumentIdx?: number | null
@@ -61,6 +62,7 @@
 		tempo,
 		sceneCtx,
 		renderPlayOnly = false,
+		visible = true,
 		id,
 		railIdx = 0,
 		selectedInstrumentIdx = null,
@@ -371,7 +373,7 @@
 	})
 </script>
 
-{#if showBeats}
+{#if visible && showBeats}
 	{#each visibleBeats as bp, bpIndex (bpIndex)}
 		{@const isDownbeat = bp.beat === resolved.beatOffset}
 		<T.Group
@@ -398,7 +400,7 @@
 	{/each}
 {/if}
 
-{#if showNameDeferred && railNamePosition}
+{#if visible && showNameDeferred && railNamePosition}
 	<T.Group
 		bind:ref={nameGroup}
 		position={railNamePosition.clone().applyQuaternion(groupQuaternion).toArray()}
@@ -418,7 +420,7 @@
 	</T.Group>
 {/if}
 
-<T.Group position={groupPosition} rotation={groupRotation}>
+<T.Group position={groupPosition} rotation={groupRotation} {visible}>
 	{#each allMeshes as { geometry }, idx (idx)}
 		<T.Mesh {geometry} material={<Material>(fxRails ? fxMaterialObj.mat : plainMaterial)} />
 	{/each}
