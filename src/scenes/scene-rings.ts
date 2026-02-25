@@ -20,6 +20,7 @@ export const scene: SceneConfig = {
 	sequencerMode: 'time',
 	stars: true,
 	audioView: {
+		analyzers: false,
 		offset: [0, -0.5, 0],
 		module: 0.25,
 		color: '#333366',

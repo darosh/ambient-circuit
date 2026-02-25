@@ -29,6 +29,7 @@ export const scene: SceneConfig = {
 	camera: [0, 11, 8],
 	target: [0, 1, 0],
 	audioView: {
+		analyzers: false,
 		color: '#555599',
 		marbleLinks: true,
 		module: 0.25
@@ -171,9 +172,8 @@ export const scene: SceneConfig = {
 					start: 4,
 					speed: 0.5,
 					direction: 'backward',
+					type: 'ball',
 					bouncer: true,
-					type: 'poly',
-					sides: 12,
 					audio: { id: 'synth' },
 					note: 60 + 5
 				},
@@ -182,7 +182,8 @@ export const scene: SceneConfig = {
 					speed: 0.7,
 					direction: 'backward',
 					bouncer: true,
-					type: 'ball',
+					type: 'poly',
+					sides: 12,
 					audio: { id: 'synth' },
 					note: 60
 				}

@@ -543,7 +543,7 @@
 		{/if}
 	{/each}{/if}
 
-{#if audioInitialized}
+{#if audioInitialized && (scene?.audioView !== false)}
 	<AudioView
 		showAllNodes={scene?.audioView?.all}
 		showAnalysers={showAnalyzers && (scene?.audioView?.analyzers ?? true)}

@@ -12,7 +12,7 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	sequencerMode: 'time',
 	names: true,
-	audioView: { module: 0.05 },
+	audioView: false,
 	sequencerBeats: 32,
 	audio: {
 		chains: {

@@ -92,5 +92,5 @@ export type SceneConfig = {
 		module?: number
 		defaultAnalyser?: 'fft' | 'meter' | 'waveform'
 		marbleLinks?: boolean
-	}
+	} | false
 }
