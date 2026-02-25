@@ -70,11 +70,15 @@ export function clearRailMaterialCache(): void {
 export function buildRailMaterial(
 	hexColor: string,
 	initialIntensity: number = 0.7,
-	transparent: boolean = true
+	transparent: boolean = true,
+	uvFreq: number = 0.75,
+	useFade = 0.5
 ) {
 	const emissiveColor = uniform(color(hexColor))
 	const impactIntensity = uniform(0.0)
 	const activeUniform = uniform(1.0)
+	const uvFreqUniform = uniform(uvFreq)
+	const useFadeUniform = float(useFade)
 
 	const mat = new MeshBasicNodeMaterial({
 		transparent,
@@ -92,14 +96,17 @@ export function buildRailMaterial(
 		const cy = sin(angle).mul(0.5)
 
 		// noise 1: wider streaks, flows forward
-		const u1 = uv().x.mul(2).add(scaledTime).add(positionWorld.x.mul(10.3))
+		const u1 = uv().x.mul(uvFreqUniform).add(scaledTime).add(positionWorld.x.mul(10.3))
 		const noise1 = perlinNoise({ position: vec3(cx.add(u1.mul(0.3)), cy, u1), scale: 2 }).r.remap(
 			0.2,
 			0.95
 		)
 
 		// noise 2: tighter streaks, flows at half speed
-		const u2 = uv().x.mul(5).add(scaledTime.mul(0.5)).add(positionWorld.z.mul(0.3))
+		const u2 = uv()
+			.x.mul(uvFreqUniform.mul(2.5))
+			.add(scaledTime.mul(0.5))
+			.add(positionWorld.z.mul(0.3))
 		const noise2 = perlinNoise({ position: vec3(cx.add(u2.mul(0.15)), cy, u2), scale: 2 }).g.remap(
 			0.2,
 			0.95
@@ -107,11 +114,12 @@ export function buildRailMaterial(
 
 		// outer fade
 		const outerFade = min(uv().y.smoothstep(0, 0.1), uv().y.oneMinus().smoothstep(0, 0.4))
+		const fadeFactor = outerFade.mul(useFadeUniform).add(useFadeUniform.oneMinus())
 
 		// effect
 		const effect = noise1
 			.mul(noise2)
-			.mul(outerFade)
+			.mul(fadeFactor)
 			.mul(impactIntensity.add(initialIntensity * 0.8))
 
 		const emissiveColorLuminance = luminance(emissiveColor)

@@ -101,7 +101,9 @@
 	const fxMaterialObj = makeRailMaterial(
 		untrack(() => color),
 		0.7,
-		true
+		true,
+		0.04,
+		1
 	)
 	const plainMaterial = $derived(!fxRails ? makeStandardMaterial(untrack(() => color)) : null)
 
@@ -198,7 +200,12 @@
 		if (!curvePath) return null
 		try {
 			const radius = Math.max(width / 2, 0.001)
-			return { geometry: buildTubeGeometry(curvePath.curves, radius, 8, 12, closed), opacity }
+			// uvScale: lower than default (1/2πr) → sparser UV → faster noise animation on long rails
+			const uvScale = 0.15 / radius
+			return {
+				geometry: buildTubeGeometry(curvePath.curves, radius, 8, 12, closed, true, uvScale),
+				opacity
+			}
 		} catch (e) {
 			console.warn('Failed to create tube:', e)
 			return null
