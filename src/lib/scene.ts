@@ -82,15 +82,17 @@ export type SceneConfig = {
 	}
 	/** Factory to auto-assign render fn to rails without one */
 	renderFactory?: (railData: RailData, index: number) => RailData['render'] | undefined
-	audioView?: {
-		offset?: Vector3Tuple
-		analyzers?: boolean
-		text?: boolean
-		all?: boolean
-		color?: string
-		midiAlpha?: number
-		module?: number
-		defaultAnalyser?: 'fft' | 'meter' | 'waveform'
-		marbleLinks?: boolean
-	} | false
+	audioView?:
+		| {
+				offset?: Vector3Tuple
+				analyzers?: boolean
+				text?: boolean
+				all?: boolean
+				color?: string
+				midiAlpha?: number
+				module?: number
+				defaultAnalyser?: 'fft' | 'meter' | 'waveform'
+				marbleLinks?: boolean
+		  }
+		| false
 }

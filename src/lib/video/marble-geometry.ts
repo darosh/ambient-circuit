@@ -14,6 +14,7 @@ export const MARBLE_SIZE = 0.2
 export const MARBLE_CORNER_RADIUS = 0.02
 export const MARBLE_RADIAL_SEGMENTS = 8
 export const MARBLE_CLOSED_SEGMENTS = 12
+export const MARBLE_EATER_SEGMENTS = 24
 export const COIL_SEGMENTS_PER_ROUND = 16
 export const BALL_RADIUS = 0.12
 export const BALL_WIDTH_SEGMENTS = 16
@@ -105,12 +106,14 @@ function buildMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | nul
 			curves.push(new LineCurve3(arcEnd, nextArcStart))
 		}
 
+		const closed = sides > 2
+
 		return buildTubeGeometry(
-			curves,
+			closed ? curves : [curves[1]],
 			width / 2,
 			MARBLE_RADIAL_SEGMENTS,
 			MARBLE_CLOSED_SEGMENTS,
-			true
+			closed
 		)
 	} else if (type === 'coil') {
 		const path = new CurvePath<Vector3>()
@@ -210,7 +213,7 @@ function buildEaterMarbleGeometry(
 		curvePath.curves,
 		width / 2,
 		MARBLE_RADIAL_SEGMENTS,
-		(MARBLE_CLOSED_SEGMENTS * 4) / curvePath.getLength(),
+		MARBLE_EATER_SEGMENTS / curvePath.getLength(),
 		true
 	)
 }
