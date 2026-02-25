@@ -1,10 +1,8 @@
 import {
 	type BufferGeometry,
-	type Curve,
 	CurvePath,
 	LineCurve3,
 	QuadraticBezierCurve3,
-	TubeGeometry,
 	Vector3
 } from 'three/webgpu'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
@@ -18,7 +16,8 @@ const ARROW_CIRCLE_SEGMENTS = 36
 const TUBULAR_SEGMENTS_SPIRAL = 64
 const TUBULAR_SEGMENTS_ARROW_CIRCLE = 72
 const TUBULAR_SEGMENTS_POLY = 21
-const TUBULAR_SEGMENTS_ARROW_OTHER = 16
+const TUBULAR_SEGMENTS_POLY_FILL = 11
+const TUBULAR_SEGMENTS_ARROW_OTHER = 17
 const TUBULAR_SEGMENTS_SUN_RAY = 16
 const RADIAL_SEGMENTS = 8
 const HEART_SEGMENTS = 36
@@ -151,11 +150,11 @@ function buildInstrumentGeometry(params: InstrumentGeometryParams): BufferGeomet
 		const p2 = new Vector3(Math.cos(angle2) * radius, Math.sin(angle2) * radius, 0)
 		path.add(new LineCurve3(p1, p2))
 	}
-	return new TubeGeometry(
-		path as unknown as Curve<Vector3>,
-		segments,
+	return buildTubeGeometry(
+		path.curves,
 		width / 2,
 		RADIAL_SEGMENTS,
+		segments / path.getLength(),
 		true
 	)
 }
@@ -211,14 +210,22 @@ function buildPolyStarGeometry(params: InstrumentGeometryParams): BufferGeometry
 	}
 
 	const tubularSegments =
-		type === 'star' ? n * 2 * TUBULAR_SEGMENTS_POLY : n * TUBULAR_SEGMENTS_POLY
+		type === 'star'
+			? (n > 2 ? 3 : 1) * 2 * TUBULAR_SEGMENTS_POLY
+			: (n > 2 ? 3 : 1) * TUBULAR_SEGMENTS_POLY
 
-	return new TubeGeometry(
-		path as unknown as Curve<Vector3>,
-		tubularSegments,
+	const closed = !(type === 'poly' && sides === 2)
+
+	if (!closed) {
+		path.curves = [path.curves[1]]
+	}
+
+	return buildTubeGeometry(
+		path.curves,
 		width / 2,
 		RADIAL_SEGMENTS,
-		true
+		tubularSegments / path.getLength(),
+		closed
 	)
 }
 
@@ -412,7 +419,7 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		const tip1 = new Vector3(0, tipY1, -zScale * (tipZ + length * zOffset))
 		const tip2 = new Vector3(0, tipY2, -zScale * (tipZ + length * zOffset))
 
-		path.add(new LineCurve3(origin, tip1))
+		path.add(new LineCurve3(tip1, origin))
 		path.add(new LineCurve3(origin, tip2))
 	} else if (kind === 'play' || kind === 'fwd') {
 		const height = length
@@ -573,25 +580,27 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 						? 6 * TUBULAR_SEGMENTS_POLY
 						: TUBULAR_SEGMENTS_ARROW_OTHER
 
-	const straightSecondary = kind === 'repro' || kind === 'muted'
+	const straightSecondary = kind === 'repro' || kind === 'muted' || 'fwd'
 
-	const mainGeometry = new TubeGeometry(
-		path as unknown as Curve<Vector3>,
-		tubularSegments,
-		width / 2,
+	const r = width / 2
+	const mainGeometry = buildTubeGeometry(
+		path.curves,
+		r,
 		RADIAL_SEGMENTS,
+		tubularSegments / path.getLength(),
 		closed
 	)
 
 	const geometries = [mainGeometry]
 
 	if (secondaryPath) {
+		const secSegs = straightSecondary ? TUBULAR_SEGMENTS_ARROW_OTHER : tubularSegments
 		geometries.push(
-			new TubeGeometry(
-				secondaryPath as unknown as Curve<Vector3>,
-				straightSecondary ? Math.round(tubularSegments / 8) : tubularSegments,
-				width / 2,
+			buildTubeGeometry(
+				secondaryPath.curves,
+				r,
 				RADIAL_SEGMENTS,
+				secSegs / secondaryPath.getLength(),
 				false
 			)
 		)
@@ -599,11 +608,11 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 
 	if (tertiaryPath) {
 		geometries.push(
-			new TubeGeometry(
-				tertiaryPath as unknown as Curve<Vector3>,
-				TUBULAR_SEGMENTS_ARROW_OTHER,
-				width / 2,
+			buildTubeGeometry(
+				tertiaryPath.curves,
+				r,
 				RADIAL_SEGMENTS,
+				TUBULAR_SEGMENTS_ARROW_OTHER / tertiaryPath.getLength(),
 				false
 			)
 		)
@@ -669,11 +678,12 @@ function buildSunGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		}
 	}
 
-	const mainGeometry = new TubeGeometry(
-		path as unknown as Curve<Vector3>,
-		12 * TUBULAR_SEGMENTS_POLY,
+	const sunSegs = 12 * TUBULAR_SEGMENTS_POLY
+	const mainGeometry = buildTubeGeometry(
+		path.curves,
 		width / 2,
 		RADIAL_SEGMENTS,
+		sunSegs / path.getLength(),
 		true
 	)
 
@@ -755,11 +765,11 @@ function buildEaterGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		}
 	}
 
-	return new TubeGeometry(
-		path as unknown as Curve<Vector3>,
-		n * TUBULAR_SEGMENTS_POLY,
+	return buildTubeGeometry(
+		path.curves,
 		width / 2,
 		RADIAL_SEGMENTS,
+		(n * TUBULAR_SEGMENTS_POLY) / path.getLength(),
 		true
 	)
 }
@@ -770,7 +780,7 @@ function buildPolyFillGeometry(
 	width: number,
 	cornerRadius: number
 ): BufferGeometry | null {
-	const n = sides
+	const n = sides > 4 ? 12 : sides
 	const cr = cornerRadius
 	const path = new CurvePath<Vector3>()
 
@@ -811,11 +821,11 @@ function buildPolyFillGeometry(
 		}
 	}
 
-	return new TubeGeometry(
-		path as unknown as Curve<Vector3>,
-		n * TUBULAR_SEGMENTS_POLY,
+	return buildTubeGeometry(
+		path.curves,
 		width / 2,
 		RADIAL_SEGMENTS,
+		((n > 2 ? 3 : 1) * TUBULAR_SEGMENTS_POLY_FILL) / path.getLength(),
 		true
 	)
 }

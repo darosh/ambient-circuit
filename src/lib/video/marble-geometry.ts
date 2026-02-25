@@ -3,7 +3,6 @@ import {
 	CurvePath,
 	LineCurve3,
 	QuadraticBezierCurve3,
-	TubeGeometry,
 	Vector3,
 	type BufferGeometry
 } from 'three/webgpu'
@@ -132,11 +131,11 @@ function buildMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | nul
 			path.add(new LineCurve3(curr, next))
 		}
 
-		return new TubeGeometry(
-			path as unknown as Curve<Vector3>,
-			rounds * COIL_SEGMENTS_PER_ROUND,
+		return buildTubeGeometry(
+			path.curves,
 			width / 2,
 			MARBLE_RADIAL_SEGMENTS,
+			(rounds * COIL_SEGMENTS_PER_ROUND) / path.getLength(),
 			false
 		)
 	}
@@ -207,13 +206,11 @@ function buildEaterMarbleGeometry(
 		curvePath.add(c)
 	}
 
-	return new TubeGeometry(
-		curvePath,
-		MARBLE_CLOSED_SEGMENTS * 4,
+	return buildTubeGeometry(
+		curvePath.curves,
 		width / 2,
 		MARBLE_RADIAL_SEGMENTS,
+		(MARBLE_CLOSED_SEGMENTS * 4) / curvePath.getLength(),
 		true
 	)
-
-	// return buildTubeGeometry(curves, width / 2, MARBLE_RADIAL_SEGMENTS, MARBLE_CLOSED_SEGMENTS, true)
 }

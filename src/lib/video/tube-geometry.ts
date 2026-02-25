@@ -6,7 +6,14 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
  * Unlike TubeGeometry, computes analytical tangents at each sub-curve's endpoints
  * and blends them at junctions to avoid normal-frame kinks.
  *
+ * @param curves
+ * @param radius
+ * @param radialSegments
+ * @param density
+ * @param closed
  * @param cap - when true and closed=false, appends flat end caps (default true)
+ * @param uvScale - UV.x = cumulativeArcLength * uvScale. Default 1/(2πr) makes
+ *   checker squares physically square. Lower values = sparser / faster-animating noise.
  */
 export function buildTubeGeometry(
 	curves: Curve<Vector3>[],
@@ -14,7 +21,8 @@ export function buildTubeGeometry(
 	radialSegments: number,
 	density: number,
 	closed: boolean,
-	cap = true
+	cap = true,
+	uvScale = 1 / (2 * Math.PI * radius)
 ): BufferGeometry {
 	// --- 1. Sample positions and blended tangents ---
 	interface Frame {
@@ -114,10 +122,18 @@ export function buildTubeGeometry(
 		}
 	}
 
+	// --- 4b. Precompute cumulative arc-length for UV.x ---
+	const N = frames.length
+	const arcLen: number[] = new Array(N)
+	arcLen[0] = 0
+	for (let i = 1; i < N; i++) {
+		arcLen[i] = arcLen[i - 1] + frames[i].p.distanceTo(frames[i - 1].p)
+	}
+	const totalLen = arcLen[N - 1] + (closed ? frames[N - 1].p.distanceTo(frames[0].p) : 0)
+
 	// --- 5. Extrude rings ---
 	// For closed tubes: add one extra ring (UV duplicate of ring 0) so the closing stitch
 	// has continuous UV.x instead of jumping from 1 back to 0.
-	const N = frames.length
 	const numRings = closed ? N + 1 : N
 	const R = radialSegments
 	const positions: number[] = []
@@ -128,7 +144,7 @@ export function buildTubeGeometry(
 	for (let i = 0; i < numRings; i++) {
 		const fi = closed && i === N ? 0 : i
 		const { p, n, b } = frames[fi]
-		const uvX = closed ? i / N : i / (N - 1)
+		const uvX = (closed && i === N ? totalLen : arcLen[fi]) * uvScale
 		for (let j = 0; j <= R; j++) {
 			const angle = (j / R) * Math.PI * 2
 			const cos = Math.cos(angle)
