@@ -23,6 +23,7 @@ import { scene as sceneSnake } from './scene-snake'
 import { scene as sceneAudio } from './scene-audio'
 import { scene as sceneToneInstruments } from './scene-tone-instruments'
 import { scene as sceneCreateDestroy } from './scene-create-destroy'
+import { scene as sceneRnbo } from './scene-rnbo'
 
 export const scenes: SceneConfig[] = [
 	sceneTest,
@@ -48,5 +49,6 @@ export const scenes: SceneConfig[] = [
 	...floatingScenes,
 	sceneAudio,
 	sceneCollisions,
-	sceneToneInstruments
+	sceneToneInstruments,
+	sceneRnbo
 ]
