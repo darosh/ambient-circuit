@@ -22,7 +22,17 @@ export function buildUvCheckMaterial(
 		const cx = floor(mod(uv().x.mul(scale), 2))
 		const cy = floor(mod(uv().y.mul(scale), 2))
 		const checker = cx.add(cy).mod(2)
-		return vec4(checker, checker, checker, 1)
+		const uvs = uv()
+		const inFirstCol = floor(uvs.x.mul(scale)).equal(0)
+		const inFirstRow = floor(uvs.y.mul(scale)).equal(0)
+		const inLastCol = floor(uvs.x.mul(scale)).equal(scale - 1)
+		const inLastRow = floor(uvs.y.mul(scale)).equal(scale - 1)
+		const isRedCell = inFirstCol.and(inFirstRow)
+		const isBlueCell = inLastCol.and(inLastRow)
+		const grey = vec4(checker, checker, checker, 1)
+		const red = vec4(1, 0, 0, 1)
+		const blue = vec4(0, 0, 1, 1)
+		return isRedCell.select(red, isBlueCell.select(blue, grey))
 	})()
 
 	return { mat, impactIntensity, emissiveColor, activeUniform }
