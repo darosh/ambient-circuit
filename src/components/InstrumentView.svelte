@@ -74,10 +74,9 @@
 	const effectiveRays = $derived(instrument.runtime?.rays ?? (instrument as any).rays)
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
-	const isTransparent = $derived(effectiveType !== 'heart')
 	const fxMaterial = makeInstrumentMaterial(
 		untrack(() => effectiveColor),
-		untrack(() => isTransparent)
+		true
 	)
 	const plainMaterial = $derived(
 		!fxInstruments ? makeStandardMaterial(untrack(() => effectiveColor)) : null
@@ -108,10 +107,6 @@
 		if (plainMaterial) {
 			plainMaterial.wireframe = wireframe
 		}
-	})
-
-	$effect(() => {
-		fxMaterial.mat.transparent = isTransparent
 	})
 
 	$effect(() => {
