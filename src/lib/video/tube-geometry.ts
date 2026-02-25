@@ -14,6 +14,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
  * @param cap - when true and closed=false, appends flat end caps (default true)
  * @param uvScale - UV.x = cumulativeArcLength * uvScale. Default 1/(2πr) makes
  *   checker squares physically square. Lower values = sparser / faster-animating noise.
+ * @param snap
  */
 export function buildTubeGeometry(
 	curves: Curve<Vector3>[],
@@ -22,7 +23,8 @@ export function buildTubeGeometry(
 	density: number,
 	closed: boolean,
 	cap = true,
-	uvScale = 1 / (2 * Math.PI * radius)
+	uvScale = 1 / (2 * Math.PI * radius),
+	snap = true
 ): BufferGeometry {
 	// --- 1. Sample positions and blended tangents ---
 	interface Frame {
@@ -131,6 +133,17 @@ export function buildTubeGeometry(
 	}
 	const totalLen = arcLen[N - 1] + (closed ? frames[N - 1].p.distanceTo(frames[0].p) : 0)
 
+	// Adjust uvScale for closed shapes to avoid seam misalignment
+	if (closed && totalLen > 0) {
+		if (snap) {
+			const rawRepeats = totalLen * uvScale
+			const snapped = Math.max(1, Math.round(rawRepeats))
+			uvScale = snapped / totalLen
+		} else {
+			uvScale = 1 / totalLen
+		}
+	}
+
 	// --- 5. Extrude rings ---
 	// For closed tubes: add one extra ring (UV duplicate of ring 0) so the closing stitch
 	// has continuous UV.x instead of jumping from 1 back to 0.
@@ -175,13 +188,17 @@ export function buildTubeGeometry(
 	geo.setAttribute('normal', new BufferAttribute(new Float32Array(normals), 3))
 	geo.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2))
 
+	geo.userData.uvMax = totalLen * uvScale
+
 	// --- 7. End caps (open tubes only) ---
 	if (!closed && cap && frames.length >= 2) {
-		return mergeGeometries([
+		const merged = mergeGeometries([
 			geo,
 			_buildCapDisk(frames[0], radius, R, true),
 			_buildCapDisk(frames[N - 1], radius, R, false)
 		])
+		merged.userData.uvMax = geo.userData.uvMax
+		return merged
 	}
 
 	return geo
