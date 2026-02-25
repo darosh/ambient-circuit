@@ -93,10 +93,10 @@
 	let selectedMidiPort = $state<string | null>(null)
 
 	let selectedEntity = $state<SelectedEntity>(null)
-	let selectedAudioChain = $state<AudioChain | undefined>(undefined)
-	let allAudioChains = $state<AudioChain[]>([])
+	let selectedAudioChain = $state.raw<AudioChain | undefined>(undefined)
+	let allAudioChains = $state.raw<AudioChain[]>([])
 	let soloMode = $state(false)
-	let audioEngineRef = $state<AudioEngine | null>(null)
+	let audioEngineRef = $state.raw<AudioEngine | null>(null)
 	let selectedAudioTarget = $state<string>('')
 	let analyzerRafId = 0
 
@@ -683,10 +683,10 @@
 		{easing}
 		bind:railVisibility
 		bind:fps
-		{selectedEntity}
-		{selectedAudioChain}
+		bind:selectedEntity
+		bind:selectedAudioChain
 		bind:allAudioChains
-		{audioEngineRef}
+		bind:audioEngineRef
 		{autoRotate}
 		onPlay={(event: MouseEvent) => {
 			tempo.isPlaying = !tempo.isPlaying
