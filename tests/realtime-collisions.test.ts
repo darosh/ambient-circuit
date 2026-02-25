@@ -12,14 +12,18 @@ import type { Rail } from '../src/lib/rail'
  * and sort to get a cyclic sequence. The RELATIVE cyclic order (which marble is next) should
  * be stable — billiard-ball collision is equivalent to pass-through, so the order is invariant.
  */
-function cyclicOrder(marbles: ReturnType<typeof createMarble>[], minBeat: number, maxBeat: number): number[] {
+function cyclicOrder(
+	marbles: ReturnType<typeof createMarble>[],
+	minBeat: number,
+	maxBeat: number
+): number[] {
 	const range = maxBeat - minBeat
-	const normalized = marbles.map(m => {
-		const b = ((m.currentBeat - minBeat) % range + range) % range
+	const normalized = marbles.map((m) => {
+		const b = (((m.currentBeat - minBeat) % range) + range) % range
 		return { id: m.id, beat: b }
 	})
 	normalized.sort((a, b) => a.beat - b.beat)
-	return normalized.map(m => m.id)
+	return normalized.map((m) => m.id)
 }
 
 /**
@@ -76,10 +80,10 @@ describe('realtime collisions — marble order preservation', () => {
 		const range = maxBeat - minBeat
 
 		function snapshot() {
-			return marbles.map(m => ({
+			return marbles.map((m) => ({
 				id: m.id,
 				beat: m.currentBeat,
-				normBeat: (((m.currentBeat - minBeat) % range + range) % range).toFixed(3),
+				normBeat: ((((m.currentBeat - minBeat) % range) + range) % range).toFixed(3),
 				dir: m.direction,
 				speed: (m.runtime.speed ?? m.config.speed ?? 1).toFixed(2)
 			}))
@@ -114,7 +118,14 @@ describe('realtime collisions — marble order preservation', () => {
 					firstFailFrame = frame
 					firstFailState = snapshot()
 					console.log('\n--- ORDER CHANGED ---')
-					console.log('frame:', frame, '| time:', (frame / fps).toFixed(2) + 's', '| globalBeat:', (tempo.currentBeat + tempo.beatProgress).toFixed(3))
+					console.log(
+						'frame:',
+						frame,
+						'| time:',
+						(frame / fps).toFixed(2) + 's',
+						'| globalBeat:',
+						(tempo.currentBeat + tempo.beatProgress).toFixed(3)
+					)
 					console.log('last good order:', lastGoodOrder, 'at frame', frame - 1)
 					console.log('last good state:', lastGoodState)
 					console.log('failed order:   ', order)

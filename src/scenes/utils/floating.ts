@@ -3,17 +3,12 @@ import type { Vector2Tuple } from 'three/webgpu'
 import type { SceneCtx } from '../../lib/scene-ctx'
 import type { TempoState } from '../../lib/tempo'
 import {
-	easeInBounce,
 	easeInBounceCustom,
-	easeInBouncePhysical,
 	easeInElastic,
 	easeInElasticCustom,
-	easeInOutBack,
 	easeOutBack,
-	easeOutCirc,
 	easeOutElastic,
-	type EasingFunction,
-	linear
+	type EasingFunction
 } from '../../lib/easing'
 import type { RailData } from '../../lib/rail-data'
 import type { Vec3 } from '../../lib/rail'
