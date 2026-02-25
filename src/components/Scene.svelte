@@ -216,7 +216,7 @@
 			scene,
 			rails,
 			sceneCtx,
-			scene?.audioView?.defaultAnalyser
+			audioViewConfig?.defaultAnalyser
 		)
 		audioEngineRef = audioEngine
 		audioInitialized = true
@@ -226,7 +226,8 @@
 	// 	AUDIO_LAYER_GAP = .5,
 	// 	AUDIO_COL_SPACING = 1
 
-	const AUDIO_OFFSET: [number, number, number] = $derived(scene?.audioView?.offset ?? [0, -2, 0])
+	const audioViewConfig = $derived(scene?.audioView || undefined)
+	const AUDIO_OFFSET: [number, number, number] = $derived(audioViewConfig?.offset ?? [0, -2, 0])
 
 	let audioView: AudioView | undefined = $state()
 
@@ -242,7 +243,7 @@
 	})
 
 	const marbleSignalLinks = $derived.by(() => {
-		if (!audioInitialized || !scene?.audioView?.marbleLinks) return []
+		if (!audioInitialized || !audioViewConfig?.marbleLinks) return []
 		const nodes = audioView?.getNodes()
 		if (!nodes?.length) return []
 		if (rails[0]?.runtime?.renderVersion) {
