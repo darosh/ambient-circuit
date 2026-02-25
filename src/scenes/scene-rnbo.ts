@@ -15,7 +15,7 @@ const generator = {
 }
 
 let bc = 1 - 4
-const b = () => bc+=4
+const b = () => (bc += 4)
 
 export const scene: SceneConfig = {
 	id: 'scene-rnbo',
@@ -46,7 +46,7 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'synth',
-				offset: [0,4.5,0],
+				offset: [0, 4.5, 0],
 				nodes: spiral({ rounds: 9, height: -4.5 })
 			},
 			color: '#00ffcc',
@@ -66,10 +66,12 @@ export const scene: SceneConfig = {
 					beat: b(),
 					audio: {
 						generator,
-						fx: [{
-							rnbo: 'filterdelay',
-							preset: 'Wide'
-						}]
+						fx: [
+							{
+								rnbo: 'filterdelay',
+								preset: 'Wide'
+							}
+						]
 					}
 				},
 				{
@@ -78,10 +80,12 @@ export const scene: SceneConfig = {
 					beat: b(),
 					audio: {
 						generator,
-						fx: [{
-							rnbo: 'autofilter',
-							preset: 'Resonant'
-						}]
+						fx: [
+							{
+								rnbo: 'autofilter',
+								preset: 'Resonant'
+							}
+						]
 					}
 				},
 				{
@@ -90,10 +94,12 @@ export const scene: SceneConfig = {
 					beat: b(),
 					audio: {
 						generator,
-						fx: [{
-							rnbo: 'flanger',
-							// preset: 'Wide'
-						}]
+						fx: [
+							{
+								rnbo: 'flanger'
+								// preset: 'Wide'
+							}
+						]
 					}
 				},
 				{
@@ -102,10 +108,12 @@ export const scene: SceneConfig = {
 					beat: b(),
 					audio: {
 						generator,
-						fx: [{
-							rnbo: 'freqshifter',
-							preset: 'Extreme'
-						}]
+						fx: [
+							{
+								rnbo: 'freqshifter',
+								preset: 'Extreme'
+							}
+						]
 					}
 				},
 				{
@@ -114,10 +122,12 @@ export const scene: SceneConfig = {
 					beat: b(),
 					audio: {
 						generator,
-						fx: [{
-							rnbo: 'octaver',
-							preset: 'Octave2'
-						}]
+						fx: [
+							{
+								rnbo: 'octaver',
+								preset: 'Octave2'
+							}
+						]
 					}
 				}
 			]
