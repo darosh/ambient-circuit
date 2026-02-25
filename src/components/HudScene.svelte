@@ -315,7 +315,7 @@
 
 	const menuItems = $derived(MENU_ITEMS.filter((item) => !item.condition || item.condition()))
 
-	const textMat = $derived(buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.4, 2))
+	const textMat = $derived(buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.2, 2))
 	const textMatLarge = $derived(buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.2, 2))
 
 	function onMouseActivity(event?: PointerEvent) {
@@ -391,7 +391,7 @@
 	}
 
 	const btnStates: BtnState[] = btnDefs.map(() => ({
-		fx: buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.5, 2),
+		fx: buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.3, 2),
 		animTime: 0,
 		spinFrom: 0,
 		spinTo: 0,
