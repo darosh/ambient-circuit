@@ -1,6 +1,6 @@
 // based on https://github.com/mrdoob/three.js/blob/master/examples/webgpu_tsl_vfx_tornado.html
 
-import { TextureLoader, MeshBasicNodeMaterial, RepeatWrapping, DoubleSide } from 'three/webgpu'
+import { MeshBasicNodeMaterial, DoubleSide } from 'three/webgpu'
 import {
 	luminance,
 	min,
@@ -8,27 +8,18 @@ import {
 	time,
 	uniform,
 	color,
-	texture,
 	Fn,
 	uv,
-	vec2,
 	vec3,
 	vec4,
-	positionWorld
+	positionWorld,
+	sin,
+	cos,
+	float
 } from 'three/tsl'
-
-const textureLoader = new TextureLoader()
-const perlinTexture = textureLoader.load('./media/rgb-256x256.png')
-perlinTexture.wrapS = RepeatWrapping
-perlinTexture.wrapT = RepeatWrapping
+import { perlinNoise } from 'tsl-textures'
 
 const timeScale = uniform(0.2)
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const toSkewedUv = Fn(([uvCoord, skew]: any[]) => {
-	return vec2(uvCoord.x.add(uvCoord.y.mul(skew.x)), uvCoord.y.add(uvCoord.x.mul(skew.y)))
-}) as (...args: any[]) => any
-/* eslint-enable @typescript-eslint/no-explicit-any */
 
 // Material cache: key = `${color}_${intensity}_${transparent}`
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -91,29 +82,28 @@ export function buildRailMaterial(
 	})
 
 	mat.outputNode = Fn(() => {
-		const scaledTime = time.mul(timeScale).negate()
+		const scaledTime = time.mul(timeScale).mul(2).negate()
 
-		// world-position-derived phase offset — varies per rail, deterministic
-		const posPhase = positionWorld.xz.mul(0.5)
+		// Map v (0→1 around tube circumference) onto a circle so noise is seamlessly periodic.
+		// u (0→1 along tube length) becomes the z-axis stretched for line streaks.
+		// positionWorld.xz offsets the noise differently per rail (deterministic variation).
+		const angle = uv().y.mul(float(Math.PI * 2))
+		const cx = cos(angle).mul(0.5)
+		const cy = sin(angle).mul(0.5)
 
-		// noise 1
-		const noise1Uv = uv()
-			.add(vec2(scaledTime.add(posPhase.x), scaledTime.negate().add(posPhase.y)))
-			.toVar()
-		noise1Uv.assign(toSkewedUv(noise1Uv, vec2(-1, 0)))
-		noise1Uv.mulAssign(vec2(2, 0.25))
+		// noise 1: wider streaks, flows forward
+		const u1 = uv().x.mul(2).add(scaledTime).add(positionWorld.x.mul(10.3))
+		const noise1 = perlinNoise({ position: vec3(cx.add(u1.mul(0.3)), cy, u1), scale: 2 }).r.remap(
+			0.2,
+			0.95
+		)
 
-		const noise1 = texture(perlinTexture, noise1Uv, 1).r.remap(0.3, 0.95)
-
-		// noise 2
-		const noise2Uv = uv()
-			.add(vec2(scaledTime.mul(0.5).add(posPhase.x), scaledTime.negate().add(posPhase.y)))
-			.toVar()
-
-		noise2Uv.assign(toSkewedUv(noise2Uv, vec2(-1, 0)))
-		noise2Uv.mulAssign(vec2(5, 1))
-
-		const noise2 = texture(perlinTexture, noise2Uv, 1).g.remap(0.3, 0.95)
+		// noise 2: tighter streaks, flows at half speed
+		const u2 = uv().x.mul(5).add(scaledTime.mul(0.5)).add(positionWorld.z.mul(0.3))
+		const noise2 = perlinNoise({ position: vec3(cx.add(u2.mul(0.15)), cy, u2), scale: 2 }).g.remap(
+			0.2,
+			0.95
+		)
 
 		// outer fade
 		const outerFade = min(uv().y.smoothstep(0, 0.1), uv().y.oneMinus().smoothstep(0, 0.4))

@@ -1,4 +1,4 @@
-import { buildRailMaterial } from './video/material-rail'
+import { buildRailMaterial } from './video/material-rail-gen'
 
 export const makeRailMaterial = buildRailMaterial
 export const makeMarbleMaterial = (c: string) => buildRailMaterial(c, 0.51)
