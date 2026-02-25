@@ -1,16 +1,16 @@
 # TODO (no AI)
 
-- [ ] scene switch leaks
-- [ ] review need for lazy instruments load
-- [ ] use gigaverb from examples
-- [ ] freeverb too
-- [ ] try <Float> on rails
-- [ ] replace the Perlin texture with procedural generation
+- [ ] use rails for camera path? or scene path? and keep the camera for user only
 - [ ] make RNBO synth
 - [ ] make RNBO karplus-strong synth https://rnbo.cycling74.com/explore/synth-building-blocks-intro
-- [ ] use rails for camera path? or scene path? and keep the camera for user only
+- [ ] use gigaverb from examples
+- [ ] freeverb too
+- [ ] optimize notes scale update
 - [ ] `onSceneCtx={(ctx) => (sceneCtx = ctx)}` might be suboptimal
-- [ ] optimize scale update
+- [ ] review need for lazy instruments load
+- [x] replace the Perlin texture with procedural generation
+- [ ] scene switch leaks
+- [x] try <Float> on rails
 - [x] ball destruction and creation in handlers (should correctly and resource-efficiently reset on rewind)
 - [x] chord info in context for handlers, including individual notes, with recent history (const KEEP_PAST = 10)
 - [x] global chord from all chains (will be displayed in HUD), including individual notes
