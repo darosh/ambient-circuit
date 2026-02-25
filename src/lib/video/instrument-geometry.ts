@@ -195,14 +195,19 @@ function buildPolyStarGeometry(params: InstrumentGeometryParams): BufferGeometry
 		const inDir = new Vector3().subVectors(curr, prev).normalize()
 		const outDir = new Vector3().subVectors(next, curr).normalize()
 
-		const arcStart = curr.clone().addScaledVector(inDir, -cr)
-		const arcEnd = curr.clone().addScaledVector(outDir, cr)
-		const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+		const sideLen = curr.distanceTo(next)
+		const ecr = Math.min(cr, sideLen / 2)
 
-		if (cr > 0) {
+		const arcStart = curr.clone().addScaledVector(inDir, -ecr)
+		const arcEnd = curr.clone().addScaledVector(outDir, ecr)
+		const nextArcStart = next.clone().addScaledVector(outDir, -ecr)
+
+		if (ecr > 0) {
 			path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
 		}
-		path.add(new LineCurve3(arcEnd, nextArcStart))
+		if (arcEnd.distanceToSquared(nextArcStart) > 1e-10) {
+			path.add(new LineCurve3(arcEnd, nextArcStart))
+		}
 	}
 
 	const tubularSegments =
@@ -220,10 +225,11 @@ function buildPolyStarGeometry(params: InstrumentGeometryParams): BufferGeometry
 function buildWhirlCrossGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	const { type, size, width, sides = 3 } = params
 	const n = sides
-	const path = new CurvePath<Vector3>()
 
 	const adjustedSize = n === 2 ? size * 0.5 : size
 	const outerR = adjustedSize / (1 + Math.cos(Math.PI / n))
+
+	const geometries: BufferGeometry[] = []
 
 	for (let i = 0; i < n; i++) {
 		const angle = (i / n) * Math.PI * 2 - Math.PI / 2
@@ -232,31 +238,26 @@ function buildWhirlCrossGeometry(params: InstrumentGeometryParams): BufferGeomet
 		const tip = new Vector3(Math.cos(angle) * outerR, Math.sin(angle) * outerR, 0)
 
 		const angleSpread = n === 2 ? 2 * Math.PI : Math.PI / n
-		const leftAngle = angle - angleSpread * (type === 'whirl' ? -1.8 : 0)
-		const rightAngle = angle + angleSpread * (type === 'whirl' ? 1.8 : 0)
-
-		const leftCtrl = new Vector3(
-			Math.cos(leftAngle) * outerR * 0.5,
-			Math.sin(leftAngle) * outerR * 0.5,
-			0
-		)
-		const rightCtrl = new Vector3(
-			Math.cos(rightAngle) * outerR * 0.5,
-			Math.sin(rightAngle) * outerR * 0.5,
+		const ctrlAngle = angle + angleSpread * (type === 'whirl' ? 1.8 : 0)
+		const ctrl = new Vector3(
+			Math.cos(ctrlAngle) * outerR * 0.5,
+			Math.sin(ctrlAngle) * outerR * 0.5,
 			0
 		)
 
-		path.add(new QuadraticBezierCurve3(center, leftCtrl, tip))
-		path.add(new QuadraticBezierCurve3(tip, rightCtrl, center))
+		// Each arm is a separate open tube — avoids shared degenerate center junction
+		// cross: control point is collinear → straight line; whirl: curved arc
+		const armCurve =
+			type === 'cross'
+				? new LineCurve3(center.clone(), tip)
+				: new QuadraticBezierCurve3(center.clone(), ctrl, tip)
+
+		geometries.push(
+			buildTubeGeometry([armCurve], width / 2, RADIAL_SEGMENTS, TUBULAR_SEGMENTS_POLY, false, true)
+		)
 	}
 
-	return new TubeGeometry(
-		path as unknown as Curve<Vector3>,
-		n * TUBULAR_SEGMENTS_POLY,
-		width / 2,
-		RADIAL_SEGMENTS,
-		true
-	)
+	return mergeGeometries(geometries)
 }
 
 function buildHeartGeometry(size: number, width: number): BufferGeometry {
@@ -320,12 +321,13 @@ function buildSpiralGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		path.add(new LineCurve3(new Vector3(x, y, 0), new Vector3(nextX, nextY, 0)))
 	}
 
-	return new TubeGeometry(
-		path as unknown as Curve<Vector3>,
-		rounds * TUBULAR_SEGMENTS_SPIRAL,
+	return buildTubeGeometry(
+		path.curves,
 		width / 2,
 		RADIAL_SEGMENTS,
-		false
+		TUBULAR_SEGMENTS_SPIRAL,
+		false,
+		true
 	)
 }
 
@@ -370,12 +372,13 @@ function buildConeGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		path.add(new LineCurve3(new Vector3(x, y, z), new Vector3(nextX, nextY, nextZ)))
 	}
 
-	return new TubeGeometry(
-		path as unknown as Curve<Vector3>,
-		rounds * TUBULAR_SEGMENTS_SPIRAL,
+	return buildTubeGeometry(
+		path.curves,
 		width / 2,
 		RADIAL_SEGMENTS,
-		false
+		TUBULAR_SEGMENTS_SPIRAL,
+		false,
+		true
 	)
 }
 
@@ -589,7 +592,7 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 				straightSecondary ? Math.round(tubularSegments / 8) : tubularSegments,
 				width / 2,
 				RADIAL_SEGMENTS,
-				closed
+				false
 			)
 		)
 	}
@@ -636,14 +639,19 @@ function buildSunGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		const inDir = new Vector3().subVectors(curr, prev).normalize()
 		const outDir = new Vector3().subVectors(next, curr).normalize()
 
-		const arcStart = curr.clone().addScaledVector(inDir, -cr)
-		const arcEnd = curr.clone().addScaledVector(outDir, cr)
-		const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+		const sideLen = curr.distanceTo(next)
+		const ecr = Math.min(cr, sideLen / 2)
 
-		if (cr > 0) {
+		const arcStart = curr.clone().addScaledVector(inDir, -ecr)
+		const arcEnd = curr.clone().addScaledVector(outDir, ecr)
+		const nextArcStart = next.clone().addScaledVector(outDir, -ecr)
+
+		if (ecr > 0) {
 			path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
 		}
-		path.add(new LineCurve3(arcEnd, nextArcStart))
+		if (arcEnd.distanceToSquared(nextArcStart) > 1e-10) {
+			path.add(new LineCurve3(arcEnd, nextArcStart))
+		}
 	}
 
 	// Rays
@@ -670,16 +678,18 @@ function buildSunGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	)
 
 	if (sunRayPaths.length > 0) {
-		const geometries = [mainGeometry]
+		const geometries: BufferGeometry[] = [mainGeometry]
 		for (const rayPath of sunRayPaths) {
-			const rayGeometry = new TubeGeometry(
-				rayPath as unknown as Curve<Vector3>,
-				TUBULAR_SEGMENTS_SUN_RAY,
-				width / 2,
-				RADIAL_SEGMENTS,
-				false
+			geometries.push(
+				buildTubeGeometry(
+					rayPath.curves,
+					width / 2,
+					RADIAL_SEGMENTS,
+					TUBULAR_SEGMENTS_SUN_RAY,
+					false,
+					true
+				)
 			)
-			geometries.push(rayGeometry)
 		}
 		return mergeGeometries(geometries)
 	}
@@ -730,14 +740,19 @@ function buildEaterGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		const inDir = new Vector3().subVectors(curr, prev).normalize()
 		const outDir = new Vector3().subVectors(next, curr).normalize()
 
-		const arcStart = curr.clone().addScaledVector(inDir, -cr)
-		const arcEnd = curr.clone().addScaledVector(outDir, cr)
-		const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+		const sideLen = curr.distanceTo(next)
+		const ecr = Math.min(cr, sideLen / 2)
 
-		if (cr > 0) {
+		const arcStart = curr.clone().addScaledVector(inDir, -ecr)
+		const arcEnd = curr.clone().addScaledVector(outDir, ecr)
+		const nextArcStart = next.clone().addScaledVector(outDir, -ecr)
+
+		if (ecr > 0) {
 			path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
 		}
-		path.add(new LineCurve3(arcEnd, nextArcStart))
+		if (arcEnd.distanceToSquared(nextArcStart) > 1e-10) {
+			path.add(new LineCurve3(arcEnd, nextArcStart))
+		}
 	}
 
 	return new TubeGeometry(
@@ -756,7 +771,7 @@ function buildPolyFillGeometry(
 	cornerRadius: number
 ): BufferGeometry | null {
 	const n = sides
-	const cr = cornerRadius / 2
+	const cr = cornerRadius
 	const path = new CurvePath<Vector3>()
 
 	const adjustedSize = n === 2 ? size * 0.5 : size
@@ -781,14 +796,19 @@ function buildPolyFillGeometry(
 		const inDir = new Vector3().subVectors(curr, prev).normalize()
 		const outDir = new Vector3().subVectors(next, curr).normalize()
 
-		const arcStart = curr.clone().addScaledVector(inDir, -cr)
-		const arcEnd = curr.clone().addScaledVector(outDir, cr)
-		const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+		const sideLen = curr.distanceTo(next)
+		const ecr = Math.min(cr, sideLen / 2)
 
-		if (cr > 0) {
+		const arcStart = curr.clone().addScaledVector(inDir, -ecr)
+		const arcEnd = curr.clone().addScaledVector(outDir, ecr)
+		const nextArcStart = next.clone().addScaledVector(outDir, -ecr)
+
+		if (ecr > 0) {
 			path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
 		}
-		path.add(new LineCurve3(arcEnd, nextArcStart))
+		if (arcEnd.distanceToSquared(nextArcStart) > 1e-10) {
+			path.add(new LineCurve3(arcEnd, nextArcStart))
+		}
 	}
 
 	return new TubeGeometry(
@@ -796,6 +816,6 @@ function buildPolyFillGeometry(
 		n * TUBULAR_SEGMENTS_POLY,
 		width / 2,
 		RADIAL_SEGMENTS,
-		false
+		true
 	)
 }

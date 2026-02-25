@@ -1,16 +1,20 @@
 import { BufferAttribute, BufferGeometry, type Curve, Vector3, LineCurve3 } from 'three/webgpu'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 /**
  * Build a tube geometry from sub-curves with junction-aware Frenet frames.
  * Unlike TubeGeometry, computes analytical tangents at each sub-curve's endpoints
  * and blends them at junctions to avoid normal-frame kinks.
+ *
+ * @param cap - when true and closed=false, appends flat end caps (default true)
  */
 export function buildTubeGeometry(
 	curves: Curve<Vector3>[],
 	radius: number,
 	radialSegments: number,
 	density: number,
-	closed: boolean
+	closed: boolean,
+	cap = true
 ): BufferGeometry {
 	// --- 1. Sample positions and blended tangents ---
 	interface Frame {
@@ -154,7 +158,69 @@ export function buildTubeGeometry(
 	geo.setAttribute('position', new BufferAttribute(new Float32Array(positions), 3))
 	geo.setAttribute('normal', new BufferAttribute(new Float32Array(normals), 3))
 	geo.setAttribute('uv', new BufferAttribute(new Float32Array(uvs), 2))
+
+	// --- 7. End caps (open tubes only) ---
+	if (!closed && cap && frames.length >= 2) {
+		return mergeGeometries([
+			geo,
+			_buildCapDisk(frames[0], radius, R, true),
+			_buildCapDisk(frames[N - 1], radius, R, false)
+		])
+	}
+
 	return geo
+}
+
+/** Flat disk cap at a frame position, facing along (flip ? -t : +t). */
+function _buildCapDisk(
+	frame: { p: Vector3; t: Vector3; n: Vector3; b: Vector3 },
+	radius: number,
+	R: number,
+	flip: boolean
+): BufferGeometry {
+	const { p, t, n, b } = frame
+	const nx = flip ? -t.x : t.x
+	const ny = flip ? -t.y : t.y
+	const nz = flip ? -t.z : t.z
+
+	const capPositions: number[] = []
+	const capNormals: number[] = []
+	const capUvs: number[] = []
+	const capIndices: number[] = []
+
+	// Center vertex (index 0)
+	capPositions.push(p.x, p.y, p.z)
+	capNormals.push(nx, ny, nz)
+	capUvs.push(0.5, 0.5)
+
+	// Perimeter vertices (indices 1 .. R+1)
+	for (let j = 0; j <= R; j++) {
+		const angle = (j / R) * Math.PI * 2
+		const cos = Math.cos(angle)
+		const sin = Math.sin(angle)
+		const vx = cos * n.x + sin * b.x
+		const vy = cos * n.y + sin * b.y
+		const vz = cos * n.z + sin * b.z
+		capPositions.push(p.x + radius * vx, p.y + radius * vy, p.z + radius * vz)
+		capNormals.push(nx, ny, nz)
+		capUvs.push(0.5 + 0.5 * cos, 0.5 + 0.5 * sin)
+	}
+
+	// Triangle fan
+	for (let j = 0; j < R; j++) {
+		if (flip) {
+			capIndices.push(0, j + 1, j + 2)
+		} else {
+			capIndices.push(0, j + 2, j + 1)
+		}
+	}
+
+	const cap = new BufferGeometry()
+	cap.setIndex(capIndices)
+	cap.setAttribute('position', new BufferAttribute(new Float32Array(capPositions), 3))
+	cap.setAttribute('normal', new BufferAttribute(new Float32Array(capNormals), 3))
+	cap.setAttribute('uv', new BufferAttribute(new Float32Array(capUvs), 2))
+	return cap
 }
 
 /**
