@@ -1,7 +1,7 @@
 import { sendMidiNote, getMidiState } from './midi/midi'
 import { triggerChain, updateGlobalChord } from './audio'
 import type { BounceContext, GlobalBeatContext, TriggerContext } from './scene'
-import { notes } from '../scenes/utils/notes'
+import { notes } from './midi/notes'
 
 const VELOCITY = 100
 const DURATION = 200
