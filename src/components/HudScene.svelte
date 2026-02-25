@@ -260,6 +260,14 @@
 	onMount(() => {
 		for (const item of MENU_ITEMS) item.set(readLS(item.lsKey, item.def))
 		isMuted = readLS('ac-muted', false)
+		if (isMuted) {
+			const ri = btnDefs.findIndex((b) => b.kind === 'repro')
+			if (ri >= 0) {
+				btnStates[ri].spinFrom = Math.PI
+				btnStates[ri].spinTo = Math.PI
+				btnSpinAngles[ri] = Math.PI
+			}
+		}
 	})
 
 	// Per-item menu material states (parallel to MENU_ITEMS)
