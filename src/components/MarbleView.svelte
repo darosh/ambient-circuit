@@ -124,8 +124,6 @@
 
 	// Compute rotation to align normal with tangent
 	const rotation = $derived.by((): [number, number, number] => {
-		if (type === 'ball') return [0, 0, 0]
-
 		const tx = marble.tangent.x,
 			ty = marble.tangent.y,
 			tz = marble.tangent.z
@@ -147,6 +145,11 @@
 		const tiltRad = ((rail.tilt ?? 0) * Math.PI) / 180
 		if (tiltRad !== 0) {
 			_mTmpMat.makeRotationZ(tiltRad)
+			_mMat.multiply(_mTmpMat)
+		}
+
+		if (type === 'ball') {
+			_mTmpMat.makeRotationX(Math.PI / 2)
 			_mMat.multiply(_mTmpMat)
 		}
 
@@ -198,6 +201,7 @@
 	{#if type === 'ball'}
 		<T.Mesh
 			position={[transformedPosition.x, transformedPosition.y, transformedPosition.z]}
+			{rotation}
 			material={<Material>(fxMarbles ? fx.mat : plainMaterial)}
 			onclick={(e: Event) => {
 				e.stopPropagation()
