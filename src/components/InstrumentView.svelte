@@ -114,6 +114,10 @@
 		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1.0 : 0.3
 	})
 
+	$effect(() => {
+		fxMaterial.setUvMax(geometry?.userData?.uvMax ?? 0)
+	})
+
 	// Get points for the instrument's path
 	const points = $derived(getPointsForPath(rail, instrument.path))
 
