@@ -1,4 +1,4 @@
-// usage node ./scripts/font.js ./.fonts/NanumGothicCoding-Regular.ttf ./public/fonts/nanumgothiccoding-regular.json "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-_:.,;|()[]{} #*/'♭♯♪♬♩☆★"
+// usage node ./scripts/font.js ./.fonts/NanumGothicCoding-Regular.ttf ./public/fonts/nanumgothiccoding-regular.json "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-_:.,;|()[]{} #*/'♭♯♪♬♩☆★…"
 
 import opentype from 'opentype.js'
 import { readFile, writeFile } from 'node:fs/promises'
@@ -98,6 +98,8 @@ async function main(fontPath, jsonPath, characters) {
 
 	if (jsonPath.includes('nanumgothiccoding')) {
 		fontAsJson.glyphs['*'] = shiftGlyphY(fontAsJson.glyphs['*'], -60)
+		// fontAsJson.glyphs['…'] = shiftGlyphY(fontAsJson.glyphs['…'], -525)
+		// fontAsJson.glyphs['…'] = matchGlyphWidth(fontAsJson.glyphs['…'], fontAsJson.glyphs['_'])
 	}
 
 	await writeFile(jsonPath, JSON.stringify(fontAsJson))
@@ -164,8 +166,6 @@ export function shiftGlyphY(glyph, offset) {
 				break
 
 			case 'z':
-				result.push(commands[i])
-				i += 1
 				break
 
 			default:
@@ -177,6 +177,106 @@ export function shiftGlyphY(glyph, offset) {
 		...glyph,
 		o: result.join(' ')
 	}
+}
+
+// export function tightenEllipsis(glyph: Glyph, spacingReduction: number): Glyph {
+export function tightenEllipsis(glyph, spacingReduction) {
+	const tokens = glyph.o.trim().split(/\s+/)
+	// const result: string[] = [];
+	const result = []
+
+	let i = 0
+	let dotIndex = -1
+
+	while (i < tokens.length) {
+		const cmd = tokens[i]
+		result.push(cmd)
+		i++
+
+		const shiftAmount = dotIndex <= 0 ? 0 : -spacingReduction * dotIndex
+
+		switch (cmd) {
+			case 'm': {
+				dotIndex++ // new contour = new dot
+				const x = Number(tokens[i]) + shiftAmount
+				const y = Number(tokens[i + 1])
+				result.push(String(x), String(y))
+				i += 2
+				break
+			}
+
+			case 'l': {
+				const x = Number(tokens[i]) + shiftAmount
+				const y = Number(tokens[i + 1])
+				result.push(String(x), String(y))
+				i += 2
+				break
+			}
+
+			case 'q': {
+				const cx = Number(tokens[i]) + shiftAmount
+				const cy = Number(tokens[i + 1])
+				const x = Number(tokens[i + 2]) + shiftAmount
+				const y = Number(tokens[i + 3])
+				result.push(String(cx), String(cy), String(x), String(y))
+				i += 4
+				break
+			}
+
+			case 'b': {
+				const cx1 = Number(tokens[i]) + shiftAmount
+				const cy1 = Number(tokens[i + 1])
+				const cx2 = Number(tokens[i + 2]) + shiftAmount
+				const cy2 = Number(tokens[i + 3])
+				const x = Number(tokens[i + 4]) + shiftAmount
+				const y = Number(tokens[i + 5])
+				result.push(String(cx1), String(cy1), String(cx2), String(cy2), String(x), String(y))
+				i += 6
+				break
+			}
+
+			case 'z':
+				break
+
+			default:
+				throw new Error(`Unsupported command: ${cmd}`)
+		}
+	}
+
+	const newXMax = glyph.x_max - spacingReduction * 2
+	const newHa = glyph.ha - spacingReduction * 2
+
+	return {
+		...glyph,
+		o: result.join(' '),
+		x_max: newXMax,
+		ha: newHa
+	}
+}
+
+// export function matchGlyphWidth(ellipsis: Glyph, reference: Glyph): Glyph {
+export function matchGlyphWidth(ellipsis, reference) {
+	const ellipsisWidth = ellipsis.x_max - ellipsis.x_min
+	const targetWidth = reference.x_max - reference.x_min
+
+	const totalReduction = ellipsisWidth - targetWidth
+
+	if (totalReduction <= 0) {
+		// already smaller or equal
+		return ellipsis
+	}
+
+	// We assume 3 dots → reduce spacing in 2 gaps
+	const spacingReduction = totalReduction / 2
+
+	console.log({
+		ellipsisWidth,
+		targetWidth,
+		totalReduction,
+		spacingReduction
+	})
+
+	return tightenEllipsis(ellipsis, spacingReduction)
 }
 
 main(fontPath, jsonPath, characters).catch((err) => {
