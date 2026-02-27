@@ -73,9 +73,7 @@ export const scene: SceneConfig = {
 						generator: { tone: 'PluckSynth', params: { resonance: 0.95 } },
 						fx: [
 							{ tone: 'Split', params: { channels: 1 } },
-							// { tone: 'OnePoleFilter', params: { frequency: 1200, type: 'lowpass' } },
 							{ tone: 'OnePoleFilter', params: { frequency: 30, type: 'highpass' } }
-							// { tone: 'Reverb' }
 						]
 					}
 				}
