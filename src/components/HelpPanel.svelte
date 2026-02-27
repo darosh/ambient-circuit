@@ -19,6 +19,7 @@
 	const DUMMY_OPACITY = 0
 	const CHAR_WIDTH = 0.69
 	const HUD_ZOOM = 80
+	const ELLIP = '…'
 
 	let {
 		baseColor = '#ffffff',
@@ -69,7 +70,7 @@
 	// --- Content ---
 	type ContentRow = { text?: string; header?: boolean; link?: string }
 
-	const CONTENT: ContentRow[] = [
+	const BASE_CONTENT: ContentRow[] = [
 		{ text: 'AMBIENT CIRCUIT', header: true },
 		{ text: 'NON-LINEAR SEQUENCING AUDIO-VISUAL EXPERIMENT' },
 		{ text: 'BUILD WITH TONE.JS, RNBO, SVELTE, THRELTE AND THREE.JS' },
@@ -100,14 +101,59 @@
 		{ text: 'GITHUB.COM/DAROSH/AMBIENT-CIRCUIT', link: 'https://github.com/darosh/ambient-circuit' }
 	]
 
-	const totalRows = CONTENT.length
+	const availChars = $derived(Math.max(8, Math.floor(panelW / charW) - 4))
+
+	function wrapText(text: string, maxChars: number): string[] {
+		const words = text.split(' ')
+		const lines: string[] = []
+		let cur = ''
+		for (const w of words) {
+			if (!cur) {
+				cur = w
+				continue
+			}
+			if (cur.length + 1 + w.length <= maxChars) cur += ' ' + w
+			else {
+				lines.push(cur)
+				cur = w
+			}
+		}
+		if (cur) lines.push(cur)
+		return lines.length ? lines : [text]
+	}
+
+	function truncate(text: string, maxChars: number): string {
+		return text.length <= maxChars ? text : text.slice(0, maxChars - 2) + ELLIP
+	}
+
+	const processedContent = $derived.by(() => {
+		const rows: ContentRow[] = []
+		for (const row of BASE_CONTENT) {
+			if (!row.text) {
+				rows.push(row)
+				continue
+			}
+			if (row.link) {
+				rows.push({ ...row, text: truncate(row.text, availChars) })
+			} else if (row.header) {
+				rows.push(row)
+			} else {
+				const lines = wrapText(row.text, availChars)
+				rows.push({ ...row, text: lines[0] })
+				for (let i = 1; i < lines.length; i++) rows.push({ text: lines[i] })
+			}
+		}
+		return rows
+	})
+
+	const totalRows = $derived(processedContent.length)
 
 	// --- State ---
 	let scrollOffset = $state(0)
 
 	const visibleContent = $derived.by(() => {
 		const start = Math.floor(scrollOffset)
-		return CONTENT.slice(start, start + MAX_VISIBLE_ROWS)
+		return processedContent.slice(start, start + MAX_VISIBLE_ROWS)
 	})
 
 	const canScrollUp = $derived(scrollOffset > 0)
@@ -161,12 +207,15 @@
 		panelState.pointerLock = false
 	}
 
-	// Stable link index per CONTENT row (pre-assigned so pool index is stable across scrolling)
-	const linkIndices: number[] = CONTENT.map(() => -1)
-	let li = 0
-	for (let i = 0; i < CONTENT.length; i++) {
-		if (CONTENT[i].link) linkIndices[i] = li++
-	}
+	// Link index per processedContent row (stable pool index for hover isolation)
+	const linkIndices = $derived.by(() => {
+		const arr = processedContent.map(() => -1)
+		let li = 0
+		for (let i = 0; i < processedContent.length; i++) {
+			if (processedContent[i].link) arr[i] = li++
+		}
+		return arr
+	})
 
 	onDestroy(() => {
 		panelState.pointerLock = false
