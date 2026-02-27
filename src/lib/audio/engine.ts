@@ -171,10 +171,12 @@ async function buildBus(
 	output.connect(destination as AudioNode)
 
 	const fx: (ToneAudioNode | Device)[] = []
+	const fxActivePreset: (string | null)[] = []
 	if (config.fx) {
 		for (const fxConfig of config.fx) {
 			const result = await buildNode(engine, fxConfig)
 			fx.push(result.node)
+			fxActivePreset.push(result.activePreset)
 		}
 	}
 
@@ -199,7 +201,14 @@ async function buildBus(
 			if ('rnbo' in config.fx[i]) {
 				const fxNode = fx[i]
 				const info = makeNodePresetInfo(engine, config.fx[i] as { rnbo: string }, fxNode)
-				if (info) nodePresets.set(i, info)
+
+				if (info && fxActivePreset[i]) {
+					info.active = fxActivePreset[i]!
+				}
+
+				if (info) {
+					nodePresets.set(i, info)
+				}
 			}
 		}
 	}
@@ -251,10 +260,12 @@ export async function buildChain(
 	}
 
 	const fx: (ToneAudioNode | Device)[] = []
+	const fxActivePreset: (string | null)[] = []
 	if (config.fx) {
 		for (const fxConfig of config.fx) {
 			const result = await buildNode(engine, fxConfig)
 			fx.push(result.node)
+			fxActivePreset.push(result.activePreset)
 		}
 	}
 
@@ -287,7 +298,10 @@ export async function buildChain(
 		const info = makeNodePresetInfo(engine, config.generator, generator)
 		if (info) {
 			// Apply initial preset from buildNode result
-			if (genActivePreset) info.active = genActivePreset
+			if (genActivePreset) {
+				log('initial preset', -1)
+				info.active = genActivePreset
+			}
 			nodePresets.set(-1, info)
 		}
 	}
@@ -295,6 +309,12 @@ export async function buildChain(
 		for (let i = 0; i < config.fx.length; i++) {
 			if ('rnbo' in config.fx[i]) {
 				const info = makeNodePresetInfo(engine, config.fx[i] as { rnbo: string }, fx[i])
+				log('initial preset', i)
+
+				if (info && fxActivePreset[i]) {
+					info.active = fxActivePreset[i]
+				}
+
 				if (info) nodePresets.set(i, info)
 			}
 		}
@@ -821,12 +841,14 @@ function makeNodePresetInfo(
 	const entries: { name: string; preset: any }[] = patcher?.presets ?? []
 	if (entries.length === 0) return null
 	const device = node
+	log('making preset info', config.rnbo)
 	return {
 		names: entries.map((p) => p.name),
 		active: null,
 		set(name: string) {
 			const entry = entries.find((p) => p.name === name)
 			if (entry) {
+				log('setting preset', name)
 				device.setPreset(entry.preset)
 				this.active = name
 			}
