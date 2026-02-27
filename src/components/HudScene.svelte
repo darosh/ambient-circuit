@@ -7,6 +7,7 @@
 	import { createInstrumentGeometry, type ArrowKind } from '../lib/video/instrument-geometry'
 	import AnalyserView from './AnalyserView.svelte'
 	import SequencerView, { type NoteEvent } from './SequencerView.svelte'
+	import ParamPanel from './ParamPanel.svelte'
 	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
 	import GeoText from './GeoText.svelte'
 	import { easeInCubic, easeOutCubic } from '../lib/easing'
@@ -59,7 +60,9 @@
 		showStats = $bindable(true),
 		wireframe = $bindable(false),
 		showAnalyzers = $bindable(true),
-		showAudio = $bindable(true)
+		showAudio = $bindable(true),
+		selectedAudioChain,
+		onAudioTargetChange
 	}: {
 		engine: AudioEngine | null
 		defaultAnalyser: string | undefined
@@ -84,6 +87,8 @@
 		wireframe?: boolean
 		showAnalyzers?: boolean
 		showAudio?: boolean
+		selectedAudioChain?: AudioChain
+		onAudioTargetChange?: (target: string) => void
 	} = $props()
 
 	const { size } = useThrelte()
@@ -156,9 +161,20 @@
 	let showHarmony = $state(true)
 	let showDescription = $state(true)
 	let showNotes = $state(true)
+	let showParams = $state(false)
 
 	// Single source-of-truth menu config — reorder freely, no index handling needed
 	const MENU_ITEMS: MenuItem[] = [
+		{
+			label: 'PARAMS',
+			lsKey: 'ac-show-params',
+			def: false,
+			condition: () => !!engine,
+			get: () => showParams,
+			set: (v) => {
+				showParams = v
+			}
+		},
 		{
 			label: 'HUD',
 			lsKey: 'ac-pin-hud',
@@ -305,12 +321,20 @@
 		menuItemStates.map((state) => [state.label, state])
 	)
 
-	function toggleMenuItem(idx: number) {
+	function toggleMenuItem(idx: number, value?: boolean) {
 		const item = menuItems[idx]
-		const v = !item.get()
+		const v = value ?? !item.get()
 		item.set(v)
 		writeLS(item.lsKey, v)
 		menuItemDic[item.label].animTime = TRANSPORT_FLASH
+	}
+
+	function toggleParams(val?: boolean) {
+		const ind = menuItems.findIndex((x) => x.lsKey === 'ac-show-params')
+
+		if (ind > -1) {
+			toggleMenuItem(ind, val)
+		}
 	}
 
 	const menuItems = $derived(MENU_ITEMS.filter((item) => !item.condition || item.condition()))
@@ -318,10 +342,21 @@
 	const textMat = $derived(buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.2, 2))
 	const textMatLarge = $derived(buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.2, 2))
 
-	function onMouseActivity(event?: PointerEvent) {
+	function onMouseActivity() {
 		idleTimer = 0
 		targetOpacity = 1
-		if (event?.clientX != null) mouseXNorm = event.clientX / window.innerWidth
+	}
+
+	function onMouseEnter() {
+		idleTimer = 0
+		targetOpacity = 1
+		mouseXNorm = 1
+	}
+
+	function onMouseLeave() {
+		idleTimer = 0
+		targetOpacity = 1
+		mouseXNorm = 0
 	}
 
 	$effect(() => {
@@ -405,6 +440,12 @@
 	function onBtnClick(event: unknown, i: number) {
 		onMouseActivity()
 		btnDefs[i].action(event)
+
+		if (i === 5) {
+			onBtnLeave(i)
+			return
+		}
+
 		const b = btnStates[i]
 		b.animTime = TRANSPORT_FLASH
 		b.fx.impactColor.value.set(baseColor)
@@ -650,9 +691,30 @@
 
 	const posChord = $derived(showStats ? widthFps : 0)
 	const posScale = $derived(showHarmony ? posChord + widthChords : showStats ? widthFps : 0)
+
+	function onkeydown(e: KeyboardEvent) {
+		if (e.code === 'Escape') {
+			toggleParams()
+		}
+	}
+
+	const mouseZoneWidth = 10
 </script>
 
+<svelte:window {onkeydown} />
+
 <T.OrthographicCamera makeDefault zoom={80} position={[0, 0, 10]} />
+
+<T.Mesh
+	position.x={$size.width / HUD_ZOOM / 2 - (sphereR * mouseZoneWidth) / 2}
+	scale.x={sphereR * mouseZoneWidth}
+	scale.y={$size.height / HUD_ZOOM}
+	onpointerenter={onMouseEnter}
+	onpointerleave={onMouseLeave}
+>
+	<T.PlaneGeometry args={[1, 1]} />
+	<T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
+</T.Mesh>
 
 {#each rows as row, i (i)}
 	{@const analyzerType = resolveAnalyzerType(row.chain.config.analyzer, defaultAnalyser)}
@@ -741,8 +803,8 @@
 		position={[
 			$size.width / HUD_ZOOM / 2 -
 				otherSpacing -
-				sphereR * 21.9 -
-				beatText.length * beatSize * CHAR_WIDTH,
+				sphereR * 0.63 -
+				(beatText.length * beatSize * CHAR_WIDTH) / 2,
 			-$size.height / HUD_ZOOM / 2 + sphereR * 1.5,
 			0
 		]}
@@ -810,7 +872,7 @@
 	{@const overlayX = width - overlay / 2 + otherSpacing}
 
 	{#if my < $size.height / HUD_ZOOM / 2 - sphereR * 10}
-		<T.Group position={[mx, my, 0]}>
+		<T.Group position={[mx, my, 1.1]}>
 			<GeoText cache material={menuItemDic[item.label].fx.mat} text={itemText} size={menuSize} />
 			<!-- Invisible hitbox -->
 			<T.Mesh
@@ -833,33 +895,47 @@
 
 <!-- Transport controls (bottom-right) -->
 {#each btnDefs as btn, i (i)}
-	{@const btnSize = sphereR * 3}
-	{@const btnMargin = sphereR * 0.5}
-	{@const bx = $size.width / HUD_ZOOM / 2 - otherSpacing - sphereR * 0.9}
-	{@const by = -$size.height / HUD_ZOOM / 2 + sphereR * 2}
-	{@const kind = btn.kind === 'repro' && isMuted ? 'muted' : btn.kind}
-	{@const geom = createInstrumentGeometry({
-		type: 'arrow',
-		kind,
-		size: btnSize / 2,
-		width: btnSize * 0.06,
-		cornerRadius: btnSize * 0.075
-	})}
-	<T.Group position={[bx - (btnDefs.length - 1 - i) * (btnSize + btnMargin), by, 0]}>
-		<T.Mesh
-			geometry={geom}
-			material={btnStates[i].fx.mat}
-			rotation.x={(btn.rotX ?? 0) + btnSpinAngles[i]}
-			rotation.y={(btn.rotY ?? 0) + Math.PI / 2}
-		/>
-		<!-- Invisible hitbox -->
-		<T.Mesh
-			onclick={(event: MouseEvent) => onBtnClick(event, i)}
-			onpointerenter={() => onBtnEnter(i)}
-			onpointerleave={() => onBtnLeave(i)}
-		>
-			<T.BoxGeometry args={[btnSize, btnSize, btnSize]} />
-			<T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
-		</T.Mesh>
-	</T.Group>
+	{#if i !== 5 || !tempo.isPlaying}
+		{@const btnSize = sphereR * 3}
+		{@const btnMargin = sphereR * 0.5}
+		{@const bx = $size.width / HUD_ZOOM / 2 - otherSpacing - sphereR * 0.9}
+		{@const by = -$size.height / HUD_ZOOM / 2 + sphereR * 2}
+		{@const kind = btn.kind === 'repro' && isMuted ? 'muted' : btn.kind}
+		{@const geom = createInstrumentGeometry({
+			type: 'arrow',
+			kind,
+			size: btnSize / 2,
+			width: btnSize * 0.06,
+			cornerRadius: btnSize * 0.075
+		})}
+		<T.Group position={[bx - (btnDefs.length - 1 - i) * (btnSize + btnMargin), by, 0]}>
+			<T.Mesh
+				geometry={geom}
+				material={btnStates[i].fx.mat}
+				rotation.x={(btn.rotX ?? 0) + btnSpinAngles[i]}
+				rotation.y={(btn.rotY ?? 0) + Math.PI / 2}
+			/>
+			<!-- Invisible hitbox -->
+			<T.Mesh
+				onclick={(event: MouseEvent) => onBtnClick(event, i)}
+				onpointerenter={() => onBtnEnter(i)}
+				onpointerleave={() => onBtnLeave(i)}
+			>
+				<T.BoxGeometry args={[btnSize, btnSize, btnSize]} />
+				<T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
+			</T.Mesh>
+		</T.Group>
+	{/if}
 {/each}
+
+{#if showParams && engine}
+	<ParamPanel
+		{engine}
+		{baseColor}
+		close={() => toggleParams(false)}
+		{sphereR}
+		visible={true}
+		selectedChain={selectedAudioChain}
+		onTargetChange={onAudioTargetChange}
+	/>
+{/if}

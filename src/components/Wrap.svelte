@@ -6,6 +6,8 @@
 	import HudScene from './HudScene.svelte'
 	import BloomHud from './BloomHud.svelte'
 	import type { SceneCtx } from '../lib/scene-ctx'
+	import type { AudioChain } from '../lib/audio'
+	import { panelState } from '../lib/hud/panel-state.svelte'
 
 	let {
 		sceneId,
@@ -76,6 +78,7 @@
 <T.PerspectiveCamera makeDefault position={activeScene.camera ?? [5, 7, 9]} fov={30}>
 	<OrbitControls
 		enableDamping
+		enabled={!panelState.pointerLock}
 		target={activeScene.target ?? [0, 1, 0]}
 		autoRotate={activeScene.rotatePlay && tempo.isPlaying ? true : autoRotate}
 		autoRotateSpeed={(activeScene.rotatePlay ?? 1) * 0.5}
@@ -120,6 +123,18 @@
 				bind:wireframe
 				bind:showAnalyzers
 				bind:showAudio
+				{selectedAudioChain}
+				onAudioTargetChange={(target) => {
+					if (!audioEngineRef) return
+					if (target.startsWith('chain:')) {
+						const idx = parseInt(target.slice(6))
+						const chains = audioEngineRef.instanceChains.filter((ch: AudioChain) => ch.generator)
+						if (chains[idx]) selectedAudioChain = chains[idx]
+					} else {
+						// Bus/master selected — clear chain selection
+						selectedAudioChain = undefined
+					}
+				}}
 			/>
 		{/if}
 	</BloomHud>
