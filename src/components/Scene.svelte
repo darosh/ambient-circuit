@@ -36,6 +36,7 @@
 	import Stars from './Stars.svelte'
 	import type { SceneCtx } from '../lib/scene-ctx'
 	import { toggleMute } from '../lib/audio/engine'
+	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
 
 	export type SelectedEntity = {
 		type: 'instrument' | 'marble'
@@ -262,6 +263,7 @@
 
 	// Fire destroy handler on unmount
 	onDestroy(() => {
+		audioEngineRef = null
 		// Release $state proxy refs from module-level scene config
 		for (const railData of rails) {
 			if (railData.instruments) {
@@ -463,6 +465,21 @@
 
 		if (mutations) applyMutations(mutations)
 	})
+
+	const gridColor = $derived.by(() => {
+		const base = scene?.audioView && scene.audioView?.color
+
+		if (!base) {
+			return 0x777777
+		}
+
+		const rgb = <Rgb>parseHex(base)
+		const oklab = convertRgbToOklab(rgb)
+		oklab.l = 0.5
+		const backRgb = convertOklabToRgb(oklab)
+
+		return formatHex(backRgb)
+	})
 </script>
 
 <!-- Invisible plane for deselect on miss -->
@@ -490,10 +507,10 @@
 
 {#if showGrid}
 	{#if !scene.polar}
-		<T.GridHelper position.y={-0.01} args={[10, 10, 0x777777, 0x777777]} />
+		<T.GridHelper position.y={-0.01} args={[10, 10, gridColor, gridColor]} />
 	{/if}
 	{#if scene.polar}
-		<T.PolarGridHelper position.y={-0.01} args={[5, 24, 10, 64, 0x777777, 0x777777]} />
+		<T.PolarGridHelper position.y={-0.01} args={[5, 24, 10, 64, gridColor, gridColor]} />
 	{/if}
 {/if}
 
