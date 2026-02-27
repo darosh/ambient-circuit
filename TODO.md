@@ -20,7 +20,7 @@
   - [x] nav chars ◁▷△▽ or ◃▹▵▿
   - [x] analyzer
   - [x] slider drag should not trigger slider click
-  - [ ] fix copy object
+  - [x] fix copy object
   - [x] +/- mouse over
   - [x] preset mouse over
   - [x] solo mouse over

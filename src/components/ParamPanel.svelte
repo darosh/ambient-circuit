@@ -581,9 +581,26 @@
 
 	function copyParams() {
 		if (!activeNode) return
-		const out: Record<string, ParamValue> = {}
-		for (const [k, v] of Object.entries(activeNode.paramValues)) out[k] = v
-		if (activeNode.presets?.active) out['preset'] = activeNode.presets.active
+		const chain = getChain()
+		const bus = getBus()
+		const nodeIndex = activeNode.nodeIndex
+		let nodeCfg: import('../lib/audio/types').NodeConfig | undefined
+		if (chain) {
+			nodeCfg = nodeIndex === -1 ? chain.config.generator : (chain.config.fx ?? [])[nodeIndex]
+		} else if (bus) {
+			nodeCfg = (bus.config.fx ?? [])[nodeIndex]
+		}
+		const params: Record<string, ParamValue> = {}
+		for (const [k, v] of Object.entries(activeNode.paramValues)) params[k] = v
+		const preset = activeNode.presets?.active
+		let out: Record<string, unknown>
+		if (nodeCfg && 'rnbo' in nodeCfg) {
+			out = { rnbo: nodeCfg.rnbo, ...(Object.keys(params).length ? { params } : {}), ...(preset ? { preset } : {}) }
+		} else if (nodeCfg && 'tone' in nodeCfg) {
+			out = { tone: nodeCfg.tone, ...(Object.keys(params).length ? { params } : {}) }
+		} else {
+			out = { ...(Object.keys(params).length ? { params } : {}), ...(preset ? { preset } : {}) }
+		}
 		navigator.clipboard.writeText(JSON.stringify(out))
 		copyFlash = FLASH_DUR
 	}
