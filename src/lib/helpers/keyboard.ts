@@ -9,7 +9,10 @@ export function createKeydownHandler(bindings: KeyBinding[]): (e: KeyboardEvent)
 
 	return (e: KeyboardEvent) => {
 		if (e.target !== document.body) return
+		if (e.ctrlKey || e.metaKey) return
+
 		const action = map.get(e.code)
+
 		if (action) {
 			if (e.code === 'Space') e.preventDefault()
 			action(e)
