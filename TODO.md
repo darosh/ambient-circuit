@@ -52,3 +52,5 @@
 The 627 MeshBasicMaterial count likely comes from new Mesh() without material arg (Three.js creates a default
 MeshBasicMaterial per mesh): 48 × N_rows SequencerView + 16 × N_rows AnalyserView + transport hitboxes. A future
 task could share a single dummy material or pass pool materials at construction time.
+
+BIRDS: {"volume":-23.634375000000002,"detune":0,"portamento":0,"envelope.attack":0.04300781249999999,"envelope.decay":0.763203125,"envelope.release":2.41630859375,"envelope.sustain":0.3384765625,"filter.Q":668.3828125,"filter.detune":0.328125,"filter.gain":8.969531250000001,"filterEnvelope.attack":0.08597656249999996,"filterEnvelope.decay":1.1663671875,"filterEnvelope.release":1.80380859375,"filterEnvelope.sustain":0.5,"filterEnvelope.baseFrequency":1156.89453125,"filterEnvelope.exponent":3.44609375,"filterEnvelope.octaves":0.40593749999999984,"oscillator.detune":-2.071875}
