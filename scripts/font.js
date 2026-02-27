@@ -1,4 +1,4 @@
-// usage node ./scripts/font.js ./.fonts/NanumGothicCoding-Regular.ttf ./public/fonts/nanumgothiccoding-regular.json "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-_:.,;|()[]{} #*/'…<>♭♯♪♬♩☆★"
+// usage node ./scripts/font.js ./.fonts/NanumGothicCoding-Regular.ttf ./public/fonts/nanumgothiccoding-regular.json "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-_:.,;|()[]{} #*/'…<>?◃▹▵▿♭♯♪♬♩☆★"
 
 import opentype from 'opentype.js'
 import { readFile, writeFile } from 'node:fs/promises'
@@ -96,8 +96,15 @@ async function main(fontPath, jsonPath, characters) {
 
 	const fontAsJson = convertFont(font, { weight, variant, characters })
 
+	// const LEFT = '◃'
+	// const RIGHT = '▹'
+	const UP = '▵'
+	const DOWN = '▿'
+
 	if (jsonPath.includes('nanumgothiccoding')) {
 		fontAsJson.glyphs['*'] = shiftGlyphY(fontAsJson.glyphs['*'], -60)
+		fontAsJson.glyphs[UP] = shiftGlyphY(fontAsJson.glyphs[UP], 30)
+		fontAsJson.glyphs[DOWN] = shiftGlyphY(fontAsJson.glyphs[DOWN], -30)
 		// fontAsJson.glyphs['…'] = shiftGlyphY(fontAsJson.glyphs['…'], -525)
 		// fontAsJson.glyphs['…'] = matchGlyphWidth(fontAsJson.glyphs['…'], fontAsJson.glyphs['_'])
 	}
