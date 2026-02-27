@@ -388,13 +388,16 @@
 
 	let prevTargetKey = ''
 	let prevParamVersion = -1
+	let prevEngine: typeof engine = null
 
 	$effect(() => {
 		const tk = targetKey
 		const pv = paramVersion
-		if (tk === prevTargetKey && pv === prevParamVersion) return
+		const eng = engine
+		if (tk === prevTargetKey && pv === prevParamVersion && eng === prevEngine) return
 		prevTargetKey = tk
 		prevParamVersion = pv
+		prevEngine = eng
 		refreshNodes()
 	})
 
