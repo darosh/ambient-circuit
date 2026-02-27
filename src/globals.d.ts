@@ -4,8 +4,7 @@ declare const __APP_VERSION__: string
 // All functions return a TSL vec3 node (color) unless noted
 // All accept an optional params object; unspecified params use defaults
 declare module 'tsl-textures' {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	type TslNode = any
+	type TslNode = import('three/webgpu').Node
 
 	interface PositionParam {
 		position?: TslNode

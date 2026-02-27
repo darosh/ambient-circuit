@@ -194,7 +194,6 @@
 						pool[(headIdx + r) % MAX_SLOTS].alpha.value = 0
 						if (slotMeshes[r]) slotMeshes[r].visible = false
 					}
-					d = fillCount
 					break
 				}
 				const alpha = getAlpha(x + slide) * ringFadeIns[idx]

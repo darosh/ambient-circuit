@@ -2,12 +2,11 @@
 	import { T, useThrelte, useTask, createSceneContext, createCameraContext } from '@threlte/core'
 	import { onMount, untrack } from 'svelte'
 	import type { Snippet } from 'svelte'
-	import { PostProcessing, type WebGPURenderer, type Scene } from 'three/webgpu'
+	import { PostProcessing, type WebGPURenderer, type Scene, type Node } from 'three/webgpu'
 	import { pass, mix, max, vec3, uniform } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	type TslNode = any
+	type TslNode = Node
 
 	type Props = {
 		enabled?: boolean
@@ -43,7 +42,7 @@
 	const postProcessing = new PostProcessing(renderer as unknown as WebGPURenderer)
 
 	// Store bloom node ref for uniform updates
-	let bloomNode: TslNode = null
+	let bloomNode: ReturnType<typeof bloom> | null = null
 
 	// Build pipeline once (recompiles only when camera/HUD structure changes)
 	// Guarded: skip until main camera is ready (avoids wasteful build during init)

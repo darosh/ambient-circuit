@@ -143,7 +143,7 @@ function buildCharacterPoints(
 	cursorX: number,
 	spacing: number
 ): { points: Vector3[]; newCursorX: number } {
-	const isNumber = /[0-9]/.test(char)
+	const isNumber = /\d/.test(char)
 	const isDash = char === '-'
 	const isDot = char === '.'
 

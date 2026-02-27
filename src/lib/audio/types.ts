@@ -10,7 +10,9 @@ export type NodeConfig =
 	| { tone: string; params?: ParamMap; poly?: number }
 	| { rnbo: string; params?: ParamMap; preset?: string; poly?: number }
 
+// eslint-disable-next-line sonarjs/redundant-type-aliases
 export type GeneratorConfig = NodeConfig
+// eslint-disable-next-line sonarjs/redundant-type-aliases
 export type FxConfig = NodeConfig
 
 export type AnalyzerType = boolean | 'fft' | 'waveform' | 'meter'

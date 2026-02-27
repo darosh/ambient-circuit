@@ -781,10 +781,12 @@ function listNodeParams(
 		} else if (path === 'volume') {
 			min = -60
 			max = 60
-		} else if (path === 'envelope.attack' || path === 'filterEnvelope.attack') {
-			min = 0
-			max = 2
-		} else if (path === 'envelope.decay' || path === 'filterEnvelope.decay') {
+		} else if (
+			path === 'envelope.attack' ||
+			path === 'filterEnvelope.attack' ||
+			path === 'envelope.decay' ||
+			path === 'filterEnvelope.decay'
+		) {
 			min = 0
 			max = 2
 		} else if (
@@ -797,19 +799,16 @@ function listNodeParams(
 		} else if (path === 'filterEnvelope.exponent') {
 			min = 0
 			max = 10
-		} else if (path === 'filterEnvelope.octaves') {
+		} else if (path === 'filterEnvelope.octaves' || path === 'harmonicity') {
 			min = 0
 			max = 12
 		} else if (path === 'filter.Q') {
 			min = 0
 			max = 10000
-		} else if (path === 'harmonicity') {
-			min = 0
-			max = 12
 		} else if (path === 'octaves') {
 			min = 0.5
 			max = 10
-		} else if (path === 'dampening') {
+		} else if (path === 'dampening' || path === 'frequency') {
 			min = 0.1
 			max = 7000
 		} else if (path === 'resonance' && defaults[path] > 1) {
@@ -820,9 +819,6 @@ function listNodeParams(
 			min = 0.1
 			max = 20
 		} else if (path.endsWith('.baseFrequency')) {
-			max = 7000
-		} else if (path === 'frequency') {
-			min = 0.1
 			max = 7000
 		}
 
@@ -997,11 +993,9 @@ function isDevice(node: ToneAudioNode | Device): node is Device {
 	return 'scheduleEvent' in node
 }
 
-function connectNodes(
-	from: ToneAudioNode | Device | AnalyserNode | GainNode,
-	to: ToneAudioNode | Device | AnalyserNode | GainNode,
-	engine: AudioEngine
-): void {
+type AudioNodeLike = ToneAudioNode | Device | AnalyserNode | GainNode
+
+function connectNodes(from: AudioNodeLike, to: AudioNodeLike, engine: AudioEngine): void {
 	const fromWeb = getOutputNode(from, engine)
 	const toWeb = getInputNode(to, engine)
 
@@ -1014,10 +1008,7 @@ function connectNodes(
 }
 
 /** Get the OUTPUT AudioNode (for connecting FROM this node) */
-function getOutputNode(
-	node: ToneAudioNode | Device | AnalyserNode | GainNode,
-	_engine: AudioEngine
-): AudioNode | null {
+function getOutputNode(node: AudioNodeLike, _engine: AudioEngine): AudioNode | null {
 	if (node instanceof GainNode || node instanceof AnalyserNode) return node
 	if (isDevice(node as ToneAudioNode | Device)) return (node as Device).node
 
@@ -1055,10 +1046,7 @@ function getOutputNode(
 }
 
 /** Get the INPUT AudioNode (for connecting TO this node) */
-function getInputNode(
-	node: ToneAudioNode | Device | AnalyserNode | GainNode,
-	_engine: AudioEngine
-): AudioNode | null {
+function getInputNode(node: AudioNodeLike, _engine: AudioEngine): AudioNode | null {
 	if (node instanceof GainNode || node instanceof AnalyserNode) return node
 	if (isDevice(node as ToneAudioNode | Device)) return (node as Device).node
 
@@ -1092,10 +1080,7 @@ function getInputNode(
 }
 
 /** Get web audio node — used for analyzer access (output side) */
-function getWebAudioNode(
-	node: ToneAudioNode | Device | AnalyserNode | GainNode,
-	engine: AudioEngine
-): AudioNode | null {
+function getWebAudioNode(node: AudioNodeLike, engine: AudioEngine): AudioNode | null {
 	return getOutputNode(node, engine)
 }
 

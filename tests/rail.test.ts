@@ -256,7 +256,7 @@ describe('resolveRail', () => {
 			/duplicate positions in the middle of a path/i
 		)
 		expect(() => validateNoDuplicateMidPathPositions(r.points, rail.id)).toThrow(
-			/beat (1|3).*beat (1|3)/i
+			/beat [13].*beat [13]/i
 		)
 	})
 

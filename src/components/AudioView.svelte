@@ -109,9 +109,7 @@
 	// Create/dispose materials when layout changes
 	$effect(() => {
 		const nodes = layout.nodes
-		const newFx = nodes.map((n) =>
-			buildImpactMaterial(baseColor, baseColor, n.isGenerator ? 1.0 : 1.0)
-		)
+		const newFx = nodes.map(() => buildImpactMaterial(baseColor, baseColor, 1.0))
 		fxArr = newFx
 		return () => {
 			for (const fx of newFx) fx.mat.dispose()
