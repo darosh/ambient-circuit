@@ -30,7 +30,7 @@ export function expandPathString(
 				if (Array.isArray(last)) {
 					result[result.length - 1] = { p: last as Vec3, beat }
 				} else {
-					(last as RailPointFull).beat = beat
+					;(last as RailPointFull).beat = beat
 				}
 			}
 			continue

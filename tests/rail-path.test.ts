@@ -136,10 +136,7 @@ describe('expandPathString', () => {
 
 	it('standalone float beat', () => {
 		const result = expandPathString('r 7.5 u')
-		expect(result).toEqual([
-			{ p: [1, 0, 0], beat: 7.5 },
-			[1, 1, 0]
-		])
+		expect(result).toEqual([{ p: [1, 0, 0], beat: 7.5 }, [1, 1, 0]])
 	})
 
 	it('all directions', () => {

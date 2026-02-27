@@ -408,10 +408,7 @@
 
 {#if visible && showBeats}
 	{#each visibleBeats as bp, bpIndex (bpIndex)}
-		<T.Group
-			bind:ref={beatGroups[bpIndex]}
-			position={beatLabelPositions[bpIndex]}
-		>
+		<T.Group bind:ref={beatGroups[bpIndex]} position={beatLabelPositions[bpIndex]}>
 			<Align>
 				<LineText
 					fx={fxText}
@@ -429,10 +426,7 @@
 {/if}
 
 {#if visible && showNameDeferred && nameLabelPosition}
-	<T.Group
-		bind:ref={nameGroup}
-		position={nameLabelPosition}
-	>
+	<T.Group bind:ref={nameGroup} position={nameLabelPosition}>
 		<Align>
 			<LineText
 				fx={fxText}

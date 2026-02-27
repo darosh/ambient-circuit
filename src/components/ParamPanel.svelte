@@ -595,7 +595,11 @@
 		const preset = activeNode.presets?.active
 		let out: Record<string, unknown>
 		if (nodeCfg && 'rnbo' in nodeCfg) {
-			out = { rnbo: nodeCfg.rnbo, ...(Object.keys(params).length ? { params } : {}), ...(preset ? { preset } : {}) }
+			out = {
+				rnbo: nodeCfg.rnbo,
+				...(Object.keys(params).length ? { params } : {}),
+				...(preset ? { preset } : {})
+			}
 		} else if (nodeCfg && 'tone' in nodeCfg) {
 			out = { tone: nodeCfg.tone, ...(Object.keys(params).length ? { params } : {}) }
 		} else {
@@ -652,8 +656,16 @@
 		didDrag = false
 		startDrag(e.nativeEvent, info, nodeIndex)
 	}
-	function onSliderClick(e: { point: { x: number } }, info: ParamInfo, nodeIndex: number, trackX: number) {
-		if (didDrag) { didDrag = false; return }
+	function onSliderClick(
+		e: { point: { x: number } },
+		info: ParamInfo,
+		nodeIndex: number,
+		trackX: number
+	) {
+		if (didDrag) {
+			didDrag = false
+			return
+		}
 		const norm2 = Math.max(0, Math.min(1, (e.point.x - trackX) / sliderW))
 		setParam(nodeIndex, info.path, info.min + norm2 * (info.max - info.min))
 	}
