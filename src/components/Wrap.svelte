@@ -44,7 +44,7 @@
 		freeze = false
 	} = $props()
 
-	let sceneCtx = $state<SceneCtx | undefined>(undefined)
+	let sceneCtx = $state<SceneCtx | undefined>()
 </script>
 
 {#key sceneId}
@@ -127,7 +127,7 @@
 				onAudioTargetChange={(target) => {
 					if (!audioEngineRef) return
 					if (target.startsWith('chain:')) {
-						const idx = parseInt(target.slice(6))
+						const idx = Number.parseInt(target.slice(6))
 						const chains = audioEngineRef.instanceChains.filter((ch: AudioChain) => ch.generator)
 						if (chains[idx]) selectedAudioChain = chains[idx]
 					} else {

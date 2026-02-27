@@ -162,13 +162,23 @@ export function globalHandlerFactory(onTick?: BeatHandler) {
 
 	function globalBeatHandler(ctx: GlobalBeatContext) {
 		// Log phase changes and ticks
-		if (ctx.phase === 'init') {
+		switch (ctx.phase) {
+		case 'init': {
 			// console.log('[GLOBAL] Init - beat:', ctx.beat.toFixed(3))
-		} else if (ctx.phase === 'play') {
+		
+		break;
+		}
+		case 'play': {
 			// console.log('[GLOBAL] Play - beat:', ctx.beat.toFixed(3))
-		} else if (ctx.phase === 'pause') {
+		
+		break;
+		}
+		case 'pause': {
 			// console.log('[GLOBAL] Pause - beat:', ctx.beat.toFixed(3))
-		} else if (ctx.phase === 'destroy') {
+		
+		break;
+		}
+		case 'destroy': {
 			// console.log(
 			// 	'[GLOBAL] Destroy - beat:',
 			// 	ctx.beat.toFixed(3),
@@ -177,9 +187,12 @@ export function globalHandlerFactory(onTick?: BeatHandler) {
 			// 	'timers'
 			// )
 			// Cleanup any timers/intervals here
-			timers.forEach((id) => clearTimeout(id))
+			for (const id of timers) clearTimeout(id)
 			timers.length = 0
-		} else if (ctx.phase === 'tick') {
+		
+		break;
+		}
+		case 'tick': {
 			// Log every tick
 			// console.log('[GLOBAL] beat:', ctx.beat.toFixed(3))
 
@@ -188,6 +201,10 @@ export function globalHandlerFactory(onTick?: BeatHandler) {
 				// @ts-expect-error
 				onTick(ctx)
 			}
+		
+		break;
+		}
+		// No default
 		}
 	}
 

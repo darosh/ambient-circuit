@@ -25,8 +25,8 @@ export function expandPathString(
 		// Standalone number = beat for previous point
 		if (/^-?(?:\d+(?:\.\d+)?|\.\d+)$/.test(token)) {
 			if (result.length > 0) {
-				const beat = parseFloat(token)
-				const last = result[result.length - 1]
+				const beat = Number.parseFloat(token)
+				const last = result.at(-1)
 				if (Array.isArray(last)) {
 					result[result.length - 1] = { p: last as Vec3, beat }
 				} else {
@@ -39,11 +39,11 @@ export function expandPathString(
 		// Check for rounding+tangent suffix: e.g. "rub1", "l3u2b0.5", "lb.4"
 		const roundTangentMatch = token.match(/^(.+)([tfb])(-?(?:\d+(?:\.\d+)?|\.\d+))$/i)
 		// Check for just rounding suffix: e.g. "rub", "l3u2b"
-		const roundMatch = !roundTangentMatch ? token.match(/^(.+)([tfb])$/i) : null
+		const roundMatch = roundTangentMatch ? null : token.match(/^(.+)([tfb])$/i)
 
 		const dirPart = roundTangentMatch ? roundTangentMatch[1] : roundMatch ? roundMatch[1] : token
 		const roundCh = roundTangentMatch ? roundTangentMatch[2] : roundMatch ? roundMatch[2] : null
-		const tangent = roundTangentMatch ? parseFloat(roundTangentMatch[3]) : undefined
+		const tangent = roundTangentMatch ? Number.parseFloat(roundTangentMatch[3]) : undefined
 
 		// Parse direction part to accumulate movements
 		const delta: [number, number, number] = [0, 0, 0]
@@ -54,7 +54,7 @@ export function expandPathString(
 				// Check if followed by a number
 				const numMatch = dirPart.slice(i + 1).match(/^(-?(?:\d+(?:\.\d+)?|\.\d+))/)
 				if (numMatch) {
-					const n = parseFloat(numMatch[0])
+					const n = Number.parseFloat(numMatch[0])
 					const d = DIR[ch]
 					delta[0] += d[0] * n
 					delta[1] += d[1] * n
@@ -78,10 +78,10 @@ export function expandPathString(
 
 		if (roundCh && ROUND_CHARS.has(roundCh)) {
 			const round = ROUND_MAP[roundCh]
-			if (tangent !== undefined) {
-				result.push({ p: [pos[0], pos[1], pos[2]] as Vec3, round, tangent })
-			} else {
+			if (tangent === undefined) {
 				result.push({ p: [pos[0], pos[1], pos[2]] as Vec3, round })
+			} else {
+				result.push({ p: [pos[0], pos[1], pos[2]] as Vec3, round, tangent })
 			}
 		} else {
 			result.push([pos[0], pos[1], pos[2]] as Vec3)

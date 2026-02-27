@@ -24,7 +24,7 @@
 	const BAR_COUNT = 16
 	const barGap = 0.05
 
-	let groupRef = $state<Group | undefined>(undefined)
+	let groupRef = $state<Group | undefined>()
 	let barMeshes: Mesh[] = []
 
 	// Create bar meshes imperatively — zero Svelte context overhead
@@ -77,11 +77,7 @@
 					const arr = raw as number[] | Float32Array
 					const step = Math.max(1, Math.floor(arr.length / binCount))
 					v = arr[i * step] ?? 0
-					if (type === 'fft') {
-						v = Math.max(0, Math.min(1, (v + 100) / 100))
-					} else {
-						v = Math.abs(v)
-					}
+					v = type === 'fft' ? Math.max(0, Math.min(1, (v + 100) / 100)) : Math.abs(v);
 				}
 
 				const h = Math.max(0.01, v * Math.abs(height))

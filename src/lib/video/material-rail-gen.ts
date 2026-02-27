@@ -75,8 +75,8 @@ export function buildRailMaterial(
 	useFade = 0.5
 ) {
 	const emissiveColor = uniform(color(hexColor))
-	const impactIntensity = uniform(0.0)
-	const activeUniform = uniform(1.0)
+	const impactIntensity = uniform(0)
+	const activeUniform = uniform(1)
 	const uvFreqUniform = uniform(uvFreq)
 	const useFadeUniform = float(useFade)
 

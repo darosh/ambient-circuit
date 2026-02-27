@@ -16,11 +16,12 @@ export function createInstrumentSignals(rails: RailData[]): {
 	const runtimes: Array<Record<string, any>> = []
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 	for (const { instruments } of rails) {
-		instruments?.forEach(() => {
+		const count = instruments?.length ?? 0
+		for (let i = 0; i < count; i++) {
 			signals.push({ intensity: 0 })
 			midiSignals.push({ intensity: 0 })
 			runtimes.push({})
-		})
+		}
 	}
 	return { signals, midiSignals, runtimes }
 }
@@ -35,12 +36,12 @@ export function assignInstrumentSignals(
 ): void {
 	let idx = 0
 	for (const { instruments } of rails) {
-		instruments?.forEach((ins) => {
+		if (instruments) for (const ins of instruments) {
 			ins.signal = signals[idx]
 			ins.midiSignal = midiSignals[idx]
 			ins.runtime = runtimes[idx]
 			idx++
-		})
+		}
 	}
 }
 
@@ -50,8 +51,7 @@ export function createMarbleConfigs(
 ): { marbles: Marble[]; railIndices: number[] } {
 	const ms: Marble[] = []
 	const indices: number[] = []
-	for (let i = 0; i < rails.length; i++) {
-		const { rail, marbles: mds } = rails[i]
+	for (const [i, { rail, marbles: mds }] of rails.entries()) {
 		const resolvedRail = resolveRail(rail)
 
 		const configs = mds && mds.length > 0 ? mds : mds === false ? [] : [{}]

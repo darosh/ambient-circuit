@@ -7,7 +7,7 @@ import { Color } from 'three/webgpu'
 class GridHelperXY extends LineSegments {
 	type = 'GridHelperXY'
 
-	constructor(sizeX = 10, sizeY = 10, divisionsX = 10, divisionsY = 10, color = 0x888888) {
+	constructor(sizeX = 10, sizeY = 10, divisionsX = 10, divisionsY = 10, color = 0x88_88_88) {
 		const halfX = sizeX / 2
 		const halfY = sizeY / 2
 

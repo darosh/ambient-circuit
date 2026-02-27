@@ -83,7 +83,7 @@
 
 	// ─── Imperative mesh pool ────────────────────────────────────────────────────
 	// Plain Three.js meshes — zero Svelte context overhead
-	let groupRef = $state<Group | undefined>(undefined)
+	let groupRef = $state<Group | undefined>()
 	let slotMeshes: Mesh[] = []
 
 	$effect(() => {
@@ -122,7 +122,7 @@
 		const textSize = height / 2
 
 		if (mode === 'time') {
-			const msPerBeat = 60000 / bpm
+			const msPerBeat = 60_000 / bpm
 			const now = Date.now()
 			let rightEdge = -Infinity
 

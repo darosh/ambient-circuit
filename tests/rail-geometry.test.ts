@@ -58,7 +58,7 @@ describe('computeBeatPositions', () => {
 		expect(r).toHaveLength(8) // beats 0..7
 		// midpoint of first segment (beat 2) should be near radius=1
 		const mid = r[2].position
-		const dist = Math.sqrt(mid.x ** 2 + mid.y ** 2 + mid.z ** 2)
+		const dist = Math.hypot(mid.x, mid.y, mid.z)
 		expect(dist).toBeGreaterThan(0.9)
 	})
 
@@ -101,7 +101,7 @@ describe('computeBeatPositions', () => {
 		const points = [
 			pt([1, 0, 0], 0, 'both'),
 			pt([0, 0, 1], 0.5, 'both'),
-			pt([-1, 0, 0], 1.0, 'both'),
+			pt([-1, 0, 0], 1, 'both'),
 			pt([0, 0, -1], 1.5, 'both'),
 			pt([1, 0, 0], 2, 'both')
 		]
@@ -135,11 +135,11 @@ describe('tangent scale', () => {
 	})
 
 	it('tangent=1.0: extreme curve', () => {
-		const points = [pt([0, 0, 0], 0, 'both', 1.0), pt([1, 0, 0], 1, 'both', 1.0)]
+		const points = [pt([0, 0, 0], 0, 'both', 1), pt([1, 0, 0], 1, 'both', 1)]
 		const curve = buildSegmentCurve(points, 0)
 		expect(curve).not.toBeNull()
 		const chord = 1
-		const handleLen = chord * 1.0
+		const handleLen = chord * 1
 		expect(curve!.v1.distanceTo(new Vector3(0, 0, 0))).toBeCloseTo(handleLen)
 	})
 

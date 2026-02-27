@@ -35,7 +35,7 @@ function createTubeMaterial(color: string): TubeMat {
 	})
 
 	const emissiveColor = uniform(colorShader(color))
-	const activeUniform = uniform(1.0)
+	const activeUniform = uniform(1)
 
 	mat.colorNode = Fn(() => {
 		const lum = luminance(emissiveColor)

@@ -136,13 +136,13 @@ function isNonZero(v: [number, number, number]) {
 export function railCenter(railData: RailData): Vec3 {
 	const resolved = resolveRail(railData.rail)
 	const pts = resolved.points
-	if (!pts.length) return [0, 0, 0]
+	if (pts.length === 0) return [0, 0, 0]
 
 	const min = [Infinity, Infinity, Infinity]
 	const max = [-Infinity, -Infinity, -Infinity]
 
-	for (let i = 0; i < pts.length; i++) {
-		const p = pts[i].p
+	for (const pt of pts) {
+		const p = pt.p
 		for (let j = 0; j < 3; j++) {
 			if (p[j] < min[j]) min[j] = p[j]
 			if (p[j] > max[j]) max[j] = p[j]

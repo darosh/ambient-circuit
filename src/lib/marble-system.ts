@@ -49,8 +49,8 @@ function selectBranch(marble: Marble, split: ResolvedSplit): number {
 	const position = marble.routingCounter % totalWeight
 
 	let cumulative = 0
-	for (let i = 0; i < weights.length; i++) {
-		cumulative += weights[i]
+	for (const [i, weight] of weights.entries()) {
+		cumulative += weight
 		if (position < cumulative) {
 			return i
 		}
@@ -276,7 +276,7 @@ function calculateMarblePosition(
 			const sx = marble.tangent.x + marble.up.x * derivY * snake
 			const sy = marble.tangent.y + marble.up.y * derivY * snake
 			const sz = marble.tangent.z + marble.up.z * derivY * snake
-			const slen = Math.sqrt(sx * sx + sy * sy + sz * sz)
+			const slen = Math.hypot(sx, sy, sz)
 			if (slen > 0) {
 				marble.tangent.x = sx / slen
 				marble.tangent.y = sy / slen
@@ -292,8 +292,8 @@ function calculateMarblePosition(
 function pathsMatch(marblePath: number[], instrumentPath?: number[]): boolean {
 	const instPath = instrumentPath || []
 	if (marblePath.length !== instPath.length) return false
-	for (let i = 0; i < marblePath.length; i++) {
-		if (marblePath[i] !== instPath[i]) return false
+	for (const [i, element] of marblePath.entries()) {
+		if (element !== instPath[i]) return false
 	}
 	return true
 }
@@ -333,11 +333,9 @@ function checkMarbleCollisions(
 		const m1 = marbles[i]
 
 		// Skip if recently collided (cooldown to prevent oscillation)
-		if (m1.runtime.lastCollisionTime !== undefined) {
-			if (Math.abs(globalBeat - m1.runtime.lastCollisionTime) < cooldownBeats) {
+		if (m1.runtime.lastCollisionTime !== undefined && Math.abs(globalBeat - m1.runtime.lastCollisionTime) < cooldownBeats) {
 				continue
 			}
-		}
 
 		// Skip if marble just wrapped (large beat delta indicates loop/wrap)
 		const m1Delta = Math.abs(m1.currentBeat - m1.previousBeat)
@@ -354,11 +352,9 @@ function checkMarbleCollisions(
 			if (!m1.config.bouncer && !m2.config.bouncer) continue
 
 			// Skip if recently collided
-			if (m2.runtime.lastCollisionTime !== undefined) {
-				if (Math.abs(globalBeat - m2.runtime.lastCollisionTime) < cooldownBeats) {
+			if (m2.runtime.lastCollisionTime !== undefined && Math.abs(globalBeat - m2.runtime.lastCollisionTime) < cooldownBeats) {
 					continue
 				}
-			}
 
 			// Skip if marble just wrapped
 			const m2Delta = Math.abs(m2.currentBeat - m2.previousBeat)
@@ -554,7 +550,7 @@ function checkInstrumentTriggers(
 	if (Math.abs(beatDelta) > 100) return
 
 	// Determine marble's current path
-	const marblePath: number[] = marble.branchIndex !== null ? [marble.branchIndex] : []
+	const marblePath: number[] = marble.branchIndex === null ? [] : [marble.branchIndex]
 
 	// Check for jump trigger first (from previous frame's jump)
 	if (marble.runtime.jumpedToBeat !== undefined) {
@@ -566,9 +562,8 @@ function checkInstrumentTriggers(
 			if (!pathsMatch(marblePath, instrument.path)) continue
 
 			// Check if instrument is at or very close to jump target (within 0.01 beats)
-			if (Math.abs(instrument.beat - jumpBeat) < 0.01) {
-				// Trigger this instrument
-				if (triggerHandler && sceneCtx) {
+			if (Math.abs(instrument.beat - jumpBeat) < 0.01 && // Trigger this instrument
+				triggerHandler && sceneCtx) {
 					// Find entities
 					const marbleEntity = sceneCtx.marbles[marbleIndex]
 					const instrumentEntity = sceneCtx.instrumentByRef.get(instrument)
@@ -620,7 +615,6 @@ function checkInstrumentTriggers(
 						marble.runtime.triggerBeat = undefined
 					}
 				}
-			}
 		}
 	}
 
@@ -781,6 +775,7 @@ export function updateMarble(
 
 	// Update position based on delta, not absolute recalculation
 	let rawBeat: number
+	// eslint-disable-next-line unicorn/prefer-ternary
 	if (isFirstUpdate) {
 		// First update: use startBeat + globalBeat * speed
 		rawBeat =
@@ -801,7 +796,7 @@ export function updateMarble(
 	}
 
 	const minBeat = tempPoints[0].beat
-	const maxBeat = tempPoints[tempPoints.length - 1].beat
+	const maxBeat = tempPoints.at(-1)!.beat
 	const beatRange = maxBeat - minBeat
 
 	if (beatRange === 0) {
@@ -835,7 +830,7 @@ export function updateMarble(
 		const branchPoints = getCurrentPathPoints(marble)
 		if (branchPoints.length > 1) {
 			const newMinBeat = branchPoints[0].beat
-			const newMaxBeat = branchPoints[branchPoints.length - 1].beat
+			const newMaxBeat = branchPoints.at(-1)!.beat
 			const newBeatRange = newMaxBeat - newMinBeat
 
 			// Only wrap if PAST newMaxBeat
@@ -876,7 +871,7 @@ export function updateMarble(
 			const mainPoints = getCurrentPathPoints(marble)
 			if (mainPoints.length > 1) {
 				const mainMin = mainPoints[0].beat
-				const mainMax = mainPoints[mainPoints.length - 1].beat
+				const mainMax = mainPoints.at(-1)!.beat
 				const mainRange = mainMax - mainMin
 				if (mainRange > 0 && rawBeat > mainMax) {
 					const mainExcess = rawBeat - mainMax
@@ -919,7 +914,7 @@ export function updateMarble(
 			const mainPoints = getCurrentPathPoints(marble)
 			if (mainPoints.length > 1) {
 				const mainMin = mainPoints[0].beat
-				const mainMax = mainPoints[mainPoints.length - 1].beat
+				const mainMax = mainPoints.at(-1)!.beat
 				const mainRange = mainMax - mainMin
 				if (mainRange > 0 && rawBeat < mainMin) {
 					const mainDeficit = mainMin - rawBeat
@@ -1004,13 +999,9 @@ export function updateMarble(
 		marble.runtime.targetRailId = undefined
 
 		// Validate rail exists
-		if (!sceneCtx) {
-			console.warn(`[rail-switch] Cannot switch: sceneCtx not available`)
-		} else {
+		if (sceneCtx) {
 			const targetRail = sceneCtx.railById.get(targetRailId)
-			if (!targetRail) {
-				console.warn(`[rail-switch] Rail "${targetRailId}" not found`)
-			} else {
+			if (targetRail) {
 				// Perform switch
 				marble.config.resolvedRail = targetRail.resolvedRail
 				marble.runtime.railId = targetRailId
@@ -1031,7 +1022,11 @@ export function updateMarble(
 				// Recalculate position on new rail
 				const points = getCurrentPathPoints(marble)
 				calculateMarblePosition(marble, marble.currentBeat, points, easing)
+			} else {
+				console.warn(`[rail-switch] Rail "${targetRailId}" not found`)
 			}
+		} else {
+			console.warn(`[rail-switch] Cannot switch: sceneCtx not available`)
 		}
 	}
 
@@ -1086,11 +1081,11 @@ export function updateMarbles(
 	}
 
 	// Update each marble (skip destroyed)
-	for (let i = 0; i < marbles.length; i++) {
-		if (marbles[i].runtime.destroyed) continue
+	for (const [i, marble] of marbles.entries()) {
+		if (marble.runtime.destroyed) continue
 		const instruments = instrumentsPerRail[i] || []
 		const railId = railIds[i] || ''
-		updateMarble(marbles[i], tempo, instruments, railId, i, triggerHandler, sceneCtx)
+		updateMarble(marble, tempo, instruments, railId, i, triggerHandler, sceneCtx)
 	}
 
 	// Check for marble collisions (after all positions updated, skip destroyed)

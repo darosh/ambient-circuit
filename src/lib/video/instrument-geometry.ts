@@ -121,22 +121,36 @@ export function clearInstrumentGeometryCache(): void {
 function buildInstrumentGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	const { type, size, width } = params
 
-	if (type === 'poly' || type === 'star') {
+	switch (type) {
+	case 'poly': 
+	case 'star': {
 		return buildPolyStarGeometry(params)
-	} else if (type === 'whirl' || type === 'cross') {
+	}
+	case 'whirl': 
+	case 'cross': {
 		return buildWhirlCrossGeometry(params)
-	} else if (type === 'heart') {
+	}
+	case 'heart': {
 		return buildHeartGeometry(size, width)
-	} else if (type === 'spiral') {
+	}
+	case 'spiral': {
 		return buildSpiralGeometry(params)
-	} else if (type === 'cone') {
+	}
+	case 'cone': {
 		return buildConeGeometry(params)
-	} else if (type === 'arrow') {
+	}
+	case 'arrow': {
 		return buildArrowGeometry(params)
-	} else if (type === 'sun') {
+	}
+	case 'sun': {
 		return buildSunGeometry(params)
-	} else if (type === 'eater') {
+	}
+	case 'eater': {
 		return buildEaterGeometry(params)
+	}
+	default: {
+		break
+	}
 	}
 
 	// Fallback: simple circle
@@ -409,7 +423,9 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	const zOffset = align === 'tip' ? 0 : align === 'back' ? -1 : -0.5
 	const zScale = point === 'backward' ? -1 : 1
 
-	if (kind === 'plain' || kind === 'step') {
+	switch (kind) {
+	case 'plain': 
+	case 'step': {
 		const halfAngle = angle / 2
 		const tipY1 = Math.sin(halfAngle) * length
 		const tipY2 = -tipY1
@@ -421,7 +437,11 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 
 		path.add(new LineCurve3(tip1, origin))
 		path.add(new LineCurve3(origin, tip2))
-	} else if (kind === 'play' || kind === 'fwd') {
+	
+	break;
+	}
+	case 'play': 
+	case 'fwd': {
 		const height = length
 		const halfBase = height / Math.sqrt(3)
 		const verts = [
@@ -447,7 +467,10 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 			}
 			path.add(new LineCurve3(arcEnd, nextArcStart))
 		}
-	} else if (kind === 'rec') {
+	
+	break;
+	}
+	case 'rec': {
 		const radius = length / 2
 		const segments = ARROW_CIRCLE_SEGMENTS
 		for (let i = 0; i < segments; i++) {
@@ -457,7 +480,10 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 			const p2 = new Vector3(0, Math.cos(angle2) * radius, Math.sin(angle2) * radius)
 			path.add(new LineCurve3(p1, p2))
 		}
-	} else if (kind === 'stop') {
+	
+	break;
+	}
+	case 'stop': {
 		const halfSize = length / 2
 		const verts = [
 			new Vector3(0, halfSize, halfSize),
@@ -479,7 +505,11 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 			}
 			path.add(new LineCurve3(arcEnd, nextArcStart))
 		}
-	} else if (kind === 'repro' || kind === 'muted') {
+	
+	break;
+	}
+	case 'repro': 
+	case 'muted': {
 		// Speaker icon: rectangle (back) + trapezoid (front cone)
 		const h = length // total height
 		const rectW = h * 0.3 // rectangle width (narrower part)
@@ -545,7 +575,10 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 				)
 			)
 		}
-	} else if (kind === 'pause') {
+	
+	break;
+	}
+	case 'pause': {
 		const spacing = width * 2.5
 		const height = length
 		const line1Start = new Vector3(0, -height / 2, -spacing / 2)
@@ -555,6 +588,10 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		path.add(new LineCurve3(line1Start, line1End))
 		secondaryPath = new CurvePath<Vector3>()
 		secondaryPath.add(new LineCurve3(line2Start, line2End))
+	
+	break;
+	}
+	// No default
 	}
 
 	if (kind === 'fwd' || kind === 'step') {

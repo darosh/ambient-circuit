@@ -6,7 +6,7 @@ localStorage.debug = '0'
 // localStorage.debug = '*'
 
 const app = mount(App, {
-	target: <Element>document.getElementById('app')
+	target: <Element>document.querySelector('#app')
 })
 
 export default app

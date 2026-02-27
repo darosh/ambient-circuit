@@ -75,9 +75,11 @@ function buildMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | nul
 	const size = MARBLE_SIZE
 	const cr = MARBLE_CORNER_RADIUS
 
-	if (type === 'eater') {
+	switch (type) {
+	case 'eater': {
 		return buildEaterMarbleGeometry(size, width, cr, angle)
-	} else if (type === 'poly') {
+	}
+	case 'poly': {
 		const n = sides
 		const r = size / (1 + Math.cos(Math.PI / n))
 		const curves: Curve<Vector3>[] = []
@@ -115,7 +117,8 @@ function buildMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | nul
 			MARBLE_CLOSED_SEGMENTS,
 			closed
 		)
-	} else if (type === 'coil') {
+	}
+	case 'coil': {
 		const path = new CurvePath<Vector3>()
 		const r = size / 2
 		const length = width * 3 * rounds
@@ -141,6 +144,8 @@ function buildMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | nul
 			(rounds * COIL_SEGMENTS_PER_ROUND) / path.getLength(),
 			false
 		)
+	}
+	// No default
 	}
 
 	return null

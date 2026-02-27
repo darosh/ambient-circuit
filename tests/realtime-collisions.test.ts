@@ -50,7 +50,7 @@ describe('realtime collisions — marble order preservation', () => {
 		const resolvedRail = resolveRail(rail)
 
 		const minBeat = resolvedRail.points[0].beat
-		const maxBeat = resolvedRail.points[resolvedRail.points.length - 1].beat
+		const maxBeat = resolvedRail.points.at(-1)!.beat
 
 		const marbleConfigs = [
 			{ startBeat: 0, speed: 0.4, direction: 'forward' as const, bouncer: true },
@@ -113,7 +113,10 @@ describe('realtime collisions — marble order preservation', () => {
 			updateMarbles(marbles, tempo, [], [])
 
 			const order = cyclicOrder(marbles, minBeat, maxBeat)
-			if (!sameCyclicOrder(initialOrder, order)) {
+			if (sameCyclicOrder(initialOrder, order)) {
+				lastGoodOrder = order
+				lastGoodState = snapshot()
+			} else {
 				if (firstFailFrame === -1) {
 					firstFailFrame = frame
 					firstFailState = snapshot()
@@ -131,9 +134,6 @@ describe('realtime collisions — marble order preservation', () => {
 					console.log('failed order:   ', order)
 					console.log('failed state:   ', firstFailState)
 				}
-			} else {
-				lastGoodOrder = order
-				lastGoodState = snapshot()
 			}
 		}
 

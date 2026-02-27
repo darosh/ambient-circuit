@@ -75,7 +75,7 @@ describe('buildTubeGeometry', () => {
 		const lastRingStart = (totalRings - 1) * (R + 1)
 		for (let j = 0; j <= R; j++) {
 			const uvX = uv.array[(lastRingStart + j) * 2]
-			expect(uvX).toBeCloseTo(1.0, 5)
+			expect(uvX).toBeCloseTo(1, 5)
 		}
 	})
 
@@ -86,7 +86,7 @@ describe('buildTubeGeometry', () => {
 		const lastRingStart = (totalRings - 1) * (R + 1)
 		for (let j = 0; j <= R; j++) {
 			const uvX = uv.array[(lastRingStart + j) * 2]
-			expect(uvX).toBeCloseTo(1.0, 5)
+			expect(uvX).toBeCloseTo(1, 5)
 		}
 	})
 
@@ -97,8 +97,8 @@ describe('buildTubeGeometry', () => {
 			const x = nrm.array[i * 3]
 			const y = nrm.array[i * 3 + 1]
 			const z = nrm.array[i * 3 + 2]
-			const len = Math.sqrt(x * x + y * y + z * z)
-			expect(len).toBeCloseTo(1.0, 4)
+			const len = Math.hypot(x, y, z)
+			expect(len).toBeCloseTo(1, 4)
 		}
 	})
 

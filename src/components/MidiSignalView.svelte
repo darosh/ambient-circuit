@@ -71,7 +71,7 @@
 		e.lastFrom = [f[0], f[1], f[2]]
 		e.lastTo = [t[0], t[1], t[2]]
 		if (e.curve instanceof CubicBezierCurve3) {
-			const len = Math.sqrt((t[0] - f[0]) ** 2 + (t[1] - f[1]) ** 2 + (t[2] - f[2]) ** 2)
+			const len = Math.hypot((t[0] - f[0]), (t[1] - f[1]), (t[2] - f[2]))
 			const d = Math.max(t[1] - f[1], len / 2) * CURVE_TANGENT
 			e.curve.v0.set(f[0], f[1] + INS_SHIFT, f[2])
 			e.curve.v1.set(f[0], f[1] + d, f[2])
@@ -111,7 +111,7 @@
 			if (len !== curveEntries.length) {
 				for (const m of materials) m.mat.dispose()
 				curveEntries = links.map(buildEntry)
-				geoRefs = new Array(len).fill(undefined)
+				geoRefs = Array.from({ length: len })
 				materials = links.map((l) =>
 					buildImpactMaterial(l.color ?? '#ffffff', l.color ?? '#ffffff', alpha, true, 1, 0.7)
 				)

@@ -91,7 +91,7 @@ export function easeOutBounce(x: number): number {
 		return n1 * t * t + 0.9375
 	} else {
 		const t = x - 2.625 / d1
-		return n1 * t * t + 0.984375
+		return n1 * t * t + 0.984_375
 	}
 }
 
@@ -166,19 +166,19 @@ export function easeInOutElasticCustom(bounces = 3, decay = 2): EasingFunction {
 
 // Back
 export const easeInBack: EasingFunction = (t) => {
-	const c1 = 1.70158
+	const c1 = 1.701_58
 	const c3 = c1 + 1
 	return c3 * t * t * t - c1 * t * t
 }
 
 export const easeOutBack: EasingFunction = (t) => {
-	const c1 = 1.70158
+	const c1 = 1.701_58
 	const c3 = c1 + 1
 	return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2)
 }
 
 export const easeInOutBack: EasingFunction = (t) => {
-	const c1 = 1.70158
+	const c1 = 1.701_58
 	const c2 = c1 * 1.525
 	return t < 0.5
 		? (Math.pow(2 * t, 2) * ((c2 + 1) * 2 * t - c2)) / 2

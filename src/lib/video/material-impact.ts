@@ -4,7 +4,7 @@ import { MeshBasicNodeMaterial, DoubleSide } from 'three/webgpu'
 import { luminance, uniform, color, Fn, vec4, float } from 'three/tsl'
 
 const BASE_INTENSITY = 0.8
-const PEAK_INTENSITY = 2.0
+const PEAK_INTENSITY = 2
 
 const materialCache = new Map<string, ReturnType<typeof buildImpactMaterial>>()
 
@@ -23,7 +23,7 @@ function getMaterialCacheKey(
 export function createImpactMaterialCached(
 	baseHexColor: string,
 	impactHexColor?: string,
-	alpha = 1.0,
+	alpha = 1,
 	transparent = true
 ) {
 	const key = getMaterialCacheKey(baseHexColor, impactHexColor ?? baseHexColor, alpha, transparent)
@@ -54,7 +54,7 @@ export function clearImpactMaterialCache(): void {
 export function buildImpactMaterial(
 	baseHexColor: string,
 	impactHexColor?: string,
-	alpha = 1.0,
+	alpha = 1,
 	transparent = true,
 	colorPart = 0.75,
 	baseIntensity = BASE_INTENSITY,

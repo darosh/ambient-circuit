@@ -45,8 +45,8 @@ export async function initMidi(): Promise<MidiState> {
 			selectedPortId,
 			enabled: outputs.length > 0
 		}
-	} catch (e) {
-		console.warn('MIDI init failed:', e)
+	} catch (error) {
+		console.warn('MIDI init failed:', error)
 		return {
 			access: null,
 			outputs: [],

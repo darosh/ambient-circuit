@@ -306,7 +306,7 @@
 		isMuted = readLS('ac-muted', false)
 		if (isMuted) {
 			const ri = btnDefs.findIndex((b) => b.kind === 'repro')
-			if (ri >= 0) {
+			if (ri !== -1) {
 				btnStates[ri].spinFrom = Math.PI
 				btnStates[ri].spinTo = Math.PI
 				btnSpinAngles[ri] = Math.PI
@@ -368,12 +368,12 @@
 
 	function toggleParams(val?: boolean) {
 		const ind = menuItems.findIndex((x) => x.lsKey === 'ac-show-params')
-		if (ind > -1) toggleMenuItem(ind, val)
+		if (ind !== -1) toggleMenuItem(ind, val)
 	}
 
 	function toggleHelp(val?: boolean) {
 		const ind = menuItems.findIndex((x) => x.lsKey === 'ac-show-help')
-		if (ind > -1) toggleMenuItem(ind, val)
+		if (ind !== -1) toggleMenuItem(ind, val)
 	}
 
 	const menuItems = $derived(MENU_ITEMS.filter((item) => !item.condition || item.condition()))
@@ -406,11 +406,11 @@
 	})
 
 	$effect(() => {
-		window.addEventListener('pointermove', onMouseActivity)
-		window.addEventListener('pointerdown', onMouseActivity)
+		globalThis.addEventListener('pointermove', onMouseActivity)
+		globalThis.addEventListener('pointerdown', onMouseActivity)
 		return () => {
-			window.removeEventListener('pointermove', onMouseActivity)
-			window.removeEventListener('pointerdown', onMouseActivity)
+			globalThis.removeEventListener('pointermove', onMouseActivity)
+			globalThis.removeEventListener('pointerdown', onMouseActivity)
 		}
 	})
 
@@ -518,8 +518,8 @@
 		const chains = engine.instanceChains.filter((c) => c.generator)
 		let changed = chains.length !== prevChainRefs.length
 		if (!changed) {
-			for (let i = 0; i < chains.length; i++) {
-				if (chains[i] !== prevChainRefs[i]) {
+			for (const [i, chain] of chains.entries()) {
+				if (chain !== prevChainRefs[i]) {
 					changed = true
 					break
 				}
@@ -532,10 +532,10 @@
 			const nextStates: RowState[] = []
 			const nextRows: typeof rows = []
 			const nextLabels: string[] = []
-			for (let i = 0; i < chains.length; i++) {
+			for (const chain of chains) {
 				const fx = buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.5, 2)
-				nextStates.push({ chain: chains[i], fx, animTime: 0, lastSeen: 0 })
-				nextRows.push({ chain: chains[i], fx })
+				nextStates.push({ chain: chain, fx, animTime: 0, lastSeen: 0 })
+				nextRows.push({ chain: chain, fx })
 				nextLabels.push('.')
 			}
 			rowStates = nextStates
@@ -562,8 +562,7 @@
 
 	// Animation + label update
 	useTask((delta) => {
-		for (let i = 0; i < rowStates.length; i++) {
-			const s = rowStates[i]
+		for (const [i, s] of rowStates.entries()) {
 			const chain = s.chain
 
 			if (chain.lastTrigger > s.lastSeen) {
@@ -622,8 +621,8 @@
 		} else if (controlsOpacity > targetOpacity) {
 			controlsOpacity = Math.max(targetOpacity, controlsOpacity - opacityStep)
 		}
-		for (let i = 0; i < btnStates.length; i++) {
-			btnStates[i].fx.alpha.value = controlsOpacity
+		for (const btnState of btnStates) {
+			btnState.fx.alpha.value = controlsOpacity
 		}
 
 		// Edge fade for right menu
@@ -643,8 +642,7 @@
 		}
 
 		const menuAlpha = controlsOpacity * slideEased * slideEased
-		for (let i = 0; i < menuItemStates.length; i++) {
-			const ms = menuItemStates[i]
+		for (const ms of menuItemStates) {
 			ms.fx.alpha.value = menuAlpha
 			if (ms.animTime > 0) {
 				ms.animTime = Math.max(0, ms.animTime - delta)
@@ -658,8 +656,7 @@
 		textMatLarge.alpha.value = controlsOpacity
 
 		// Transport button animation
-		for (let i = 0; i < btnStates.length; i++) {
-			const b = btnStates[i]
+		for (const [i, b] of btnStates.entries()) {
 
 			// Flash decay
 			if (b.animTime > 0) {

@@ -30,8 +30,8 @@
 
 	const lines = $derived.by(() => getTextGeometryCached(text, spacing))
 
-	let material = $state<LineMat | undefined>(undefined)
-	const plainMaterial = $derived(!fx ? createLineMaterialCached(id, color, width) : null)
+	let material = $state<LineMat | undefined>()
+	const plainMaterial = $derived(fx ? null : createLineMaterialCached(id, color, width))
 	const useMaterial = $derived(fx ? material?.mat : plainMaterial?.mat)
 	const colorValue = new Color()
 
@@ -54,11 +54,9 @@
 	})
 
 	$effect(() => {
-		if (plainMaterial && !fx) {
-			if (!plainMaterial.mat.color.equals(colorValue)) {
+		if (plainMaterial && !fx && !plainMaterial.mat.color.equals(colorValue)) {
 				plainMaterial.mat.color = colorValue
 			}
-		}
 	})
 
 	// onDestroy(() => {

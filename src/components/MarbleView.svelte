@@ -75,7 +75,7 @@
 
 	const fx = makeMarbleMaterial(untrack(() => effectiveColor))
 	const plainMaterial = $derived(
-		!fxMarbles ? makeStandardMaterial(untrack(() => effectiveColor)) : null
+		fxMarbles ? null : makeStandardMaterial(untrack(() => effectiveColor))
 	)
 
 	$effect(() => {
@@ -89,8 +89,8 @@
 	})
 
 	$effect(() => {
-		if (fx) fx.activeUniform.value = effectiveActive ? 1.0 : 0.0
-		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1.0 : 0.3
+		if (fx) fx.activeUniform.value = effectiveActive ? 1 : 0
+		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
 	})
 
 	$effect(() => {

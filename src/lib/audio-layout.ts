@@ -36,7 +36,7 @@ export function audioLayout(
 	const instrLayerDepth = maxChainNodes * NODE_SPACING
 
 	// Bus layer start
-	const busEntries = Array.from(buses.entries())
+	const busEntries = [...buses.entries()]
 	const hasBuses = busEntries.length > 0
 	const busLayerZ = instrLayerDepth + LAYER_GAP
 
@@ -80,7 +80,7 @@ export function audioLayout(
 				label: cfgName(chain.config.generator) ?? 'gen',
 				isGenerator: true,
 				next: showAllNodes
-					? chain.fx.length
+					? chain.fx.length > 0
 						? nodes.length + 1
 						: chain.config.bus
 							? busNodes.map[chain.config.bus]
@@ -125,7 +125,7 @@ export function audioLayout(
 
 		for (let fi = 0; fi < bus.fx.length; fi++) {
 			nodes.push({
-				bus: !fi ? bus : null,
+				bus: fi ? null : bus,
 				x: bx,
 				y: 0,
 				z: busLayerZ + nz,
@@ -143,7 +143,7 @@ export function audioLayout(
 		let nz = 0
 		for (let fi = 0; fi < master.fx.length; fi++) {
 			nodes.push({
-				master: !fi ? master : null,
+				master: fi ? null : master,
 				x: 0,
 				y: busNodes.total ? COL_SPACING : 0,
 				z: masterLayerZ + nz,

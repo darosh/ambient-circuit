@@ -77,7 +77,7 @@
 	let selectedMidiPort = $state<string | null>(null)
 
 	let selectedEntity = $state<SelectedEntity>(null)
-	let selectedAudioChain = $state.raw<AudioChain | undefined>(undefined)
+	let selectedAudioChain = $state.raw<AudioChain | undefined>()
 	let allAudioChains = $state.raw<AudioChain[]>([])
 	let audioEngineRef = $state.raw<AudioEngine | null>(null)
 
@@ -106,17 +106,17 @@
 		return { id: raw.slice(0, q), params: new URLSearchParams(raw.slice(q + 1)) }
 	}
 
-	const initialHash = parseHash(window.location.hash)
+	const initialHash = parseHash(globalThis.location.hash)
 	let sceneId = $state(initialHash.id || scenes[0].id)
 
 	$effect(() => {
 		function onHashChange() {
-			const h = parseHash(window.location.hash)
+			const h = parseHash(globalThis.location.hash)
 			sceneId = h.id || scenes[0].id
 		}
 
-		window.addEventListener('hashchange', onHashChange)
-		return () => window.removeEventListener('hashchange', onHashChange)
+		globalThis.addEventListener('hashchange', onHashChange)
+		return () => globalThis.removeEventListener('hashchange', onHashChange)
 	})
 
 	$effect(() => {
@@ -130,11 +130,11 @@
 	})
 
 	$effect(() => {
-		if (window.location.hash === `#${sceneId}` || window.location.hash.startsWith(`#${sceneId}?`)) {
+		if (globalThis.location.hash === `#${sceneId}` || globalThis.location.hash.startsWith(`#${sceneId}?`)) {
 			return
 		}
 
-		window.location.hash = sceneId
+		globalThis.location.hash = sceneId
 		clearMarbleGeometryCache()
 		clearInstrumentGeometryCache()
 		selectedEntity = null
@@ -190,7 +190,7 @@
 			code: 'KeyE',
 			action: () =>
 				(easing =
-					easingNames[(easingNames.findIndex((x) => x === easing) + 1) % easingNames.length])
+					easingNames[(easingNames.indexOf(easing) + 1) % easingNames.length])
 		},
 		{ code: 'KeyB', action: () => (showBeats = !showBeats) },
 		{ code: 'KeyN', action: () => (showNames = !showNames) },

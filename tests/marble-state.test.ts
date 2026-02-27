@@ -76,13 +76,13 @@ describe('MarbleState - full roundtrip with triggers', () => {
 
 		// Move backward past beat 4 - does NOT re-trigger:
 		// reverse() sets lastTriggeredDirection to 'backward', so backward crossing is blocked
-		advanceTempo(tempo, 2.0)
+		advanceTempo(tempo, 2)
 		updateMarble(marble, tempo, instruments, 'test-rail', 0, triggerHandler, sceneCtx)
 		expect(triggerHandler).toHaveBeenCalledTimes(1) // still 1
 
 		// Force forward, cross beat 4 again - triggers (lastTriggeredDirection='backward' vs 'forward')
 		marble.direction = 'forward'
-		advanceTempo(tempo, 4.0)
+		advanceTempo(tempo, 4)
 		updateMarble(marble, tempo, instruments, 'test-rail', 0, triggerHandler, sceneCtx)
 		expect(triggerHandler).toHaveBeenCalledTimes(2)
 	})
@@ -176,7 +176,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 
 		const beatBefore = marble.currentBeat
 
-		advanceTempo(tempo, 1.0)
+		advanceTempo(tempo, 1)
 		updateMarble(marble, tempo, instruments, 'test-rail', 0, triggerHandler, sceneCtx)
 
 		const beatAfter = marble.currentBeat
@@ -279,12 +279,12 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		expect(reverseCount).toBe(1)
 		expect(marble.direction).toBe('backward')
 
-		advanceTempo(tempo, 1.0)
+		advanceTempo(tempo, 1)
 		updateMarble(marble, tempo, instruments, 'test-rail', 0, triggerHandler, sceneCtx)
 		expect(reverseCount).toBe(1)
 
 		marble.direction = 'forward'
-		advanceTempo(tempo, 2.0)
+		advanceTempo(tempo, 2)
 		updateMarble(marble, tempo, instruments, 'test-rail', 0, triggerHandler, sceneCtx)
 		expect(reverseCount).toBe(2)
 		expect(marble.direction).toBe('backward')

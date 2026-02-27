@@ -103,7 +103,7 @@ export function buildTubeGeometry(
 	// --- 4. Closed loop: correct accumulated twist ---
 	if (closed && frames.length > 1) {
 		// Propagate one virtual frame through the closing gap to measure true loop twist
-		const lastF = frames[frames.length - 1]
+		const lastF = frames.at(-1)!
 		const firstT = frames[0].t
 		const closeAxis = new Vector3().crossVectors(lastF.t, firstT)
 		let closingN: Vector3
@@ -126,7 +126,7 @@ export function buildTubeGeometry(
 
 	// --- 4b. Precompute cumulative arc-length for UV.x ---
 	const N = frames.length
-	const arcLen: number[] = new Array(N)
+	const arcLen: number[] = Array.from({ length: N })
 	arcLen[0] = 0
 	for (let i = 1; i < N; i++) {
 		arcLen[i] = arcLen[i - 1] + frames[i].p.distanceTo(frames[i - 1].p)

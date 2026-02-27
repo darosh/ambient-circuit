@@ -99,18 +99,18 @@ export function buildRailCurve(points: ResolvedPoint[]): Vector3[] {
 
 	for (let i = 0; i < n - 1; i++) {
 		const bezier = buildSegmentCurve(points, i)
-		if (!bezier) {
+		if (bezier) {
+			const pts = bezier.getPoints(CURVE_SEGMENTS)
+			for (let j = 1; j < pts.length; j++) {
+				result.push(pts[j])
+			}
+		} else {
 			// Straight segment - subdivide for smooth interpolation
 			const p0 = toV3(points[i].p)
 			const p1 = toV3(points[i + 1].p)
 			for (let j = 1; j <= CURVE_SEGMENTS; j++) {
 				const t = j / CURVE_SEGMENTS
 				result.push(new Vector3().lerpVectors(p0, p1, t))
-			}
-		} else {
-			const pts = bezier.getPoints(CURVE_SEGMENTS)
-			for (let j = 1; j < pts.length; j++) {
-				result.push(pts[j])
 			}
 		}
 	}

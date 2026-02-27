@@ -11,8 +11,8 @@ export function buildUvCheckMaterial(
 	_transparent: boolean = true
 ) {
 	const emissiveColor = uniform(color(hexColor))
-	const impactIntensity = uniform(0.0)
-	const activeUniform = uniform(1.0)
+	const impactIntensity = uniform(0)
+	const activeUniform = uniform(1)
 
 	const mat = new MeshBasicNodeMaterial({ side: DoubleSide })
 

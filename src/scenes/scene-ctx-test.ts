@@ -31,9 +31,9 @@ export const scene: SceneConfig = {
 					actionHandler(ctx) {
 						// console.log('Reversing all marbles!')
 						// Reverse ALL marbles in the scene
-						ctx.scene.marbles.forEach((_m) => {
+						for (const _m of ctx.scene.marbles) {
 							_m.state.reverse()
-						})
+						}
 
 						// const otherMarble = ctx.scene.marbles.find(
 						// 	(x) => x.marble.config.resolvedRail.id === 'target-other'
@@ -89,13 +89,13 @@ export const scene: SceneConfig = {
 					actionHandler(ctx) {
 						// console.log('Blinking all instruments')
 						// Hide all instruments briefly
-						ctx.scene.instruments.forEach((inst) => {
+						for (const inst of ctx.scene.instruments) {
 							inst.state.visible = false
-						})
+						}
 						globalBeatHandler.setTimeout(() => {
-							ctx.scene.instruments.forEach((inst) => {
+							for (const inst of ctx.scene.instruments) {
 								inst.state.visible = true
-							})
+							}
 						}, 50)
 					}
 				}

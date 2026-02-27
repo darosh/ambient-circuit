@@ -37,8 +37,8 @@ export function buildInstrumentMaterial(
 	useFade = 0.5
 ) {
 	const emissiveColor = uniform(color(hexColor))
-	const impactIntensity = uniform(0.0)
-	const activeUniform = uniform(1.0)
+	const impactIntensity = uniform(0)
+	const activeUniform = uniform(1)
 	const uvFreqEffective = uniform(uvFreq)
 	const useFadeUniform = float(useFade)
 

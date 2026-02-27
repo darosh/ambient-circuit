@@ -22,7 +22,7 @@ export function createSceneCtx(
 	// Snapshot initial marble configs for rewind
 	const initialSnapshot = {
 		configs: marbles.map((m) => ({ ...m.config }) as MarbleConfig),
-		railIndices: marbleRailIndices.slice(),
+		railIndices: [...marbleRailIndices],
 		originalIds: marbles.map((m) => m.id)
 	}
 
@@ -50,8 +50,8 @@ export function createSceneCtx(
 	// Build flat instrument list (from per-rail arrays)
 	const instrumentEntities: InstrumentEntity[] = []
 	let instIdx = 0
-	for (let i = 0; i < rails.length; i++) {
-		const instruments = rails[i].instruments || []
+	for (const rail of rails) {
+		const instruments = rail.instruments || []
 		for (const inst of instruments) {
 			const visRef = { value: inst.visible ?? true }
 			const actRef = { value: inst.active ?? true }
@@ -64,7 +64,7 @@ export function createSceneCtx(
 				id: instIdx++,
 				instrument: inst,
 				state: new InstrumentState(inst, visRef, actRef),
-				railId: rails[i].rail.id,
+				railId: rail.rail.id,
 				visibility: visRef,
 				activity: actRef
 			})
@@ -173,15 +173,15 @@ export function addMarbleEntity(ctx: SceneCtx, marble: Marble): MarbleEntity {
  */
 export function removeMarbleEntity(ctx: SceneCtx, marbleId: number): void {
 	const idx = ctx.marbles.findIndex((e) => e.id === marbleId)
-	if (idx >= 0) ctx.marbles.splice(idx, 1)
+	if (idx !== -1) ctx.marbles.splice(idx, 1)
 }
 
 /**
  * Re-index marble.index to match array positions
  */
 export function reindexMarbles(marbles: Marble[]): void {
-	for (let i = 0; i < marbles.length; i++) {
-		marbles[i].index = i
+	for (const [i, marble] of marbles.entries()) {
+		marble.index = i
 	}
 }
 

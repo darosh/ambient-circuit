@@ -22,7 +22,7 @@ function flattenNodes(nodes: RailDef): Array<Exclude<RailNode, string>> {
 			const expanded = expandPathString(node, lastPos)
 			for (const n of expanded) out.push(n)
 			if (expanded.length > 0) {
-				const last = expanded[expanded.length - 1]
+				const last = expanded.at(-1)
 				lastPos = Array.isArray(last) ? (last as Vec3) : (last as { p: Vec3 }).p
 			}
 		} else {
@@ -70,7 +70,7 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 				// Geometric-only: placeholder, will be interpolated
 				points.push({
 					p: node.p,
-					beat: NaN,
+					beat: Number.NaN,
 					round: node.round ?? null,
 					tangent: node.tangent ?? 0.39
 				})
@@ -81,7 +81,7 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 			}
 		} else if (isSplit(node)) {
 			// Split now contains its own position and optional beat
-			const splitBeat = node.split.beat !== undefined ? node.split.beat : beat
+			const splitBeat = node.split.beat === undefined ? beat : node.split.beat
 			const branchStartBeat = splitBeat + 1
 
 			// Add split point to main rail
@@ -124,7 +124,7 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 			}
 		}
 		// After last anchor: same beat
-		const last = anchors[anchors.length - 1]
+		const last = anchors.at(-1)!
 		for (let i = last + 1; i < points.length; i++) {
 			points[i].beat = points[last].beat
 		}
@@ -140,19 +140,15 @@ function applyTransform<T extends { p: Vec3 }>(
 	points: T[],
 	transform: Matrix4 | ((v: Vector3) => Vector3)
 ): T[] {
-	if (transform instanceof Matrix4) {
-		return points.map((pt) => {
+	return transform instanceof Matrix4 ? points.map((pt) => {
 			const v = new Vector3().fromArray(pt.p)
 			v.applyMatrix4(transform)
 			return { ...pt, p: v.toArray() as Vec3 }
-		})
-	} else {
-		return points.map((pt) => {
+		}) : points.map((pt) => {
 			const v = new Vector3().fromArray(pt.p)
 			const transformed = transform(v)
 			return { ...pt, p: transformed.toArray() as Vec3 }
-		})
-	}
+		});
 }
 
 /**

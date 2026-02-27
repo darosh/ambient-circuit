@@ -184,8 +184,8 @@ describe('marble-system', () => {
 		tempo.beatProgress = 0.3
 		updateMarble(marble, tempo)
 		expect(marble.currentBeat).toBeCloseTo(14.3, 1)
-		expect(marble.position.x).toBeGreaterThan(5.0) // should be near end
-		expect(marble.position.x).toBeLessThan(6.0)
+		expect(marble.position.x).toBeGreaterThan(5) // should be near end
+		expect(marble.position.x).toBeLessThan(6)
 
 		// Test fractional beat 14.9 (very near end)
 		tempo.currentBeat = 14
@@ -193,7 +193,7 @@ describe('marble-system', () => {
 		updateMarble(marble, tempo)
 		expect(marble.currentBeat).toBeCloseTo(14.9, 1)
 		expect(marble.position.x).toBeGreaterThan(5.5) // should be very near end
-		expect(marble.position.x).toBeLessThan(6.0)
+		expect(marble.position.x).toBeLessThan(6)
 
 		// Should not throw errors at any point
 	})

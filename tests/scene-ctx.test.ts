@@ -227,7 +227,7 @@ describe('scene-ctx', () => {
 
 	it('beat quantization detects eighth note changes', () => {
 		// Test eighth note detection logic
-		const beats = [0, 0.124, 0.125, 0.249, 0.25, 0.5, 0.75, 1.0]
+		const beats = [0, 0.124, 0.125, 0.249, 0.25, 0.5, 0.75, 1]
 
 		const eighths = beats.map((b) => Math.floor(b * 8))
 

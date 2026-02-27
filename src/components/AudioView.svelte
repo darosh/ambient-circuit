@@ -55,18 +55,18 @@
 
 	let fxArr: ReturnType<typeof buildImpactMaterial>[] = $state([])
 	const animTimes: number[] = []
-	let analyzerMaterial = $state<MeshStandardMaterial | undefined>(undefined)
+	let analyzerMaterial = $state<MeshStandardMaterial | undefined>()
 
 	$effect(() => {
-		if (!analyzerMaterial) {
+		if (analyzerMaterial) {
+			analyzerMaterial?.color.set(baseColor)
+			analyzerMaterial?.emissive.set(baseColor)
+		} else {
 			analyzerMaterial = new MeshStandardMaterial({
 				color: baseColor,
 				emissive: baseColor,
 				emissiveIntensity: 0.5
 			})
-		} else {
-			analyzerMaterial?.color.set(baseColor)
-			analyzerMaterial?.emissive.set(baseColor)
 		}
 
 		return () => {
@@ -109,7 +109,7 @@
 	// Create/dispose materials when layout changes
 	$effect(() => {
 		const nodes = layout.nodes
-		const newFx = nodes.map(() => buildImpactMaterial(baseColor, baseColor, 1.0))
+		const newFx = nodes.map(() => buildImpactMaterial(baseColor, baseColor, 1))
 		fxArr = newFx
 		return () => {
 			for (const fx of newFx) fx.mat.dispose()
@@ -125,8 +125,8 @@
 
 	useTask((delta) => {
 		const nodes = layout.nodes
-		for (let ni = 0; ni < nodes.length; ni++) {
-			const chain = nodes[ni].chain
+		for (const [ni, node] of nodes.entries()) {
+			const chain = node.chain
 			if (!chain) continue
 			const fx = fxArr[ni]
 			if (!fx) continue

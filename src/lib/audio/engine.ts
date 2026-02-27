@@ -67,8 +67,8 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 
 	// Dynamic import Tone.js and set shared context
 
-	if (typeof self === 'object') {
-		;(<Record<string, boolean>>(<unknown>self)).TONE_SILENCE_LOGGING = true
+	if (typeof globalThis.self === 'object') {
+		;(<Record<string, boolean>>(<unknown>globalThis)).TONE_SILENCE_LOGGING = true
 	}
 
 	engine.Tone = await import('tone')
@@ -325,7 +325,7 @@ export async function buildChain(
 
 	const genPoly = config.generator?.poly
 	const maxVoices =
-		genPoly !== undefined ? genPoly : config.generator && 'rnbo' in config.generator ? 8 : 1
+		genPoly === undefined ? config.generator && 'rnbo' in config.generator ? 8 : 1 : genPoly
 	const voices: VoiceTracker = { max: maxVoices, endTimes: [] }
 
 	const chain: AudioChain = {
@@ -400,12 +400,17 @@ async function buildAnalyzer(
 
 	const ana = resolveAnalyzerType(config, def)
 
-	if (ana === 'fft') {
+	switch (ana) {
+	case 'fft': {
 		return new Tone.Analyser('fft', 64) as unknown as ToneAudioNode
-	} else if (ana === 'waveform') {
+	}
+	case 'waveform': {
 		return new Tone.Analyser('waveform', 256) as unknown as ToneAudioNode
-	} else if (ana === 'meter') {
+	}
+	case 'meter': {
 		return new Tone.Meter() as unknown as ToneAudioNode
+	}
+	// No default
 	}
 	return null
 }
@@ -610,17 +615,17 @@ export function disposeScene(engine: AudioEngine): void {
 }
 
 export function soloChain(chains: AudioChain[], selected: AudioChain | undefined) {
-	if (!chains.length) return
+	if (chains.length === 0) return
 
 	for (const chain of chains) {
 		if (chain.solo) {
 			const setSolo = chain.output === selected?.output
 
-			if (chain.solo.solo !== setSolo) {
+			if (chain.solo.solo === setSolo) {
+				log('solo-keep', setSolo, genName(chain) || cfgName(chain.config?.fx?.[0]))
+			} else {
 				log('solo-set', setSolo, genName(chain) || cfgName(chain.config?.fx?.[0]))
 				chain.solo.solo = setSolo
-			} else {
-				log('solo-keep', setSolo, genName(chain) || cfgName(chain.config?.fx?.[0]))
 			}
 		}
 	}
@@ -640,12 +645,12 @@ export function unflattenParams(flat: Record<string, ParamValue>): Record<string
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		let cur: any = result
 		for (let i = 0; i < parts.length - 1; i++) {
-			if (cur[parts[i]] == null || typeof cur[parts[i]] !== 'object') {
+			if (cur[parts[i]] == undefined || typeof cur[parts[i]] !== 'object') {
 				cur[parts[i]] = {}
 			}
 			cur = cur[parts[i]]
 		}
-		cur[parts[parts.length - 1]] = val
+		cur[parts.at(-1)!] = val
 	}
 	return result
 }
@@ -672,15 +677,15 @@ export function setNodeParam(node: ToneAudioNode | Device, path: string, value: 
 		let cur: any = isPolySynth(node) ? (node as any).options : node
 
 		for (let i = 0; i < parts.length - 1; i++) {
-			if (cur == null) return
+			if (cur == undefined) return
 			cur = cur[parts[i]]
 		}
 
-		if (cur != null) {
-			if (cur[parts[parts.length - 1]]?.value !== undefined) {
-				cur[parts[parts.length - 1]].value = value
+		if (cur != undefined) {
+			if (cur[parts.at(-1)!]?.value === undefined) {
+				cur[parts.at(-1)!] = value
 			} else {
-				cur[parts[parts.length - 1]] = value
+				cur[parts.at(-1)!].value = value
 			}
 		}
 	}
@@ -702,15 +707,11 @@ export function getNodeParam(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		let cur: any = isPolySynth(node) ? (node as any).options : node
 		for (const part of parts) {
-			if (cur == null) return undefined
+			if (cur == undefined) return undefined
 			cur = cur[part]
 		}
 
-		if (forceValue) {
-			return (cur?.value ?? cur) as ParamValue | undefined
-		} else {
-			return cur as ParamValue | undefined
-		}
+		return forceValue ? (cur?.value ?? cur) as ParamValue | undefined : cur as ParamValue | undefined;
 	}
 }
 
@@ -766,52 +767,90 @@ function listNodeParams(
 
 		if (isAudioParam) {
 			const u = param.units
-			if (u === 'decibels' || u === 'gain') {
+			switch (u) {
+			case 'decibels': 
+			case 'gain': {
 				if (min < -1e30 || param.minValue === undefined) min = -60
 				if (max > 1e30 || param.maxValue === undefined) max = 60
-			} else if (u === 'cents') {
+			
+			break;
+			}
+			case 'cents': {
 				if (min < -1e30) min = -240
 				if (max > 1e30) max = 240
-			} else if (u === 'positive') {
-				if (max > 1e30) max = 10000
-			} else if (u === 'frequency') {
-				if (min < -1e30) min = -10000
-				if (max > 1e30) max = 10000
+			
+			break;
 			}
-		} else if (path === 'volume') {
+			case 'positive': {
+				if (max > 1e30) max = 10_000
+			
+			break;
+			}
+			case 'frequency': {
+				if (min < -1e30) min = -10_000
+				if (max > 1e30) max = 10_000
+			
+			break;
+			}
+			// No default
+			}
+		} else switch (path) {
+ case 'volume': {
 			min = -60
 			max = 60
-		} else if (
-			path === 'envelope.attack' ||
-			path === 'filterEnvelope.attack' ||
-			path === 'envelope.decay' ||
-			path === 'filterEnvelope.decay'
-		) {
+		
+ break;
+ }
+ case 'envelope.attack': 
+ case 'filterEnvelope.attack': 
+ case 'envelope.decay': 
+ case 'filterEnvelope.decay': {
 			min = 0
 			max = 2
-		} else if (
-			path === 'envelope.release' ||
-			path === 'filterEnvelope.release' ||
-			path === 'modulation.release'
-		) {
+		
+ break;
+ }
+ case 'envelope.release': 
+ case 'filterEnvelope.release': 
+ case 'modulation.release': {
 			min = 0
 			max = 5
-		} else if (path === 'filterEnvelope.exponent') {
+		
+ break;
+ }
+ case 'filterEnvelope.exponent': {
 			min = 0
 			max = 10
-		} else if (path === 'filterEnvelope.octaves' || path === 'harmonicity') {
+		
+ break;
+ }
+ case 'filterEnvelope.octaves': 
+ case 'harmonicity': {
 			min = 0
 			max = 12
-		} else if (path === 'filter.Q') {
+		
+ break;
+ }
+ case 'filter.Q': {
 			min = 0
-			max = 10000
-		} else if (path === 'octaves') {
+			max = 10_000
+		
+ break;
+ }
+ case 'octaves': {
 			min = 0.5
 			max = 10
-		} else if (path === 'dampening' || path === 'frequency') {
+		
+ break;
+ }
+ case 'dampening': 
+ case 'frequency': {
 			min = 0.1
 			max = 7000
-		} else if (path === 'resonance' && defaults[path] > 1) {
+		
+ break;
+ }
+ default: { if (path === 'resonance' && defaults[path] > 1) {
 			max = 7000
 		} else if (path === 'resonance' && defaults[path] < 1) {
 			max = 0.999
@@ -821,6 +860,8 @@ function listNodeParams(
 		} else if (path.endsWith('.baseFrequency')) {
 			max = 7000
 		}
+ }
+ }
 
 		params.push({ path, value, min, max })
 	}
@@ -919,15 +960,15 @@ async function loadRNBO(
 	)
 	let device
 
-	if (ind > -1) {
-		device = disposedRnbos[ind]
-		disposedRnbos.splice(ind, 1)
-	} else {
+	if (ind === -1) {
 		device = await createDevice(
 			{ context: engine.ctx, patcher: patcher as IPatcher }
 			// disposedRnbos.shift()
 		)
 		;(device as unknown as { __patcher: unknown }).__patcher = patcher
+	} else {
+		device = disposedRnbos[ind]
+		disposedRnbos.splice(ind, 1)
 	}
 
 	// Extract and apply presets
@@ -940,7 +981,7 @@ async function loadRNBO(
 	if (presetEntries.length > 0) {
 		const target =
 			preset ??
-			(presetEntries.find((p) => p.name === 'Default') ? 'Default' : presetEntries[0].name)
+			(presetEntries.some((p) => p.name === 'Default') ? 'Default' : presetEntries[0].name)
 		const entry = presetEntries.find((p) => p.name === target)
 		if (entry) {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1032,7 +1073,7 @@ function getOutputNode(node: AudioNodeLike, _engine: AudioEngine): AudioNode | n
 			return cur._gainNode
 		}
 
-		if (cur.output != null) {
+		if (cur.output != undefined) {
 			log('output-deeper', node)
 			cur = cur.output
 			continue
@@ -1055,7 +1096,7 @@ function getInputNode(node: AudioNodeLike, _engine: AudioEngine): AudioNode | nu
 	const n = node as any
 
 	// Try .input first (Tone.js effects have separate input/output)
-	if (n.input != null) {
+	if (n.input != undefined) {
 		let cur = n.input
 		for (let i = 0; i < 10; i++) {
 			if (cur instanceof AudioNode) {
@@ -1066,7 +1107,7 @@ function getInputNode(node: AudioNodeLike, _engine: AudioEngine): AudioNode | nu
 				log('input-_gain', node)
 				return cur._gainNode
 			}
-			if (cur.input != null) {
+			if (cur.input != undefined) {
 				log('input-deeper', node)
 				cur = cur.input
 				continue
@@ -1091,7 +1132,7 @@ function disposeNode(node: ToneAudioNode | Device): void {
 		node.node.disconnect()
 		node.parameterChangeEvent.removeAllSubscriptions()
 
-		for (const { id } of [...node.dataBufferDescriptions]) {
+		for (const { id } of node.dataBufferDescriptions) {
 			node.releaseDataBuffer(id).then()
 		}
 
@@ -1121,20 +1162,20 @@ import type { SceneCtx } from '../scene-ctx'
 
 function computeChordInfo(activeNotes: { midi: number; end: number }[], now: number): ChordInfo {
 	const alive: { midi: number; end: number }[] = []
-	for (let i = 0; i < activeNotes.length; i++) {
-		if (activeNotes[i].end > now) alive.push(activeNotes[i])
+	for (const activeNote of activeNotes) {
+		if (activeNote.end > now) alive.push(activeNote)
 	}
 	const notes: number[] = []
 	const pcs = new Set<string>()
 	let lastNote = 0
-	for (let i = 0; i < alive.length; i++) {
-		notes.push(alive[i].midi)
-		pcs.add(toneNames[alive[i].midi % 12])
-		lastNote = alive[i].midi
+	for (const element of alive) {
+		notes.push(element.midi)
+		pcs.add(toneNames[element.midi % 12])
+		lastNote = element.midi
 	}
 	let chord = ''
 	if (pcs.size >= 2) {
-		const chords = detect(Array.from(pcs))
+		const chords = detect([...pcs])
 		if (chords.length > 0) chord = chords[0]
 	} else if (lastNote > 0) {
 		chord = tones[lastNote] ?? ''
@@ -1192,7 +1233,8 @@ function getScale(ctx: SceneCtx) {
 
 	const notes = []
 
-	for (const v of Array.from(completeNotes.values()).sort()) {
+	// eslint-disable-next-line unicorn/no-array-sort
+	for (const v of [...completeNotes.values()].sort()) {
 		notes.push(toneNames[v])
 	}
 
@@ -1220,12 +1262,12 @@ export function getChainLabel(chain: AudioChain): string {
 
 	// Collect unique pitch classes
 	const pcs = new Set<string>()
-	for (let i = 0; i < alive.length; i++) {
-		pcs.add(toneNames[alive[i].midi % 12])
+	for (const element of alive) {
+		pcs.add(toneNames[element.midi % 12])
 	}
 
 	if (pcs.size >= 2) {
-		const chords = detect(Array.from(pcs))
+		const chords = detect([...pcs])
 		if (chords.length > 0) return chords[0]
 	}
 

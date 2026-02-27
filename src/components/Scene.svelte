@@ -65,7 +65,7 @@
 		fps = $bindable(),
 		onSceneCtx,
 		selectedEntity = $bindable<SelectedEntity>(null),
-		selectedAudioChain = $bindable<AudioChain | undefined>(undefined),
+		selectedAudioChain = $bindable<AudioChain | undefined>(),
 		allAudioChains = $bindable<AudioChain[]>([]),
 		audioEngineRef = $bindable<AudioEngine | null>(null)
 	}: {
@@ -101,8 +101,8 @@
 	const rails = untrack(() => {
 		const r = scene.rails
 		if (scene.renderFactory) {
-			for (let i = 0; i < r.length; i++) {
-				if (!r[i].render) r[i].render = scene.renderFactory(r[i], i)
+			for (const [i, element] of r.entries()) {
+				if (!element.render) element.render = scene.renderFactory(element, i)
 			}
 		}
 		return r
@@ -123,8 +123,8 @@
 	const railRuntimeStates = $state<Array<{ color?: string }>>(rails.map(() => ({})))
 
 	// Assign runtimes to rails (reactive references)
-	for (let i = 0; i < rails.length; i++) {
-		rails[i].runtime = railRuntimeStates[i]
+	for (const [i, rail] of rails.entries()) {
+		rail.runtime = railRuntimeStates[i]
 	}
 
 	const _init = createMarbleConfigs(rails, easing || 'linear')
@@ -132,7 +132,7 @@
 	const marbleRailIndices = _init.railIndices
 
 	// Pre-allocated, updated in-place on rail switch (no per-frame allocation)
-	const liveRailIndices: number[] = marbleRailIndices.slice()
+	const liveRailIndices: number[] = [...marbleRailIndices]
 	const instrumentsPerRail: Instrument[][] = liveRailIndices.map((i) => rails[i].instruments || [])
 	const railIds: string[] = liveRailIndices.map((i) => rails[i].rail.id)
 
@@ -440,8 +440,8 @@
 		}
 
 		// Sync live rail indices from marble runtime (only changes on rail switch)
-		for (let i = 0; i < marbles.length; i++) {
-			const ri = marbles[i].runtime.railIndex ?? liveRailIndices[i] ?? marbleRailIndices[i]
+		for (const [i, marble] of marbles.entries()) {
+			const ri = marble.runtime.railIndex ?? liveRailIndices[i] ?? marbleRailIndices[i]
 			if (ri !== liveRailIndices[i]) {
 				liveRailIndices[i] = ri
 				instrumentsPerRail[i] = rails[ri].instruments || []
@@ -470,7 +470,7 @@
 		const base = scene?.audioView && scene.audioView?.color
 
 		if (!base) {
-			return 0x777777
+			return 0x77_77_77
 		}
 
 		const rgb = <Rgb>parseHex(base)

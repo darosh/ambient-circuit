@@ -79,7 +79,7 @@
 		true
 	)
 	const plainMaterial = $derived(
-		!fxInstruments ? makeStandardMaterial(untrack(() => effectiveColor)) : null
+		fxInstruments ? null : makeStandardMaterial(untrack(() => effectiveColor))
 	)
 	const effectiveVisible = $derived(instrument.runtime?.visible ?? true)
 	const effectiveActive = $derived(
@@ -110,8 +110,8 @@
 	})
 
 	$effect(() => {
-		fxMaterial.activeUniform.value = effectiveActive ? 1.0 : 0.0
-		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1.0 : 0.3
+		fxMaterial.activeUniform.value = effectiveActive ? 1 : 0
+		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
 	})
 
 	$effect(() => {
@@ -215,12 +215,29 @@
 
 		// Apply type-based constant rotation
 		const type = instrument.type || 'poly'
-		if (type === 'poly' || type === 'star' || type === 'heart') {
+		switch (type) {
+		case 'poly': 
+		case 'star': 
+		case 'heart': {
 			_iMat.multiply(_ROT_NEG_HALF_PI)
-		} else if (type === 'cross' || type === 'whirl' || type === 'sun' || type === 'eater') {
+		
+		break;
+		}
+		case 'cross': 
+		case 'whirl': 
+		case 'sun': 
+		case 'eater': {
 			_iMat.multiply(_ROT_HALF_PI)
-		} else if (type === 'cone' || type === 'spiral') {
+		
+		break;
+		}
+		case 'cone': 
+		case 'spiral': {
 			_iMat.multiply(_ROT_NEG_PI)
+		
+		break;
+		}
+		// No default
 		}
 
 		const tiltRad = ((rail.tilt ?? 0) * Math.PI) / 180
@@ -277,11 +294,7 @@
 		}
 
 		// Pulse animation for heart
-		if (pulseAnimationEnabled && impactTime > 0) {
-			bounceOffset = BOUNCE_AMPLITUDE * easeInBounce(impactTime / IMPACT_DURATION)
-		} else {
-			bounceOffset = 0
-		}
+		bounceOffset = pulseAnimationEnabled && impactTime > 0 ? BOUNCE_AMPLITUDE * easeInBounce(impactTime / IMPACT_DURATION) : 0;
 
 		if (impactTime > 0) {
 			impactTime = Math.max(0, impactTime - delta)

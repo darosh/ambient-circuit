@@ -53,11 +53,7 @@ export async function buildSceneAudio(
 	// Build per-instrument chains
 	for (const ie of sceneCtx.instruments) {
 		if (ie.instrument.audio) {
-			if (ie.instrument.audio.id && engine.chains.has(ie.instrument.audio.id)) {
-				ie.audio = engine.chains.get(ie.instrument.audio.id)
-			} else {
-				ie.audio = await buildChain(engine, ie.instrument.audio, defaultAnalyser)
-			}
+			ie.audio = ie.instrument.audio.id && engine.chains.has(ie.instrument.audio.id) ? engine.chains.get(ie.instrument.audio.id) : (await buildChain(engine, ie.instrument.audio, defaultAnalyser));
 		}
 	}
 
@@ -69,11 +65,7 @@ export async function buildSceneAudio(
 			if ('audio' in md && md.audio) {
 				const me = sceneCtx.marbles[mIdx]
 				if (me) {
-					if (md.audio.id && engine.chains.has(md.audio.id)) {
-						me.audio = engine.chains.get(md.audio.id)
-					} else {
-						me.audio = await buildChain(engine, md.audio, defaultAnalyser)
-					}
+					me.audio = md.audio.id && engine.chains.has(md.audio.id) ? engine.chains.get(md.audio.id) : (await buildChain(engine, md.audio, defaultAnalyser));
 				}
 			}
 			mIdx++

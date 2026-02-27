@@ -105,7 +105,7 @@
 		0.04,
 		1
 	)
-	const plainMaterial = $derived(!fxRails ? makeStandardMaterial(untrack(() => color)) : null)
+	const plainMaterial = $derived(fxRails ? null : makeStandardMaterial(untrack(() => color)))
 
 	$effect(() => {
 		fxMaterialObj.emissiveColor.value.set(color)
@@ -118,8 +118,8 @@
 	const effectiveActive = $derived(railData.runtime?.active ?? true)
 
 	$effect(() => {
-		fxMaterialObj.activeUniform.value = effectiveActive ? 1.0 : 0.0
-		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1.0 : 0.3
+		fxMaterialObj.activeUniform.value = effectiveActive ? 1 : 0
+		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
 	})
 
 	// Runtime render transform (pre-allocated, filled in-place by render fn)
@@ -206,8 +206,8 @@
 				geometry: buildTubeGeometry(curvePath.curves, radius, 8, 12, closed, true, uvScale),
 				opacity
 			}
-		} catch (e) {
-			console.warn('Failed to create tube:', e)
+		} catch (error) {
+			console.warn('Failed to create tube:', error)
 			return null
 		}
 	}
@@ -215,7 +215,7 @@
 	const mainMeshes = $derived.by(() => {
 		const pts = displayPoints
 		const first = pts[0]?.p
-		const last = pts[pts.length - 1]?.p
+		const last = pts.at(-1)?.p
 		const closed =
 			!!first &&
 			!!last &&

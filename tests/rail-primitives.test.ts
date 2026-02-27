@@ -72,10 +72,10 @@ describe('roundedRect', () => {
 		const pos = getPositions(nodes)
 		const fixturePos = fixture.map((f) => f.p)
 		expect(pos).toHaveLength(fixturePos.length)
-		for (let i = 0; i < pos.length; i++) {
-			expect(pos[i][0]).toBeCloseTo(fixturePos[i][0])
-			expect(pos[i][1]).toBeCloseTo(fixturePos[i][1])
-			expect(pos[i][2]).toBeCloseTo(fixturePos[i][2])
+		for (const [i, po] of pos.entries()) {
+			expect(po[0]).toBeCloseTo(fixturePos[i][0])
+			expect(po[1]).toBeCloseTo(fixturePos[i][1])
+			expect(po[2]).toBeCloseTo(fixturePos[i][2])
 		}
 	})
 
@@ -136,14 +136,14 @@ describe('coil', () => {
 	it('first and last nodes are plain Vec3 (leads)', () => {
 		const nodes = coil()
 		expect(isVec3(nodes[0])).toBe(true)
-		expect(isVec3(nodes[nodes.length - 1])).toBe(true)
+		expect(isVec3(nodes.at(-1)!)).toBe(true)
 	})
 
 	it('inner points have correct rounding', () => {
 		const nodes = coil()
 		const inner = nodes.slice(1, -1) as RailPointFull[]
 		expect(inner[0].round).toBe('from')
-		expect(inner[inner.length - 1].round).toBe('to')
+		expect(inner.at(-1)!.round).toBe('to')
 		for (let i = 1; i < inner.length - 1; i++) {
 			expect(inner[i].round).toBe('both')
 		}
@@ -153,7 +153,7 @@ describe('coil', () => {
 		const nodes = coil({ height: 4 })
 		const inner = nodes.slice(1, -1) as RailPointFull[]
 		expect(inner[0].p[1]).toBeCloseTo(0)
-		expect(inner[inner.length - 1].p[1]).toBeCloseTo(4)
+		expect(inner.at(-1)!.p[1]).toBeCloseTo(4)
 	})
 
 	it('custom rounds and density', () => {
@@ -182,8 +182,8 @@ describe('spiral', () => {
 		const nodes = spiral({ startRadius: 0.5, radiusStep: 0.5, density: 4, rounds: 2 })
 		const inner = nodes.slice(1, -1) as RailPointFull[]
 		// points at angle 0 (i=0 and i=4) should have increasing distance from center
-		const dist0 = Math.sqrt(inner[0].p[0] ** 2 + inner[0].p[2] ** 2)
-		const dist4 = Math.sqrt(inner[4].p[0] ** 2 + inner[4].p[2] ** 2)
+		const dist0 = Math.hypot(inner[0].p[0], inner[0].p[2])
+		const dist4 = Math.hypot(inner[4].p[0], inner[4].p[2])
 		expect(dist4).toBeGreaterThan(dist0)
 	})
 
@@ -191,7 +191,7 @@ describe('spiral', () => {
 		const nodes = spiral()
 		const inner = nodes.slice(1, -1) as RailPointFull[]
 		expect(inner[0].round).toBe('from')
-		expect(inner[inner.length - 1].round).toBe('to')
+		expect(inner.at(-1)!.round).toBe('to')
 		for (let i = 1; i < inner.length - 1; i++) {
 			expect(inner[i].round).toBe('both')
 		}

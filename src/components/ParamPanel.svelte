@@ -228,8 +228,8 @@
 		if (!engine) return [] as SidebarItem[]
 		const items: SidebarItem[] = []
 		const chains = engine.instanceChains.filter((c) => c.generator)
-		for (let i = 0; i < chains.length; i++) {
-			const label = chains[i].config.id ?? `ch:${i}`
+		for (const [i, chain] of chains.entries()) {
+			const label = chain.config.id ?? `ch:${i}`
 			items.push({ label, targetKey: `chain:${i}`, panelTarget: { type: 'chain', index: i } })
 		}
 		for (const name of engine.buses.keys()) {
@@ -256,7 +256,7 @@
 
 	// Node tab labels with smart abbreviation
 	const nodeTabLabels = $derived.by(() => {
-		if (!nodes.length) return [] as string[]
+		if (nodes.length === 0) return [] as string[]
 		const raw = nodes.map((n) => n.label)
 		return getLabels(raw, tabsAvailW)
 	})
@@ -349,12 +349,12 @@
 				})
 			}
 			const fxList = chain.config.fx ?? []
-			for (let i = 0; i < fxList.length; i++) {
+			for (const [i, element] of fxList.entries()) {
 				const k = i.toString()
 				const fxPreset = chain.nodePresets.get(i)
 				if (result.fxParamInfos[k] || fxPreset) {
 					entries.push({
-						label: cfgName(fxList[i]) ?? `fx:${i}`,
+						label: cfgName(element) ?? `fx:${i}`,
 						nodeIndex: i,
 						presets: fxPreset,
 						params: result.fxParamInfos[k] ?? [],
@@ -368,12 +368,12 @@
 			const result = readBusParams(bus)
 			const entries: NodeEntry[] = []
 			const fxList = bus.config.fx ?? []
-			for (let i = 0; i < fxList.length; i++) {
+			for (const [i, element] of fxList.entries()) {
 				const k = i.toString()
 				const presetInfo = bus.nodePresets.get(i)
 				if (result.busFxParamInfos[k] || presetInfo) {
 					entries.push({
-						label: cfgName(fxList[i]) ?? `fx:${i}`,
+						label: cfgName(element) ?? `fx:${i}`,
 						nodeIndex: i,
 						presets: presetInfo,
 						params: result.busFxParamInfos[k] ?? [],
@@ -449,7 +449,7 @@
 		prevSelectedChainOutput = selectedChain.output
 		const chains = engine.instanceChains.filter((c) => c.generator)
 		const idx = chains.findIndex((c) => c.output === selectedChain.output)
-		if (idx >= 0) {
+		if (idx !== -1) {
 			target = { type: 'chain', index: idx }
 		}
 	})
@@ -597,13 +597,13 @@
 		if (nodeCfg && 'rnbo' in nodeCfg) {
 			out = {
 				rnbo: nodeCfg.rnbo,
-				...(Object.keys(params).length ? { params } : {}),
+				...(Object.keys(params).length > 0 ? { params } : {}),
 				...(preset ? { preset } : {})
 			}
 		} else if (nodeCfg && 'tone' in nodeCfg) {
-			out = { tone: nodeCfg.tone, ...(Object.keys(params).length ? { params } : {}) }
+			out = { tone: nodeCfg.tone, ...(Object.keys(params).length > 0 ? { params } : {}) }
 		} else {
-			out = { ...(Object.keys(params).length ? { params } : {}), ...(preset ? { preset } : {}) }
+			out = { ...(Object.keys(params).length > 0 ? { params } : {}), ...(preset ? { preset } : {}) }
 		}
 		navigator.clipboard.writeText(JSON.stringify(out))
 		copyFlash = FLASH_DUR
@@ -672,11 +672,11 @@
 
 	$effect(() => {
 		if (!dragging) return
-		window.addEventListener('pointermove', onPointerMove)
-		window.addEventListener('pointerup', stopDrag)
+		globalThis.addEventListener('pointermove', onPointerMove)
+		globalThis.addEventListener('pointerup', stopDrag)
 		return () => {
-			window.removeEventListener('pointermove', onPointerMove)
-			window.removeEventListener('pointerup', stopDrag)
+			globalThis.removeEventListener('pointermove', onPointerMove)
+			globalThis.removeEventListener('pointerup', stopDrag)
 		}
 	})
 
@@ -772,7 +772,7 @@
 
 	function shortName(path: string): string {
 		const parts = path.split('.')
-		if (parts.length > 1) return parts[0].slice(0, 3) + ELLIP + parts[parts.length - 1]
+		if (parts.length > 1) return parts[0].slice(0, 3) + ELLIP + parts.at(-1)
 		return path.length > 12 ? path.slice(0, 11) + '.' : path
 	}
 

@@ -36,7 +36,7 @@
 		untrack(() => id),
 		untrack(() => color)
 	)
-	const plainMaterial = $derived(!fx ? createStandardMaterialCached(id, color) : null)
+	const plainMaterial = $derived(fx ? null : createStandardMaterialCached(id, color))
 	const useMaterial = $derived(fx ? material?.mat : plainMaterial)
 	const colorValue = new Color()
 
@@ -56,15 +56,15 @@
 	})
 
 	$effect(() => {
-		if (material) material.activeUniform.value = active ? 1.0 : 0.0
-		if (plainMaterial) plainMaterial.opacity = active ? 1.0 : 0.3
+		if (material) material.activeUniform.value = active ? 1 : 0
+		if (plainMaterial) plainMaterial.opacity = active ? 1 : 0.3
 	})
 
 	// Build tube geometries from character paths
 	const geometries = $derived.by(() =>
 		paths.map((path) => {
 			// Convert points to LineCurve3 array
-			const curves = new Array(path.length - 1)
+			const curves: LineCurve3[] = Array.from({length: path.length - 1})
 			for (let i = 0; i < path.length - 1; i++) {
 				curves[i] = new LineCurve3(path[i], path[i + 1])
 			}

@@ -56,10 +56,10 @@ export const scene: SceneConfig = {
 				generator: {
 					rnbo: 'feedback-synth',
 					params: {
-						cutoff: 2216.304347826087,
-						overblow: 1.13586956521739,
-						Q: 0.77010869565217,
-						harmonics: 7.84782608695652,
+						cutoff: 2216.304_347_826_087,
+						overblow: 1.135_869_565_217_39,
+						Q: 0.770_108_695_652_17,
+						harmonics: 7.847_826_086_956_52,
 						left_delay: 10,
 						fb: 0,
 						right_delay: 10

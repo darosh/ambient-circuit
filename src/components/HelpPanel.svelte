@@ -119,7 +119,7 @@
 			}
 		}
 		if (cur) lines.push(cur)
-		return lines.length ? lines : [text]
+		return lines.length > 0 ? lines : [text]
 	}
 
 	function truncate(text: string, maxChars: number): string {
@@ -211,8 +211,8 @@
 	const linkIndices = $derived.by(() => {
 		const arr = processedContent.map(() => -1)
 		let li = 0
-		for (let i = 0; i < processedContent.length; i++) {
-			if (processedContent[i].link) arr[i] = li++
+		for (const [i, element] of processedContent.entries()) {
+			if (element.link) arr[i] = li++
 		}
 		return arr
 	})

@@ -295,7 +295,7 @@ describe('Rail Switching API', () => {
 		expect(marble.config.resolvedRail.id).toBe('rail-2')
 
 		// Advance to beat 1 on rail2
-		advanceTempo(tempo, 1.0)
+		advanceTempo(tempo, 1)
 		const rail2Instruments = railDataList[1].instruments || []
 		updateMarble(marble, tempo, rail2Instruments, 'rail-2', 0, triggerHandler, sceneCtx)
 

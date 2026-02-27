@@ -6,19 +6,19 @@ const c = colorFactory()
 const globalBeatHandler = globalHandlerFactory((ctx) => {
 	const state = Math.floor(ctx.beat / 3) % 2
 
-	ctx.scene.rails.forEach((_m) => {
+	for (const _m of ctx.scene.rails) {
 		if (Math.random() < 0.9) {
-			return
+			continue
 		}
 
 		_m.state.active = !state
 		// _m.state.running = !state
-		ctx.scene.marbles.forEach((m) => {
+		for (const m of ctx.scene.marbles) {
 			if (m.state.railId === _m.id) {
 				m.state.running = !state
 			}
-		})
-	})
+		}
+	}
 })
 
 export const scene: SceneConfig = {

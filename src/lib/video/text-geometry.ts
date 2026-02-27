@@ -147,9 +147,9 @@ function buildCharacterPoints(
 	const isDash = char === '-'
 	const isDot = char === '.'
 
-	const n = isNumber ? Number.parseInt(char, 10) : char.charCodeAt(0) - 'A'.charCodeAt(0)
+	const n = isNumber ? Number.parseInt(char, 10) : (char.codePointAt(0) ?? 0) - ('A'.codePointAt(0) ?? 0)
 
-	const path = isNumber ? NUMBERS[n] : MISC[char] ? MISC[char] : LETTERS[n] || UNKNOWN
+	const path = isNumber ? NUMBERS[n] : (MISC[char] ?? LETTERS[n] ?? UNKNOWN)
 
 	// ---- Build points once ----
 
@@ -160,11 +160,10 @@ function buildCharacterPoints(
 	} else {
 		const expanded = expandPathString(path) as Vec3[]
 
-		points = new Array(expanded.length + 1)
+		points = Array.from({length: expanded.length + 1})
 		points[0] = new Vector3(0, 0, 0)
 
-		for (let i = 0; i < expanded.length; i++) {
-			const e = expanded[i]
+		for (const [i, e] of expanded.entries()) {
 			points[i + 1] = new Vector3(e[0], e[1], e[2])
 		}
 	}
@@ -205,7 +204,7 @@ function buildCharacterPoints(
 export function getTextPaths(text: string, spacing: number): Vector3[][] {
 	let cursorX = 0
 
-	return text.split('').map((char) => {
+	return [...text].map((char) => {
 		const { points, newCursorX } = buildCharacterPoints(char, cursorX, spacing)
 		cursorX = newCursorX
 		return points
@@ -215,7 +214,7 @@ export function getTextPaths(text: string, spacing: number): Vector3[][] {
 export function getTextGeometry(text: string, spacing: number) {
 	let cursorX = 0
 
-	return text.split('').map((char) => {
+	return [...text].map((char) => {
 		const { points, newCursorX } = buildCharacterPoints(char, cursorX, spacing)
 		cursorX = newCursorX
 

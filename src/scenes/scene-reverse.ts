@@ -39,9 +39,9 @@ export const scene: SceneConfig = {
 
 						prev = now
 
-						ctx.scene.marbles.forEach((_m) => {
+						for (const _m of ctx.scene.marbles) {
 							_m.state.reverse()
-						})
+						}
 					}
 				}
 			]

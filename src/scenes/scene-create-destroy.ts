@@ -75,7 +75,7 @@ export const scene: SceneConfig = {
 						const { marbles } = ctx.scene.rails[1].state
 
 						if (marbles.length >= 12) {
-							marbles.forEach((x) => x.state.destroy())
+							for (const x of marbles) x.state.destroy()
 						}
 					}
 				}
