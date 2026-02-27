@@ -1102,7 +1102,7 @@ function disposeNode(node: ToneAudioNode | Device): void {
 		// empty attempt using disposedRnbos instead
 		// createDevice({context: node.context, patcher: <IPatcher>engineCache.rnboCache?.get('empty')}, node).then()
 		// TODO: parameterChangeEvent subscription stops working after device reuse, investigate / report bug
-		// disposedRnbos.push(node)
+		disposedRnbos.push(node)
 	} else {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const n = node as any
