@@ -182,8 +182,8 @@
 	})
 	const beatPositions = $derived.by(() => {
 		if (!showBeats) return []
-		const result = computeBeatPositions(resolved.points)
-		for (const s of resolved.splits) {
+		const result = computeBeatPositions(displayPoints)
+		for (const s of displaySplits) {
 			for (const b of s.branches) {
 				const branchBeats = computeBeatPositions(b.points)
 				result.push(...branchBeats)
@@ -257,6 +257,8 @@
 	// Unified group transform (identity when no renderTransform)
 	const _identityQuat = new Quaternion()
 	const _zeroTuple: [number, number, number] = [0, 0, 0]
+	const _scratchVec = new Vector3()
+	const _beatOffset = new Vector3()
 	const groupPosition = $derived(renderTransform?.position ?? _zeroTuple)
 	const groupRotation = $derived(renderTransform?.rotation ?? _zeroTuple)
 	const groupQuaternion = $derived(renderTransform?.quaternion ?? _identityQuat)
@@ -265,6 +267,30 @@
 	const railNamePosition = $derived(
 		showNames ? computeRailNamePosition(displayPoints, displaySplits) : null
 	)
+
+	const beatLabelPositions = $derived.by(() => {
+		const gp = groupPosition
+		return visibleBeats.map((bp) => {
+			const isDownbeat = bp.beat === resolved.beatOffset
+			_scratchVec.copy(bp.position)
+			_scratchVec.applyQuaternion(groupQuaternion)
+			_scratchVec.x += gp[0] + 0.2
+			_scratchVec.y += gp[1] + (isDownbeat ? -0.2 : 0.2)
+			_scratchVec.z += gp[2]
+			return [_scratchVec.x, _scratchVec.y, _scratchVec.z] as [number, number, number]
+		})
+	})
+
+	const nameLabelPosition = $derived.by(() => {
+		if (!railNamePosition) return null
+		const gp = groupPosition
+		_beatOffset.copy(railNamePosition)
+		_beatOffset.applyQuaternion(groupQuaternion)
+		_beatOffset.x += gp[0]
+		_beatOffset.y += gp[1]
+		_beatOffset.z += gp[2]
+		return [_beatOffset.x, _beatOffset.y, _beatOffset.z] as [number, number, number]
+	})
 
 	const { camera } = useThrelte()
 	let nameGroup = $state<Group | undefined>()
@@ -382,14 +408,9 @@
 
 {#if visible && showBeats}
 	{#each visibleBeats as bp, bpIndex (bpIndex)}
-		{@const isDownbeat = bp.beat === resolved.beatOffset}
 		<T.Group
 			bind:ref={beatGroups[bpIndex]}
-			position={bp.position
-				.clone()
-				.applyQuaternion(groupQuaternion)
-				.add(new Vector3(0.2, isDownbeat ? -0.2 : 0.2, 0))
-				.toArray()}
+			position={beatLabelPositions[bpIndex]}
 		>
 			<Align>
 				<LineText
@@ -407,10 +428,10 @@
 	{/each}
 {/if}
 
-{#if visible && showNameDeferred && railNamePosition}
+{#if visible && showNameDeferred && nameLabelPosition}
 	<T.Group
 		bind:ref={nameGroup}
-		position={railNamePosition.clone().applyQuaternion(groupQuaternion).toArray()}
+		position={nameLabelPosition}
 	>
 		<Align>
 			<LineText
