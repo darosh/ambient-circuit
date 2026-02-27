@@ -101,6 +101,47 @@ describe('expandPathString', () => {
 		}
 	})
 
+	it('leading decimal multiplier', () => {
+		const result = expandPathString('l.4')
+		expect(result).toEqual([[-0.4, 0, 0]])
+	})
+
+	it('leading decimal tangent suffix', () => {
+		const result = expandPathString('lb.8')
+		expect(result).toEqual([{ p: [-1, 0, 0], round: 'both', tangent: 0.8 }])
+	})
+
+	it('leading decimal in complex token', () => {
+		const result = expandPathString('l.4u.8')
+		expect(result).toEqual([[-0.4, 0.8, 0]])
+	})
+
+	it('standalone number sets beat on previous Vec3 point', () => {
+		const result = expandPathString('llll 10 llll 11')
+		expect(result).toEqual([
+			{ p: [-4, 0, 0], beat: 10 },
+			{ p: [-8, 0, 0], beat: 11 }
+		])
+	})
+
+	it('standalone number sets beat on previous RailPointFull', () => {
+		const result = expandPathString('lb 10')
+		expect(result).toEqual([{ p: [-1, 0, 0], round: 'both', beat: 10 }])
+	})
+
+	it('standalone number with no previous point is ignored', () => {
+		const result = expandPathString('10 r')
+		expect(result).toEqual([[1, 0, 0]])
+	})
+
+	it('standalone float beat', () => {
+		const result = expandPathString('r 7.5 u')
+		expect(result).toEqual([
+			{ p: [1, 0, 0], beat: 7.5 },
+			[1, 1, 0]
+		])
+	})
+
 	it('all directions', () => {
 		const result = expandPathString('r l u d i o')
 		expect(result).toEqual([

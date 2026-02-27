@@ -22,8 +22,22 @@ export function expandPathString(
 	for (const token of str.trim().split(/\s+/)) {
 		if (!token) continue
 
-		// Check for rounding+tangent suffix: e.g. "rub1", "l3u2b0.5"
-		const roundTangentMatch = token.match(/^(.+)([tfb])(-?\d+(?:\.\d+)?)$/i)
+		// Standalone number = beat for previous point
+		if (/^-?(?:\d+(?:\.\d+)?|\.\d+)$/.test(token)) {
+			if (result.length > 0) {
+				const beat = parseFloat(token)
+				const last = result[result.length - 1]
+				if (Array.isArray(last)) {
+					result[result.length - 1] = { p: last as Vec3, beat }
+				} else {
+					(last as RailPointFull).beat = beat
+				}
+			}
+			continue
+		}
+
+		// Check for rounding+tangent suffix: e.g. "rub1", "l3u2b0.5", "lb.4"
+		const roundTangentMatch = token.match(/^(.+)([tfb])(-?(?:\d+(?:\.\d+)?|\.\d+))$/i)
 		// Check for just rounding suffix: e.g. "rub", "l3u2b"
 		const roundMatch = !roundTangentMatch ? token.match(/^(.+)([tfb])$/i) : null
 
@@ -38,7 +52,7 @@ export function expandPathString(
 			const ch = dirPart[i]
 			if (DIR[ch]) {
 				// Check if followed by a number
-				const numMatch = dirPart.slice(i + 1).match(/^(-?\d+(?:\.\d+)?)/)
+				const numMatch = dirPart.slice(i + 1).match(/^(-?(?:\d+(?:\.\d+)?|\.\d+))/)
 				if (numMatch) {
 					const n = parseFloat(numMatch[0])
 					const d = DIR[ch]

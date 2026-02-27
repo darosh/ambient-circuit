@@ -1,9 +1,6 @@
 # TODO (no AI)
 
-- [ ] fix rail names render transform
 - [ ] Dust?
-- [ ] expandPathString support leading decimal point
-- [ ] expandPathString standalone number is beat number
 - [ ] responsive side menu
 - [ ] responsive help line-breaking
 - [ ] use rails for camera path? or scene path? and keep the camera for user only
@@ -29,6 +26,9 @@
   - [x] scroll presets
   - [x] scroll chains
   - [ ] remove limit, use available space
+- [x] expandPathString support leading decimal point
+- [x] expandPathString standalone number is beat number
+- [x] fix rail names render transform
 - [x] help in hud, hotkeys, gh link
 - [x] default preset in bus and master
 - [x] replace the Perlin texture with procedural generation
