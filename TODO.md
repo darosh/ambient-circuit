@@ -1,5 +1,23 @@
 # TODO (no AI)
 
+- [ ] help in hud, hotkeys, gh link
+- [ ] fix rail names render transform
+- [ ] Dust?
+- [ ] expandPathString support leading decimal point
+- [ ] expandPathString standalone number is beat number
+- [ ] ParamPanel
+  - [x] analyzer in param panel
+  - [x] nav chars ◁▷△▽ or ◃▹▵▿
+  - [x] analyzer
+  - [ ] fix copy object
+  - [ ] +/- mouse over
+  - [ ] preset mouse over
+  - [ ] solo mouse over
+  - [ ] sliders click
+  - [ ] scroll / click tabs
+  - [ ] scroll / click presets
+  - [ ] scroll / click chains
+  - [ ] remove limit, use available space
 - [ ] use rails for camera path? or scene path? and keep the camera for user only
 - [ ] make RNBO synth
 - [ ] make RNBO karplus-strong synth https://rnbo.cycling74.com/explore/synth-building-blocks-intro
@@ -8,8 +26,9 @@
 - [ ] optimize notes scale update
 - [ ] `onSceneCtx={(ctx) => (sceneCtx = ctx)}` might be suboptimal
 - [ ] review need for lazy instruments load
-- [x] replace the Perlin texture with procedural generation
 - [ ] scene switch leaks
+- [x] default preset in bus and master
+- [x] replace the Perlin texture with procedural generation
 - [x] try <Float> on rails
 - [x] ball destruction and creation in handlers (should correctly and resource-efficiently reset on rewind)
 - [x] chord info in context for handlers, including individual notes, with recent history (const KEEP_PAST = 10)
