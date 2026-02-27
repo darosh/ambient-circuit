@@ -23,7 +23,6 @@
 
 	const BAR_COUNT = 16
 	const barGap = 0.05
-	const alignCount = 16
 
 	let groupRef = $state<Group | undefined>(undefined)
 	let barMeshes: Mesh[] = []
@@ -54,7 +53,7 @@
 	useTask(() => {
 		if (!analyzer || barMeshes.length === 0) return
 
-		const barWidth = (width - barGap * 15) / 16
+		const barWidth = (width - barGap * (BAR_COUNT - 1)) / BAR_COUNT
 		const binCount = type === 'meter' ? 1 : 16
 
 		try {
@@ -86,7 +85,7 @@
 				}
 
 				const h = Math.max(0.01, v * Math.abs(height))
-				mesh.position.x = (i - alignCount / 2) * (barWidth + barGap)
+				mesh.position.x = -width / 2 + barWidth / 2 + i * (barWidth + barGap)
 				mesh.position.y = (Math.sign(height) * h) / 2
 				mesh.scale.y = h
 				if (material && mesh.material !== material) mesh.material = material
