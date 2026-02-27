@@ -8,6 +8,7 @@
 	import AnalyserView from './AnalyserView.svelte'
 	import SequencerView, { type NoteEvent } from './SequencerView.svelte'
 	import ParamPanel from './ParamPanel.svelte'
+	import HelpPanel from './HelpPanel.svelte'
 	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
 	import GeoText from './GeoText.svelte'
 	import { easeInCubic, easeOutCubic } from '../lib/easing'
@@ -162,6 +163,7 @@
 	let showDescription = $state(true)
 	let showNotes = $state(true)
 	let showParams = $state(false)
+	let showHelp = $state(false)
 
 	// Single source-of-truth menu config — reorder freely, no index handling needed
 	const MENU_ITEMS: MenuItem[] = [
@@ -261,7 +263,7 @@
 			set: (v) => {
 				showStats = v
 			}
-		}
+		},
 		// {
 		// 	label: 'OUTLINE',
 		// 	lsKey: 'ac-wireframe',
@@ -271,6 +273,15 @@
 		// 		wireframe = v
 		// 	}
 		// }
+		{
+			label: 'HELP',
+			lsKey: 'ac-show-help',
+			def: false,
+			get: () => showHelp,
+			set: (v) => {
+				showHelp = v
+			}
+		}
 	]
 
 	onMount(() => {
@@ -324,6 +335,15 @@
 	function toggleMenuItem(idx: number, value?: boolean) {
 		const item = menuItems[idx]
 		const v = value ?? !item.get()
+		// exclusivity: close the other panel
+		if (item.lsKey === 'ac-show-params' && v) {
+			showHelp = false
+			writeLS('ac-show-help', false)
+		}
+		if (item.lsKey === 'ac-show-help' && v) {
+			showParams = false
+			writeLS('ac-show-params', false)
+		}
 		item.set(v)
 		writeLS(item.lsKey, v)
 		menuItemDic[item.label].animTime = TRANSPORT_FLASH
@@ -331,10 +351,12 @@
 
 	function toggleParams(val?: boolean) {
 		const ind = menuItems.findIndex((x) => x.lsKey === 'ac-show-params')
+		if (ind > -1) toggleMenuItem(ind, val)
+	}
 
-		if (ind > -1) {
-			toggleMenuItem(ind, val)
-		}
+	function toggleHelp(val?: boolean) {
+		const ind = menuItems.findIndex((x) => x.lsKey === 'ac-show-help')
+		if (ind > -1) toggleMenuItem(ind, val)
 	}
 
 	const menuItems = $derived(MENU_ITEMS.filter((item) => !item.condition || item.condition()))
@@ -694,7 +716,11 @@
 
 	function onkeydown(e: KeyboardEvent) {
 		if (e.code === 'Escape') {
-			toggleParams()
+			if (showHelp) {
+				toggleHelp(false)
+			} else {
+				toggleParams()
+			}
 		}
 	}
 
@@ -938,4 +964,8 @@
 		selectedChain={selectedAudioChain}
 		onTargetChange={onAudioTargetChange}
 	/>
+{/if}
+
+{#if showHelp}
+	<HelpPanel {baseColor} {sphereR} close={() => toggleHelp(false)} />
 {/if}
