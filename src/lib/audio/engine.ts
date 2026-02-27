@@ -918,10 +918,21 @@ async function loadRNBO(
 		// }
 	}
 
-	const device = await createDevice(
-		{ context: engine.ctx, patcher: patcher as IPatcher },
-		disposedRnbos.shift()
+	const ind = (disposedRnbos as unknown as { __patcher: unknown }[]).findIndex(
+		(d) => d.__patcher === patcher
 	)
+	let device
+
+	if (ind > -1) {
+		device = disposedRnbos[ind]
+		disposedRnbos.splice(ind, 1)
+	} else {
+		device = await createDevice(
+			{ context: engine.ctx, patcher: patcher as IPatcher }
+			// disposedRnbos.shift()
+		)
+		;(device as unknown as { __patcher: unknown }).__patcher = patcher
+	}
 
 	// Extract and apply presets
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
