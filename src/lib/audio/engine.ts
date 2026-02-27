@@ -218,7 +218,10 @@ async function buildBus(
 	// Subscribe RNBO fx to param changes
 	for (const f of fx) {
 		if (isDevice(f)) {
+			log('parameterChangeEvent.subscribe', f)
+			log('parameterChangeEvent.count', f.parameterChangeEvent.listenerCount)
 			f.parameterChangeEvent.subscribe((param) => {
+				log('parameterChangeEvent', param)
 				if (bus.onParamChange) bus.onParamChange(param.id, param.value)
 			})
 		}
@@ -367,7 +370,10 @@ export async function buildChain(
 		if (isDevice(f)) rnboNodes.push(f)
 	}
 	for (const node of rnboNodes) {
+		log('parameterChangeEvent.subscribe', node)
+		log('parameterChangeEvent.count', (node as Device).parameterChangeEvent.listenerCount)
 		;(node as Device).parameterChangeEvent.subscribe((param) => {
+			log('parameterChangeEvent', param)
 			if (chain.onParamChange) chain.onParamChange(param.id, param.value)
 		})
 	}
@@ -1095,7 +1101,8 @@ function disposeNode(node: ToneAudioNode | Device): void {
 
 		// empty attempt using disposedRnbos instead
 		// createDevice({context: node.context, patcher: <IPatcher>engineCache.rnboCache?.get('empty')}, node).then()
-		disposedRnbos.push(node)
+		// TODO: parameterChangeEvent subscription stops working after device reuse, investigate / report bug
+		// disposedRnbos.push(node)
 	} else {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const n = node as any
