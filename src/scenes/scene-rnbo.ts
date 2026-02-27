@@ -19,7 +19,7 @@ const b = () => (bc += 4)
 
 export const scene: SceneConfig = {
 	id: 'scene-rnbo',
-	description: 'Scene with sequencer\nin compact mode',
+	description: 'RNBO effects test',
 	bpm: 120,
 	camera: [20, 18, 12],
 	sequencerBeats: 16,
@@ -47,7 +47,7 @@ export const scene: SceneConfig = {
 			rail: {
 				id: 'synth',
 				offset: [0, 4.5, 0],
-				nodes: spiral({ rounds: 9, height: -4.5 })
+				nodes: [...spiral({ rounds: 9, height: -4.5 }), 'oo out u2.5 uit iiii ilt l2.5 lot']
 			},
 			color: '#00ffcc',
 			marbles: [{ type: 'ball', note: 33 }],
