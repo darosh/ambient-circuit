@@ -3,7 +3,7 @@
 	import { onMount, untrack } from 'svelte'
 	import type { Snippet } from 'svelte'
 	import { PostProcessing, type WebGPURenderer, type Scene } from 'three/webgpu'
-	import { pass, mix, max, vec3, uniform, add } from 'three/tsl'
+	import { pass, mix, max, vec3, uniform } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -66,16 +66,14 @@
 			// Apply HUD effects (blur, etc.)
 			if (hudFx) hudColor = hudFx(hudColor)
 
-			const hudMask = max(hudColor.r, max(hudColor.g, hudColor.b))
+			const hudMask = max(hudColor.r, hudColor.g, hudColor.b, hudColor.a)
 
 			if (hudBloom) {
-				// Composite HUD before bloom — both get bloomed
-				const combined = add(
-					scenePassColor.add(bloom(scenePassColor, s, r, th)),
-					hudColor.add(bloom(hudColor, s, r, th))
-				)
-
-				output = combined.mul(tintUniform)
+				const scpC = scenePassColor.add(bloom(scenePassColor, s, r, th))
+				const hudC = hudColor.add(bloom(hudColor, s, r, th))
+				const hudMaskBloom = hudC.a.smoothstep(1, 2.5).sub(0.01).mul(1.02).clamp(0, 1)
+				const mixed = mix(scpC, hudC, hudMaskBloom)
+				output = mixed.mul(tintUniform)
 			} else {
 				// Composite HUD after bloom — HUD stays crisp
 				output = mix(scenePassColor.add(bloomNode), hudColor, hudMask).mul(tintUniform)
