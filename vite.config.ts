@@ -9,7 +9,7 @@ export default defineConfig({
 	plugins: [svelte()],
 	base: './',
 	build: {
-		chunkSizeWarningLimit: 800,
+		chunkSizeWarningLimit: 900,
 		target: 'esnext',
 		outDir: './docs',
 		rollupOptions: {
