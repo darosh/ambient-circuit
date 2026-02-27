@@ -1,7 +1,6 @@
 # TODO (no AI)
 
 - [ ] Dust?
-- [ ] responsive side menu
 - [ ] responsive help line-breaking
 - [ ] use rails for camera path? or scene path? and keep the camera for user only
 - [ ] make RNBO synth
@@ -26,6 +25,7 @@
   - [x] scroll presets
   - [x] scroll chains
   - [ ] remove limit, use available space
+- [x] responsive side menu
 - [x] expandPathString support leading decimal point
 - [x] expandPathString standalone number is beat number
 - [x] fix rail names render transform
