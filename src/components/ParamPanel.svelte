@@ -108,6 +108,7 @@
 		startVal: number
 		fine: boolean
 	} | null>(null)
+	let didDrag = false
 
 	// --- Derived layout ---
 	const vpW = $derived($size.width / HUD_ZOOM)
@@ -623,11 +624,21 @@
 		const sensitivity = dragging.fine ? 0.1 : 1
 		const range = info.max - info.min
 		const dx = (event.clientX - dragging.startX) * sensitivity
+		if (Math.abs(dx) > 2) didDrag = true
 		const newVal = Math.max(info.min, Math.min(info.max, dragging.startVal + (dx / 200) * range))
 		setParam(dragging.nodeIndex, info.path, newVal)
 	}
 	function stopDrag() {
 		dragging = null
+	}
+	function startDragHitbox(e: { nativeEvent: PointerEvent }, info: ParamInfo, nodeIndex: number) {
+		didDrag = false
+		startDrag(e.nativeEvent, info, nodeIndex)
+	}
+	function onSliderClick(e: { point: { x: number } }, info: ParamInfo, nodeIndex: number, trackX: number) {
+		if (didDrag) { didDrag = false; return }
+		const norm2 = Math.max(0, Math.min(1, (e.point.x - trackX) / sliderW))
+		setParam(nodeIndex, info.path, info.min + norm2 * (info.max - info.min))
 	}
 
 	$effect(() => {
@@ -1155,11 +1166,9 @@
 						position={[trackX + sliderW / 2, textSize * 0.3, 0.03]}
 						scale={[sliderW + THUMB_R * sphereR, rowH, 0.1]}
 						onpointerdown={(e: { nativeEvent: PointerEvent }) =>
-							startDrag(e.nativeEvent, info, activeNode.nodeIndex)}
-						onclick={(e: { point: { x: number } }) => {
-							const norm2 = Math.max(0, Math.min(1, (e.point.x - trackX) / sliderW))
-							setParam(activeNode.nodeIndex, info.path, info.min + norm2 * (info.max - info.min))
-						}}
+							startDragHitbox(e, info, activeNode.nodeIndex)}
+						onclick={(e: { point: { x: number } }) =>
+							onSliderClick(e, info, activeNode.nodeIndex, trackX)}
 					>
 						<T.BoxGeometry args={[1, 1, 1]} />
 						<T.MeshBasicMaterial transparent opacity={DUMMY_OPACITY} depthWrite={false} />
