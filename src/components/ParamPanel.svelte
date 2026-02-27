@@ -41,8 +41,8 @@
 	// Char width ratio (same as HudScene)
 	export const CHAR_WIDTH = 0.69
 
-	// const LEFT = '◃'
-	// const RIGHT = '▹'
+	const LEFT = '◃'
+	const RIGHT = '▹'
 	const UP = '▵'
 	const DOWN = '▿'
 	const ELLIP = '…'
@@ -87,27 +87,20 @@
 		return s.length + (s.includes(ELLIP) ? 1 : 0)
 	}
 
-	function presetNames(preset: NodePresetInfo) {
-		let sum = 0
-
-		return getLabels(preset.names, tabsAvailW).map((name) => {
-			const x = sum
-			sum += name.length + 2
-
-			return {
-				name,
-				length: name.length,
-				x
-			}
-		})
-	}
-
 	// --- State ---
 	let target = $state<PanelTarget | null>(null)
 	let activeNodeIdx = $state(0)
 	let scrollOffset = $state(0)
 	let paramVersion = $state(0)
 	let soloMode = $state(false)
+	let soloHovered = $state(false)
+	let tabScrollOffset = $state(0)
+	let presetScrollOffset = $state(0)
+	let sidebarScrollOffset = $state(0)
+	let tabsHovered = false
+	let presetsHovered = false
+	let sidebarHovered = false
+	let localParamVersion = $state(0)
 	let dragging = $state<{
 		paramPath: string
 		nodeIndex: number
@@ -208,6 +201,20 @@
 	const sidebarFxPool: ReturnType<typeof buildImpactMaterial>[] = []
 	for (let i = 0; i < MAX_SIDEBAR; i++) {
 		sidebarFxPool.push(buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2))
+	}
+
+	// Per +/- button and preset materials
+	const MAX_PARAM_ROWS = 16
+	const plusFxPool: ReturnType<typeof buildImpactMaterial>[] = []
+	const minusFxPool: ReturnType<typeof buildImpactMaterial>[] = []
+	for (let i = 0; i < MAX_PARAM_ROWS; i++) {
+		plusFxPool.push(buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2))
+		minusFxPool.push(buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2))
+	}
+	const MAX_PRESETS = 16
+	const presetFxPool: ReturnType<typeof buildImpactMaterial>[] = []
+	for (let i = 0; i < MAX_PRESETS; i++) {
+		presetFxPool.push(buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2))
 	}
 
 	let copyFlash = 0
@@ -388,15 +395,24 @@
 
 	let prevTargetKey = ''
 	let prevParamVersion = -1
+	let prevLocalParamVersion = -1
 	let prevEngine: typeof engine = null
 
 	$effect(() => {
 		const tk = targetKey
 		const pv = paramVersion
+		const pvl = localParamVersion
 		const eng = engine
-		if (tk === prevTargetKey && pv === prevParamVersion && eng === prevEngine) return
+		if (
+			tk === prevTargetKey &&
+			pv === prevParamVersion &&
+			pvl === prevLocalParamVersion &&
+			eng === prevEngine
+		)
+			return
 		prevTargetKey = tk
 		prevParamVersion = pv
+		prevLocalParamVersion = pvl
 		prevEngine = eng
 		refreshNodes()
 	})
@@ -462,6 +478,75 @@
 		activeNode ? scrollOffset < activeNode.params.length - MAX_VISIBLE_PARAMS : false
 	)
 
+	// Reset tab scroll when nodes change
+	$effect(() => {
+		void nodes
+		tabScrollOffset = 0
+	})
+	// Reset preset scroll when active node changes
+	$effect(() => {
+		void activeNodeIdx
+		presetScrollOffset = 0
+	})
+
+	// Sidebar scroll
+	const MAX_VISIBLE_SIDEBAR = $derived(panelRows - 3)
+
+	const visibleSidebarItems = $derived(
+		sidebarItems.slice(sidebarScrollOffset, sidebarScrollOffset + MAX_VISIBLE_SIDEBAR)
+	)
+
+	const canScrollSidebarUp = $derived(sidebarScrollOffset > 0)
+
+	const canScrollSidebarDown = $derived(
+		sidebarScrollOffset + MAX_VISIBLE_SIDEBAR < sidebarItems.length
+	)
+
+	// Tab scroll
+
+	const visibleTabData = $derived.by(() => {
+		const total = nodes.length
+		if (total === 0) return { indices: [] as number[], showLeft: false, showRight: false }
+		const offset = tabScrollOffset
+		const showLeft = offset > 0
+		const avail = tabsAvailW - (showLeft ? 4 * charW : 0)
+		const indices: number[] = []
+		let usedW = 0
+		for (let i = offset; i < total; i++) {
+			const label = nodeTabLabels[i] ?? nodes[i].label
+			const w = (label.length + 2) * charW
+			const moreAfter = i + 1 < total
+			const rightReserve = moreAfter ? 4 * charW : 0
+			if (usedW + w + rightReserve > avail && indices.length > 0) break
+			indices.push(i)
+			usedW += w
+		}
+		const showRight = indices.length > 0 && offset + indices.length < total
+		return { indices, showLeft, showRight }
+	})
+
+	// Preset scroll
+	const visiblePresetData = $derived.by(() => {
+		const names = activeNode?.presets?.names ?? []
+		const total = names.length
+		if (total === 0) return { indices: [] as number[], showLeft: false, showRight: false }
+		const offset = presetScrollOffset
+		const showLeft = offset > 0
+		const avail = tabsAvailW - (showLeft ? 4 * charW : 0)
+		const indices: number[] = []
+		let usedW = 0
+		for (let i = offset; i < total; i++) {
+			const w = (names[i].length + 2) * charW
+			const moreAfter = i + 1 < total
+			const rightReserve = moreAfter ? 4 * charW : 0
+			if (usedW + w + rightReserve > avail && indices.length > 0) break
+			indices.push(i)
+			usedW += w
+		}
+		const showRight = indices.length > 0 && offset + indices.length < total
+		return { indices, showLeft, showRight }
+	})
+
 	// --- Actions ---
 	function setParam(nodeIndex: number, path: string, value: number) {
 		const chain = getChain()
@@ -477,6 +562,8 @@
 				n.paramValues[path] = value
 			}
 		}
+		// Force visibleParams to re-derive (Tone.js has no onParamChange callback)
+		localParamVersion++
 	}
 
 	const activePresetName = $derived(activeNode?.presets?.active)
@@ -556,10 +643,21 @@
 	// Scroll: wheel on canvas when panel is hovered
 	let panelHovered = false
 	function onWheel(e: WheelEvent) {
-		if (!panelHovered || !activeNode) return
+		if (!panelHovered) return
 		e.preventDefault()
-		const maxScroll = Math.max(0, activeNode.params.length - MAX_VISIBLE_PARAMS)
-		scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset + (e.deltaY > 0 ? 1 : -1)))
+		const dir = e.deltaY > 0 ? 1 : -1
+		if (tabsHovered) {
+			tabScrollOffset = Math.max(0, Math.min(nodes.length - 1, tabScrollOffset + dir))
+		} else if (presetsHovered) {
+			const maxP = Math.max(0, (activeNode?.presets?.names.length ?? 0) - 1)
+			presetScrollOffset = Math.max(0, Math.min(maxP, presetScrollOffset + dir))
+		} else if (sidebarHovered) {
+			const maxS = Math.max(0, sidebarItems.length - MAX_VISIBLE_SIDEBAR)
+			sidebarScrollOffset = Math.max(0, Math.min(maxS, sidebarScrollOffset + dir))
+		} else if (activeNode) {
+			const maxScroll = Math.max(0, activeNode.params.length - MAX_VISIBLE_PARAMS)
+			scrollOffset = Math.max(0, Math.min(maxScroll, scrollOffset + dir))
+		}
 	}
 	$effect(() => {
 		if (!visible) return
@@ -603,6 +701,16 @@
 			sidebarFxPool[i].emissiveColor.value.set(baseColor)
 			sidebarFxPool[i].impactColor.value.set(baseColor)
 		}
+		for (let i = 0; i < MAX_PARAM_ROWS; i++) {
+			plusFxPool[i].emissiveColor.value.set(baseColor)
+			plusFxPool[i].impactColor.value.set(baseColor)
+			minusFxPool[i].emissiveColor.value.set(baseColor)
+			minusFxPool[i].impactColor.value.set(baseColor)
+		}
+		for (let i = 0; i < MAX_PRESETS; i++) {
+			presetFxPool[i].emissiveColor.value.set(baseColor)
+			presetFxPool[i].impactColor.value.set(baseColor)
+		}
 	})
 
 	useTask((delta) => {
@@ -614,8 +722,8 @@
 			trigFlash = Math.max(0, trigFlash - delta)
 			trigFx.impactT.value = trigFlash / FLASH_DUR
 		}
-		// Solo: keep lit while active
-		soloFx.impactT.value = soloMode ? 0.6 : 0
+		// Solo: keep lit while active, respect hover
+		soloFx.impactT.value = soloMode ? 0.6 : soloHovered ? 0.3 : 0
 	})
 
 	function fmt(v: number): string {
@@ -652,6 +760,9 @@
 		trigFx.mat.dispose()
 		soloFx.mat.dispose()
 		for (const fx of sidebarFxPool) fx.mat.dispose()
+		for (const fx of plusFxPool) fx.mat.dispose()
+		for (const fx of minusFxPool) fx.mat.dispose()
+		for (const fx of presetFxPool) fx.mat.dispose()
 	})
 </script>
 
@@ -672,10 +783,11 @@
 		</T.Mesh>
 
 		<!-- Sidebar items -->
-		{#each sidebarItems as item, i (item.targetKey)}
+		{#each visibleSidebarItems as item, i (item.targetKey)}
+			{@const globalI = sidebarScrollOffset + i}
 			{@const iy = panelH / 2 - textMid - (i + 1) * rowH}
 			{@const isSelected = targetKey === item.targetKey}
-			{@const sFx = sidebarFxPool[i % MAX_SIDEBAR]}
+			{@const sFx = sidebarFxPool[globalI % MAX_SIDEBAR]}
 			{@const itemMat = isSelected ? activeFx.mat : sFx.mat}
 			<T.Group position={[-panelW / 2 + charW * 2, iy, 0.02]}>
 				<GeoText cache material={itemMat} text={item.label.toUpperCase()} size={textSize} />
@@ -696,18 +808,84 @@
 				</T.Mesh>
 			</T.Group>
 		{/each}
+		<!-- Sidebar hover zone (plane, no depth → doesn't block sliders) -->
+		<T.Mesh
+			position={[-panelW / 2 + sidebarW / 2, 0, 0.005]}
+			scale={[sidebarW, panelH, 1]}
+			onpointerenter={() => {
+				sidebarHovered = true
+			}}
+			onpointerleave={() => {
+				sidebarHovered = false
+			}}
+		>
+			<T.PlaneGeometry args={[1, 1]} />
+			<T.MeshBasicMaterial transparent opacity={DUMMY_OPACITY} depthWrite={false} />
+		</T.Mesh>
+		{#if canScrollSidebarUp}
+			{@const iy = -panelH / 2 - textMid + 2 * rowH}
+			<T.Group position={[-panelW / 2 + charW * 2, iy, 0.02]}>
+				<GeoText cache material={textFx.mat} text={UP} size={textSize} />
+			</T.Group>
+		{/if}
+		{#if canScrollSidebarDown}
+			{@const iy = -panelH / 2 - textMid + 2 * rowH}
+			<T.Group position={[-panelW / 2 + sidebarW - charW * 4, iy, 0.02]}>
+				<GeoText cache material={textFx.mat} text={DOWN} size={textSize} />
+			</T.Group>
+		{/if}
 
 		<!-- Header: node tabs (left) -->
 		{#if nodes.length > 0}
 			{@const headerY = panelH / 2 - textMid - rowH}
 			<T.Group position={[contentX, headerY, 0.02]}>
-				{#each nodes as node, ni (ni)}
+				<!-- Tab row hover zone -->
+				<T.Mesh
+					position.x={contentW / 2}
+					position.y={textSize * 0.4}
+					position.z={0.005}
+					scale={[contentW, rowH, 1]}
+					onpointerenter={() => {
+						tabsHovered = true
+					}}
+					onpointerleave={() => {
+						tabsHovered = false
+					}}
+				>
+					<T.PlaneGeometry args={[1, 1]} />
+					<T.MeshBasicMaterial transparent opacity={DUMMY_OPACITY} depthWrite={false} />
+				</T.Mesh>
+				{#if visibleTabData.showLeft}
+					<T.Group position={[0, 0, 0.01]}>
+						<GeoText cache material={textFx.mat} text={LEFT} size={textSize} />
+						<T.Mesh
+							position.x={charW * 0.5}
+							position.y={textSize * 0.4}
+							scale={[charW * 2, rowH, 0.1]}
+							onclick={() => {
+								tabScrollOffset = Math.max(0, tabScrollOffset - 1)
+							}}
+						>
+							<T.BoxGeometry args={[1, 1, 1]} />
+							<T.MeshBasicMaterial transparent opacity={DUMMY_OPACITY} depthWrite={false} />
+						</T.Mesh>
+					</T.Group>
+				{/if}
+				{@const tabsStartX = visibleTabData.showLeft ? 4 * charW : 0}
+				{#each visibleTabData.indices as ni (ni)}
+					{@const node = nodes[ni]}
 					{@const isActive = ni === activeNodeIdx}
 					{@const tFx = tabFxPool[ni % MAX_TABS]}
 					{@const tabMat = isActive ? activeFx.mat : tFx.mat}
 					{@const tabLabel = nodeTabLabels[ni] ?? node.label}
-					{@const tabX = nodeTabLabels.slice(0, ni).reduce((s, l) => s + (l.length + 2) * charW, 0)}
-					<T.Group position={[tabX, 0, 0]}>
+					{@const prevIndices = visibleTabData.indices.slice(0, visibleTabData.indices.indexOf(ni))}
+					{@const tabX =
+						tabsStartX +
+						prevIndices.reduce(
+							(s, j) => s + ((nodeTabLabels[j] ?? nodes[j].label).length + 2) * charW,
+							0
+						)}
+					<T.Group position={[tabX, 0, 0.01]}>
 						<GeoText cache material={tabMat} text={tabLabel.toUpperCase()} size={textSize} />
 						<T.Mesh
 							position.x={(tabLabel.length * charW) / 2}
@@ -729,6 +907,23 @@
 						</T.Mesh>
 					</T.Group>
 				{/each}
+				{#if visibleTabData.showRight}
+					{@const rightX = contentW - charW * 4}
+					<T.Group position={[rightX, 0, 0.01]}>
+						<GeoText cache material={textFx.mat} text={RIGHT} size={textSize} />
+						<T.Mesh
+							position.x={charW * 0.5}
+							position.y={textSize * 0.4}
+							scale={[charW * 2, rowH, 0.1]}
+							onclick={() => {
+								tabScrollOffset = Math.min(nodes.length - 1, tabScrollOffset + 1)
+							}}
+						>
+							<T.BoxGeometry args={[1, 1, 1]} />
+							<T.MeshBasicMaterial transparent opacity={DUMMY_OPACITY} depthWrite={false} />
+						</T.Mesh>
+					</T.Group>
+				{/if}
 			</T.Group>
 		{/if}
 
@@ -745,9 +940,11 @@
 						scale={[btn.label.length * charW, rowH, 0.1]}
 						onclick={() => btn.onclick()}
 						onpointerenter={() => {
+							if (btn.label === 'SOLO') soloHovered = true
 							btn.mat.impactT.value = 0.3
 						}}
 						onpointerleave={() => {
+							if (btn.label === 'SOLO') soloHovered = false
 							btn.mat.impactT.value = 0
 						}}
 					>
@@ -761,23 +958,65 @@
 		<!-- Presets -->
 		{#if activeNode?.presets}
 			{@const presets = activeNode.presets}
-			{@const presetsNs = presetNames(presets)}
 			<T.Group position={[contentX, contentY - textMid - rowH * 2, 0.02]}>
-				{#each presets.names as name, pi (`${pi}_${name}`)}
-					{@const isActivePreset = name === activePresetName}
-					<T.Group position={[presetsNs[pi].x * charW, 0, 0.05]}>
-						<GeoText
-							cache
-							material={isActivePreset ? activeFx.mat : textFx.mat}
-							text={presetsNs[pi].name.toUpperCase()}
-							size={textSize}
-						/>
+				<!-- Preset row hover zone -->
+				<T.Mesh
+					position.x={contentW / 2}
+					position.y={textSize * 0.4}
+					position.z={0.005}
+					scale={[contentW, rowH, 1]}
+					onpointerenter={() => {
+						presetsHovered = true
+					}}
+					onpointerleave={() => {
+						presetsHovered = false
+					}}
+				>
+					<T.PlaneGeometry args={[1, 1]} />
+					<T.MeshBasicMaterial transparent opacity={DUMMY_OPACITY} depthWrite={false} />
+				</T.Mesh>
+				{#if visiblePresetData.showLeft}
+					<T.Group position={[0, 0, 0.01]}>
+						<GeoText cache material={textFx.mat} text={LEFT} size={textSize} />
 						<T.Mesh
-							position.x={(presetsNs[pi].length * charW) / 2}
+							position.x={charW * 0.5}
+							position.y={textSize * 0.4}
+							scale={[charW * 2, rowH, 0.1]}
+							onclick={() => {
+								presetScrollOffset = Math.max(0, presetScrollOffset - 1)
+							}}
+						>
+							<T.BoxGeometry args={[1, 1, 1]} />
+							<T.MeshBasicMaterial transparent opacity={DUMMY_OPACITY} depthWrite={false} />
+						</T.Mesh>
+					</T.Group>
+				{/if}
+				{@const presetsStartX = visiblePresetData.showLeft ? 4 * charW : 0}
+				{#each visiblePresetData.indices as pi (pi)}
+					{@const name = presets.names[pi]}
+					{@const isActivePreset = name === activePresetName}
+					{@const pFx = presetFxPool[pi % MAX_PRESETS]}
+					{@const pMat = isActivePreset ? activeFx.mat : pFx.mat}
+					{@const prevPi = visiblePresetData.indices.slice(
+						0,
+						visiblePresetData.indices.indexOf(pi)
+					)}
+					{@const pX =
+						presetsStartX + prevPi.reduce((s, j) => s + (presets.names[j].length + 2) * charW, 0)}
+					<T.Group position={[pX, 0, 0.05]}>
+						<GeoText cache material={pMat} text={name.toUpperCase()} size={textSize} />
+						<T.Mesh
+							position.x={(name.length * charW) / 2}
 							position.y={textSize / 2}
-							scale={[presetsNs[pi].length * charW, textSize, 0.1]}
+							scale={[name.length * charW, rowH, 0.1]}
 							onclick={() => {
 								applyPreset(presets, name)
+							}}
+							onpointerenter={() => {
+								if (!isActivePreset) pFx.impactT.value = 0.3
+							}}
+							onpointerleave={() => {
+								pFx.impactT.value = 0
 							}}
 						>
 							<T.BoxGeometry args={[1, 1, 1]} />
@@ -785,6 +1024,23 @@
 						</T.Mesh>
 					</T.Group>
 				{/each}
+				{#if visiblePresetData.showRight}
+					{@const rightX = contentW - charW * 4}
+					<T.Group position={[rightX, 0, 0.01]}>
+						<GeoText cache material={textFx.mat} text={RIGHT} size={textSize} />
+						<T.Mesh
+							position.x={charW * 0.5}
+							position.y={textSize * 0.4}
+							scale={[charW * 2, rowH, 0.1]}
+							onclick={() => {
+								presetScrollOffset = Math.min(presets.names.length - 1, presetScrollOffset + 1)
+							}}
+						>
+							<T.BoxGeometry args={[1, 1, 1]} />
+							<T.MeshBasicMaterial transparent opacity={DUMMY_OPACITY} depthWrite={false} />
+						</T.Mesh>
+					</T.Group>
+				{/if}
 			</T.Group>
 		{/if}
 
@@ -848,12 +1104,23 @@
 							const s = e.nativeEvent.shiftKey ? step / 10 : step
 							setParam(activeNode.nodeIndex, info.path, Math.max(info.min, val - s))
 						}}
+						onpointerenter={() => {
+							minusFxPool[vi % MAX_PARAM_ROWS].impactT.value = 0.3
+						}}
+						onpointerleave={() => {
+							minusFxPool[vi % MAX_PARAM_ROWS].impactT.value = 0
+						}}
 					>
 						<T.BoxGeometry args={[1, 1, 1]} />
 						<T.MeshBasicMaterial transparent opacity={DUMMY_OPACITY} depthWrite={false} />
 					</T.Mesh>
 					<T.Group position={[btnMinusX + charW, 0, 0]}>
-						<GeoText cache material={textFx.mat} text="-" size={textSize} />
+						<GeoText
+							cache
+							material={minusFxPool[vi % MAX_PARAM_ROWS].mat}
+							text="-"
+							size={textSize}
+						/>
 					</T.Group>
 
 					<!-- + button -->
@@ -865,20 +1132,34 @@
 							const s = e.nativeEvent.shiftKey ? step / 10 : step
 							setParam(activeNode.nodeIndex, info.path, Math.min(info.max, val + s))
 						}}
+						onpointerenter={() => {
+							plusFxPool[vi % MAX_PARAM_ROWS].impactT.value = 0.3
+						}}
+						onpointerleave={() => {
+							plusFxPool[vi % MAX_PARAM_ROWS].impactT.value = 0
+						}}
 					>
 						<T.BoxGeometry args={[1, 1, 1]} />
 						<T.MeshBasicMaterial transparent opacity={DUMMY_OPACITY} depthWrite={false} />
 					</T.Mesh>
 					<T.Group position={[btnPlusX, textSize * -0.05, 0]}>
-						<GeoText cache material={textFx.mat} text="+" size={textSize} />
+						<GeoText
+							cache
+							material={plusFxPool[vi % MAX_PARAM_ROWS].mat}
+							text="+"
+							size={textSize}
+						/>
 					</T.Group>
-
 					<!-- Drag hitbox (over slider track) -->
 					<T.Mesh
 						position={[trackX + sliderW / 2, textSize * 0.3, 0.03]}
 						scale={[sliderW + THUMB_R * sphereR, rowH, 0.1]}
 						onpointerdown={(e: { nativeEvent: PointerEvent }) =>
 							startDrag(e.nativeEvent, info, activeNode.nodeIndex)}
+						onclick={(e: { point: { x: number } }) => {
+							const norm2 = Math.max(0, Math.min(1, (e.point.x - trackX) / sliderW))
+							setParam(activeNode.nodeIndex, info.path, info.min + norm2 * (info.max - info.min))
+						}}
 					>
 						<T.BoxGeometry args={[1, 1, 1]} />
 						<T.MeshBasicMaterial transparent opacity={DUMMY_OPACITY} depthWrite={false} />
@@ -889,14 +1170,14 @@
 
 		<!-- Scroll indicators -->
 		{#if canScrollUp}
-			{@const bottomY = -contentY + rowH - textMid}
+			{@const bottomY = -contentY + rowH * 2 - textMid}
 			<T.Group position={[contentX, bottomY, 0]}>
 				<GeoText cache material={textFx.mat} text={UP} size={textSize} />
 			</T.Group>
 		{/if}
 		{#if canScrollDown}
-			{@const bottomY = -contentY + rowH - textMid}
-			<T.Group position={[contentX + charW * 2, bottomY, 0.03]}>
+			{@const bottomY = -contentY + rowH * 2 - textMid}
+			<T.Group position={[contentX + (maxLabelChars - 2) * charW, bottomY, 0.03]}>
 				<GeoText cache material={textFx.mat} text={DOWN} size={textSize} />
 			</T.Group>
 		{/if}
