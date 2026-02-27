@@ -10,13 +10,13 @@
   - [x] nav chars ◁▷△▽ or ◃▹▵▿
   - [x] analyzer
   - [ ] fix copy object
-  - [ ] +/- mouse over
-  - [ ] preset mouse over
-  - [ ] solo mouse over
-  - [ ] sliders click
-  - [ ] scroll / click tabs
-  - [ ] scroll / click presets
-  - [ ] scroll / click chains
+  - [x] +/- mouse over
+  - [x] preset mouse over
+  - [x] solo mouse over
+  - [x] sliders click
+  - [x] scroll tabs
+  - [x] scroll presets
+  - [x] scroll chains
   - [ ] remove limit, use available space
 - [ ] use rails for camera path? or scene path? and keep the camera for user only
 - [ ] make RNBO synth
