@@ -1,10 +1,20 @@
 # TODO (no AI)
 
-- [ ] help in hud, hotkeys, gh link
 - [ ] fix rail names render transform
 - [ ] Dust?
 - [ ] expandPathString support leading decimal point
 - [ ] expandPathString standalone number is beat number
+- [ ] responsive side menu
+- [ ] responsive help line-breaking
+- [ ] use rails for camera path? or scene path? and keep the camera for user only
+- [ ] make RNBO synth
+- [ ] make RNBO karplus-strong synth https://rnbo.cycling74.com/explore/synth-building-blocks-intro
+- [ ] use gigaverb from examples
+- [ ] freeverb too
+- [ ] optimize notes scale update
+- [ ] `onSceneCtx={(ctx) => (sceneCtx = ctx)}` might be suboptimal
+- [ ] review need for lazy instruments load
+- [ ] scene switch leaks
 - [ ] ParamPanel
   - [x] analyzer in param panel
   - [x] nav chars ◁▷△▽ or ◃▹▵▿
@@ -18,15 +28,7 @@
   - [x] scroll presets
   - [x] scroll chains
   - [ ] remove limit, use available space
-- [ ] use rails for camera path? or scene path? and keep the camera for user only
-- [ ] make RNBO synth
-- [ ] make RNBO karplus-strong synth https://rnbo.cycling74.com/explore/synth-building-blocks-intro
-- [ ] use gigaverb from examples
-- [ ] freeverb too
-- [ ] optimize notes scale update
-- [ ] `onSceneCtx={(ctx) => (sceneCtx = ctx)}` might be suboptimal
-- [ ] review need for lazy instruments load
-- [ ] scene switch leaks
+- [x] help in hud, hotkeys, gh link
 - [x] default preset in bus and master
 - [x] replace the Perlin texture with procedural generation
 - [x] try <Float> on rails
