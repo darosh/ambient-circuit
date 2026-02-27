@@ -741,12 +741,48 @@ function listNodeParams(
 		if (isAudioParam) {
 			const u = param.units
 			if (u === 'decibels' || u === 'gain') {
-				if (min < -1e30) min = -60
-				if (max > 1e30) max = 60
+				if (min < -1e30 || param.minValue === undefined) min = -60
+				if (max > 1e30 || param.maxValue === undefined) max = 60
 			} else if (u === 'cents') {
 				if (min < -1e30) min = -240
 				if (max > 1e30) max = 240
+			} else if (u === 'positive') {
+				if (max > 1e30) max = 10000
+			} else if (u === 'frequency') {
+				if (min < -1e30) min = -10000
+				if (max > 1e30) max = 10000
 			}
+		} else if (path === 'volume') {
+			min = -60
+			max = 60
+		} else if (path === 'envelope.attack' || path === 'filterEnvelope.attack') {
+			min = 0
+			max = 2
+		} else if (path === 'envelope.decay' || path === 'filterEnvelope.decay') {
+			min = 0
+			max = 2
+		} else if (
+			path === 'envelope.release' ||
+			path === 'filterEnvelope.release' ||
+			path === 'modulation.release'
+		) {
+			min = 0
+			max = 5
+		} else if (path === 'filterEnvelope.exponent') {
+			min = 0
+			max = 10
+		} else if (path === 'filterEnvelope.octaves') {
+			min = 0
+			max = 12
+		} else if (path === 'filter.Q') {
+			min = 0
+			max = 10000
+		} else if (path === 'harmonicity') {
+			min = 0
+			max = 12
+		} else if (path === 'octaves') {
+			min = 0.5
+			max = 10
 		} else if (path === 'dampening') {
 			min = 0.1
 			max = 7000
