@@ -126,11 +126,14 @@
 	// eslint-disable-next-line svelte/prefer-writable-derived
 	let railVisibility = $state<boolean[]>([])
 	$effect(() => {
-		railVisibility = activeScene.rails.map(rail => rail.visible !== false)
+		railVisibility = activeScene.rails.map((rail) => rail.visible !== false)
 	})
 
 	$effect(() => {
-		if (globalThis.location.hash === `#${sceneId}` || globalThis.location.hash.startsWith(`#${sceneId}?`)) {
+		if (
+			globalThis.location.hash === `#${sceneId}` ||
+			globalThis.location.hash.startsWith(`#${sceneId}?`)
+		) {
 			return
 		}
 
@@ -188,9 +191,7 @@
 		{ code: 'KeyR', action: () => (autoRotate = !autoRotate) },
 		{
 			code: 'KeyE',
-			action: () =>
-				(easing =
-					easingNames[(easingNames.indexOf(easing) + 1) % easingNames.length])
+			action: () => (easing = easingNames[(easingNames.indexOf(easing) + 1) % easingNames.length])
 		},
 		{ code: 'KeyB', action: () => (showBeats = !showBeats) },
 		{ code: 'KeyN', action: () => (showNames = !showNames) },
