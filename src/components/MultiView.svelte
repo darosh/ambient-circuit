@@ -9,6 +9,7 @@
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 	import type { ViewConfig, ViewSplitConfig, BloomConfig } from '../lib/scene'
 	import type { SceneCtx, MarbleEntity, ViewSplitState } from '../lib/scene-ctx'
+	import { dirToAngles, dampAngleStep, dampStep } from '../lib/camera-math'
 
 	type OC = import('three/addons/controls/OrbitControls.js').OrbitControls
 	type MarbleOrVec = MarbleEntity | number | [number, number, number] | null
@@ -33,9 +34,19 @@
 
 	const postProcessing = new PostProcessing(renderer as unknown as WebGPURenderer)
 
-	// Per-split lerped positions (pre-allocated) — untrack: config is static after mount
-	const lerpCameraPos: Vector3[] = untrack(() => config.splits.map(() => new Vector3(5, 7, 9)))
-	const lerpTargetPos: Vector3[] = untrack(() => config.splits.map(() => new Vector3(0, 1, 0)))
+	// Per-split lerped target positions — seeded from static config values
+	const lerpTargetPos: Vector3[] = untrack(() => config.splits.map((s) =>
+		Array.isArray(s.target) ? new Vector3(s.target[0], s.target[1], s.target[2]) : new Vector3(0, 1, 0)
+	))
+	// World-space camera position (independent of target)
+	const _camWorldX: number[] = untrack(() => config.splits.map(() => 5))
+	const _camWorldY: number[] = untrack(() => config.splits.map(() => 7))
+	const _camWorldZ: number[] = untrack(() => config.splits.map(() => 9))
+	// Damped view angles (yaw=azimuth, pitch=elevation)
+	const _camYaw: number[] = untrack(() => config.splits.map(() => 0))
+	const _camPitch: number[] = untrack(() => config.splits.map(() => 0))
+	const _anglesInited: boolean[] = untrack(() => config.splits.map(() => false))
+	const _isDragging: boolean[] = untrack(() => config.splits.map(() => false))
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	let cameras = $state<CamRef[]>(untrack(() => config.splits.map((): any => void 0)))
@@ -48,11 +59,29 @@
 		config.splits.map((s) => ({
 			camera: s.camera ?? null,
 			target: s.target ?? null,
-			smoothness: s.smoothness ?? 8
+			smoothnessPos: s.smoothnessPos ?? 8,
+			smoothnessAngle: s.smoothnessAngle ?? 8,
+			smoothnessTarget: s.smoothnessTarget ?? 8,
+			maxAngleSpeed: s.maxAngleSpeed ?? Infinity
 		}))
 	)
 	untrack(() => {
 		sceneCtx.view = { splits: splitStates }
+	})
+
+	// Attach drag-start/end listeners to each OrbitControls instance
+	$effect(() => {
+		const ocs = orbitControls
+		const cleanups: (() => void)[] = []
+		for (const [i, oc] of ocs.entries()) {
+			if (!oc) continue
+			const onStart = () => { _isDragging[i] = true }
+			const onEnd = () => { _isDragging[i] = false }
+			oc.addEventListener('start', onStart)
+			oc.addEventListener('end', onEnd)
+			cleanups.push(() => { oc.removeEventListener('start', onStart); oc.removeEventListener('end', onEnd) })
+		}
+		return () => { for (const fn of cleanups) fn() }
 	})
 
 	// ── Helpers ───────────────────────────────────────────────────────────────
@@ -219,6 +248,12 @@
 
 	const _tmp = new Vector3()
 
+	// Scratch object for angle computation (reused per split per frame, no alloc)
+	const _tmpAngles = { yaw: 0, pitch: 0 }
+
+	const ANGLE_DEAD_ZONE = 0.0002  // ~0.01°, prevents micro-jitter oscillation
+	const MAX_PITCH = 1.55           // ~88°, prevents gimbal at poles
+
 	// Pre-allocated scratch vectors for resolveVec3 — never returned, only read via outPos/outTangent
 	const _resolvePos = new Vector3()
 	const _resolveTangent = new Vector3()
@@ -277,7 +312,7 @@
 		}
 	}
 
-	// Scratch vector for tangent offset
+	// Scratch vector for desired camera world position
 	const _desired = new Vector3()
 	// Track last aspect per camera to avoid redundant updateProjectionMatrix
 	const _lastAspect: number[] = untrack(() => config.splits.map(() => 0))
@@ -301,8 +336,27 @@
 
 				const splitCfg: ViewSplitConfig = config.splits[i]
 				const state = splitStates[i]
-				const alpha = 1 - Math.exp(-state.smoothness * delta * 60)
+				const alphaPos   = 1 - Math.exp(-state.smoothnessPos    * delta * 60)
+				const alphaAngle = 1 - Math.exp(-state.smoothnessAngle  * delta * 60)
+				const alphaTgt   = 1 - Math.exp(-state.smoothnessTarget * delta * 60)
 
+				// ── Target (look-at pivot) ─────────────────────────────────────
+				const tgtVal = (state.target == null ? (splitCfg.target ?? null) : state.target) as MarbleOrVec
+				const tgtResolved = resolveVec3(tgtVal, sceneCtx)
+				if (tgtResolved) {
+					if (!_anglesInited[i]) {
+						// Snap target on first frame so angle init uses the real target position
+						lerpTargetPos[i].copy(tgtResolved.pos)
+					} else if (lerpTargetPos[i].distanceToSquared(tgtResolved.pos) > 1e-6) {
+						lerpTargetPos[i].lerp(tgtResolved.pos, alphaTgt)
+					} else {
+						lerpTargetPos[i].copy(tgtResolved.pos)
+					}
+					const oc = orbitControls[i]
+					if (oc) oc.target.copy(lerpTargetPos[i])
+				}
+
+				// ── Camera world position (independent of target) ─────────────
 				const camVal = (state.camera == null ? (splitCfg.camera ?? null) : state.camera) as MarbleOrVec
 				const camResolved = resolveVec3(camVal, sceneCtx)
 				if (camResolved) {
@@ -311,16 +365,51 @@
 						_tmp.copy(camResolved.tangent).multiplyScalar(-splitCfg.tangentOffset)
 						_desired.add(_tmp)
 					}
-					lerpCameraPos[i].lerp(_desired, alpha)
-					cam.position.copy(lerpCameraPos[i])
-				}
 
-				const tgtVal = (state.target == null ? (splitCfg.target ?? null) : state.target) as MarbleOrVec
-				const tgtResolved = resolveVec3(tgtVal, sceneCtx)
-				if (tgtResolved) {
-					lerpTargetPos[i].lerp(tgtResolved.pos, alpha)
-					const oc = orbitControls[i]
-					if (oc) oc.target.copy(lerpTargetPos[i])
+					if (_isDragging[i]) {
+						// Sync world pos + angles from OC so resume lerps smoothly from drag position
+						_camWorldX[i] = cam.position.x
+						_camWorldY[i] = cam.position.y
+						_camWorldZ[i] = cam.position.z
+						const rdx = lerpTargetPos[i].x - _camWorldX[i]
+						const rdy = lerpTargetPos[i].y - _camWorldY[i]
+						const rdz = lerpTargetPos[i].z - _camWorldZ[i]
+						dirToAngles(rdx, rdy, rdz, _tmpAngles)
+						_camYaw[i] = _tmpAngles.yaw
+						_camPitch[i] = _tmpAngles.pitch
+					} else {
+						if (!_anglesInited[i]) {
+							// Snap position on first valid frame — no initial drift
+							_camWorldX[i] = _desired.x
+							_camWorldY[i] = _desired.y
+							_camWorldZ[i] = _desired.z
+						} else if (alphaPos > 0) {
+							_camWorldX[i] = dampStep(_camWorldX[i], _desired.x, alphaPos)
+							_camWorldY[i] = dampStep(_camWorldY[i], _desired.y, alphaPos)
+							_camWorldZ[i] = dampStep(_camWorldZ[i], _desired.z, alphaPos)
+						}
+
+						// ── View direction: from cam world pos toward lerped target ──
+						const dx = lerpTargetPos[i].x - _camWorldX[i]
+						const dy = lerpTargetPos[i].y - _camWorldY[i]
+						const dz = lerpTargetPos[i].z - _camWorldZ[i]
+						dirToAngles(dx, dy, dz, _tmpAngles)
+
+						if (_anglesInited[i]) {
+							const maxDelta = state.maxAngleSpeed * delta
+							_camYaw[i]   = dampAngleStep(_camYaw[i],   _tmpAngles.yaw,   alphaAngle, ANGLE_DEAD_ZONE, maxDelta)
+							_camPitch[i] = dampAngleStep(_camPitch[i], _tmpAngles.pitch, alphaAngle, ANGLE_DEAD_ZONE, maxDelta)
+							if (_camPitch[i] >  MAX_PITCH) _camPitch[i] =  MAX_PITCH
+							if (_camPitch[i] < -MAX_PITCH) _camPitch[i] = -MAX_PITCH
+						} else {
+							_camYaw[i] = _tmpAngles.yaw
+							_camPitch[i] = _tmpAngles.pitch
+							_anglesInited[i] = true
+						}
+
+						// Set position — OC handles lookAt via oc.target (set in target section)
+						cam.position.set(_camWorldX[i], _camWorldY[i], _camWorldZ[i])
+					}
 				}
 			}
 

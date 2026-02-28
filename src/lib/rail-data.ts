@@ -58,6 +58,7 @@ export type RailData = {
 	marbles?: MarbleData[] | false
 	instruments?: Instrument[]
 	runtime?: RailRuntime
+	visible?: false
 	active?: boolean
 	running?: boolean
 	/** Runtime animation function: fills `out` matrix in-place (no allocation) */

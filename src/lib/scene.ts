@@ -17,8 +17,14 @@ export type ViewSplitConfig = {
 	target?: number | Vector3Tuple
 	/** Shift camera back along -tangent for chase cam (metres) */
 	tangentOffset?: number
-	/** Lerp speed (default 8; higher = snappier) */
-	smoothness?: number
+	/** Camera position lerp speed (default 8; higher = snappier) */
+	smoothnessPos?: number
+	/** Look-at angle damp speed (default 8; higher = snappier) */
+	smoothnessAngle?: number
+	/** Look-at target pivot lerp speed (default 8; higher = snappier) */
+	smoothnessTarget?: number
+	/** Max angle change speed in rad/s (default Infinity = unlimited) */
+	maxAngleSpeed?: number
 	autoRotate?: boolean | number
 	fov?: number
 	/** Per-split bloom — true uses defaults, object overrides params, false/absent = no bloom */

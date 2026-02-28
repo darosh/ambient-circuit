@@ -149,7 +149,7 @@
 
 	// Init rail visibility (reset if length mismatch from scene change)
 	if (!railVisibility || railVisibility.length !== rails.length) {
-		railVisibility = rails.map(() => true)
+		railVisibility = rails.map(rail => rail.visible !== false)
 	}
 
 	// Create scene context once at mount (non-reactive to avoid loops)
