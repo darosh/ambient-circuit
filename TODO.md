@@ -1,7 +1,11 @@
 # TODO (no AI)
 
 - [ ] Dust?
-- [ ] use rails for camera path? or scene path? and keep the camera for user only
+- [ ] https://threlte.xyz/docs/reference/extras/fake-glow-material
+- [ ] https://threlte.xyz/docs/reference/extras/transitions
+- [ ] https://threlte.xyz/docs/reference/extras/uv-material
+- [ ] https://threlte.xyz/docs/reference/extras/wireframe
+- [ ] https://threlte.xyz/docs/reference/extras/use-fbo
 - [ ] make RNBO synth
 - [ ] make RNBO karplus-strong synth https://rnbo.cycling74.com/explore/synth-building-blocks-intro
 - [ ] use gigaverb from examples
@@ -24,6 +28,8 @@
   - [x] scroll presets
   - [x] scroll chains
   - [ ] remove limit, use available space
+- [x] try marbles as camera pos / target
+- [x] ~~use rails for camera path? or scene path? and keep the camera for user only~~
 - [x] responsive help line-breaking
 - [x] responsive side menu
 - [x] expandPathString support leading decimal point

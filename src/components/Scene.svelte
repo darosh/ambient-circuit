@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	import { untrack, onMount, onDestroy } from 'svelte'
+	import { untrack, onMount, onDestroy, type Snippet } from 'svelte'
+	import type { Scene as ThreeScene } from 'three/webgpu'
 	import { interactivity } from '@threlte/extras'
 	import RailView from './RailView.svelte'
 	import MarbleView from './MarbleView.svelte'
@@ -31,6 +32,7 @@
 		createMarbleConfigs
 	} from '../lib/helpers/scene-init'
 	import AudioView from './AudioView.svelte'
+	import MultiView from './MultiView.svelte'
 	import MidiSignalView from './MidiSignalView.svelte'
 	import { getMarbleSignalLinks, getMidiSignalLinks } from '../lib/helpers/links'
 	import Stars from './Stars.svelte'
@@ -67,7 +69,8 @@
 		selectedEntity = $bindable<SelectedEntity>(null),
 		selectedAudioChain = $bindable<AudioChain | undefined>(),
 		allAudioChains = $bindable<AudioChain[]>([]),
-		audioEngineRef = $bindable<AudioEngine | null>(null)
+		audioEngineRef = $bindable<AudioEngine | null>(null),
+		hudContent
 	}: {
 		scene: SceneConfig
 		showGrid?: boolean
@@ -92,6 +95,8 @@
 		selectedAudioChain?: AudioChain | undefined
 		allAudioChains?: AudioChain[]
 		audioEngineRef?: AudioEngine | null
+		/** HUD content snippet forwarded to MultiView (multi-view mode only) */
+		hudContent?: Snippet<[{ ref: ThreeScene }]>
 	} = $props()
 
 	// Init tempo state
@@ -560,6 +565,10 @@
 			/>
 		{/if}
 	{/each}{/if}
+
+{#if scene.view}
+	<MultiView config={scene.view} {sceneCtx}>{#snippet children(arg)}{@render hudContent?.(arg)}{/snippet}</MultiView>
+{/if}
 
 {#if audioInitialized && scene?.audioView !== false}
 	<AudioView

@@ -45,7 +45,52 @@
 	} = $props()
 
 	let sceneCtx = $state<SceneCtx | undefined>()
+
+	function onAudioTargetChange(target: string) {
+		if (!audioEngineRef) return
+		if (target.startsWith('chain:')) {
+			const idx = Number.parseInt(target.slice(6))
+			const chains = audioEngineRef.instanceChains.filter((ch: AudioChain) => ch.generator)
+			if (chains[idx]) selectedAudioChain = chains[idx]
+		} else {
+			selectedAudioChain = undefined
+		}
+	}
+
+
 </script>
+
+{#snippet hudContent(_arg?: unknown)}
+	{#if showHud && activeScene && tempo}
+		<HudScene
+			baseColor={activeScene?.audioView?.color}
+			engine={audioEngineRef}
+			defaultAnalyser={activeScene?.audioView?.defaultAnalyser}
+			title={sceneId.replace('scene-', '')}
+			currentBeat={tempo?.currentBeat ?? 0}
+			bpm={tempo?.config?.bpm ?? 120}
+			{tempo}
+			description={activeScene.description}
+			beatsVisible={activeScene.sequencerBeats}
+			sequencerMode={activeScene.sequencerMode}
+			sequencerColors={activeScene.sequencerColors}
+			{onPlay}
+			{onStop}
+			{onRewind}
+			{onNextScene}
+			{onPrevScene}
+			{freeze}
+			{sceneCtx}
+			{fps}
+			bind:showStats
+			bind:wireframe
+			bind:showAnalyzers
+			bind:showAudio
+			{selectedAudioChain}
+			{onAudioTargetChange}
+		/>
+	{/if}
+{/snippet}
 
 {#key sceneId}
 	<Scene
@@ -72,70 +117,37 @@
 		bind:selectedAudioChain
 		bind:allAudioChains
 		bind:audioEngineRef
+		hudContent={activeScene.view ? hudContent : undefined}
 	/>
 {/key}
 
-<T.PerspectiveCamera makeDefault position={activeScene.camera ?? [5, 7, 9]} fov={30}>
-	<OrbitControls
-		enableDamping
-		enabled={!panelState.pointerLock}
-		target={activeScene.target ?? [0, 1, 0]}
-		autoRotate={activeScene.rotatePlay && tempo.isPlaying ? true : autoRotate}
-		autoRotateSpeed={(activeScene.rotatePlay ?? 1) * 0.5}
-	/>
-</T.PerspectiveCamera>
+{#if !activeScene.view}
+	<T.PerspectiveCamera makeDefault position={activeScene.camera ?? [5, 7, 9]} fov={30}>
+		<OrbitControls
+			enableDamping
+			enabled={!panelState.pointerLock}
+			target={activeScene.target ?? [0, 1, 0]}
+			autoRotate={activeScene.rotatePlay && tempo.isPlaying ? true : autoRotate}
+			autoRotateSpeed={(activeScene.rotatePlay ?? 1) * 0.5}
+		/>
+	</T.PerspectiveCamera>
 
-<!-- Example: <BloomHud hudFx={fxPost ? (color) => gaussianBlur(color, null, 2) : undefined} -->
-
-{#if fxPost && !(showHud && activeScene && tempo)}
-	<Bloom strength={0.5} radius={0.2} threshold={0.5} tint={activeScene.tint} />
-{:else}
-	<BloomHud
-		enabled={fxPost}
-		hudBloom={fxPost && fxHud}
-		strength={0.5}
-		radius={0.2}
-		threshold={0.5}
-		tint={activeScene.tint}
-	>
-		{#if showHud && activeScene && tempo}
-			<HudScene
-				baseColor={activeScene?.audioView?.color}
-				engine={audioEngineRef}
-				defaultAnalyser={activeScene?.audioView?.defaultAnalyser}
-				title={sceneId.replace('scene-', '')}
-				currentBeat={tempo?.currentBeat ?? 0}
-				bpm={tempo?.config?.bpm ?? 120}
-				{tempo}
-				description={activeScene.description}
-				beatsVisible={activeScene.sequencerBeats}
-				sequencerMode={activeScene.sequencerMode}
-				sequencerColors={activeScene.sequencerColors}
-				{onPlay}
-				{onStop}
-				{onRewind}
-				{onNextScene}
-				{onPrevScene}
-				{freeze}
-				{sceneCtx}
-				{fps}
-				bind:showStats
-				bind:wireframe
-				bind:showAnalyzers
-				bind:showAudio
-				{selectedAudioChain}
-				onAudioTargetChange={(target) => {
-					if (!audioEngineRef) return
-					if (target.startsWith('chain:')) {
-						const idx = Number.parseInt(target.slice(6))
-						const chains = audioEngineRef.instanceChains.filter((ch: AudioChain) => ch.generator)
-						if (chains[idx]) selectedAudioChain = chains[idx]
-					} else {
-						// Bus/master selected — clear chain selection
-						selectedAudioChain = undefined
-					}
-				}}
-			/>
-		{/if}
-	</BloomHud>
+	<!-- Example: <BloomHud hudFx={fxPost ? (color) => gaussianBlur(color, null, 2) : undefined} -->
+	{#if fxPost && !(showHud && activeScene && tempo)}
+		<Bloom strength={0.5} radius={0.2} threshold={0.5} tint={activeScene.tint} />
+	{:else}
+		<BloomHud
+			enabled={fxPost}
+			hudBloom={fxPost && fxHud}
+			strength={0.5}
+			radius={0.2}
+			threshold={0.5}
+			tint={activeScene.tint}
+		>
+			{#snippet children(_arg)}
+				<!-- eslint-disable-next-line sonarjs/no-use-of-empty-return-value -->
+				{@render hudContent(_arg)}
+			{/snippet}
+		</BloomHud>
+	{/if}
 {/if}

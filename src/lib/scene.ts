@@ -4,6 +4,36 @@ import type { AudioChainConfig } from './audio/types'
 import type { SceneCtx, MarbleEntity, InstrumentEntity, RailEntity } from './scene-ctx'
 import { Vector3Tuple } from 'three/webgpu'
 
+export type BloomConfig = {
+	strength?: number
+	radius?: number
+	threshold?: number
+}
+
+export type ViewSplitConfig = {
+	/** Marble index or static [x,y,z] pos for camera; undefined = free orbit */
+	camera?: number | Vector3Tuple
+	/** Marble index or static [x,y,z] pos for look-at target; undefined = scene default */
+	target?: number | Vector3Tuple
+	/** Shift camera back along -tangent for chase cam (metres) */
+	tangentOffset?: number
+	/** Lerp speed (default 8; higher = snappier) */
+	smoothness?: number
+	autoRotate?: boolean | number
+	fov?: number
+	/** Per-split bloom — true uses defaults, object overrides params, false/absent = no bloom */
+	bloom?: boolean | BloomConfig
+}
+
+export type ViewConfig = {
+	layout: 'horizontal' | 'vertical' | 'grid'
+	splits: ViewSplitConfig[]
+	/** Default bloom applied to splits that have bloom:true */
+	bloomDefaults?: BloomConfig
+	/** Bloom the HUD overlay too (composites before bloom instead of after) */
+	hudBloom?: boolean
+}
+
 export type TriggerContext = InstrumentTriggerContext & {
 	// Current entities (clean access)
 	marble: MarbleEntity
@@ -82,6 +112,8 @@ export type SceneConfig = {
 	}
 	/** Factory to auto-assign render fn to rails without one */
 	renderFactory?: (railData: RailData, index: number) => RailData['render'] | undefined
+	/** Multi-view split-screen config */
+	view?: ViewConfig
 	audioView?:
 		| {
 				offset?: Vector3Tuple

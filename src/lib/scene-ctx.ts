@@ -1,4 +1,5 @@
 import type { Marble, MarbleConfig } from './marble'
+import type { Vector3Tuple } from 'three/webgpu'
 import type { Instrument } from './instrument'
 import type { RailData, MarbleData } from './rail-data'
 import type { ResolvedRail } from './rail'
@@ -80,10 +81,28 @@ export type SceneCtx = {
 		history: ChordInfo[]
 	}
 
+	/** Multi-view state (written by MultiView on mount) */
+	view?: ViewState
+
 	// Deferred marble mutations
 	pendingCreations: { railId: string; data: MarbleData }[]
 	// Snapshot for rewind (restore initial state)
 	initialSnapshot: { configs: MarbleConfig[]; railIndices: number[]; originalIds: number[] }
+}
+
+/**
+ * Per-split runtime state (writable by trigger handlers)
+ */
+export type ViewSplitState = {
+	/** MarbleEntity, marble index, static [x,y,z], or null (free/scene default) */
+	camera: MarbleEntity | number | Vector3Tuple | null
+	/** MarbleEntity, marble index, static [x,y,z], or null (free/scene default) */
+	target: MarbleEntity | number | Vector3Tuple | null
+	smoothness: number
+}
+
+export type ViewState = {
+	splits: ViewSplitState[]
 }
 
 /**

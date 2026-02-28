@@ -256,6 +256,19 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] SceneConfig: `sequencerMode` ('time'|'compact'), `sequencerBeats` (visible beat window)
   - [x] Animated analyser X position (easeInCubic, avoids label/analyser overlap)
   - [x] Freeze prop: pause HUD animations when not playing
+- [ ] Multi-view split-screen system
+  - [x] `ViewConfig` type: layout (horizontal/vertical/grid), per-split config
+  - [x] `ViewSplitConfig`: camera/target (marble index, static pos, or free orbit), tangentOffset, smoothness, fov, bloom
+  - [x] `ViewSplitState` runtime state in SceneCtx (`ctx.scene.view.splits[]`) — writable from trigger handlers
+  - [x] `MultiView.svelte` component: per-split PerspectiveCamera + OrbitControls, TSL compositing pipeline
+  - [x] Per-split bloom via TSL `bloom()` node, configurable per split with scene-level defaults
+  - [x] HUD overlay compositing (snippet forwarded from Wrap → Scene → MultiView)
+  - [x] Camera lerp: marble-following with tangent offset (chase cam), smoothness control
+  - [x] Active split detection via pointer position (only active split receives OrbitControls)
+  - [x] Zero-alloc per-frame updates (pre-allocated scratch vectors, cached rects, aspect-change gating)
+  - [x] Wrap.svelte: conditional camera/bloom/HUD rendering (multi-view vs single-view paths)
+  - [ ] Per-split tint
+  - [ ] Runtime split count changes
 
 **Next Steps:**
 
@@ -301,8 +314,8 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/instrument.ts     - Instrument type with MIDI properties
 /src/lib/instrument-state.ts - InstrumentState API (safe mutations with visible/active)
 /src/lib/rail-state.ts     - RailState API (safe mutations with visible/active/create)
-/src/lib/scene.ts          - TriggerContext, GlobalBeatContext, SceneConfig types
-/src/lib/scene-ctx.ts      - SceneCtx types (MarbleEntity/InstrumentEntity/RailEntity)
+/src/lib/scene.ts          - TriggerContext, GlobalBeatContext, SceneConfig, ViewConfig types
+/src/lib/scene-ctx.ts      - SceneCtx types (MarbleEntity/InstrumentEntity/RailEntity/ViewState/ViewSplitState)
 /src/lib/scene-ctx-factory.ts - createSceneCtx(), updateSceneCtx()
 /src/lib/easing.ts         - Easing functions (maath + custom)
 /src/lib/midi/midi.ts      - Web MIDI API wrapper (init, port selection, sendNote)
@@ -321,6 +334,7 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/components/HudScene.svelte     - HUD overlay content (ortho camera, transport, sequencer rows)
 /src/components/SequencerView.svelte - Per-chain note history (ring buffer, two display modes)
 /src/components/GeoText.svelte      - 3D text with optional geometry cache (module-level Map)
+/src/components/MultiView.svelte - Multi-view split-screen (per-split cameras, TSL compositing, bloom)
 /src/components/AudioView.svelte - 3D audio chain topology visualization
 /src/components/AnalyserView.svelte - per-frame VU meter (FFT/waveform/meter)
 /src/components/Scene.svelte    - 3D scene with rails, marbles, tempo integration
