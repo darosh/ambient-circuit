@@ -38,15 +38,14 @@
 	const lerpTargetPos: Vector3[] = untrack(() => config.splits.map((s) =>
 		Array.isArray(s.target) ? new Vector3(s.target[0], s.target[1], s.target[2]) : new Vector3(0, 1, 0)
 	))
-	// World-space camera position (independent of target)
-	const _camWorldX: number[] = untrack(() => config.splits.map(() => 5))
-	const _camWorldY: number[] = untrack(() => config.splits.map(() => 7))
-	const _camWorldZ: number[] = untrack(() => config.splits.map(() => 9))
+	// Spherical camera state relative to lerpTargetPos
+	const _camRadius: number[] = untrack(() => config.splits.map(() => Math.hypot(5, 7, 9)))
 	// Damped view angles (yaw=azimuth, pitch=elevation)
 	const _camYaw: number[] = untrack(() => config.splits.map(() => 0))
 	const _camPitch: number[] = untrack(() => config.splits.map(() => 0))
 	const _anglesInited: boolean[] = untrack(() => config.splits.map(() => false))
 	const _isDragging: boolean[] = untrack(() => config.splits.map(() => false))
+	const _dragTimeouts: ReturnType<typeof setTimeout>[] = untrack(() => config.splits.map(() => 0 as unknown as ReturnType<typeof setTimeout>))
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	let cameras = $state<CamRef[]>(untrack(() => config.splits.map((): any => void 0)))
@@ -69,17 +68,20 @@
 		sceneCtx.view = { splits: splitStates }
 	})
 
-	// Attach drag-start/end listeners to each OrbitControls instance
+	// Track OC movement via 'change' event (fires during drag AND post-drag damping).
+	// Keep _isDragging true until OC fully settles (no 'change' for 150ms).
 	$effect(() => {
 		const ocs = orbitControls
 		const cleanups: (() => void)[] = []
 		for (const [i, oc] of ocs.entries()) {
 			if (!oc) continue
-			const onStart = () => { _isDragging[i] = true }
-			const onEnd = () => { _isDragging[i] = false }
-			oc.addEventListener('start', onStart)
-			oc.addEventListener('end', onEnd)
-			cleanups.push(() => { oc.removeEventListener('start', onStart); oc.removeEventListener('end', onEnd) })
+			const onChange = () => {
+				_isDragging[i] = true
+				// clearTimeout(_dragTimeouts[i])
+				// _dragTimeouts[i] = setTimeout(() => { _isDragging[i] = false }, 150)
+			}
+			oc.addEventListener('change', onChange)
+			cleanups.push(() => { oc.removeEventListener('change', onChange); clearTimeout(_dragTimeouts[i]) })
 		}
 		return () => { for (const fn of cleanups) fn() }
 	})
@@ -367,48 +369,47 @@
 					}
 
 					if (_isDragging[i]) {
-						// Sync world pos + angles from OC so resume lerps smoothly from drag position
-						_camWorldX[i] = cam.position.x
-						_camWorldY[i] = cam.position.y
-						_camWorldZ[i] = cam.position.z
-						const rdx = lerpTargetPos[i].x - _camWorldX[i]
-						const rdy = lerpTargetPos[i].y - _camWorldY[i]
-						const rdz = lerpTargetPos[i].z - _camWorldZ[i]
+						// Sync spherical state from OC so resume lerps smoothly from drag position
+						const rdx = lerpTargetPos[i].x - cam.position.x
+						const rdy = lerpTargetPos[i].y - cam.position.y
+						const rdz = lerpTargetPos[i].z - cam.position.z
+						_camRadius[i] = Math.hypot(rdx, rdy, rdz) || _camRadius[i]
 						dirToAngles(rdx, rdy, rdz, _tmpAngles)
 						_camYaw[i] = _tmpAngles.yaw
 						_camPitch[i] = _tmpAngles.pitch
 					} else {
-						if (!_anglesInited[i]) {
-							// Snap position on first valid frame — no initial drift
-							_camWorldX[i] = _desired.x
-							_camWorldY[i] = _desired.y
-							_camWorldZ[i] = _desired.z
-						} else if (alphaPos > 0) {
-							_camWorldX[i] = dampStep(_camWorldX[i], _desired.x, alphaPos)
-							_camWorldY[i] = dampStep(_camWorldY[i], _desired.y, alphaPos)
-							_camWorldZ[i] = dampStep(_camWorldZ[i], _desired.z, alphaPos)
-						}
-
-						// ── View direction: from cam world pos toward lerped target ──
-						const dx = lerpTargetPos[i].x - _camWorldX[i]
-						const dy = lerpTargetPos[i].y - _camWorldY[i]
-						const dz = lerpTargetPos[i].z - _camWorldZ[i]
-						dirToAngles(dx, dy, dz, _tmpAngles)
+						// Convert desired world pos to spherical relative to lerped target
+						const dsx = lerpTargetPos[i].x - _desired.x
+						const dsy = lerpTargetPos[i].y - _desired.y
+						const dsz = lerpTargetPos[i].z - _desired.z
+						const desiredRadius = Math.hypot(dsx, dsy, dsz) || _camRadius[i]
+						dirToAngles(dsx, dsy, dsz, _tmpAngles)
 
 						if (_anglesInited[i]) {
+							// Lerp radius + angles along sphere surface — no pass-through
+							_camRadius[i] = dampStep(_camRadius[i], desiredRadius, alphaPos)
 							const maxDelta = state.maxAngleSpeed * delta
 							_camYaw[i]   = dampAngleStep(_camYaw[i],   _tmpAngles.yaw,   alphaAngle, ANGLE_DEAD_ZONE, maxDelta)
 							_camPitch[i] = dampAngleStep(_camPitch[i], _tmpAngles.pitch, alphaAngle, ANGLE_DEAD_ZONE, maxDelta)
 							if (_camPitch[i] >  MAX_PITCH) _camPitch[i] =  MAX_PITCH
 							if (_camPitch[i] < -MAX_PITCH) _camPitch[i] = -MAX_PITCH
 						} else {
+							// Snap spherical state on first valid frame
+							_camRadius[i] = desiredRadius
 							_camYaw[i] = _tmpAngles.yaw
 							_camPitch[i] = _tmpAngles.pitch
 							_anglesInited[i] = true
 						}
 
-						// Set position — OC handles lookAt via oc.target (set in target section)
-						cam.position.set(_camWorldX[i], _camWorldY[i], _camWorldZ[i])
+						// Reconstruct world pos from spherical: cam = target - radius * dir(yaw, pitch)
+						const cpcy = Math.cos(_camPitch[i]) * Math.cos(_camYaw[i])
+						const sp   = Math.sin(_camPitch[i])
+						const cpsy = Math.cos(_camPitch[i]) * Math.sin(_camYaw[i])
+						cam.position.set(
+							lerpTargetPos[i].x - _camRadius[i] * cpcy,
+							lerpTargetPos[i].y - _camRadius[i] * sp,
+							lerpTargetPos[i].z - _camRadius[i] * cpsy,
+						)
 					}
 				}
 			}
