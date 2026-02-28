@@ -3,16 +3,26 @@
 	import { OrbitControls } from '@threlte/extras'
 	import { onMount, untrack } from 'svelte'
 	import type { Snippet } from 'svelte'
-	import { Vector3, PerspectiveCamera as ThreePerspectiveCamera, PostProcessing } from 'three/webgpu'
+	import {
+		Vector3,
+		PerspectiveCamera as ThreePerspectiveCamera,
+		PostProcessing
+	} from 'three/webgpu'
 	import type { WebGPURenderer, Scene } from 'three/webgpu'
 	import { pass, select, screenUV, mix, max, vec2 } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 	import type { ViewConfig, ViewSplitConfig, BloomConfig } from '../lib/scene'
 	import type { SceneCtx } from '../lib/scene-ctx'
 	import {
-		initSplitStates, initCamStates, initLerpTargets,
-		updateRects, resolveMarbleOrVec, updateCameraForSplit, updateTargetLerp,
-		type SplitRect, type ResolvedTarget,
+		initSplitStates,
+		initCamStates,
+		initLerpTargets,
+		updateRects,
+		resolveMarbleOrVec,
+		updateCameraForSplit,
+		updateTargetLerp,
+		type SplitRect,
+		type ResolvedTarget
 	} from '../lib/multi-view'
 
 	type OC = import('three/addons/controls/OrbitControls.js').OrbitControls
@@ -38,46 +48,60 @@
 	const postProcessing = new PostProcessing(renderer as unknown as WebGPURenderer)
 
 	const lerpTargetPos = untrack(() => initLerpTargets(config.splits))
-	const camStates     = untrack(() => initCamStates(config.splits))
-	const splitStates   = untrack(() => initSplitStates(config.splits))
+	const camStates = untrack(() => initCamStates(config.splits))
+	const splitStates = untrack(() => initSplitStates(config.splits))
 
-	untrack(() => { sceneCtx.view = { splits: splitStates } })
+	untrack(() => {
+		sceneCtx.view = { splits: splitStates }
+	})
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
-	let cameras      = $state<CamRef[]>(untrack(() => config.splits.map((): any => void 0)))
+	let cameras = $state<CamRef[]>(untrack(() => config.splits.map((): any => void 0)))
 	let orbitControls = $state<OCRef[]>(untrack(() => config.splits.map((): any => void 0)))
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
 	let activeSplitIndex = $state(0)
 
-	// Track OC movement — set isDragging, reset after 150ms of inactivity
-	// $effect(() => {
-	// 	const ocs = orbitControls
-	// 	const cleanups: (() => void)[] = []
-	// 	for (const [i, oc] of ocs.entries()) {
-	// 		if (!oc) continue
-	// 		const cs = camStates[i]
-	// 		const onChange = () => {
-	// 			cs.isDragging = true
-	// 			if (cs.dragTimeoutId !== null) clearTimeout(cs.dragTimeoutId)
-	// 			cs.dragTimeoutId = setTimeout(() => { cs.isDragging = false; cs.dragTimeoutId = null }, 150)
-	// 		}
-	// 		oc.addEventListener('change', onChange)
-	// 		cleanups.push(() => {
-	// 			oc.removeEventListener('change', onChange)
-	// 			if (cs.dragTimeoutId !== null) { clearTimeout(cs.dragTimeoutId); cs.dragTimeoutId = null }
-	// 		})
-	// 	}
-	// 	return () => { for (const fn of cleanups) fn() }
-	// })
+	// Track OC user interaction via start/end events
+	$effect(() => {
+		const ocs = orbitControls
+		const cleanups: (() => void)[] = []
+		for (const [i, oc] of ocs.entries()) {
+			if (!oc) continue
+			const cs = camStates[i]
+			const onStart = () => {
+				cs.isDragging = true
+			}
+			const onEnd = () => {
+				cs.isDragging = false
+			}
+			oc.addEventListener('start', onStart)
+			oc.addEventListener('end', onEnd)
+			cleanups.push(() => {
+				oc.removeEventListener('start', onStart)
+				oc.removeEventListener('end', onEnd)
+			})
+		}
+		return () => {
+			for (const fn of cleanups) fn()
+		}
+	})
 
 	// ── TSL pipeline helpers ───────────────────────────────────────────────────
 
-	function resolveBloom(cfg: ViewSplitConfig['bloom'], defaults: BloomConfig | undefined): BloomConfig | null {
+	function resolveBloom(
+		cfg: ViewSplitConfig['bloom'],
+		defaults: BloomConfig | undefined
+	): BloomConfig | null {
 		if (!cfg) return null
 		const d = defaults ?? {}
-		if (cfg === true) return { strength: d.strength ?? 0.5, radius: d.radius ?? 0.2, threshold: d.threshold ?? 0.5 }
-		return { strength: cfg.strength ?? d.strength ?? 0.5, radius: cfg.radius ?? d.radius ?? 0.2, threshold: cfg.threshold ?? d.threshold ?? 0.5 }
+		if (cfg === true)
+			return { strength: d.strength ?? 0.5, radius: d.radius ?? 0.2, threshold: d.threshold ?? 0.5 }
+		return {
+			strength: cfg.strength ?? d.strength ?? 0.5,
+			radius: cfg.radius ?? d.radius ?? 0.2,
+			threshold: cfg.threshold ?? d.threshold ?? 0.5
+		}
 	}
 
 	function splitRemapUV(layout: ViewConfig['layout'], n: number, i: number) {
@@ -87,7 +111,10 @@
 		const row = Math.floor(i / cols)
 		if (layout === 'horizontal') return vec2(screenUV.x.sub(i / n).mul(n), screenUV.y)
 		if (layout === 'vertical') return vec2(screenUV.x, screenUV.y.sub((n - 1 - i) / n).mul(n))
-		return vec2(screenUV.x.sub(col / cols).mul(cols), screenUV.y.sub((rows - 1 - row) / rows).mul(rows))
+		return vec2(
+			screenUV.x.sub(col / cols).mul(cols),
+			screenUV.y.sub((rows - 1 - row) / rows).mul(rows)
+		)
 	}
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
@@ -95,12 +122,14 @@
 		if (n === 1) return nodes[0]
 		if (layout === 'horizontal') {
 			let result = nodes[n - 1]
-			for (let i = n - 2; i >= 0; i--) result = select(screenUV.x.lessThan((i + 1) / n), nodes[i], result)
+			for (let i = n - 2; i >= 0; i--)
+				result = select(screenUV.x.lessThan((i + 1) / n), nodes[i], result)
 			return result
 		}
 		if (layout === 'vertical') {
 			let result = nodes[n - 1]
-			for (let i = n - 2; i >= 0; i--) result = select(screenUV.y.greaterThan((n - 1 - i) / n), nodes[i], result)
+			for (let i = n - 2; i >= 0; i--)
+				result = select(screenUV.y.greaterThan((n - 1 - i) / n), nodes[i], result)
 			return result
 		}
 		const cols = Math.ceil(Math.sqrt(n))
@@ -111,12 +140,14 @@
 			let rowResult = nodes[Math.min(base + cols - 1, n - 1)]
 			for (let col = cols - 2; col >= 0; col--) {
 				const idx = base + col
-				if (idx < n) rowResult = select(screenUV.x.lessThan((col + 1) / cols), nodes[idx], rowResult)
+				if (idx < n)
+					rowResult = select(screenUV.x.lessThan((col + 1) / cols), nodes[idx], rowResult)
 			}
 			rowNodes.push(rowResult)
 		}
 		let result = rowNodes[rows - 1]
-		for (let row = rows - 2; row >= 0; row--) result = select(screenUV.y.greaterThan((rows - 1 - row) / rows), rowNodes[row], result)
+		for (let row = rows - 2; row >= 0; row--)
+			result = select(screenUV.y.greaterThan((rows - 1 - row) / rows), rowNodes[row], result)
 		return result
 	}
 	/* eslint-enable @typescript-eslint/no-explicit-any */
@@ -176,7 +207,9 @@
 
 	// ── Viewport rects ─────────────────────────────────────────────────────────
 
-	const _rects: SplitRect[] = untrack(() => config.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 })))
+	const _rects: SplitRect[] = untrack(() =>
+		config.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
+	)
 	const _lastSize = { w: 0, h: 0 }
 
 	function onPointerMove(e: PointerEvent) {
@@ -206,13 +239,15 @@
 
 	// ── Per-frame: aspect update + camera follow + render ──────────────────────
 
-	const _tmp         = new Vector3()
-	const _desired     = new Vector3()
+	const _tmp = new Vector3()
+	const _desired = new Vector3()
 	const _lastAspect: number[] = untrack(() => config.splits.map(() => 0))
 
 	// Pre-allocated resolve scratch (reused per split per frame)
 	const _resolveOut: ResolvedTarget = {
-		pos: new Vector3(), tangent: new Vector3(), hasTangent: false,
+		pos: new Vector3(),
+		tangent: new Vector3(),
+		hasTangent: false
 	}
 
 	useTask(
@@ -238,7 +273,9 @@
 				const alphaTgt = 1 - Math.exp(-state.smoothnessTarget * delta * 60)
 
 				// ── Target (look-at pivot) ───────────────────────────────────
-				const tgtVal = (state.target == null ? (splitCfg.target ?? null) : state.target) as MarbleOrVec
+				const tgtVal = (
+					state.target == null ? (splitCfg.target ?? null) : state.target
+				) as MarbleOrVec
 				const tgtResolved = resolveMarbleOrVec(tgtVal, sceneCtx, _resolveOut)
 				if (tgtResolved) {
 					updateTargetLerp(lerpTargetPos[i], tgtResolved.pos, alphaTgt, cs.inited)
@@ -247,7 +284,9 @@
 				}
 
 				// ── Camera world position ────────────────────────────────────
-				const camVal = (state.camera == null ? (splitCfg.camera ?? null) : state.camera) as MarbleOrVec
+				const camVal = (
+					state.camera == null ? (splitCfg.camera ?? null) : state.camera
+				) as MarbleOrVec
 				const camResolved = resolveMarbleOrVec(camVal, sceneCtx, _resolveOut)
 				if (camResolved) {
 					_desired.copy(camResolved.pos)
