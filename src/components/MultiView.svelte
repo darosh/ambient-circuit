@@ -8,11 +8,15 @@
 	import { pass, select, screenUV, mix, max, vec2 } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 	import type { ViewConfig, ViewSplitConfig, BloomConfig } from '../lib/scene'
-	import type { SceneCtx, MarbleEntity, ViewSplitState } from '../lib/scene-ctx'
-	import { dirToAngles, dampAngleStep, dampStep } from '../lib/camera-math'
+	import type { SceneCtx } from '../lib/scene-ctx'
+	import {
+		initSplitStates, initCamStates, initLerpTargets,
+		updateRects, resolveMarbleOrVec, updateCameraForSplit, updateTargetLerp,
+		type SplitRect, type ResolvedTarget,
+	} from '../lib/multi-view'
 
 	type OC = import('three/addons/controls/OrbitControls.js').OrbitControls
-	type MarbleOrVec = MarbleEntity | number | [number, number, number] | null
+	type MarbleOrVec = number | [number, number, number] | null
 	type CamRef = ThreePerspectiveCamera | undefined
 	type OCRef = OC | undefined
 
@@ -28,65 +32,46 @@
 
 	const { renderer, scene, renderStage, autoRender, size } = useThrelte()
 
-	// Separate scene + camera context for HUD overlay
 	const { scene: hudScene } = createSceneContext()
 	const { camera: hudCamera } = createCameraContext()
 
 	const postProcessing = new PostProcessing(renderer as unknown as WebGPURenderer)
 
-	// Per-split lerped target positions — seeded from static config values
-	const lerpTargetPos: Vector3[] = untrack(() => config.splits.map((s) =>
-		Array.isArray(s.target) ? new Vector3(s.target[0], s.target[1], s.target[2]) : new Vector3(0, 1, 0)
-	))
-	// Spherical camera state relative to lerpTargetPos
-	const _camRadius: number[] = untrack(() => config.splits.map(() => Math.hypot(5, 7, 9)))
-	// Damped view angles (yaw=azimuth, pitch=elevation)
-	const _camYaw: number[] = untrack(() => config.splits.map(() => 0))
-	const _camPitch: number[] = untrack(() => config.splits.map(() => 0))
-	const _anglesInited: boolean[] = untrack(() => config.splits.map(() => false))
-	const _isDragging: boolean[] = untrack(() => config.splits.map(() => false))
-	const _dragTimeouts: ReturnType<typeof setTimeout>[] = untrack(() => config.splits.map(() => 0 as unknown as ReturnType<typeof setTimeout>))
+	const lerpTargetPos = untrack(() => initLerpTargets(config.splits))
+	const camStates     = untrack(() => initCamStates(config.splits))
+	const splitStates   = untrack(() => initSplitStates(config.splits))
+
+	untrack(() => { sceneCtx.view = { splits: splitStates } })
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
-	let cameras = $state<CamRef[]>(untrack(() => config.splits.map((): any => void 0)))
+	let cameras      = $state<CamRef[]>(untrack(() => config.splits.map((): any => void 0)))
 	let orbitControls = $state<OCRef[]>(untrack(() => config.splits.map((): any => void 0)))
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
 	let activeSplitIndex = $state(0)
 
-	const splitStates: ViewSplitState[] = untrack(() =>
-		config.splits.map((s) => ({
-			camera: s.camera ?? null,
-			target: s.target ?? null,
-			smoothnessPos: s.smoothnessPos ?? 8,
-			smoothnessAngle: s.smoothnessAngle ?? 8,
-			smoothnessTarget: s.smoothnessTarget ?? 8,
-			maxAngleSpeed: s.maxAngleSpeed ?? Infinity
-		}))
-	)
-	untrack(() => {
-		sceneCtx.view = { splits: splitStates }
-	})
-
-	// Track OC movement via 'change' event (fires during drag AND post-drag damping).
-	// Keep _isDragging true until OC fully settles (no 'change' for 150ms).
+	// Track OC movement — set isDragging, reset after 150ms of inactivity
 	$effect(() => {
 		const ocs = orbitControls
 		const cleanups: (() => void)[] = []
 		for (const [i, oc] of ocs.entries()) {
 			if (!oc) continue
+			const cs = camStates[i]
 			const onChange = () => {
-				_isDragging[i] = true
-				// clearTimeout(_dragTimeouts[i])
-				// _dragTimeouts[i] = setTimeout(() => { _isDragging[i] = false }, 150)
+				cs.isDragging = true
+				// if (cs.dragTimeoutId !== null) clearTimeout(cs.dragTimeoutId)
+				// cs.dragTimeoutId = setTimeout(() => { cs.isDragging = false; cs.dragTimeoutId = null }, 150)
 			}
 			oc.addEventListener('change', onChange)
-			cleanups.push(() => { oc.removeEventListener('change', onChange); clearTimeout(_dragTimeouts[i]) })
+			cleanups.push(() => {
+				oc.removeEventListener('change', onChange)
+				if (cs.dragTimeoutId !== null) { clearTimeout(cs.dragTimeoutId); cs.dragTimeoutId = null }
+			})
 		}
 		return () => { for (const fn of cleanups) fn() }
 	})
 
-	// ── Helpers ───────────────────────────────────────────────────────────────
+	// ── TSL pipeline helpers ───────────────────────────────────────────────────
 
 	function resolveBloom(cfg: ViewSplitConfig['bloom'], defaults: BloomConfig | undefined): BloomConfig | null {
 		if (!cfg) return null
@@ -95,45 +80,29 @@
 		return { strength: cfg.strength ?? d.strength ?? 0.5, radius: cfg.radius ?? d.radius ?? 0.2, threshold: cfg.threshold ?? d.threshold ?? 0.5 }
 	}
 
-	/**
-	 * Returns a TSL UV node that remaps the split's canvas region [lo,hi] → [0,1].
-	 * Must be called inside buildPipeline (TSL context).
-	 */
 	function splitRemapUV(layout: ViewConfig['layout'], n: number, i: number) {
 		const cols = Math.ceil(Math.sqrt(n))
 		const rows = Math.ceil(n / cols)
 		const col = i % cols
 		const row = Math.floor(i / cols)
-
-		if (layout === 'horizontal') {
-			// screenUV.x in [i/n, (i+1)/n] → [0,1]
-			return vec2(screenUV.x.sub(i / n).mul(n), screenUV.y)
-		}
-		if (layout === 'vertical') {
-			// Split 0 = CSS top = screenUV.y ∈ [(n-1)/n, 1]; split i ∈ [(n-1-i)/n, (n-i)/n]
-			return vec2(screenUV.x, screenUV.y.sub((n - 1 - i) / n).mul(n))
-		}
-		// grid: top-to-bottom rows, left-to-right cols
+		if (layout === 'horizontal') return vec2(screenUV.x.sub(i / n).mul(n), screenUV.y)
+		if (layout === 'vertical') return vec2(screenUV.x, screenUV.y.sub((n - 1 - i) / n).mul(n))
 		return vec2(screenUV.x.sub(col / cols).mul(cols), screenUV.y.sub((rows - 1 - row) / rows).mul(rows))
 	}
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	function buildComposite(nodes: any[], layout: ViewConfig['layout'], n: number): any {
 		if (n === 1) return nodes[0]
-
 		if (layout === 'horizontal') {
 			let result = nodes[n - 1]
 			for (let i = n - 2; i >= 0; i--) result = select(screenUV.x.lessThan((i + 1) / n), nodes[i], result)
 			return result
 		}
-
 		if (layout === 'vertical') {
-			// Split 0 at top (high screenUV.y)
 			let result = nodes[n - 1]
 			for (let i = n - 2; i >= 0; i--) result = select(screenUV.y.greaterThan((n - 1 - i) / n), nodes[i], result)
 			return result
 		}
-
 		const cols = Math.ceil(Math.sqrt(n))
 		const rows = Math.ceil(n / cols)
 		const rowNodes: any[] = []
@@ -152,16 +121,14 @@
 	}
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
-	// ── Pipeline building ─────────────────────────────────────────────────────
+	// ── Pipeline building ──────────────────────────────────────────────────────
 
-	// Build pipeline once all split cameras are bound (without HUD if not yet ready)
 	$effect(() => {
 		const cams = cameras
 		if (cams.some((c) => !c)) return
 		untrack(() => buildPipeline(cams as ThreePerspectiveCamera[]))
 	})
 
-	// Rebuild pipeline when HUD camera arrives (deferred — HudScene mounts after cameras)
 	$effect(() => {
 		if (!children) return
 		return hudCamera.subscribe((cam) => {
@@ -174,20 +141,13 @@
 
 	function buildPipeline(cams: ThreePerspectiveCamera[]) {
 		const n = config.splits.length
-
 		const splitOutputs = cams.map((cam, i) => {
 			const splitCfg = config.splits[i]
 			const scenePass = pass(scene, cam)
-
-			// Remap UV so split i's canvas region [lo,hi] maps to [0,1] in the pass texture.
-			// This is required because pass() renders to the full canvas-size render target;
-			// without remapping the split center would appear at the full-canvas center.
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const passTexNode = scenePass.getTextureNode('output') as any
-			// .uv() calls clone() + sets uvNode + sets referenceNode (prevents TSL hash deduplication)
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const color: any = passTexNode.sample(splitRemapUV(config.layout, n, i))
-
 			const bloomCfg = resolveBloom(splitCfg.bloom, config.bloomDefaults)
 			if (!bloomCfg) return color
 			return color.add(bloom(color, bloomCfg.strength, bloomCfg.radius, bloomCfg.threshold))
@@ -198,11 +158,7 @@
 		if (children && hudCamera.current) {
 			const hudPass = pass(hudScene, hudCamera.current)
 			const hudColor = hudPass.getTextureNode('output')
-			// Use max(r,g,b,a) for mask — same alpha trick as BloomHud; ensures dark/transparent HUD
-			// elements still properly occlude the scene when alpha > rgb
 			const hudMask = max(hudColor.r, hudColor.g, hudColor.b, hudColor.a)
-
-			// hudBloom defaults to true so HUD glows like in BloomHud with fxHud=true
 			const doHudBloom = config.hudBloom ?? true
 			if (doHudBloom) {
 				const b = config.bloomDefaults ?? { strength: 0.5, radius: 0.2, threshold: 0.5 }
@@ -218,14 +174,16 @@
 		postProcessing.needsUpdate = true
 	}
 
-	// ── Viewport rects (also used for pointer tracking) ─────────────────────
+	// ── Viewport rects ─────────────────────────────────────────────────────────
+
+	const _rects: SplitRect[] = untrack(() => config.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 })))
+	const _lastSize = { w: 0, h: 0 }
 
 	function onPointerMove(e: PointerEvent) {
 		const canvas = (renderer as unknown as { domElement: HTMLCanvasElement }).domElement
 		const rect = canvas.getBoundingClientRect()
 		const px = e.clientX - rect.left
 		const py = e.clientY - rect.top
-		// Use cached _rects (updated every frame in useTask)
 		for (const [i, r] of _rects.entries()) {
 			if (px >= r.x && px < r.x + r.width && py >= r.y && py < r.y + r.height) {
 				activeSplitIndex = i
@@ -246,83 +204,21 @@
 		}
 	})
 
-	// ── Per-frame: aspect update + camera lerps + render ─────────────────────
+	// ── Per-frame: aspect update + camera follow + render ──────────────────────
 
-	const _tmp = new Vector3()
-
-	// Scratch object for angle computation (reused per split per frame, no alloc)
-	const _tmpAngles = { yaw: 0, pitch: 0 }
-
-	const ANGLE_DEAD_ZONE = 0.0002  // ~0.01°, prevents micro-jitter oscillation
-	const MAX_PITCH = 1.55           // ~88°, prevents gimbal at poles
-
-	// Pre-allocated scratch vectors for resolveVec3 — never returned, only read via outPos/outTangent
-	const _resolvePos = new Vector3()
-	const _resolveTangent = new Vector3()
-	const _resolveResult = { pos: _resolvePos, tangent: _resolveTangent, hasTangent: false }
-
-	function resolveVec3(val: MarbleOrVec, ctx: SceneCtx): typeof _resolveResult | null {
-		if (val == null) return null
-		if (typeof val === 'number') {
-			const entity = ctx.marbles[val]
-			if (!entity) return null
-			const m = entity.marble
-			_resolvePos.set(m.position.x, m.position.y, m.position.z)
-			_resolveTangent.set(m.tangent.x, m.tangent.y, m.tangent.z)
-			_resolveResult.hasTangent = true
-			return _resolveResult
-		}
-		if (Array.isArray(val)) {
-			_resolvePos.set(val[0], val[1], val[2])
-			_resolveResult.hasTangent = false
-			return _resolveResult
-		}
-		const m = (val as MarbleEntity).marble
-		_resolvePos.set(m.position.x, m.position.y, m.position.z)
-		_resolveTangent.set(m.tangent.x, m.tangent.y, m.tangent.z)
-		_resolveResult.hasTangent = true
-		return _resolveResult
-	}
-
-	// Pre-allocated rects array — reused every frame
-	const _rects: { x: number; y: number; width: number; height: number }[] = untrack(() => config.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 })))
-	let _lastW = 0
-	let _lastH = 0
-
-	function updateRects(layout: ViewConfig['layout'], n: number, w: number, h: number) {
-		if (w === _lastW && h === _lastH) return
-		_lastW = w
-		_lastH = h
-		if (layout === 'horizontal') {
-			const sw = Math.floor(w / n)
-			for (let i = 0; i < n; i++) { _rects[i].x = i * sw; _rects[i].y = 0; _rects[i].width = i === n - 1 ? w - i * sw : sw; _rects[i].height = h }
-		} else if (layout === 'vertical') {
-			const sh = Math.floor(h / n)
-			for (let i = 0; i < n; i++) { _rects[i].x = 0; _rects[i].y = i * sh; _rects[i].width = w; _rects[i].height = i === n - 1 ? h - i * sh : sh }
-		} else {
-			const cols = Math.ceil(Math.sqrt(n))
-			const rows = Math.ceil(n / cols)
-			const sw = Math.floor(w / cols)
-			const sh = Math.floor(h / rows)
-			for (let i = 0; i < n; i++) {
-				const col = i % cols
-				const row = Math.floor(i / cols)
-				_rects[i].x = col * sw; _rects[i].y = row * sh
-				_rects[i].width = col === cols - 1 ? w - col * sw : sw
-				_rects[i].height = row === rows - 1 ? h - row * sh : sh
-			}
-		}
-	}
-
-	// Scratch vector for desired camera world position
-	const _desired = new Vector3()
-	// Track last aspect per camera to avoid redundant updateProjectionMatrix
+	const _tmp         = new Vector3()
+	const _desired     = new Vector3()
 	const _lastAspect: number[] = untrack(() => config.splits.map(() => 0))
+
+	// Pre-allocated resolve scratch (reused per split per frame)
+	const _resolveOut: ResolvedTarget = {
+		pos: new Vector3(), tangent: new Vector3(), hasTangent: false,
+	}
 
 	useTask(
 		(delta) => {
 			const n = config.splits.length
-			updateRects(config.layout, n, size.current.width, size.current.height)
+			updateRects(config.layout, n, size.current.width, size.current.height, _rects, _lastSize)
 
 			for (let i = 0; i < n; i++) {
 				const cam = cameras[i]
@@ -338,79 +234,28 @@
 
 				const splitCfg: ViewSplitConfig = config.splits[i]
 				const state = splitStates[i]
-				const alphaPos   = 1 - Math.exp(-state.smoothnessPos    * delta * 60)
-				const alphaAngle = 1 - Math.exp(-state.smoothnessAngle  * delta * 60)
-				const alphaTgt   = 1 - Math.exp(-state.smoothnessTarget * delta * 60)
+				const cs = camStates[i]
+				const alphaTgt = 1 - Math.exp(-state.smoothnessTarget * delta * 60)
 
-				// ── Target (look-at pivot) ─────────────────────────────────────
+				// ── Target (look-at pivot) ───────────────────────────────────
 				const tgtVal = (state.target == null ? (splitCfg.target ?? null) : state.target) as MarbleOrVec
-				const tgtResolved = resolveVec3(tgtVal, sceneCtx)
+				const tgtResolved = resolveMarbleOrVec(tgtVal, sceneCtx, _resolveOut)
 				if (tgtResolved) {
-					if (!_anglesInited[i]) {
-						// Snap target on first frame so angle init uses the real target position
-						lerpTargetPos[i].copy(tgtResolved.pos)
-					} else if (lerpTargetPos[i].distanceToSquared(tgtResolved.pos) > 1e-6) {
-						lerpTargetPos[i].lerp(tgtResolved.pos, alphaTgt)
-					} else {
-						lerpTargetPos[i].copy(tgtResolved.pos)
-					}
+					updateTargetLerp(lerpTargetPos[i], tgtResolved.pos, alphaTgt, cs.inited)
 					const oc = orbitControls[i]
 					if (oc) oc.target.copy(lerpTargetPos[i])
 				}
 
-				// ── Camera world position (independent of target) ─────────────
+				// ── Camera world position ────────────────────────────────────
 				const camVal = (state.camera == null ? (splitCfg.camera ?? null) : state.camera) as MarbleOrVec
-				const camResolved = resolveVec3(camVal, sceneCtx)
+				const camResolved = resolveMarbleOrVec(camVal, sceneCtx, _resolveOut)
 				if (camResolved) {
 					_desired.copy(camResolved.pos)
 					if (splitCfg.tangentOffset && camResolved.hasTangent) {
 						_tmp.copy(camResolved.tangent).multiplyScalar(-splitCfg.tangentOffset)
 						_desired.add(_tmp)
 					}
-
-					if (_isDragging[i]) {
-						// Sync spherical state from OC so resume lerps smoothly from drag position
-						const rdx = lerpTargetPos[i].x - cam.position.x
-						const rdy = lerpTargetPos[i].y - cam.position.y
-						const rdz = lerpTargetPos[i].z - cam.position.z
-						_camRadius[i] = Math.hypot(rdx, rdy, rdz) || _camRadius[i]
-						dirToAngles(rdx, rdy, rdz, _tmpAngles)
-						_camYaw[i] = _tmpAngles.yaw
-						_camPitch[i] = _tmpAngles.pitch
-					} else {
-						// Convert desired world pos to spherical relative to lerped target
-						const dsx = lerpTargetPos[i].x - _desired.x
-						const dsy = lerpTargetPos[i].y - _desired.y
-						const dsz = lerpTargetPos[i].z - _desired.z
-						const desiredRadius = Math.hypot(dsx, dsy, dsz) || _camRadius[i]
-						dirToAngles(dsx, dsy, dsz, _tmpAngles)
-
-						if (_anglesInited[i]) {
-							// Lerp radius + angles along sphere surface — no pass-through
-							_camRadius[i] = dampStep(_camRadius[i], desiredRadius, alphaPos)
-							const maxDelta = state.maxAngleSpeed * delta
-							_camYaw[i]   = dampAngleStep(_camYaw[i],   _tmpAngles.yaw,   alphaAngle, ANGLE_DEAD_ZONE, maxDelta)
-							_camPitch[i] = dampAngleStep(_camPitch[i], _tmpAngles.pitch, alphaAngle, ANGLE_DEAD_ZONE, maxDelta)
-							if (_camPitch[i] >  MAX_PITCH) _camPitch[i] =  MAX_PITCH
-							if (_camPitch[i] < -MAX_PITCH) _camPitch[i] = -MAX_PITCH
-						} else {
-							// Snap spherical state on first valid frame
-							_camRadius[i] = desiredRadius
-							_camYaw[i] = _tmpAngles.yaw
-							_camPitch[i] = _tmpAngles.pitch
-							_anglesInited[i] = true
-						}
-
-						// Reconstruct world pos from spherical: cam = target - radius * dir(yaw, pitch)
-						const cpcy = Math.cos(_camPitch[i]) * Math.cos(_camYaw[i])
-						const sp   = Math.sin(_camPitch[i])
-						const cpsy = Math.cos(_camPitch[i]) * Math.sin(_camYaw[i])
-						cam.position.set(
-							lerpTargetPos[i].x - _camRadius[i] * cpcy,
-							lerpTargetPos[i].y - _camRadius[i] * sp,
-							lerpTargetPos[i].z - _camRadius[i] * cpsy,
-						)
-					}
+					updateCameraForSplit(cam.position, cs, state, lerpTargetPos[i], _desired, camResolved, delta)
 				}
 			}
 
