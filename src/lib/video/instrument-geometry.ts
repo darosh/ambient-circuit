@@ -122,35 +122,35 @@ function buildInstrumentGeometry(params: InstrumentGeometryParams): BufferGeomet
 	const { type, size, width } = params
 
 	switch (type) {
-	case 'poly': 
-	case 'star': {
-		return buildPolyStarGeometry(params)
-	}
-	case 'whirl': 
-	case 'cross': {
-		return buildWhirlCrossGeometry(params)
-	}
-	case 'heart': {
-		return buildHeartGeometry(size, width)
-	}
-	case 'spiral': {
-		return buildSpiralGeometry(params)
-	}
-	case 'cone': {
-		return buildConeGeometry(params)
-	}
-	case 'arrow': {
-		return buildArrowGeometry(params)
-	}
-	case 'sun': {
-		return buildSunGeometry(params)
-	}
-	case 'eater': {
-		return buildEaterGeometry(params)
-	}
-	default: {
-		break
-	}
+		case 'poly':
+		case 'star': {
+			return buildPolyStarGeometry(params)
+		}
+		case 'whirl':
+		case 'cross': {
+			return buildWhirlCrossGeometry(params)
+		}
+		case 'heart': {
+			return buildHeartGeometry(size, width)
+		}
+		case 'spiral': {
+			return buildSpiralGeometry(params)
+		}
+		case 'cone': {
+			return buildConeGeometry(params)
+		}
+		case 'arrow': {
+			return buildArrowGeometry(params)
+		}
+		case 'sun': {
+			return buildSunGeometry(params)
+		}
+		case 'eater': {
+			return buildEaterGeometry(params)
+		}
+		default: {
+			break
+		}
 	}
 
 	// Fallback: simple circle
@@ -424,174 +424,174 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	const zScale = point === 'backward' ? -1 : 1
 
 	switch (kind) {
-	case 'plain': 
-	case 'step': {
-		const halfAngle = angle / 2
-		const tipY1 = Math.sin(halfAngle) * length
-		const tipY2 = -tipY1
-		const tipZ = Math.cos(halfAngle) * length
+		case 'plain':
+		case 'step': {
+			const halfAngle = angle / 2
+			const tipY1 = Math.sin(halfAngle) * length
+			const tipY2 = -tipY1
+			const tipZ = Math.cos(halfAngle) * length
 
-		const origin = new Vector3(0, 0, -zScale * (length * zOffset))
-		const tip1 = new Vector3(0, tipY1, -zScale * (tipZ + length * zOffset))
-		const tip2 = new Vector3(0, tipY2, -zScale * (tipZ + length * zOffset))
+			const origin = new Vector3(0, 0, -zScale * (length * zOffset))
+			const tip1 = new Vector3(0, tipY1, -zScale * (tipZ + length * zOffset))
+			const tip2 = new Vector3(0, tipY2, -zScale * (tipZ + length * zOffset))
 
-		path.add(new LineCurve3(tip1, origin))
-		path.add(new LineCurve3(origin, tip2))
-	
-	break;
-	}
-	case 'play': 
-	case 'fwd': {
-		const height = length
-		const halfBase = height / Math.sqrt(3)
-		const verts = [
-			new Vector3(0, 0, zScale * (height + length * zOffset)),
-			new Vector3(0, halfBase, zScale * (length * zOffset)),
-			new Vector3(0, -halfBase, zScale * (length * zOffset))
-		]
+			path.add(new LineCurve3(tip1, origin))
+			path.add(new LineCurve3(origin, tip2))
 
-		for (let i = 0; i < 3; i++) {
-			const curr = verts[i]
-			const next = verts[(i + 1) % 3]
-			const prev = verts[(i - 1 + 3) % 3]
-
-			const inDir = new Vector3().subVectors(curr, prev).normalize()
-			const outDir = new Vector3().subVectors(next, curr).normalize()
-
-			const arcStart = curr.clone().addScaledVector(inDir, -cr)
-			const arcEnd = curr.clone().addScaledVector(outDir, cr)
-			const nextArcStart = next.clone().addScaledVector(outDir, -cr)
-
-			if (cr > 0) {
-				path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
-			}
-			path.add(new LineCurve3(arcEnd, nextArcStart))
+			break
 		}
-	
-	break;
-	}
-	case 'rec': {
-		const radius = length / 2
-		const segments = ARROW_CIRCLE_SEGMENTS
-		for (let i = 0; i < segments; i++) {
-			const angle1 = (i / segments) * Math.PI * 2
-			const angle2 = ((i + 1) / segments) * Math.PI * 2
-			const p1 = new Vector3(0, Math.cos(angle1) * radius, Math.sin(angle1) * radius)
-			const p2 = new Vector3(0, Math.cos(angle2) * radius, Math.sin(angle2) * radius)
-			path.add(new LineCurve3(p1, p2))
-		}
-	
-	break;
-	}
-	case 'stop': {
-		const halfSize = length / 2
-		const verts = [
-			new Vector3(0, halfSize, halfSize),
-			new Vector3(0, halfSize, -halfSize),
-			new Vector3(0, -halfSize, -halfSize),
-			new Vector3(0, -halfSize, halfSize)
-		]
-		for (let i = 0; i < 4; i++) {
-			const curr = verts[i]
-			const next = verts[(i + 1) % 4]
-			const prev = verts[(i - 1 + 4) % 4]
-			const inDir = new Vector3().subVectors(curr, prev).normalize()
-			const outDir = new Vector3().subVectors(next, curr).normalize()
-			const arcStart = curr.clone().addScaledVector(inDir, -cr)
-			const arcEnd = curr.clone().addScaledVector(outDir, cr)
-			const nextArcStart = next.clone().addScaledVector(outDir, -cr)
-			if (cr > 0) {
-				path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
-			}
-			path.add(new LineCurve3(arcEnd, nextArcStart))
-		}
-	
-	break;
-	}
-	case 'repro': 
-	case 'muted': {
-		// Speaker icon: rectangle (back) + trapezoid (front cone)
-		const h = length // total height
-		const rectW = h * 0.3 // rectangle width (narrower part)
-		const rectH = h * 0.4 // rectangle height
-		const trapW = h * 0.6 // trapezoid depth
-		const trapWide = h * 1.15 // trapezoid wide side
+		case 'play':
+		case 'fwd': {
+			const height = length
+			const halfBase = height / Math.sqrt(3)
+			const verts = [
+				new Vector3(0, 0, zScale * (height + length * zOffset)),
+				new Vector3(0, halfBase, zScale * (length * zOffset)),
+				new Vector3(0, -halfBase, zScale * (length * zOffset))
+			]
 
-		const rL = -rectW / 2 - trapW / 2
-		const rR = rectW / 2 - trapW / 2
+			for (let i = 0; i < 3; i++) {
+				const curr = verts[i]
+				const next = verts[(i + 1) % 3]
+				const prev = verts[(i - 1 + 3) % 3]
 
-		// Closed outline: rectangle back + trapezoid cone as one shape
-		// Path: rect-top-left → rect-bottom-left → rect-bottom-right →
-		//        trap-bottom-right → trap-bottom-far → trap-top-far → trap-top-right →
-		//        rect-top-right → close
-		const trapR = rectW / 2 - trapW / 2 + trapW
-		const verts = [
-			new Vector3(0, rectH / 2, zScale * rL), // rect top-left
-			new Vector3(0, -rectH / 2, zScale * rL), // rect bottom-left
-			new Vector3(0, -rectH / 2, zScale * rR), // rect bottom-right
-			new Vector3(0, -trapWide / 2, zScale * trapR), // trap bottom-wide
-			new Vector3(0, trapWide / 2, zScale * trapR), // trap top-wide
-			new Vector3(0, rectH / 2, zScale * rR) // rect top-right (= trap top-narrow)
-		]
+				const inDir = new Vector3().subVectors(curr, prev).normalize()
+				const outDir = new Vector3().subVectors(next, curr).normalize()
 
-		for (let i = 0; i < verts.length; i++) {
-			const curr = verts[i]
-			const next = verts[(i + 1) % verts.length]
-			const prev = verts[(i - 1 + verts.length) % verts.length]
+				const arcStart = curr.clone().addScaledVector(inDir, -cr)
+				const arcEnd = curr.clone().addScaledVector(outDir, cr)
+				const nextArcStart = next.clone().addScaledVector(outDir, -cr)
 
-			const inDir = new Vector3().subVectors(curr, prev).normalize()
-			const outDir = new Vector3().subVectors(next, curr).normalize()
-
-			const _cr = i === 3 || i === 4 ? cr : cr / 2
-
-			const arcStart = curr.clone().addScaledVector(inDir, -_cr)
-			const arcEnd = curr.clone().addScaledVector(outDir, _cr)
-			const nextArcStart = next.clone().addScaledVector(outDir, -cr)
-
-			if (cr > 0) {
-				path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+				if (cr > 0) {
+					path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+				}
+				path.add(new LineCurve3(arcEnd, nextArcStart))
 			}
 
-			path.add(new LineCurve3(arcEnd, nextArcStart))
+			break
 		}
+		case 'rec': {
+			const radius = length / 2
+			const segments = ARROW_CIRCLE_SEGMENTS
+			for (let i = 0; i < segments; i++) {
+				const angle1 = (i / segments) * Math.PI * 2
+				const angle2 = ((i + 1) / segments) * Math.PI * 2
+				const p1 = new Vector3(0, Math.cos(angle1) * radius, Math.sin(angle1) * radius)
+				const p2 = new Vector3(0, Math.cos(angle2) * radius, Math.sin(angle2) * radius)
+				path.add(new LineCurve3(p1, p2))
+			}
 
-		// Inner dividing line between rect and trapezoid
-		secondaryPath = new CurvePath<Vector3>()
-		secondaryPath.add(
-			new LineCurve3(
-				new Vector3(0, rectH / 2 - width * 0.1, zScale * rR * 0.8),
-				new Vector3(0, -rectH / 2 - width * 0.1, zScale * rR * 0.8)
-			)
-		)
+			break
+		}
+		case 'stop': {
+			const halfSize = length / 2
+			const verts = [
+				new Vector3(0, halfSize, halfSize),
+				new Vector3(0, halfSize, -halfSize),
+				new Vector3(0, -halfSize, -halfSize),
+				new Vector3(0, -halfSize, halfSize)
+			]
+			for (let i = 0; i < 4; i++) {
+				const curr = verts[i]
+				const next = verts[(i + 1) % 4]
+				const prev = verts[(i - 1 + 4) % 4]
+				const inDir = new Vector3().subVectors(curr, prev).normalize()
+				const outDir = new Vector3().subVectors(next, curr).normalize()
+				const arcStart = curr.clone().addScaledVector(inDir, -cr)
+				const arcEnd = curr.clone().addScaledVector(outDir, cr)
+				const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+				if (cr > 0) {
+					path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+				}
+				path.add(new LineCurve3(arcEnd, nextArcStart))
+			}
 
-		// Mute stroke: diagonal line across the icon (separate open path)
-		if (kind === 'muted') {
-			tertiaryPath = new CurvePath<Vector3>()
-			const ext = h * 0.2
-			tertiaryPath.add(
+			break
+		}
+		case 'repro':
+		case 'muted': {
+			// Speaker icon: rectangle (back) + trapezoid (front cone)
+			const h = length // total height
+			const rectW = h * 0.3 // rectangle width (narrower part)
+			const rectH = h * 0.4 // rectangle height
+			const trapW = h * 0.6 // trapezoid depth
+			const trapWide = h * 1.15 // trapezoid wide side
+
+			const rL = -rectW / 2 - trapW / 2
+			const rR = rectW / 2 - trapW / 2
+
+			// Closed outline: rectangle back + trapezoid cone as one shape
+			// Path: rect-top-left → rect-bottom-left → rect-bottom-right →
+			//        trap-bottom-right → trap-bottom-far → trap-top-far → trap-top-right →
+			//        rect-top-right → close
+			const trapR = rectW / 2 - trapW / 2 + trapW
+			const verts = [
+				new Vector3(0, rectH / 2, zScale * rL), // rect top-left
+				new Vector3(0, -rectH / 2, zScale * rL), // rect bottom-left
+				new Vector3(0, -rectH / 2, zScale * rR), // rect bottom-right
+				new Vector3(0, -trapWide / 2, zScale * trapR), // trap bottom-wide
+				new Vector3(0, trapWide / 2, zScale * trapR), // trap top-wide
+				new Vector3(0, rectH / 2, zScale * rR) // rect top-right (= trap top-narrow)
+			]
+
+			for (let i = 0; i < verts.length; i++) {
+				const curr = verts[i]
+				const next = verts[(i + 1) % verts.length]
+				const prev = verts[(i - 1 + verts.length) % verts.length]
+
+				const inDir = new Vector3().subVectors(curr, prev).normalize()
+				const outDir = new Vector3().subVectors(next, curr).normalize()
+
+				const _cr = i === 3 || i === 4 ? cr : cr / 2
+
+				const arcStart = curr.clone().addScaledVector(inDir, -_cr)
+				const arcEnd = curr.clone().addScaledVector(outDir, _cr)
+				const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+				if (cr > 0) {
+					path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+				}
+
+				path.add(new LineCurve3(arcEnd, nextArcStart))
+			}
+
+			// Inner dividing line between rect and trapezoid
+			secondaryPath = new CurvePath<Vector3>()
+			secondaryPath.add(
 				new LineCurve3(
-					new Vector3(0, -trapWide / 2, zScale * (trapR + ext)),
-					new Vector3(0, trapWide / 2, zScale * (rL + ext))
+					new Vector3(0, rectH / 2 - width * 0.1, zScale * rR * 0.8),
+					new Vector3(0, -rectH / 2 - width * 0.1, zScale * rR * 0.8)
 				)
 			)
+
+			// Mute stroke: diagonal line across the icon (separate open path)
+			if (kind === 'muted') {
+				tertiaryPath = new CurvePath<Vector3>()
+				const ext = h * 0.2
+				tertiaryPath.add(
+					new LineCurve3(
+						new Vector3(0, -trapWide / 2, zScale * (trapR + ext)),
+						new Vector3(0, trapWide / 2, zScale * (rL + ext))
+					)
+				)
+			}
+
+			break
 		}
-	
-	break;
-	}
-	case 'pause': {
-		const spacing = width * 2.5
-		const height = length
-		const line1Start = new Vector3(0, -height / 2, -spacing / 2)
-		const line1End = new Vector3(0, height / 2, -spacing / 2)
-		const line2Start = new Vector3(0, -height / 2, spacing / 2)
-		const line2End = new Vector3(0, height / 2, spacing / 2)
-		path.add(new LineCurve3(line1Start, line1End))
-		secondaryPath = new CurvePath<Vector3>()
-		secondaryPath.add(new LineCurve3(line2Start, line2End))
-	
-	break;
-	}
-	// No default
+		case 'pause': {
+			const spacing = width * 2.5
+			const height = length
+			const line1Start = new Vector3(0, -height / 2, -spacing / 2)
+			const line1End = new Vector3(0, height / 2, -spacing / 2)
+			const line2Start = new Vector3(0, -height / 2, spacing / 2)
+			const line2End = new Vector3(0, height / 2, spacing / 2)
+			path.add(new LineCurve3(line1Start, line1End))
+			secondaryPath = new CurvePath<Vector3>()
+			secondaryPath.add(new LineCurve3(line2Start, line2End))
+
+			break
+		}
+		// No default
 	}
 
 	if (kind === 'fwd' || kind === 'step') {

@@ -56,8 +56,6 @@
 			selectedAudioChain = undefined
 		}
 	}
-
-
 </script>
 
 {#snippet hudContent(_arg?: unknown)}

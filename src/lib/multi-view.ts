@@ -13,7 +13,6 @@ export type SplitCamState = {
 	pitch: number
 	inited: boolean
 	isDragging: boolean
-	dragTimeoutId: ReturnType<typeof setTimeout> | null
 }
 
 export type SplitRect = { x: number; y: number; width: number; height: number }
@@ -33,7 +32,7 @@ export function initSplitStates(splits: ViewSplitConfig[]): ViewSplitState[] {
 		smoothnessPos: s.smoothnessPos ?? 8,
 		smoothnessAngle: s.smoothnessAngle ?? 8,
 		smoothnessTarget: s.smoothnessTarget ?? 8,
-		maxAngleSpeed: s.maxAngleSpeed ?? Infinity,
+		maxAngleSpeed: s.maxAngleSpeed ?? Infinity
 	}))
 }
 
@@ -43,14 +42,15 @@ export function initCamStates(splits: ViewSplitConfig[]): SplitCamState[] {
 		yaw: 0,
 		pitch: 0,
 		inited: false,
-		isDragging: false,
-		dragTimeoutId: null,
+		isDragging: false
 	}))
 }
 
 export function initLerpTargets(splits: ViewSplitConfig[]): Vector3[] {
 	return splits.map((s) =>
-		Array.isArray(s.target) ? new Vector3(s.target[0], s.target[1], s.target[2]) : new Vector3(0, 1, 0)
+		Array.isArray(s.target)
+			? new Vector3(s.target[0], s.target[1], s.target[2])
+			: new Vector3(0, 1, 0)
 	)
 }
 
@@ -62,7 +62,7 @@ export function updateRects(
 	w: number,
 	h: number,
 	out: SplitRect[],
-	_last: { w: number; h: number },
+	_last: { w: number; h: number }
 ): boolean {
 	if (w === _last.w && h === _last.h) return false
 	_last.w = w
@@ -70,14 +70,18 @@ export function updateRects(
 	if (layout === 'horizontal') {
 		const sw = Math.floor(w / n)
 		for (let i = 0; i < n; i++) {
-			out[i].x = i * sw; out[i].y = 0
-			out[i].width = i === n - 1 ? w - i * sw : sw; out[i].height = h
+			out[i].x = i * sw
+			out[i].y = 0
+			out[i].width = i === n - 1 ? w - i * sw : sw
+			out[i].height = h
 		}
 	} else if (layout === 'vertical') {
 		const sh = Math.floor(h / n)
 		for (let i = 0; i < n; i++) {
-			out[i].x = 0; out[i].y = i * sh
-			out[i].width = w; out[i].height = i === n - 1 ? h - i * sh : sh
+			out[i].x = 0
+			out[i].y = i * sh
+			out[i].width = w
+			out[i].height = i === n - 1 ? h - i * sh : sh
 		}
 	} else {
 		const cols = Math.ceil(Math.sqrt(n))
@@ -87,7 +91,8 @@ export function updateRects(
 		for (let i = 0; i < n; i++) {
 			const col = i % cols
 			const row = Math.floor(i / cols)
-			out[i].x = col * sw; out[i].y = row * sh
+			out[i].x = col * sw
+			out[i].y = row * sh
 			out[i].width = col === cols - 1 ? w - col * sw : sw
 			out[i].height = row === rows - 1 ? h - row * sh : sh
 		}
@@ -102,7 +107,7 @@ type MarbleOrVec = MarbleEntity | number | [number, number, number] | null
 export function resolveMarbleOrVec(
 	val: MarbleOrVec,
 	ctx: SceneCtx,
-	out: ResolvedTarget,
+	out: ResolvedTarget
 ): ResolvedTarget | null {
 	if (val == null) return null
 	if (typeof val === 'number') {
@@ -133,14 +138,14 @@ const _tmpAngles = { yaw: 0, pitch: 0 }
 function syncSpherical(
 	camPosition: { x: number; y: number; z: number },
 	camState: SplitCamState,
-	lerpTargetPos: Vector3,
+	lerpTargetPos: Vector3
 ): void {
 	const rdx = lerpTargetPos.x - camPosition.x
 	const rdy = lerpTargetPos.y - camPosition.y
 	const rdz = lerpTargetPos.z - camPosition.z
 	camState.radius = Math.hypot(rdx, rdy, rdz) || camState.radius
 	dirToAngles(rdx, rdy, rdz, _tmpAngles)
-	camState.yaw   = _tmpAngles.yaw
+	camState.yaw = _tmpAngles.yaw
 	camState.pitch = _tmpAngles.pitch
 }
 
@@ -160,7 +165,7 @@ export function updateCameraForSplit(
 	state: ViewSplitState,
 	lerpTargetPos: Vector3,
 	desired: Vector3,
-	delta: number,
+	delta: number
 ): void {
 	if (camState.isDragging) {
 		// OC owns camPosition — sync spherical so follow resumes smoothly after drag
@@ -181,7 +186,9 @@ export function updateCameraForSplit(
 			const stepLen = Math.hypot(sx, sy, sz)
 			if (stepLen > maxStep && stepLen > 0) {
 				const f = maxStep / stepLen
-				sx *= f; sy *= f; sz *= f
+				sx *= f
+				sy *= f
+				sz *= f
 			}
 		}
 		camPosition.x += sx
@@ -205,7 +212,7 @@ export function updateTargetLerp(
 	lerpTargetPos: Vector3,
 	resolvedPos: Vector3,
 	alpha: number,
-	inited: boolean,
+	inited: boolean
 ): void {
 	if (!inited) {
 		lerpTargetPos.copy(resolvedPos)

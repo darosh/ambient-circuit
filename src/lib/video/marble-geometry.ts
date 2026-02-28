@@ -76,76 +76,76 @@ function buildMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | nul
 	const cr = MARBLE_CORNER_RADIUS
 
 	switch (type) {
-	case 'eater': {
-		return buildEaterMarbleGeometry(size, width, cr, angle)
-	}
-	case 'poly': {
-		const n = sides
-		const r = size / (1 + Math.cos(Math.PI / n))
-		const curves: Curve<Vector3>[] = []
-		const verts: Vector3[] = []
-
-		for (let i = 0; i < n; i++) {
-			const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + Math.PI / n
-			verts.push(new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, 0))
+		case 'eater': {
+			return buildEaterMarbleGeometry(size, width, cr, angle)
 		}
+		case 'poly': {
+			const n = sides
+			const r = size / (1 + Math.cos(Math.PI / n))
+			const curves: Curve<Vector3>[] = []
+			const verts: Vector3[] = []
 
-		for (let i = 0; i < n; i++) {
-			const curr = verts[i]
-			const next = verts[(i + 1) % n]
-			const prev = verts[(i - 1 + n) % n]
-
-			const inDir = new Vector3().subVectors(curr, prev).normalize()
-			const outDir = new Vector3().subVectors(next, curr).normalize()
-
-			const arcStart = curr.clone().addScaledVector(inDir, -cr)
-			const arcEnd = curr.clone().addScaledVector(outDir, cr)
-			const nextArcStart = next.clone().addScaledVector(outDir, -cr)
-
-			if (cr > 0) {
-				curves.push(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+			for (let i = 0; i < n; i++) {
+				const angle = (i / n) * Math.PI * 2 - Math.PI / 2 + Math.PI / n
+				verts.push(new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, 0))
 			}
-			curves.push(new LineCurve3(arcEnd, nextArcStart))
+
+			for (let i = 0; i < n; i++) {
+				const curr = verts[i]
+				const next = verts[(i + 1) % n]
+				const prev = verts[(i - 1 + n) % n]
+
+				const inDir = new Vector3().subVectors(curr, prev).normalize()
+				const outDir = new Vector3().subVectors(next, curr).normalize()
+
+				const arcStart = curr.clone().addScaledVector(inDir, -cr)
+				const arcEnd = curr.clone().addScaledVector(outDir, cr)
+				const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+				if (cr > 0) {
+					curves.push(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+				}
+				curves.push(new LineCurve3(arcEnd, nextArcStart))
+			}
+
+			const closed = sides > 2
+
+			return buildTubeGeometry(
+				closed ? curves : [curves[1]],
+				width / 2,
+				MARBLE_RADIAL_SEGMENTS,
+				MARBLE_CLOSED_SEGMENTS,
+				closed
+			)
 		}
+		case 'coil': {
+			const path = new CurvePath<Vector3>()
+			const r = size / 2
+			const length = width * 3 * rounds
 
-		const closed = sides > 2
+			for (let i = 0; i < rounds * COIL_SEGMENTS_PER_ROUND; i++) {
+				const t = i / (rounds * COIL_SEGMENTS_PER_ROUND)
+				const angle = t * rounds * Math.PI * 2
+				const z = t * length - length / 2
 
-		return buildTubeGeometry(
-			closed ? curves : [curves[1]],
-			width / 2,
-			MARBLE_RADIAL_SEGMENTS,
-			MARBLE_CLOSED_SEGMENTS,
-			closed
-		)
-	}
-	case 'coil': {
-		const path = new CurvePath<Vector3>()
-		const r = size / 2
-		const length = width * 3 * rounds
+				const curr = new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, z)
+				const nextT = (i + 1) / (rounds * COIL_SEGMENTS_PER_ROUND)
+				const nextAngle = nextT * rounds * Math.PI * 2
+				const nextZ = nextT * length - length / 2
+				const next = new Vector3(Math.cos(nextAngle) * r, Math.sin(nextAngle) * r, nextZ)
 
-		for (let i = 0; i < rounds * COIL_SEGMENTS_PER_ROUND; i++) {
-			const t = i / (rounds * COIL_SEGMENTS_PER_ROUND)
-			const angle = t * rounds * Math.PI * 2
-			const z = t * length - length / 2
+				path.add(new LineCurve3(curr, next))
+			}
 
-			const curr = new Vector3(Math.cos(angle) * r, Math.sin(angle) * r, z)
-			const nextT = (i + 1) / (rounds * COIL_SEGMENTS_PER_ROUND)
-			const nextAngle = nextT * rounds * Math.PI * 2
-			const nextZ = nextT * length - length / 2
-			const next = new Vector3(Math.cos(nextAngle) * r, Math.sin(nextAngle) * r, nextZ)
-
-			path.add(new LineCurve3(curr, next))
+			return buildTubeGeometry(
+				path.curves,
+				width / 2,
+				MARBLE_RADIAL_SEGMENTS,
+				(rounds * COIL_SEGMENTS_PER_ROUND) / path.getLength(),
+				false
+			)
 		}
-
-		return buildTubeGeometry(
-			path.curves,
-			width / 2,
-			MARBLE_RADIAL_SEGMENTS,
-			(rounds * COIL_SEGMENTS_PER_ROUND) / path.getLength(),
-			false
-		)
-	}
-	// No default
+		// No default
 	}
 
 	return null

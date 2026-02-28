@@ -149,7 +149,7 @@
 
 	// Init rail visibility (reset if length mismatch from scene change)
 	if (!railVisibility || railVisibility.length !== rails.length) {
-		railVisibility = rails.map(rail => rail.visible !== false)
+		railVisibility = rails.map((rail) => rail.visible !== false)
 	}
 
 	// Create scene context once at mount (non-reactive to avoid loops)
@@ -567,7 +567,9 @@
 	{/each}{/if}
 
 {#if scene.view}
-	<MultiView config={scene.view} {sceneCtx}>{#snippet children(arg)}{@render hudContent?.(arg)}{/snippet}</MultiView>
+	<MultiView config={scene.view} {sceneCtx}
+		>{#snippet children(arg)}{@render hudContent?.(arg)}{/snippet}</MultiView
+	>
 {/if}
 
 {#if audioInitialized && scene?.audioView !== false}

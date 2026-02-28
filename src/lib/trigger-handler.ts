@@ -163,48 +163,48 @@ export function globalHandlerFactory(onTick?: BeatHandler) {
 	function globalBeatHandler(ctx: GlobalBeatContext) {
 		// Log phase changes and ticks
 		switch (ctx.phase) {
-		case 'init': {
-			// console.log('[GLOBAL] Init - beat:', ctx.beat.toFixed(3))
-		
-		break;
-		}
-		case 'play': {
-			// console.log('[GLOBAL] Play - beat:', ctx.beat.toFixed(3))
-		
-		break;
-		}
-		case 'pause': {
-			// console.log('[GLOBAL] Pause - beat:', ctx.beat.toFixed(3))
-		
-		break;
-		}
-		case 'destroy': {
-			// console.log(
-			// 	'[GLOBAL] Destroy - beat:',
-			// 	ctx.beat.toFixed(3),
-			// 	'clearing',
-			// 	timers.length,
-			// 	'timers'
-			// )
-			// Cleanup any timers/intervals here
-			for (const id of timers) clearTimeout(id)
-			timers.length = 0
-		
-		break;
-		}
-		case 'tick': {
-			// Log every tick
-			// console.log('[GLOBAL] beat:', ctx.beat.toFixed(3))
+			case 'init': {
+				// console.log('[GLOBAL] Init - beat:', ctx.beat.toFixed(3))
 
-			if (onTick) {
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-				// @ts-expect-error
-				onTick(ctx)
+				break
 			}
-		
-		break;
-		}
-		// No default
+			case 'play': {
+				// console.log('[GLOBAL] Play - beat:', ctx.beat.toFixed(3))
+
+				break
+			}
+			case 'pause': {
+				// console.log('[GLOBAL] Pause - beat:', ctx.beat.toFixed(3))
+
+				break
+			}
+			case 'destroy': {
+				// console.log(
+				// 	'[GLOBAL] Destroy - beat:',
+				// 	ctx.beat.toFixed(3),
+				// 	'clearing',
+				// 	timers.length,
+				// 	'timers'
+				// )
+				// Cleanup any timers/intervals here
+				for (const id of timers) clearTimeout(id)
+				timers.length = 0
+
+				break
+			}
+			case 'tick': {
+				// Log every tick
+				// console.log('[GLOBAL] beat:', ctx.beat.toFixed(3))
+
+				if (onTick) {
+					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+					// @ts-expect-error
+					onTick(ctx)
+				}
+
+				break
+			}
+			// No default
 		}
 	}
 

@@ -58,12 +58,14 @@ describe('dirToAngles + anglesToDir round-trip', () => {
 		[-1, 0, 0],
 		[0, -1, 0],
 		[1, 1, 1],
-		[0.5, -0.3, 0.8],
+		[0.5, -0.3, 0.8]
 	]
 	for (const [dx, dy, dz] of cases) {
 		it(`round-trip (${dx},${dy},${dz})`, () => {
 			const len = Math.hypot(dx, dy, dz)
-			const nx = dx / len, ny = dy / len, nz = dz / len
+			const nx = dx / len,
+				ny = dy / len,
+				nz = dz / len
 			const angles = { yaw: 0, pitch: 0 }
 			dirToAngles(nx, ny, nz, angles)
 			const out = { x: 0, y: 0, z: 0 }

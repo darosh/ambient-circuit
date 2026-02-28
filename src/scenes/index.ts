@@ -51,6 +51,6 @@ export const scenes: SceneConfig[] = [
 	sceneCreateDestroy,
 	sceneAudio,
 	sceneCollisions,
-	sceneToneInstruments,
+	sceneToneInstruments
 	// sceneRnbo
 ]

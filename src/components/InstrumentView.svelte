@@ -216,28 +216,28 @@
 		// Apply type-based constant rotation
 		const type = instrument.type || 'poly'
 		switch (type) {
-		case 'poly': 
-		case 'star': 
-		case 'heart': {
-			_iMat.multiply(_ROT_NEG_HALF_PI)
-		
-		break;
-		}
-		case 'cross': 
-		case 'whirl': 
-		case 'sun': 
-		case 'eater': {
-			_iMat.multiply(_ROT_HALF_PI)
-		
-		break;
-		}
-		case 'cone': 
-		case 'spiral': {
-			_iMat.multiply(_ROT_NEG_PI)
-		
-		break;
-		}
-		// No default
+			case 'poly':
+			case 'star':
+			case 'heart': {
+				_iMat.multiply(_ROT_NEG_HALF_PI)
+
+				break
+			}
+			case 'cross':
+			case 'whirl':
+			case 'sun':
+			case 'eater': {
+				_iMat.multiply(_ROT_HALF_PI)
+
+				break
+			}
+			case 'cone':
+			case 'spiral': {
+				_iMat.multiply(_ROT_NEG_PI)
+
+				break
+			}
+			// No default
 		}
 
 		const tiltRad = ((rail.tilt ?? 0) * Math.PI) / 180
@@ -294,7 +294,10 @@
 		}
 
 		// Pulse animation for heart
-		bounceOffset = pulseAnimationEnabled && impactTime > 0 ? BOUNCE_AMPLITUDE * easeInBounce(impactTime / IMPACT_DURATION) : 0;
+		bounceOffset =
+			pulseAnimationEnabled && impactTime > 0
+				? BOUNCE_AMPLITUDE * easeInBounce(impactTime / IMPACT_DURATION)
+				: 0
 
 		if (impactTime > 0) {
 			impactTime = Math.max(0, impactTime - delta)

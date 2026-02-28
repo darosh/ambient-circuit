@@ -4,7 +4,7 @@ import sonarjs from 'eslint-plugin-sonarjs'
 import svelte from 'eslint-plugin-svelte'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
-import unicorn from "eslint-plugin-unicorn"
+import unicorn from 'eslint-plugin-unicorn'
 
 export default tseslint.config(
 	eslint.configs.recommended,

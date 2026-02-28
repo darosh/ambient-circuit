@@ -64,7 +64,7 @@
 	const geometries = $derived.by(() =>
 		paths.map((path) => {
 			// Convert points to LineCurve3 array
-			const curves: LineCurve3[] = Array.from({length: path.length - 1})
+			const curves: LineCurve3[] = Array.from({ length: path.length - 1 })
 			for (let i = 0; i < path.length - 1; i++) {
 				curves[i] = new LineCurve3(path[i], path[i + 1])
 			}

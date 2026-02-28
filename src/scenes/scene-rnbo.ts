@@ -32,8 +32,28 @@ export const scene: SceneConfig = {
 		bloomDefaults: { strength: 0.5, radius: 0.2, threshold: 0.5 },
 		splits: [
 			{ camera: [25, 18, 12], fov: 50, bloom: true },
-			{ maxAngleSpeed: Math.PI / 6, camera: 0, target: 1, tangentOffset: 1, smoothnessPos: .05, smoothnessAngle: .05, smoothnessTarget: .005, fov: 60, bloom: true },      // chase marble 1
-			{ target: 1, camera: 1, maxAngleSpeed: 2, tangentOffset: 50, smoothnessPos: .0001, smoothnessAngle: .01, smoothnessTarget: .01, fov: 23, bloom: true }                   // watch marble 0
+			{
+				maxAngleSpeed: Math.PI / 6,
+				camera: 0,
+				target: 1,
+				tangentOffset: 1,
+				smoothnessPos: 0.05,
+				smoothnessAngle: 0.05,
+				smoothnessTarget: 0.005,
+				fov: 60,
+				bloom: true
+			}, // chase marble 1
+			{
+				target: 1,
+				camera: 1,
+				maxAngleSpeed: 2,
+				tangentOffset: 50,
+				smoothnessPos: 0.0001,
+				smoothnessAngle: 0.01,
+				smoothnessTarget: 0.01,
+				fov: 23,
+				bloom: true
+			} // watch marble 0
 		]
 	},
 	audioView: {
@@ -55,10 +75,10 @@ export const scene: SceneConfig = {
 		{
 			rail: {
 				id: 'camera',
-				offset: [0,8,0],
-				nodes: [...circle({radius: 7}), 'ddddb rrr uuuub lll']
+				offset: [0, 8, 0],
+				nodes: [...circle({ radius: 7 }), 'ddddb rrr uuuub lll']
 			},
-			marbles: [{start: 0, speed: 0.1}],
+			marbles: [{ start: 0, speed: 0.1 }],
 			color: '#113344',
 			visible: false
 		},
@@ -69,9 +89,7 @@ export const scene: SceneConfig = {
 				nodes: [...spiral({ rounds: 9, height: -4.5 }), 'oo out u2.5 uit iiii ilt l2.5 lot']
 			},
 			color: '#00ffcc',
-			marbles: [
-				{ type: 'ball', note: 66 }
-			],
+			marbles: [{ type: 'ball', note: 66 }],
 			instruments: [
 				{
 					type: 'arrow',

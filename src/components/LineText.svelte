@@ -55,8 +55,8 @@
 
 	$effect(() => {
 		if (plainMaterial && !fx && !plainMaterial.mat.color.equals(colorValue)) {
-				plainMaterial.mat.color = colorValue
-			}
+			plainMaterial.mat.color = colorValue
+		}
 	})
 
 	// onDestroy(() => {

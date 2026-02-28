@@ -140,15 +140,17 @@ function applyTransform<T extends { p: Vec3 }>(
 	points: T[],
 	transform: Matrix4 | ((v: Vector3) => Vector3)
 ): T[] {
-	return transform instanceof Matrix4 ? points.map((pt) => {
-			const v = new Vector3().fromArray(pt.p)
-			v.applyMatrix4(transform)
-			return { ...pt, p: v.toArray() as Vec3 }
-		}) : points.map((pt) => {
-			const v = new Vector3().fromArray(pt.p)
-			const transformed = transform(v)
-			return { ...pt, p: transformed.toArray() as Vec3 }
-		});
+	return transform instanceof Matrix4
+		? points.map((pt) => {
+				const v = new Vector3().fromArray(pt.p)
+				v.applyMatrix4(transform)
+				return { ...pt, p: v.toArray() as Vec3 }
+			})
+		: points.map((pt) => {
+				const v = new Vector3().fromArray(pt.p)
+				const transformed = transform(v)
+				return { ...pt, p: transformed.toArray() as Vec3 }
+			})
 }
 
 /**

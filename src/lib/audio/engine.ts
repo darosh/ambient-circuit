@@ -325,7 +325,7 @@ export async function buildChain(
 
 	const genPoly = config.generator?.poly
 	const maxVoices =
-		genPoly === undefined ? config.generator && 'rnbo' in config.generator ? 8 : 1 : genPoly
+		genPoly === undefined ? (config.generator && 'rnbo' in config.generator ? 8 : 1) : genPoly
 	const voices: VoiceTracker = { max: maxVoices, endTimes: [] }
 
 	const chain: AudioChain = {
@@ -401,16 +401,16 @@ async function buildAnalyzer(
 	const ana = resolveAnalyzerType(config, def)
 
 	switch (ana) {
-	case 'fft': {
-		return new Tone.Analyser('fft', 64) as unknown as ToneAudioNode
-	}
-	case 'waveform': {
-		return new Tone.Analyser('waveform', 256) as unknown as ToneAudioNode
-	}
-	case 'meter': {
-		return new Tone.Meter() as unknown as ToneAudioNode
-	}
-	// No default
+		case 'fft': {
+			return new Tone.Analyser('fft', 64) as unknown as ToneAudioNode
+		}
+		case 'waveform': {
+			return new Tone.Analyser('waveform', 256) as unknown as ToneAudioNode
+		}
+		case 'meter': {
+			return new Tone.Meter() as unknown as ToneAudioNode
+		}
+		// No default
 	}
 	return null
 }
@@ -711,7 +711,9 @@ export function getNodeParam(
 			cur = cur[part]
 		}
 
-		return forceValue ? (cur?.value ?? cur) as ParamValue | undefined : cur as ParamValue | undefined;
+		return forceValue
+			? ((cur?.value ?? cur) as ParamValue | undefined)
+			: (cur as ParamValue | undefined)
 	}
 }
 
@@ -768,100 +770,102 @@ function listNodeParams(
 		if (isAudioParam) {
 			const u = param.units
 			switch (u) {
-			case 'decibels': 
-			case 'gain': {
-				if (min < -1e30 || param.minValue === undefined) min = -60
-				if (max > 1e30 || param.maxValue === undefined) max = 60
-			
-			break;
+				case 'decibels':
+				case 'gain': {
+					if (min < -1e30 || param.minValue === undefined) min = -60
+					if (max > 1e30 || param.maxValue === undefined) max = 60
+
+					break
+				}
+				case 'cents': {
+					if (min < -1e30) min = -240
+					if (max > 1e30) max = 240
+
+					break
+				}
+				case 'positive': {
+					if (max > 1e30) max = 10_000
+
+					break
+				}
+				case 'frequency': {
+					if (min < -1e30) min = -10_000
+					if (max > 1e30) max = 10_000
+
+					break
+				}
+				// No default
 			}
-			case 'cents': {
-				if (min < -1e30) min = -240
-				if (max > 1e30) max = 240
-			
-			break;
+		} else
+			switch (path) {
+				case 'volume': {
+					min = -60
+					max = 60
+
+					break
+				}
+				case 'envelope.attack':
+				case 'filterEnvelope.attack':
+				case 'envelope.decay':
+				case 'filterEnvelope.decay': {
+					min = 0
+					max = 2
+
+					break
+				}
+				case 'envelope.release':
+				case 'filterEnvelope.release':
+				case 'modulation.release': {
+					min = 0
+					max = 5
+
+					break
+				}
+				case 'filterEnvelope.exponent': {
+					min = 0
+					max = 10
+
+					break
+				}
+				case 'filterEnvelope.octaves':
+				case 'harmonicity': {
+					min = 0
+					max = 12
+
+					break
+				}
+				case 'filter.Q': {
+					min = 0
+					max = 10_000
+
+					break
+				}
+				case 'octaves': {
+					min = 0.5
+					max = 10
+
+					break
+				}
+				case 'dampening':
+				case 'frequency': {
+					min = 0.1
+					max = 7000
+
+					break
+				}
+				default: {
+					if (path === 'resonance' && defaults[path] > 1) {
+						max = 7000
+					} else if (path === 'resonance' && defaults[path] < 1) {
+						max = 0.999
+					} else if (path === 'attackNoise') {
+						min = 0.1
+						max = 20
+					} else if (path.endsWith('.baseFrequency')) {
+						max = 7000
+					}
+				}
 			}
-			case 'positive': {
-				if (max > 1e30) max = 10_000
-			
-			break;
-			}
-			case 'frequency': {
-				if (min < -1e30) min = -10_000
-				if (max > 1e30) max = 10_000
-			
-			break;
-			}
-			// No default
-			}
-		} else switch (path) {
- case 'volume': {
-			min = -60
-			max = 60
-		
- break;
- }
- case 'envelope.attack': 
- case 'filterEnvelope.attack': 
- case 'envelope.decay': 
- case 'filterEnvelope.decay': {
-			min = 0
-			max = 2
-		
- break;
- }
- case 'envelope.release': 
- case 'filterEnvelope.release': 
- case 'modulation.release': {
-			min = 0
-			max = 5
-		
- break;
- }
- case 'filterEnvelope.exponent': {
-			min = 0
-			max = 10
-		
- break;
- }
- case 'filterEnvelope.octaves': 
- case 'harmonicity': {
-			min = 0
-			max = 12
-		
- break;
- }
- case 'filter.Q': {
-			min = 0
-			max = 10_000
-		
- break;
- }
- case 'octaves': {
-			min = 0.5
-			max = 10
-		
- break;
- }
- case 'dampening': 
- case 'frequency': {
-			min = 0.1
-			max = 7000
-		
- break;
- }
- default: { if (path === 'resonance' && defaults[path] > 1) {
-			max = 7000
-		} else if (path === 'resonance' && defaults[path] < 1) {
-			max = 0.999
-		} else if (path === 'attackNoise') {
-			min = 0.1
-			max = 20
-		} else if (path.endsWith('.baseFrequency')) {
-			max = 7000
-		}
- }
- }
 
 		params.push({ path, value, min, max })
 	}

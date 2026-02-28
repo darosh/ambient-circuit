@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { Vector3 } from 'three'
-import { updateCameraForSplit, updateTargetLerp, type SplitCamState, type ResolvedTarget } from '../src/lib/multi-view'
+import {
+	updateCameraForSplit,
+	updateTargetLerp,
+	type SplitCamState,
+	type ResolvedTarget
+} from '../src/lib/multi-view'
 import type { ViewSplitState } from '../src/lib/scene-ctx'
 
 function makeState(): SplitCamState {
@@ -9,10 +14,13 @@ function makeState(): SplitCamState {
 
 function makeViewState(overrides?: Partial<ViewSplitState>): ViewSplitState {
 	return {
-		camera: null, target: null,
-		smoothnessPos: 8, smoothnessAngle: 8, smoothnessTarget: 8,
+		camera: null,
+		target: null,
+		smoothnessPos: 8,
+		smoothnessAngle: 8,
+		smoothnessTarget: 8,
 		maxAngleSpeed: Infinity,
-		...overrides,
+		...overrides
 	}
 }
 
@@ -72,7 +80,9 @@ describe('updateCameraForSplit', () => {
 
 		// Set drag, manually set cam position as if OC moved it
 		cs.isDragging = true
-		camPos.x = 3; camPos.y = 4; camPos.z = 0
+		camPos.x = 3
+		camPos.y = 4
+		camPos.z = 0
 
 		const prevX = camPos.x
 		const prevY = camPos.y
@@ -84,7 +94,7 @@ describe('updateCameraForSplit', () => {
 		const expectedRadius = Math.hypot(
 			lerpTarget.x - prevX,
 			lerpTarget.y - prevY,
-			lerpTarget.z - prevZ,
+			lerpTarget.z - prevZ
 		)
 		expect(cs.radius).toBeCloseTo(expectedRadius, 2)
 
@@ -101,7 +111,9 @@ describe('updateCameraForSplit', () => {
 
 		// Drag: OC moves cam away
 		cs.isDragging = true
-		camPos.x = 3; camPos.y = 4; camPos.z = 0
+		camPos.x = 3
+		camPos.y = 4
+		camPos.z = 0
 		updateCameraForSplit(camPos, cs, state, lerpTarget, desired, delta)
 		updateCameraForSplit(camPos, cs, state, lerpTarget, desired, delta)
 
@@ -115,24 +127,31 @@ describe('updateCameraForSplit', () => {
 		}
 
 		// Should be moving toward desired
-		const distBefore = Math.hypot(posAfterDrag.x - desired.x, posAfterDrag.y - desired.y, posAfterDrag.z - desired.z)
-		const distAfter  = Math.hypot(camPos.x - desired.x, camPos.y - desired.y, camPos.z - desired.z)
+		const distBefore = Math.hypot(
+			posAfterDrag.x - desired.x,
+			posAfterDrag.y - desired.y,
+			posAfterDrag.z - desired.z
+		)
+		const distAfter = Math.hypot(camPos.x - desired.x, camPos.y - desired.y, camPos.z - desired.z)
 		expect(distAfter).toBeLessThan(distBefore)
 	})
 
 	it('tracks moving marble: cam [0,0,0]→[3,2,5], target [0,0,0]→[1,1,2]', () => {
 		const delta = 1 / 60
 		// Marble moves for MOVE_FRAMES, then holds still; camera must settle within MAX_FRAMES total
-		const MOVE_FRAMES = 120  // 2s of marble movement
-		const MAX_FRAMES  = 600  // 10s total safeguard
+		const MOVE_FRAMES = 120 // 2s of marble movement
+		const MAX_FRAMES = 600 // 10s total safeguard
 
 		// smoothness=1 → alpha≈0.63/frame — responsive but visible damping lag behind marble
-		Object.assign(state, makeViewState({ smoothnessPos: 1, smoothnessAngle: 1, smoothnessTarget: 1 }))
+		Object.assign(
+			state,
+			makeViewState({ smoothnessPos: 1, smoothnessAngle: 1, smoothnessTarget: 1 })
+		)
 
-		const camStart    = new Vector3(0, 0, 0)
-		const camEnd      = new Vector3(3, 2, 5)
+		const camStart = new Vector3(0, 0, 0)
+		const camEnd = new Vector3(3, 2, 5)
 		const targetStart = new Vector3(0, 0, 0)
-		const targetEnd   = new Vector3(1, 1, 2)
+		const targetEnd = new Vector3(1, 1, 2)
 
 		// Snap-init: place camera at starting marble position so spherical state is valid
 		camPos = { x: camStart.x, y: camStart.y, z: camStart.z }
@@ -149,7 +168,9 @@ describe('updateCameraForSplit', () => {
 		const fmt = (v: { x: number; y: number; z: number }) =>
 			`(${v.x.toFixed(3)},${v.y.toFixed(3)},${v.z.toFixed(3)})`
 
-		log.push(`f=INIT cam=${fmt(camPos)} tgt=${fmt(lerpTarget)} r=${cs.radius.toFixed(3)} yaw=${cs.yaw.toFixed(3)} pitch=${cs.pitch.toFixed(3)}`)
+		log.push(
+			`f=INIT cam=${fmt(camPos)} tgt=${fmt(lerpTarget)} r=${cs.radius.toFixed(3)} yaw=${cs.yaw.toFixed(3)} pitch=${cs.pitch.toFixed(3)}`
+		)
 
 		const alphaTgt = 1 - Math.exp(-state.smoothnessTarget * delta * 60)
 		// Current marble/target positions (move linearly for MOVE_FRAMES, then hold)
@@ -170,46 +191,51 @@ describe('updateCameraForSplit', () => {
 			updateTargetLerp(lerpTarget, targetPos, alphaTgt, cs.inited)
 			updateCameraForSplit(camPos, cs, state, lerpTarget, desired, delta)
 
-			const distCam    = Math.hypot(camPos.x - camEnd.x, camPos.y - camEnd.y, camPos.z - camEnd.z)
+			const distCam = Math.hypot(camPos.x - camEnd.x, camPos.y - camEnd.y, camPos.z - camEnd.z)
 			const distTarget = lerpTarget.distanceTo(targetEnd)
 
 			if (frame % 30 === 0 || (t >= 1 && distCam < TOL && distTarget < TOL)) {
 				log.push(
 					`f=${String(frame).padStart(4)} marble=${fmt(marblePos)} cam=${fmt(camPos)} tgt=${fmt(lerpTarget)}` +
-					` r=${cs.radius.toFixed(3)} yaw=${cs.yaw.toFixed(3)} pitch=${cs.pitch.toFixed(3)}` +
-					` |camErr|=${distCam.toFixed(4)} |tgtErr|=${distTarget.toFixed(4)}`
+						` r=${cs.radius.toFixed(3)} yaw=${cs.yaw.toFixed(3)} pitch=${cs.pitch.toFixed(3)}` +
+						` |camErr|=${distCam.toFixed(4)} |tgtErr|=${distTarget.toFixed(4)}`
 				)
 			}
 
 			if (t >= 1 && distCam < TOL && distTarget < TOL) break
 		}
 
-		const distCamFinal    = Math.hypot(camPos.x - camEnd.x, camPos.y - camEnd.y, camPos.z - camEnd.z)
+		const distCamFinal = Math.hypot(camPos.x - camEnd.x, camPos.y - camEnd.y, camPos.z - camEnd.z)
 		const distTargetFinal = lerpTarget.distanceTo(targetEnd)
 		const converged = distCamFinal < TOL && distTargetFinal < TOL
 
-		// console.log(converged
-		// 	? `converged in ${frame} frames\n` + log.join('\n')
-		// 	: `=== DID NOT CONVERGE (${frame} frames) ===\n` + log.join('\n') +
-		// 	  `\nfinal |camErr|=${distCamFinal.toFixed(5)} |tgtErr|=${distTargetFinal.toFixed(5)}`
-		// )
+		if (frame >= MAX_FRAMES) {
+			console.log(converged
+				? `converged in ${frame} frames\n` + log.join('\n')
+				: `=== DID NOT CONVERGE (${frame} frames) ===\n` + log.join('\n') +
+				`\nfinal |camErr|=${distCamFinal.toFixed(5)} |tgtErr|=${distTargetFinal.toFixed(5)}`
+			)
+		}
 
 		expect(frame, `did not converge within ${MAX_FRAMES} frames`).toBeLessThan(MAX_FRAMES)
-		expect(distCamFinal,    `cam not at goal: dist=${distCamFinal}`).toBeLessThan(TOL)
+		expect(distCamFinal, `cam not at goal: dist=${distCamFinal}`).toBeLessThan(TOL)
 		expect(distTargetFinal, `target not at goal: dist=${distTargetFinal}`).toBeLessThan(TOL)
 	})
 
 	it('static cam [5,3,2] stays put while target moves [0,0,0]→[3,0,0]', () => {
 		const delta = 1 / 60
 		const MOVE_FRAMES = 120
-		const MAX_FRAMES  = 600
+		const MAX_FRAMES = 600
 		const TOL = 0.01 // camera should not drift more than 1cm from [5,3,2]
 
-		Object.assign(state, makeViewState({ smoothnessPos: 1, smoothnessAngle: 1, smoothnessTarget: 1 }))
+		Object.assign(
+			state,
+			makeViewState({ smoothnessPos: 1, smoothnessAngle: 1, smoothnessTarget: 1 })
+		)
 
-		const camGoal    = new Vector3(5, 3, 2)
+		const camGoal = new Vector3(5, 3, 2)
 		const targetStart = new Vector3(0, 0, 0)
-		const targetEnd   = new Vector3(3, 0, 0)
+		const targetEnd = new Vector3(3, 0, 0)
 
 		// Snap-init: cam at goal, target at start
 		camPos = { x: camGoal.x, y: camGoal.y, z: camGoal.z }
@@ -247,16 +273,21 @@ describe('updateCameraForSplit', () => {
 			if (frame % 30 === 0 || frame === MOVE_FRAMES) {
 				log.push(
 					`f=${String(frame).padStart(4)} target=${fmt(targetPos)} cam=${fmt(camPos)}` +
-					` drift=${drift.toFixed(5)} maxDrift=${maxDrift.toFixed(5)}`
+						` drift=${drift.toFixed(5)} maxDrift=${maxDrift.toFixed(5)}`
 				)
 			}
 
 			if (t >= 1 && frame > MOVE_FRAMES + 10) break
 		}
 
-		// console.log(`max camera drift during target movement: ${maxDrift.toFixed(5)}\n` + log.join('\n'))
+		if (maxDrift >= TOL) {
+			console.log(`max camera drift during target movement: ${maxDrift.toFixed(5)}\n` + log.join('\n'))
+		}
 
-		expect(maxDrift, `camera drifted ${maxDrift.toFixed(5)} from goal (expected < ${TOL})`).toBeLessThan(TOL)
+		expect(
+			maxDrift,
+			`camera drifted ${maxDrift.toFixed(5)} from goal (expected < ${TOL})`
+		).toBeLessThan(TOL)
 	})
 
 	it('maxAngleSpeed clamps large position jumps', () => {

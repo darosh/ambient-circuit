@@ -21,10 +21,13 @@ export const scene: SceneConfig = {
 		splits: [
 			{
 				camera: 1,
-				target: [0,1,0],
+				target: [0, 1, 0],
 				smoothnessPos: 0.05,
 				smoothnessAngle: 0.05,
-				smoothnessTarget: 0.05, fov: 50, bloom: true },
+				smoothnessTarget: 0.05,
+				fov: 50,
+				bloom: true
+			},
 			{
 				maxAngleSpeed: Math.PI / 6,
 				camera: 0,
@@ -59,7 +62,7 @@ export const scene: SceneConfig = {
 				offset: [0, 8, 0],
 				nodes: [...circle({ radius: 7 }), 'ddddb rrr uuuub lll']
 			},
-			marbles: [{ start: 0, speed: .1, mode: 'ping-pong' }],
+			marbles: [{ start: 0, speed: 0.1, mode: 'ping-pong' }],
 			color: '#113344',
 			visible: false
 		},
@@ -67,9 +70,9 @@ export const scene: SceneConfig = {
 			rail: {
 				id: 'camera',
 				offset: [0, 7, 0],
-				nodes: circle({ radius: 13 }),
+				nodes: circle({ radius: 13 })
 			},
-			marbles: [{ start: 0, speed: .1 }],
+			marbles: [{ start: 0, speed: 0.1 }],
 			color: '#113344',
 			visible: false
 		},

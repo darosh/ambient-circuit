@@ -147,7 +147,9 @@ function buildCharacterPoints(
 	const isDash = char === '-'
 	const isDot = char === '.'
 
-	const n = isNumber ? Number.parseInt(char, 10) : (char.codePointAt(0) ?? 0) - ('A'.codePointAt(0) ?? 0)
+	const n = isNumber
+		? Number.parseInt(char, 10)
+		: (char.codePointAt(0) ?? 0) - ('A'.codePointAt(0) ?? 0)
 
 	const path = isNumber ? NUMBERS[n] : (MISC[char] ?? LETTERS[n] ?? UNKNOWN)
 
@@ -160,7 +162,7 @@ function buildCharacterPoints(
 	} else {
 		const expanded = expandPathString(path) as Vec3[]
 
-		points = Array.from({length: expanded.length + 1})
+		points = Array.from({ length: expanded.length + 1 })
 		points[0] = new Vector3(0, 0, 0)
 
 		for (const [i, e] of expanded.entries()) {

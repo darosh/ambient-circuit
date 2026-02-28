@@ -657,7 +657,6 @@
 
 		// Transport button animation
 		for (const [i, b] of btnStates.entries()) {
-
 			// Flash decay
 			if (b.animTime > 0) {
 				b.animTime = Math.max(0, b.animTime - delta)

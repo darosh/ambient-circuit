@@ -333,9 +333,12 @@ function checkMarbleCollisions(
 		const m1 = marbles[i]
 
 		// Skip if recently collided (cooldown to prevent oscillation)
-		if (m1.runtime.lastCollisionTime !== undefined && Math.abs(globalBeat - m1.runtime.lastCollisionTime) < cooldownBeats) {
-				continue
-			}
+		if (
+			m1.runtime.lastCollisionTime !== undefined &&
+			Math.abs(globalBeat - m1.runtime.lastCollisionTime) < cooldownBeats
+		) {
+			continue
+		}
 
 		// Skip if marble just wrapped (large beat delta indicates loop/wrap)
 		const m1Delta = Math.abs(m1.currentBeat - m1.previousBeat)
@@ -352,9 +355,12 @@ function checkMarbleCollisions(
 			if (!m1.config.bouncer && !m2.config.bouncer) continue
 
 			// Skip if recently collided
-			if (m2.runtime.lastCollisionTime !== undefined && Math.abs(globalBeat - m2.runtime.lastCollisionTime) < cooldownBeats) {
-					continue
-				}
+			if (
+				m2.runtime.lastCollisionTime !== undefined &&
+				Math.abs(globalBeat - m2.runtime.lastCollisionTime) < cooldownBeats
+			) {
+				continue
+			}
 
 			// Skip if marble just wrapped
 			const m2Delta = Math.abs(m2.currentBeat - m2.previousBeat)
@@ -562,59 +568,62 @@ function checkInstrumentTriggers(
 			if (!pathsMatch(marblePath, instrument.path)) continue
 
 			// Check if instrument is at or very close to jump target (within 0.01 beats)
-			if (Math.abs(instrument.beat - jumpBeat) < 0.01 && // Trigger this instrument
-				triggerHandler && sceneCtx) {
-					// Find entities
-					const marbleEntity = sceneCtx.marbles[marbleIndex]
-					const instrumentEntity = sceneCtx.instrumentByRef.get(instrument)
-					const railEntity = sceneCtx.railById.get(railId)
+			if (
+				Math.abs(instrument.beat - jumpBeat) < 0.01 && // Trigger this instrument
+				triggerHandler &&
+				sceneCtx
+			) {
+				// Find entities
+				const marbleEntity = sceneCtx.marbles[marbleIndex]
+				const instrumentEntity = sceneCtx.instrumentByRef.get(instrument)
+				const railEntity = sceneCtx.railById.get(railId)
 
-					// Skip if marble is inactive
-					if (!marbleEntity.activity.value) {
-						continue
-					}
-
-					// Skip if instrument is inactive
-					if (!instrumentEntity || !instrumentEntity.activity.value) {
-						continue
-					}
-
-					// Prevent re-trigger if already triggered in same direction
-					if (
-						marble.runtime.lastTriggeredBeat === instrument.beat &&
-						marble.runtime.lastTriggeredDirection === marble.direction
-					) {
-						continue
-					}
-
-					// Set trigger tracking
-					marble.runtime.lastTriggeredBeat = instrument.beat
-					marble.runtime.lastTriggeredDirection = marble.direction
-
-					if (marbleEntity && railEntity) {
-						// Set trigger context for position mirroring on reverse
-						marble.runtime.inTrigger = true
-						marble.runtime.triggerBeat = instrument.beat
-
-						triggerHandler({
-							railId,
-							marbleIndex,
-							beat: instrument.beat,
-							globalBeat,
-							marbleBeat: jumpBeat,
-							direction: marble.direction,
-							marble: marbleEntity,
-							instrument: instrumentEntity,
-							rail: railEntity,
-							scene: sceneCtx,
-							user: sceneCtx.user
-						})
-
-						// Clear trigger context
-						marble.runtime.inTrigger = false
-						marble.runtime.triggerBeat = undefined
-					}
+				// Skip if marble is inactive
+				if (!marbleEntity.activity.value) {
+					continue
 				}
+
+				// Skip if instrument is inactive
+				if (!instrumentEntity || !instrumentEntity.activity.value) {
+					continue
+				}
+
+				// Prevent re-trigger if already triggered in same direction
+				if (
+					marble.runtime.lastTriggeredBeat === instrument.beat &&
+					marble.runtime.lastTriggeredDirection === marble.direction
+				) {
+					continue
+				}
+
+				// Set trigger tracking
+				marble.runtime.lastTriggeredBeat = instrument.beat
+				marble.runtime.lastTriggeredDirection = marble.direction
+
+				if (marbleEntity && railEntity) {
+					// Set trigger context for position mirroring on reverse
+					marble.runtime.inTrigger = true
+					marble.runtime.triggerBeat = instrument.beat
+
+					triggerHandler({
+						railId,
+						marbleIndex,
+						beat: instrument.beat,
+						globalBeat,
+						marbleBeat: jumpBeat,
+						direction: marble.direction,
+						marble: marbleEntity,
+						instrument: instrumentEntity,
+						rail: railEntity,
+						scene: sceneCtx,
+						user: sceneCtx.user
+					})
+
+					// Clear trigger context
+					marble.runtime.inTrigger = false
+					marble.runtime.triggerBeat = undefined
+				}
+			}
 		}
 	}
 

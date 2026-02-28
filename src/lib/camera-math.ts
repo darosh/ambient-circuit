@@ -15,7 +15,13 @@ export function unwrapAngle(prev: number, next: number): number {
  * Unwraps target relative to cur, skips movement within deadZone, steps by alpha,
  * then clamps step magnitude to maxDelta (pass maxSpeed * delta at call site).
  */
-export function dampAngleStep(cur: number, target: number, alpha: number, deadZone: number, maxDelta = Infinity): number {
+export function dampAngleStep(
+	cur: number,
+	target: number,
+	alpha: number,
+	deadZone: number,
+	maxDelta = Infinity
+): number {
 	const t = unwrapAngle(cur, target)
 	const diff = t - cur
 	if (Math.abs(diff) <= deadZone) return cur
@@ -32,7 +38,12 @@ export function dampStep(cur: number, target: number, alpha: number): number {
  * Direction vector (dx, dy, dz) → yaw + pitch angles.
  * yaw = atan2(dz, dx), pitch = atan2(dy, horizLen)
  */
-export function dirToAngles(dx: number, dy: number, dz: number, out: { yaw: number; pitch: number }): void {
+export function dirToAngles(
+	dx: number,
+	dy: number,
+	dz: number,
+	out: { yaw: number; pitch: number }
+): void {
 	const horizLen = Math.hypot(dx, dz)
 	out.yaw = Math.atan2(dz, dx)
 	out.pitch = Math.atan2(dy, horizLen)
@@ -41,7 +52,11 @@ export function dirToAngles(dx: number, dy: number, dz: number, out: { yaw: numb
 /**
  * yaw + pitch → unit direction vector
  */
-export function anglesToDir(yaw: number, pitch: number, out: { x: number; y: number; z: number }): void {
+export function anglesToDir(
+	yaw: number,
+	pitch: number,
+	out: { x: number; y: number; z: number }
+): void {
 	const cosPitch = Math.cos(pitch)
 	out.x = Math.cos(yaw) * cosPitch
 	out.y = Math.sin(pitch)

@@ -77,7 +77,7 @@
 					const arr = raw as number[] | Float32Array
 					const step = Math.max(1, Math.floor(arr.length / binCount))
 					v = arr[i * step] ?? 0
-					v = type === 'fft' ? Math.max(0, Math.min(1, (v + 100) / 100)) : Math.abs(v);
+					v = type === 'fft' ? Math.max(0, Math.min(1, (v + 100) / 100)) : Math.abs(v)
 				}
 
 				const h = Math.max(0.01, v * Math.abs(height))

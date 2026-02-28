@@ -36,12 +36,13 @@ export function assignInstrumentSignals(
 ): void {
 	let idx = 0
 	for (const { instruments } of rails) {
-		if (instruments) for (const ins of instruments) {
-			ins.signal = signals[idx]
-			ins.midiSignal = midiSignals[idx]
-			ins.runtime = runtimes[idx]
-			idx++
-		}
+		if (instruments)
+			for (const ins of instruments) {
+				ins.signal = signals[idx]
+				ins.midiSignal = midiSignals[idx]
+				ins.runtime = runtimes[idx]
+				idx++
+			}
 	}
 }
 
