@@ -123,7 +123,11 @@
 		if (initialHash.params.has('play')) tempo.isPlaying = true
 	})
 	let activeScene = $derived(scenes.find((s) => s.id === sceneId) ?? scenes[0])
+	// eslint-disable-next-line svelte/prefer-writable-derived
 	let railVisibility = $state<boolean[]>([])
+	$effect(() => {
+		railVisibility = activeScene.rails.map(rail => rail.visible !== false)
+	})
 
 	$effect(() => {
 		if (globalThis.location.hash === `#${sceneId}` || globalThis.location.hash.startsWith(`#${sceneId}?`)) {

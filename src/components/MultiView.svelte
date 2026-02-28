@@ -51,25 +51,25 @@
 	let activeSplitIndex = $state(0)
 
 	// Track OC movement — set isDragging, reset after 150ms of inactivity
-	$effect(() => {
-		const ocs = orbitControls
-		const cleanups: (() => void)[] = []
-		for (const [i, oc] of ocs.entries()) {
-			if (!oc) continue
-			const cs = camStates[i]
-			const onChange = () => {
-				cs.isDragging = true
-				// if (cs.dragTimeoutId !== null) clearTimeout(cs.dragTimeoutId)
-				// cs.dragTimeoutId = setTimeout(() => { cs.isDragging = false; cs.dragTimeoutId = null }, 150)
-			}
-			oc.addEventListener('change', onChange)
-			cleanups.push(() => {
-				oc.removeEventListener('change', onChange)
-				if (cs.dragTimeoutId !== null) { clearTimeout(cs.dragTimeoutId); cs.dragTimeoutId = null }
-			})
-		}
-		return () => { for (const fn of cleanups) fn() }
-	})
+	// $effect(() => {
+	// 	const ocs = orbitControls
+	// 	const cleanups: (() => void)[] = []
+	// 	for (const [i, oc] of ocs.entries()) {
+	// 		if (!oc) continue
+	// 		const cs = camStates[i]
+	// 		const onChange = () => {
+	// 			cs.isDragging = true
+	// 			if (cs.dragTimeoutId !== null) clearTimeout(cs.dragTimeoutId)
+	// 			cs.dragTimeoutId = setTimeout(() => { cs.isDragging = false; cs.dragTimeoutId = null }, 150)
+	// 		}
+	// 		oc.addEventListener('change', onChange)
+	// 		cleanups.push(() => {
+	// 			oc.removeEventListener('change', onChange)
+	// 			if (cs.dragTimeoutId !== null) { clearTimeout(cs.dragTimeoutId); cs.dragTimeoutId = null }
+	// 		})
+	// 	}
+	// 	return () => { for (const fn of cleanups) fn() }
+	// })
 
 	// ── TSL pipeline helpers ───────────────────────────────────────────────────
 
@@ -255,7 +255,7 @@
 						_tmp.copy(camResolved.tangent).multiplyScalar(-splitCfg.tangentOffset)
 						_desired.add(_tmp)
 					}
-					updateCameraForSplit(cam.position, cs, state, lerpTargetPos[i], _desired, camResolved, delta)
+					updateCameraForSplit(cam.position, cs, state, lerpTargetPos[i], _desired, delta)
 				}
 			}
 

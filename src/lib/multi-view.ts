@@ -5,7 +5,7 @@
 import { Vector3 } from 'three/webgpu'
 import type { ViewConfig, ViewSplitConfig } from './scene'
 import type { SceneCtx, MarbleEntity, ViewSplitState } from './scene-ctx'
-import { dirToAngles, dampAngleStep, dampStep } from './camera-math'
+import { dirToAngles } from './camera-math'
 
 export type SplitCamState = {
 	radius: number
@@ -128,21 +128,31 @@ export function resolveMarbleOrVec(
 
 // ── Camera follow ─────────────────────────────────────────────────────────────
 
-const ANGLE_DEAD_ZONE = 0.0002 // ~0.01°, prevents micro-jitter oscillation
-const MAX_PITCH = 1.55          // ~88°, prevents gimbal at poles
-
-export { ANGLE_DEAD_ZONE, MAX_PITCH }
-
 const _tmpAngles = { yaw: 0, pitch: 0 }
+
+function syncSpherical(
+	camPosition: { x: number; y: number; z: number },
+	camState: SplitCamState,
+	lerpTargetPos: Vector3,
+): void {
+	const rdx = lerpTargetPos.x - camPosition.x
+	const rdy = lerpTargetPos.y - camPosition.y
+	const rdz = lerpTargetPos.z - camPosition.z
+	camState.radius = Math.hypot(rdx, rdy, rdz) || camState.radius
+	dirToAngles(rdx, rdy, rdz, _tmpAngles)
+	camState.yaw   = _tmpAngles.yaw
+	camState.pitch = _tmpAngles.pitch
+}
 
 /**
  * Update a single split's camera position.
  *
- * Bug fix: `isDragging` no longer permanently freezes marble-following.
- * When dragging → sync spherical FROM cam position (capture OC-induced orbit),
- * then still reconstruct cam.position from spherical. Since sync+reconstruct are
- * inverses the position is unchanged during drag, but spherical state stays in
- * sync so transitions are smooth when drag ends and marble-following resumes.
+ * Position is damped in **world space** toward `desired`, then spherical state
+ * is synced from the resulting world position. This ensures a static `desired`
+ * stays put even when `lerpTargetPos` moves (spherical-reconstruction would
+ * drift because spherical coords are relative to the target).
+ *
+ * Drag: OC owns camPosition — we only sync spherical for smooth resume.
  */
 export function updateCameraForSplit(
 	camPosition: { x: number; y: number; z: number },
@@ -150,55 +160,41 @@ export function updateCameraForSplit(
 	state: ViewSplitState,
 	lerpTargetPos: Vector3,
 	desired: Vector3,
-	camResolved: ResolvedTarget,
 	delta: number,
 ): void {
-	const alphaPos   = 1 - Math.exp(-state.smoothnessPos   * delta * 60)
-	const alphaAngle = 1 - Math.exp(-state.smoothnessAngle * delta * 60)
-
 	if (camState.isDragging) {
-		// Sync spherical state from current cam position (capture OC-induced orbit)
-		const rdx = lerpTargetPos.x - camPosition.x
-		const rdy = lerpTargetPos.y - camPosition.y
-		const rdz = lerpTargetPos.z - camPosition.z
-		camState.radius = Math.hypot(rdx, rdy, rdz) || camState.radius
-		dirToAngles(rdx, rdy, rdz, _tmpAngles)
-		camState.yaw   = _tmpAngles.yaw
-		camState.pitch = _tmpAngles.pitch
-		// inited stays as-is; if not yet inited, first non-drag frame will snap
-	} else {
-		// Convert desired world pos to spherical relative to lerped target
-		const dsx = lerpTargetPos.x - desired.x
-		const dsy = lerpTargetPos.y - desired.y
-		const dsz = lerpTargetPos.z - desired.z
-		const desiredRadius = Math.hypot(dsx, dsy, dsz) || camState.radius
-		dirToAngles(dsx, dsy, dsz, _tmpAngles)
-
-		if (camState.inited) {
-			camState.radius = dampStep(camState.radius, desiredRadius, alphaPos)
-			const maxDelta = state.maxAngleSpeed * delta
-			camState.yaw   = dampAngleStep(camState.yaw,   _tmpAngles.yaw,   alphaAngle, ANGLE_DEAD_ZONE, maxDelta)
-			camState.pitch = dampAngleStep(camState.pitch, _tmpAngles.pitch, alphaAngle, ANGLE_DEAD_ZONE, maxDelta)
-			if (camState.pitch >  MAX_PITCH) camState.pitch =  MAX_PITCH
-			if (camState.pitch < -MAX_PITCH) camState.pitch = -MAX_PITCH
-		} else {
-			// Snap on first valid frame
-			camState.radius = desiredRadius
-			camState.yaw    = _tmpAngles.yaw
-			camState.pitch  = _tmpAngles.pitch
-			camState.inited = true
-		}
+		// OC owns camPosition — sync spherical so follow resumes smoothly after drag
+		syncSpherical(camPosition, camState, lerpTargetPos)
+		return
 	}
 
-	// Always reconstruct world position from spherical.
-	// When dragging: sync+reconstruct = identity (position unchanged, OC stays in control).
-	// When not dragging: reconstruction follows marble.
-	const cpcy = Math.cos(camState.pitch) * Math.cos(camState.yaw)
-	const sp   = Math.sin(camState.pitch)
-	const cpsy = Math.cos(camState.pitch) * Math.sin(camState.yaw)
-	camPosition.x = lerpTargetPos.x - camState.radius * cpcy
-	camPosition.y = lerpTargetPos.y - camState.radius * sp
-	camPosition.z = lerpTargetPos.z - camState.radius * cpsy
+	if (camState.inited) {
+		// World-space exponential damp — correct for both moving cam and static cam
+		// with moving target (spherical reconstruction would drift in the latter case)
+		const alphaPos = 1 - Math.exp(-state.smoothnessPos * delta * 60)
+		let sx = (desired.x - camPosition.x) * alphaPos
+		let sy = (desired.y - camPosition.y) * alphaPos
+		let sz = (desired.z - camPosition.z) * alphaPos
+		// Clamp step by maxAngleSpeed (world units = radius * angle at current radius)
+		if (state.maxAngleSpeed !== Infinity) {
+			const maxStep = camState.radius * state.maxAngleSpeed * delta
+			const stepLen = Math.hypot(sx, sy, sz)
+			if (stepLen > maxStep && stepLen > 0) {
+				const f = maxStep / stepLen
+				sx *= f; sy *= f; sz *= f
+			}
+		}
+		camPosition.x += sx
+		camPosition.y += sy
+		camPosition.z += sz
+	} else {
+		camPosition.x = desired.x
+		camPosition.y = desired.y
+		camPosition.z = desired.z
+		camState.inited = true
+	}
+
+	syncSpherical(camPosition, camState, lerpTargetPos)
 }
 
 /**
