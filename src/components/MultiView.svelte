@@ -9,7 +9,7 @@
 		PostProcessing
 	} from 'three/webgpu'
 	import type { WebGPURenderer, Scene } from 'three/webgpu'
-	import { pass, select, screenUV, mix, max, vec2 } from 'three/tsl'
+	import { pass, select, screenUV, mix, max } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 	import type { ViewConfig, ViewSplitConfig, BloomConfig } from '../lib/scene'
 	import type { SceneCtx } from '../lib/scene-ctx'
@@ -41,7 +41,7 @@
 		children?: Snippet<[{ ref: Scene }]>
 	} = $props()
 
-	const { renderer, scene, renderStage, autoRender, size } = useThrelte()
+	const { renderer, scene, renderStage, autoRender, size, dpr } = useThrelte()
 
 	const { scene: hudScene } = createSceneContext()
 	const { camera: hudCamera } = createCameraContext()
@@ -61,7 +61,7 @@
 	let orbitControls = $state<OCRef[]>(untrack(() => config.splits.map((): any => void 0)))
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
-	let activeSplitIndex = $state(0)
+	let activeSplitIndex = $state(-1)
 
 	// Track OC user interaction via start/end events
 	$effect(() => {
@@ -110,19 +110,6 @@
 		}
 	}
 
-	function splitRemapUV(layout: ViewConfig['layout'], n: number, i: number) {
-		const cols = Math.ceil(Math.sqrt(n))
-		const rows = Math.ceil(n / cols)
-		const col = i % cols
-		const row = Math.floor(i / cols)
-		if (layout === 'horizontal') return vec2(screenUV.x.sub(i / n).mul(n), screenUV.y)
-		if (layout === 'vertical') return vec2(screenUV.x, screenUV.y.sub((n - 1 - i) / n).mul(n))
-		return vec2(
-			screenUV.x.sub(col / cols).mul(cols),
-			screenUV.y.sub((rows - 1 - row) / rows).mul(rows)
-		)
-	}
-
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	function buildComposite(nodes: any[], layout: ViewConfig['layout'], n: number): any {
 		if (n === 1) return nodes[0]
@@ -162,6 +149,7 @@
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let _scenePasses: any[] = []
+	let _devicePixelRatio = 0
 
 	$effect(() => {
 		const cams = cameras
@@ -175,7 +163,7 @@
 		untrack(() => buildPipeline(cams as ThreePerspectiveCamera[]))
 	})
 
-	const SINGLE_BLOOM = true
+	const SINGLE_BLOOM = false
 
 	function buildPipeline(cams: ThreePerspectiveCamera[]) {
 		const n = config.splits.length
@@ -187,7 +175,7 @@
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const passTexNode = scenePass.getTextureNode('output') as any
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const color: any = passTexNode.sample(splitRemapUV(config.layout, n, i))
+			const color: any = passTexNode.sample(screenUV)
 
 			if (!SINGLE_BLOOM) {
 				const bloomCfg = resolveBloom(splitCfg.bloom, config.bloomDefaults)
@@ -255,10 +243,15 @@
 		autoRender.set(false)
 		const canvas = (renderer as unknown as { domElement: HTMLCanvasElement }).domElement
 		canvas.addEventListener('pointermove', onPointerMove)
+		canvas.addEventListener('pointerdown', onPointerMove)
+
 		return () => {
 			autoRender.set(before)
 			canvas.removeEventListener('pointermove', onPointerMove)
+			canvas.removeEventListener('pointerdown', onPointerMove)
 			sceneCtx.view = undefined
+			for (const p of _scenePasses) p?.dispose()
+			_scenePasses = []
 		}
 	})
 
@@ -278,7 +271,7 @@
 	useTask(
 		(delta) => {
 			const n = config.splits.length
-			const rectsChanged = updateRects(
+			const viewportDirty = updateRects(
 				config.layout,
 				n,
 				size.current.width,
@@ -286,10 +279,20 @@
 				_rects,
 				_lastSize
 			)
-			if (rectsChanged) {
+
+			// Eventually: setViewport/setScissor after render() so _pixelRatio is populated
+			if (viewportDirty || _devicePixelRatio !== dpr.current) {
+				_devicePixelRatio = dpr.current
+
 				for (let i = 0; i < n; i++) {
 					const r = _rects[i]
-					_scenePasses[i]?.setSize(r.width, r.height)
+
+					if (_scenePasses[i]._pixelRatio !== _devicePixelRatio) {
+						_scenePasses[i]?.setPixelRatio(_devicePixelRatio)
+					}
+
+					_scenePasses[i]?.setViewport(r.x, 0, r.width, r.height)
+					_scenePasses[i]?.setScissor(r.x, 0, r.width, r.height)
 				}
 			}
 
