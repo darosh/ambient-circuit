@@ -23,6 +23,7 @@ import { scene as sceneSnake } from './scene-snake'
 import { scene as sceneAudio } from './scene-audio'
 import { scene as sceneToneInstruments } from './scene-tone-instruments'
 import { scene as sceneCreateDestroy } from './scene-create-destroy'
+import { scene as sceneSingleCamera } from './scene-single-camera'
 import { scene as sceneMultiCamera } from './scene-multi-camera'
 // import { scene as sceneRnbo } from './scene-rnbo'
 
@@ -47,6 +48,7 @@ export const scenes: SceneConfig[] = [
 	sceneSnake,
 	sceneRailSwitch,
 	...floatingScenes,
+	sceneSingleCamera,
 	sceneMultiCamera,
 	sceneCreateDestroy,
 	sceneAudio,
