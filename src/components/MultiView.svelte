@@ -175,6 +175,8 @@
 		})
 	})
 
+	const SINGLE_BLOOM = true
+
 	function buildPipeline(cams: ThreePerspectiveCamera[]) {
 		const n = config.splits.length
 		const splitOutputs = cams.map((cam, i) => {
@@ -184,12 +186,27 @@
 			const passTexNode = scenePass.getTextureNode('output') as any
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const color: any = passTexNode.sample(splitRemapUV(config.layout, n, i))
-			const bloomCfg = resolveBloom(splitCfg.bloom, config.bloomDefaults)
-			if (!bloomCfg) return color
-			return color.add(bloom(color, bloomCfg.strength, bloomCfg.radius, bloomCfg.threshold))
+
+			if (!SINGLE_BLOOM) {
+				const bloomCfg = resolveBloom(splitCfg.bloom, config.bloomDefaults)
+				if (!bloomCfg) return color
+				return color.add(bloom(color, bloomCfg.strength, bloomCfg.radius, bloomCfg.threshold))
+			}
+
+			return color
 		})
 
 		let composed = buildComposite(splitOutputs, config.layout, n)
+
+
+		if (SINGLE_BLOOM) {
+			const splitCfg = config.splits[0]
+			const bloomCfg = resolveBloom(splitCfg.bloom, config.bloomDefaults)
+
+			if (bloomCfg) {
+				composed = composed.add(bloom(composed, bloomCfg.strength, bloomCfg.radius, bloomCfg.threshold))
+			}
+		}
 
 		if (children && hudCamera.current) {
 			const hudPass = pass(hudScene, hudCamera.current)
