@@ -9,7 +9,7 @@ import {
 import type { ViewSplitState } from '../src/lib/scene-ctx'
 
 function makeState(): SplitCamState {
-	return { radius: 10, yaw: 0, pitch: 0, inited: false, isDragging: false, dragTimeoutId: null }
+	return { radius: 10, yaw: 0, pitch: 0, inited: false, isDragging: false }
 }
 
 function makeViewState(overrides?: Partial<ViewSplitState>): ViewSplitState {
