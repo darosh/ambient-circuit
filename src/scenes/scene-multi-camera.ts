@@ -35,8 +35,8 @@ export const scene: SceneConfig = {
 				tangentOffset: 0,
 				smoothnessPos: 0.05,
 				smoothnessAngle: 0.005,
-				smoothnessTarget: 0.005,
-				fov: 60,
+				smoothnessTarget: 0.002,
+				fov: 70,
 				bloom: true
 			},
 			{

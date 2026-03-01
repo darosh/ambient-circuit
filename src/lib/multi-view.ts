@@ -13,6 +13,7 @@ export type SplitCamState = {
 	pitch: number
 	inited: boolean
 	isDragging: boolean
+	isDraggingEnd: boolean
 }
 
 export type SplitRect = { x: number; y: number; width: number; height: number }
@@ -42,7 +43,8 @@ export function initCamStates(splits: ViewSplitConfig[]): SplitCamState[] {
 		yaw: 0,
 		pitch: 0,
 		inited: false,
-		isDragging: false
+		isDragging: false,
+		isDraggingEnd: false
 	}))
 }
 
@@ -135,9 +137,10 @@ export function resolveMarbleOrVec(
 
 const _tmpAngles = { yaw: 0, pitch: 0 }
 const _tmpDir = { x: 0, y: 0, z: 0 }
+const _tmpPos = new Vector3()
 
 function syncSpherical(
-	camPosition: { x: number; y: number; z: number },
+	camPosition: Vector3,
 	camState: SplitCamState,
 	lerpTargetPos: Vector3
 ): void {
@@ -161,7 +164,7 @@ function syncSpherical(
  * Drag: OC owns camPosition — we only sync spherical for smooth resume.
  */
 export function updateCameraForSplit(
-	camPosition: { x: number; y: number; z: number },
+	camPosition: Vector3,
 	camState: SplitCamState,
 	state: ViewSplitState,
 	lerpTargetPos: Vector3,
@@ -189,9 +192,7 @@ export function updateCameraForSplit(
 		// Max angular step (angle = arc / radius)
 		const maxAngleDelta = state.maxAngleSpeed === Infinity ? Infinity : state.maxAngleSpeed * delta
 
-		// Dead zone prevents micro-drift when static camera looks at a slowly moving target
-		const deadZone = 0.005
-		camState.yaw = dampAngleStep(camState.yaw, desiredYaw, alphaPos, deadZone, maxAngleDelta)
+		camState.yaw = dampAngleStep(camState.yaw, desiredYaw, alphaPos, 0, maxAngleDelta)
 		camState.pitch = dampStep(camState.pitch, desiredPitch, alphaPos)
 		camState.radius = dampStep(camState.radius, desiredRadius, alphaPos)
 	} else {
@@ -207,9 +208,20 @@ export function updateCameraForSplit(
 
 	// Reconstruct world position from spherical coords
 	anglesToDir(camState.yaw, camState.pitch, _tmpDir)
-	camPosition.x = lerpTargetPos.x - _tmpDir.x * camState.radius
-	camPosition.y = lerpTargetPos.y - _tmpDir.y * camState.radius
-	camPosition.z = lerpTargetPos.z - _tmpDir.z * camState.radius
+
+	_tmpPos.x = lerpTargetPos.x - _tmpDir.x * camState.radius
+	_tmpPos.y = lerpTargetPos.y - _tmpDir.y * camState.radius
+	_tmpPos.z = lerpTargetPos.z - _tmpDir.z * camState.radius
+
+	if (!isClose(_tmpPos, camPosition)) {
+		camPosition.copy(_tmpPos)
+	}
+}
+
+const EPS = 0.0001
+
+function isClose(a: Vector3, b: Vector3) {
+	return Math.abs(a.x - b.x) < EPS && Math.abs(a.y - b.y) < EPS && Math.abs(a.z - b.z) < EPS
 }
 
 /**

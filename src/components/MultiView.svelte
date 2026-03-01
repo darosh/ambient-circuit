@@ -69,11 +69,16 @@
 		for (const [i, oc] of ocs.entries()) {
 			if (!oc) continue
 			const cs = camStates[i]
+			let to: number
 			const onStart = () => {
 				cs.isDragging = true
+				clearTimeout(to)
 			}
 			const onEnd = () => {
-				cs.isDragging = false
+				to = <number>(<unknown>setTimeout(() => {
+					cs.isDraggingEnd = true
+					cs.isDragging = false
+				}, 800))
 			}
 			oc.addEventListener('start', onStart)
 			oc.addEventListener('end', onEnd)
@@ -270,6 +275,12 @@
 				const splitCfg: ViewSplitConfig = config.splits[i]
 				const state = splitStates[i]
 				const cs = camStates[i]
+
+				if (cs.isDraggingEnd) {
+					delta = 0.5
+					cs.isDraggingEnd = false
+				}
+
 				const alphaTgt = 1 - Math.exp(-state.smoothnessTarget * delta * 60)
 
 				// ── Target (look-at pivot) ───────────────────────────────────
@@ -280,7 +291,9 @@
 				if (tgtResolved) {
 					updateTargetLerp(lerpTargetPos[i], tgtResolved.pos, alphaTgt, cs.inited)
 					const oc = orbitControls[i]
-					if (oc) oc.target.copy(lerpTargetPos[i])
+					if (oc && !oc.target.equals(lerpTargetPos[i])) {
+						oc.target.copy(lerpTargetPos[i])
+					}
 				}
 
 				// ── Camera world position ────────────────────────────────────
