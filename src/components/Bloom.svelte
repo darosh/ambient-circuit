@@ -24,6 +24,7 @@
 		const scenePassColor = scenePass.getTextureNode('output')
 		const bloomPass = bloom(scenePassColor, strength, radius, threshold)
 		postProcessing.outputNode = scenePassColor.add(bloomPass).mul(tintUniform)
+		return () => scenePass.dispose()
 	})
 
 	$effect(() => {
@@ -34,7 +35,10 @@
 	onMount(() => {
 		const before = autoRender.current
 		autoRender.set(false)
-		return () => autoRender.set(before)
+		return () => {
+			autoRender.set(before)
+			postProcessing.dispose()
+		}
 	})
 
 	useTask(

@@ -57,9 +57,10 @@
 		bloomNode = bloom(scenePassColor, s, r, th)
 
 		let output: TslNode
+		let hudPass: ReturnType<typeof pass> | null = null
 
 		if (hudCamera.current) {
-			const hudPass = pass(hudScene, hudCamera.current)
+			hudPass = pass(hudScene, hudCamera.current)
 			let hudColor: TslNode = hudPass.getTextureNode('output')
 
 			// Apply HUD effects (blur, etc.)
@@ -83,6 +84,11 @@
 
 		postProcessing.outputNode = output
 		postProcessing.needsUpdate = true
+
+		return () => {
+			scenePass.dispose()
+			hudPass?.dispose()
+		}
 	})
 
 	// Update bloom uniforms at runtime (no recompilation)
@@ -101,7 +107,10 @@
 	onMount(() => {
 		const before = autoRender.current
 		autoRender.set(false)
-		return () => autoRender.set(before)
+		return () => {
+			autoRender.set(before)
+			postProcessing.dispose()
+		}
 	})
 
 	useTask(
