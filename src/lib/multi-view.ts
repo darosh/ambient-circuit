@@ -30,9 +30,9 @@ export function initSplitStates(splits: ViewSplitConfig[]): ViewSplitState[] {
 	return splits.map((s) => ({
 		camera: s.camera ?? null,
 		target: s.target ?? null,
-		smoothnessPos: s.smoothnessPos ?? 8,
-		smoothnessAngle: s.smoothnessAngle ?? 8,
-		smoothnessTarget: s.smoothnessTarget ?? 8,
+		smoothnessPos: s.smoothnessPos ?? 0.05,
+		smoothnessAngle: s.smoothnessAngle ?? 0.05,
+		smoothnessTarget: s.smoothnessTarget ?? 0.05,
 		maxAngleSpeed: s.maxAngleSpeed ?? Infinity
 	}))
 }
@@ -88,7 +88,7 @@ export function updateRects(
 			out[i].height = i === n - 1 ? h - i * sh : sh
 		}
 	} else {
-		const cols = Math.ceil(Math.sqrt(n))
+		const cols = Math.max(1, Math.min(n, Math.ceil(Math.sqrt(n * w / h))))
 		const rows = Math.ceil(n / cols)
 		const sw = Math.floor(w / cols)
 		const sh = Math.floor(h / rows)

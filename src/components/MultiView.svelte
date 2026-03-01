@@ -178,7 +178,7 @@
 			const color: any = passTexNode.sample(screenUV)
 
 			if (!SINGLE_BLOOM) {
-				const bloomCfg = resolveBloom(splitCfg.bloom, config.bloomDefaults)
+				const bloomCfg = resolveBloom(splitCfg.bloom ?? true, config.bloomDefaults)
 				if (!bloomCfg) return color
 				return color.add(bloom(color, bloomCfg.strength, bloomCfg.radius, bloomCfg.threshold))
 			}
@@ -190,7 +190,7 @@
 
 		if (SINGLE_BLOOM) {
 			const splitCfg = config.splits[0]
-			const bloomCfg = resolveBloom(splitCfg.bloom, config.bloomDefaults)
+			const bloomCfg = resolveBloom(splitCfg.bloom ?? true, config.bloomDefaults)
 
 			if (bloomCfg) {
 				composed = composed.add(
@@ -286,8 +286,8 @@
 				for (let i = 0; i < n; i++) {
 					const r = _rects[i]
 					_scenePasses[i]?.setPixelRatio(_lastSize.dpr)
-					_scenePasses[i]?.setViewport(r.x, 0, r.width, r.height)
-					_scenePasses[i]?.setScissor(r.x, 0, r.width, r.height)
+					_scenePasses[i]?.setViewport(r.x, r.y, r.width, r.height)
+					_scenePasses[i]?.setScissor(r.x, r.y, r.width, r.height)
 				}
 
 				postProcessing.needsUpdate = true
