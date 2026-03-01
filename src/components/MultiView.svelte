@@ -4,12 +4,14 @@
 	import { onMount, untrack } from 'svelte'
 	import type { Snippet } from 'svelte'
 	import {
+		Vector2,
 		Vector3,
 		PerspectiveCamera as ThreePerspectiveCamera,
-		PostProcessing
+		PostProcessing,
+		RenderTarget
 	} from 'three/webgpu'
 	import type { WebGPURenderer, Scene } from 'three/webgpu'
-	import { pass, select, screenUV, mix, max } from 'three/tsl'
+	import { pass, select, screenUV, mix, max, uniform } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 	import type { ViewConfig, ViewSplitConfig, BloomConfig } from '../lib/scene'
 	import type { SceneCtx } from '../lib/scene-ctx'
@@ -149,7 +151,11 @@
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let _scenePasses: any[] = []
-	let _devicePixelRatio = 0
+	const _splitTargets: RenderTarget[] = []
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const _splitUVOrigins: any[] = []
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const _splitUVScales: any[] = []
 
 	$effect(() => {
 		const cams = cameras
@@ -168,14 +174,39 @@
 	function buildPipeline(cams: ThreePerspectiveCamera[]) {
 		const n = config.splits.length
 		_scenePasses = []
+		const cw = _lastSize.w || size.current.width
+		const ch = _lastSize.h || size.current.height
+		for (let i = 0; i < n; i++) {
+			const r = _rects[i]
+			const w = Math.max(1, Math.round(r.width * _lastSize.dpr))
+			const h = Math.max(1, Math.round(r.height * _lastSize.dpr))
+			if (_splitTargets[i]) {
+				_splitTargets[i].setSize(w, h)
+			} else {
+				_splitTargets[i] = new RenderTarget(w, h, { samples: 4 })
+			}
+			const rx = cw > 0 ? r.x / cw : 0
+			const ry = ch > 0 ? r.y / ch : 0
+			const rw = cw > 0 ? r.width / cw : 1
+			const rh = ch > 0 ? r.height / ch : 1
+			if (_splitUVOrigins[i]) {
+				_splitUVOrigins[i].value.set(rx, ry)
+				_splitUVScales[i].value.set(cw > 0 ? 1 / rw : 1, ch > 0 ? 1 / rh : 1)
+			} else {
+				_splitUVOrigins[i] = uniform(new Vector2(rx, ry))
+				_splitUVScales[i] = uniform(new Vector2(cw > 0 ? 1 / rw : 1, ch > 0 ? 1 / rh : 1))
+			}
+		}
 		const splitOutputs = cams.map((cam, i) => {
 			const splitCfg = config.splits[i]
-			const scenePass = pass(scene, cam)
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const scenePass = pass(scene, cam, { renderTarget: _splitTargets[i] } as any)
 			_scenePasses[i] = scenePass
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const passTexNode = scenePass.getTextureNode('output') as any
+			const splitUV = screenUV.sub(_splitUVOrigins[i]).mul(_splitUVScales[i])
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const color: any = passTexNode.sample(screenUV)
+			const color: any = passTexNode.sample(splitUV)
 
 			if (!SINGLE_BLOOM) {
 				const bloomCfg = resolveBloom(splitCfg.bloom ?? true, config.bloomDefaults)
@@ -252,6 +283,8 @@
 			sceneCtx.view = undefined
 			for (const p of _scenePasses) p?.dispose()
 			_scenePasses = []
+			for (const t of _splitTargets) t?.dispose()
+			_splitTargets.length = 0
 		}
 	})
 
@@ -281,16 +314,20 @@
 				_lastSize
 			)
 
-			// setViewport/setScissor after render() so _pixelRatio is populated
 			if (viewportDirty) {
+				const cw = _lastSize.w
+				const ch = _lastSize.h
 				for (let i = 0; i < n; i++) {
 					const r = _rects[i]
-					_scenePasses[i]?.setPixelRatio(_lastSize.dpr)
-					_scenePasses[i]?.setViewport(r.x, r.y, r.width, r.height)
-					_scenePasses[i]?.setScissor(r.x, r.y, r.width, r.height)
+					_splitTargets[i]?.setSize(
+						Math.max(1, Math.round(r.width * _lastSize.dpr)),
+						Math.max(1, Math.round(r.height * _lastSize.dpr))
+					)
+					if (_splitUVOrigins[i] && cw > 0 && ch > 0) {
+						_splitUVOrigins[i].value.set(r.x / cw, r.y / ch)
+						_splitUVScales[i].value.set(cw / r.width, ch / r.height)
+					}
 				}
-
-				postProcessing.needsUpdate = true
 			}
 
 			for (let i = 0; i < n; i++) {

@@ -88,7 +88,7 @@ export function updateRects(
 			out[i].height = i === n - 1 ? h - i * sh : sh
 		}
 	} else {
-		const cols = Math.max(1, Math.min(n, Math.ceil(Math.sqrt(n * w / h))))
+		const cols = Math.max(1, Math.min(n, Math.ceil(Math.sqrt((n * w) / h))))
 		const rows = Math.ceil(n / cols)
 		const sw = Math.floor(w / cols)
 		const sh = Math.floor(h / rows)
