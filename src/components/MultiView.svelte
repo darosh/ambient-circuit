@@ -289,6 +289,8 @@
 					_scenePasses[i]?.setViewport(r.x, 0, r.width, r.height)
 					_scenePasses[i]?.setScissor(r.x, 0, r.width, r.height)
 				}
+
+				postProcessing.needsUpdate = true
 			}
 
 			for (let i = 0; i < n; i++) {
