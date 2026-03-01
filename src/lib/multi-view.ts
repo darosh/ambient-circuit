@@ -182,6 +182,10 @@ export function updateCameraForSplit(
 			(1 - Math.exp(-state.smoothnessPos * delta * 60)) /
 			(camState.isDraggingEnd > 0 ? camState.isDraggingEnd + 1 : 1)
 
+		const alphaAngle =
+			(1 - Math.exp(-state.smoothnessAngle * delta * 60)) /
+			(camState.isDraggingEnd > 0 ? camState.isDraggingEnd + 1 : 1)
+
 		// Desired spherical coords relative to lerped target
 		const ddx = lerpTargetPos.x - desired.x
 		const ddy = lerpTargetPos.y - desired.y
@@ -194,8 +198,8 @@ export function updateCameraForSplit(
 		// Max angular step (angle = arc / radius)
 		const maxAngleDelta = state.maxAngleSpeed === Infinity ? Infinity : state.maxAngleSpeed * delta
 
-		camState.yaw = dampAngleStep(camState.yaw, desiredYaw, alphaPos, 0, maxAngleDelta)
-		camState.pitch = dampStep(camState.pitch, desiredPitch, alphaPos)
+		camState.yaw = dampAngleStep(camState.yaw, desiredYaw, alphaAngle, 0, maxAngleDelta)
+		camState.pitch = dampStep(camState.pitch, desiredPitch, alphaAngle)
 		camState.radius = dampStep(camState.radius, desiredRadius, alphaPos)
 	} else {
 		const ddx = lerpTargetPos.x - desired.x
