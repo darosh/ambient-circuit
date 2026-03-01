@@ -1,6 +1,6 @@
 import type { SceneConfig } from '../lib/scene'
 import { triggerHandler } from '../lib/trigger-handler'
-import { circle, spiral } from '../lib/rail-primitives'
+import { spiral } from '../lib/rail-primitives'
 
 let bc = 1 - 4
 const b = () => (bc += 4)
