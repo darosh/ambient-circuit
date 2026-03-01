@@ -280,22 +280,6 @@
 				_lastSize
 			)
 
-			// Eventually: setViewport/setScissor after render() so _pixelRatio is populated
-			if (viewportDirty || _devicePixelRatio !== dpr.current) {
-				_devicePixelRatio = dpr.current
-
-				for (let i = 0; i < n; i++) {
-					const r = _rects[i]
-
-					if (_scenePasses[i]._pixelRatio !== _devicePixelRatio) {
-						_scenePasses[i]?.setPixelRatio(_devicePixelRatio)
-					}
-
-					_scenePasses[i]?.setViewport(r.x, 0, r.width, r.height)
-					_scenePasses[i]?.setScissor(r.x, 0, r.width, r.height)
-				}
-			}
-
 			for (let i = 0; i < n; i++) {
 				const cam = cameras[i]
 				if (!cam) continue
@@ -351,6 +335,17 @@
 			}
 
 			postProcessing.render()
+
+			// setViewport/setScissor after render() so _pixelRatio is populated
+			if (viewportDirty || _devicePixelRatio !== dpr.current) {
+				_devicePixelRatio = dpr.current
+
+				for (let i = 0; i < n; i++) {
+					const r = _rects[i]
+					_scenePasses[i]?.setViewport(r.x, 0, r.width, r.height)
+					_scenePasses[i]?.setScissor(r.x, 0, r.width, r.height)
+				}
+			}
 		},
 		{ stage: renderStage, autoInvalidate: false }
 	)
