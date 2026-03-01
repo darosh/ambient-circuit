@@ -16,7 +16,7 @@ export const scene: SceneConfig = {
 	polar: true,
 	tint: [1.4, 1, 1],
 	view: {
-		layout: 'horizontal',
+		layout: 'grid',
 		bloomDefaults: { strength: 0.5, radius: 0.2, threshold: 0.5 },
 		splits: [
 			{
@@ -41,12 +41,12 @@ export const scene: SceneConfig = {
 			},
 			{
 				target: 2,
-				camera: 2,
+				camera: [0,20,1],
 				maxAngleSpeed: 2,
 				tangentOffset: 50,
 				smoothnessPos: 0.0001,
-				smoothnessAngle: 0.0001,
-				smoothnessTarget: 0.01,
+				smoothnessAngle: 0.001,
+				smoothnessTarget: 0.001,
 				fov: 28,
 				bloom: true
 			}

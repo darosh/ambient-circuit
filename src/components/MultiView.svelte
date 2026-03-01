@@ -124,7 +124,7 @@
 		if (layout === 'vertical') {
 			let result = nodes[n - 1]
 			for (let i = n - 2; i >= 0; i--)
-				result = select(screenUV.y.greaterThan((n - 1 - i) / n), nodes[i], result)
+				result = select(screenUV.y.lessThan((i + 1) / n), nodes[i], result)
 			return result
 		}
 		const cols = Math.ceil(Math.sqrt(n))
@@ -142,7 +142,7 @@
 		}
 		let result = rowNodes[rows - 1]
 		for (let row = rows - 2; row >= 0; row--)
-			result = select(screenUV.y.greaterThan((rows - 1 - row) / rows), rowNodes[row], result)
+			result = select(screenUV.y.lessThan((row + 1) / rows), rowNodes[row], result)
 		return result
 	}
 	/* eslint-enable @typescript-eslint/no-explicit-any */
