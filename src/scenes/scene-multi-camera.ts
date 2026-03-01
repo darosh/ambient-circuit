@@ -36,12 +36,12 @@ export const scene: SceneConfig = {
 				smoothnessPos: 0.5,
 				smoothnessAngle: 0.005,
 				smoothnessTarget: 0.002,
-				fov: 70,
+				fov: 60,
 				bloom: true
 			},
 			{
 				target: 2,
-				camera: [0,20,1],
+				camera: [0, 20, 1],
 				maxAngleSpeed: 2,
 				tangentOffset: 50,
 				smoothnessPos: 0.0001,
