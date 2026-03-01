@@ -157,25 +157,48 @@
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const _splitUVScales: any[] = []
 
+	let _buildPending = false
+	function scheduleBuild(cams: ThreePerspectiveCamera[]) {
+		if (_buildPending) return
+		_buildPending = true
+		queueMicrotask(() => {
+			_buildPending = false
+			buildPipeline(cams)
+		})
+	}
+
 	$effect(() => {
 		const cams = cameras
 		if (cams.some((c) => !c)) return
 		if (children) {
-			return hudCamera.subscribe((hudCam) => {
-				if (!hudCam) return
-				untrack(() => buildPipeline(cams as ThreePerspectiveCamera[]))
-			})
+			return untrack(() =>
+				hudCamera.subscribe((hudCam) => {
+					if (!hudCam) return
+					scheduleBuild(cams as ThreePerspectiveCamera[])
+				})
+			)
 		}
-		untrack(() => buildPipeline(cams as ThreePerspectiveCamera[]))
+		untrack(() => scheduleBuild(cams as ThreePerspectiveCamera[]))
 	})
 
 	const SINGLE_BLOOM = false
 
 	function buildPipeline(cams: ThreePerspectiveCamera[]) {
 		const n = config.splits.length
+		for (const p of _scenePasses) p?.dispose()
 		_scenePasses = []
-		const cw = _lastSize.w || size.current.width
-		const ch = _lastSize.h || size.current.height
+		if (_lastSize.w === 0)
+			updateRects(
+				config.layout,
+				n,
+				size.current.width,
+				size.current.height,
+				dpr.current,
+				_rects,
+				_lastSize
+			)
+		const cw = _lastSize.w
+		const ch = _lastSize.h
 		for (let i = 0; i < n; i++) {
 			const r = _rects[i]
 			const w = Math.max(1, Math.round(r.width * _lastSize.dpr))
