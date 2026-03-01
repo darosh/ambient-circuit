@@ -17,7 +17,6 @@ export const scene: SceneConfig = {
 	tint: [1.4, 1, 1],
 	view: {
 		layout: 'grid',
-		bloomDefaults: { strength: 0.5, radius: 0.2, threshold: 0.5 },
 		splits: [
 			{
 				camera: 1,
@@ -25,8 +24,7 @@ export const scene: SceneConfig = {
 				smoothnessRadius: 0.05,
 				smoothnessYaw: 0.05,
 				smoothnessTarget: 0.05,
-				fov: 50,
-				bloom: true
+				fov: 50
 			},
 			{
 				maxAngleSpeed: Math.PI,
@@ -36,8 +34,7 @@ export const scene: SceneConfig = {
 				smoothnessRadius: 0.5,
 				smoothnessYaw: 0.005,
 				smoothnessTarget: 0.002,
-				fov: 60,
-				bloom: true
+				fov: 60
 			},
 			{
 				target: 2,
@@ -47,8 +44,7 @@ export const scene: SceneConfig = {
 				smoothnessRadius: 0.0001,
 				smoothnessYaw: 0.001,
 				smoothnessTarget: 0.001,
-				fov: 28,
-				bloom: true
+				fov: 28
 			}
 		]
 	},
