@@ -39,6 +39,7 @@
 	import type { SceneCtx } from '../lib/scene-ctx'
 	import { toggleMute } from '../lib/audio/engine'
 	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
+	import { GridHelperIO } from '../lib/three/GridHelperIO'
 
 	export type SelectedEntity = {
 		type: 'instrument' | 'marble'
@@ -515,7 +516,8 @@
 		<T.GridHelper position.y={-0.01} args={[10, 10, gridColor, gridColor]} />
 	{/if}
 	{#if scene.polar}
-		<T.PolarGridHelper position.y={-0.01} args={[5, 24, 10, 64, gridColor, gridColor]} />
+		<!--		<T.PolarGridHelper position.y={-0.01} args={[5, 24, 10, 64, gridColor, gridColor]} />-->
+		<T is={GridHelperIO} position.y={-0.01} args={[5, 0.5, 24, 10, 64, gridColor]} />
 	{/if}
 {/if}
 
