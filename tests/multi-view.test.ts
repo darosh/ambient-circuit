@@ -16,8 +16,9 @@ function makeViewState(overrides?: Partial<ViewSplitState>): ViewSplitState {
 	return {
 		camera: null,
 		target: null,
-		smoothnessPos: 8,
-		smoothnessAngle: 8,
+		smoothnessRadius: 8,
+		smoothnessYaw: 8,
+		smoothnessPitch: 8,
 		smoothnessTarget: 8,
 		maxAngleSpeed: Infinity,
 		...overrides
@@ -145,7 +146,7 @@ describe('updateCameraForSplit', () => {
 		// smoothness=1 → alpha≈0.63/frame — responsive but visible damping lag behind marble
 		Object.assign(
 			state,
-			makeViewState({ smoothnessPos: 1, smoothnessAngle: 1, smoothnessTarget: 1 })
+			makeViewState({ smoothnessRadius: 1, smoothnessYaw: 1, smoothnessTarget: 1 })
 		)
 
 		const camStart = new Vector3(0, 0, 0)
@@ -232,7 +233,7 @@ describe('updateCameraForSplit', () => {
 
 		Object.assign(
 			state,
-			makeViewState({ smoothnessPos: 1, smoothnessAngle: 1, smoothnessTarget: 1 })
+			makeViewState({ smoothnessRadius: 1, smoothnessYaw: 1, smoothnessTarget: 1 })
 		)
 
 		const camGoal = new Vector3(5, 3, 2)

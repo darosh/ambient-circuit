@@ -30,8 +30,9 @@ export function initSplitStates(splits: ViewSplitConfig[]): ViewSplitState[] {
 	return splits.map((s) => ({
 		camera: s.camera ?? null,
 		target: s.target ?? null,
-		smoothnessPos: s.smoothnessPos ?? 0.05,
-		smoothnessAngle: s.smoothnessAngle ?? 0.05,
+		smoothnessRadius: s.smoothnessRadius ?? 0.05,
+		smoothnessYaw: s.smoothnessYaw ?? 0.05,
+		smoothnessPitch: s.smoothnessPitch ?? 0.05,
 		smoothnessTarget: s.smoothnessTarget ?? 0.05,
 		maxAngleSpeed: s.maxAngleSpeed ?? Infinity
 	}))
@@ -180,12 +181,16 @@ export function updateCameraForSplit(
 	}
 
 	if (camState.inited) {
-		const alphaPos =
-			(1 - Math.exp(-state.smoothnessPos * delta * 60)) /
+		const alphaRadius =
+			(1 - Math.exp(-state.smoothnessRadius * delta * 60)) /
 			(camState.isDraggingEnd > 0 ? camState.isDraggingEnd + 1 : 1)
 
-		const alphaAngle =
-			(1 - Math.exp(-state.smoothnessAngle * delta * 60)) /
+		const alphaYaw =
+			(1 - Math.exp(-state.smoothnessYaw * delta * 60)) /
+			(camState.isDraggingEnd > 0 ? camState.isDraggingEnd + 1 : 1)
+
+		const alphaPitch =
+			(1 - Math.exp(-state.smoothnessPitch * delta * 60)) /
 			(camState.isDraggingEnd > 0 ? camState.isDraggingEnd + 1 : 1)
 
 		// Desired spherical coords relative to lerped target
@@ -200,9 +205,9 @@ export function updateCameraForSplit(
 		// Max angular step (angle = arc / radius)
 		const maxAngleDelta = state.maxAngleSpeed === Infinity ? Infinity : state.maxAngleSpeed * delta
 
-		camState.yaw = dampAngleStep(camState.yaw, desiredYaw, alphaAngle, 0, maxAngleDelta)
-		camState.pitch = dampStep(camState.pitch, desiredPitch, alphaAngle)
-		camState.radius = dampStep(camState.radius, desiredRadius, alphaPos)
+		camState.yaw = dampAngleStep(camState.yaw, desiredYaw, alphaYaw, 0, maxAngleDelta)
+		camState.pitch = dampStep(camState.pitch, desiredPitch, alphaPitch)
+		camState.radius = dampStep(camState.radius, desiredRadius, alphaRadius)
 	} else {
 		const ddx = lerpTargetPos.x - desired.x
 		const ddy = lerpTargetPos.y - desired.y

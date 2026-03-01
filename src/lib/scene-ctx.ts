@@ -98,8 +98,9 @@ export type ViewSplitState = {
 	camera: MarbleEntity | number | Vector3Tuple | null
 	/** MarbleEntity, marble index, static [x,y,z], or null (free/scene default) */
 	target: MarbleEntity | number | Vector3Tuple | null
-	smoothnessPos: number
-	smoothnessAngle: number
+	smoothnessRadius: number
+	smoothnessYaw: number
+	smoothnessPitch: number
 	smoothnessTarget: number
 	maxAngleSpeed: number
 }

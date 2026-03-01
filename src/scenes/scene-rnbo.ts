@@ -37,8 +37,8 @@ export const scene: SceneConfig = {
 				camera: 0,
 				target: 1,
 				tangentOffset: 1,
-				smoothnessPos: 0.05,
-				smoothnessAngle: 0.05,
+				smoothnessRadius: 0.05,
+				smoothnessYaw: 0.05,
 				smoothnessTarget: 0.005,
 				fov: 60,
 				bloom: true
@@ -48,8 +48,8 @@ export const scene: SceneConfig = {
 				camera: 1,
 				maxAngleSpeed: 2,
 				tangentOffset: 50,
-				smoothnessPos: 0.0001,
-				smoothnessAngle: 0.01,
+				smoothnessRadius: 0.0001,
+				smoothnessYaw: 0.01,
 				smoothnessTarget: 0.01,
 				fov: 23,
 				bloom: true
