@@ -5,7 +5,7 @@
 import { Vector3 } from 'three/webgpu'
 import type { ViewConfig, ViewSplitConfig } from './scene'
 import type { SceneCtx, MarbleEntity, ViewSplitState } from './scene-ctx'
-import { dirToAngles, anglesToDir, dampAngleStep, dampStep } from './camera-math'
+import { dirToAngles, anglesToDir, dampAngleStep, dampStep, unwrapAngle } from './camera-math'
 
 export type SplitCamState = {
 	radius: number
@@ -13,7 +13,7 @@ export type SplitCamState = {
 	pitch: number
 	inited: boolean
 	isDragging: boolean
-	isDraggingEnd: boolean
+	isDraggingEnd: number
 }
 
 export type SplitRect = { x: number; y: number; width: number; height: number }
@@ -44,7 +44,7 @@ export function initCamStates(splits: ViewSplitConfig[]): SplitCamState[] {
 		pitch: 0,
 		inited: false,
 		isDragging: false,
-		isDraggingEnd: false
+		isDraggingEnd: 0
 	}))
 }
 
@@ -149,7 +149,7 @@ function syncSpherical(
 	const rdz = lerpTargetPos.z - camPosition.z
 	camState.radius = Math.hypot(rdx, rdy, rdz) || camState.radius
 	dirToAngles(rdx, rdy, rdz, _tmpAngles)
-	camState.yaw = _tmpAngles.yaw
+	camState.yaw = unwrapAngle(camState.yaw, _tmpAngles.yaw)
 	camState.pitch = _tmpAngles.pitch
 }
 
@@ -178,7 +178,9 @@ export function updateCameraForSplit(
 	}
 
 	if (camState.inited) {
-		const alphaPos = 1 - Math.exp(-state.smoothnessPos * delta * 60)
+		const alphaPos =
+			(1 - Math.exp(-state.smoothnessPos * delta * 60)) /
+			(camState.isDraggingEnd > 0 ? camState.isDraggingEnd + 1 : 1)
 
 		// Desired spherical coords relative to lerped target
 		const ddx = lerpTargetPos.x - desired.x

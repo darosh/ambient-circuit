@@ -76,7 +76,7 @@
 			}
 			const onEnd = () => {
 				to = <number>(<unknown>setTimeout(() => {
-					cs.isDraggingEnd = true
+					cs.isDraggingEnd = 0.2
 					cs.isDragging = false
 				}, 800))
 			}
@@ -276,9 +276,8 @@
 				const state = splitStates[i]
 				const cs = camStates[i]
 
-				if (cs.isDraggingEnd) {
-					delta = 0.5
-					cs.isDraggingEnd = false
+				if (cs.isDraggingEnd > 0) {
+					cs.isDraggingEnd -= delta
 				}
 
 				const alphaTgt = 1 - Math.exp(-state.smoothnessTarget * delta * 60)
@@ -292,7 +291,7 @@
 					updateTargetLerp(lerpTargetPos[i], tgtResolved.pos, alphaTgt, cs.inited)
 					const oc = orbitControls[i]
 					if (oc && !oc.target.equals(lerpTargetPos[i])) {
-						oc.target.copy(lerpTargetPos[i])
+						// oc.target.copy(lerpTargetPos[i])
 					}
 				}
 
@@ -308,6 +307,7 @@
 						_desired.add(_tmp)
 					}
 					updateCameraForSplit(cam.position, cs, state, lerpTargetPos[i], _desired, delta)
+					cam.lookAt(lerpTargetPos[i])
 				}
 			}
 
@@ -326,7 +326,7 @@
 		bind:ref={cameras[i]}
 	>
 		<OrbitControls
-			enableDamping
+			enableDamping={false}
 			enabled={activeSplitIndex === i}
 			autoRotate={splitCfg.autoRotate === true || typeof splitCfg.autoRotate === 'number'}
 			autoRotateSpeed={typeof splitCfg.autoRotate === 'number' ? splitCfg.autoRotate * 0.5 : 0.5}
