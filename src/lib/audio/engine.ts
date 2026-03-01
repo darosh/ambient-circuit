@@ -1136,9 +1136,11 @@ function disposeNode(node: ToneAudioNode | Device): void {
 		node.node.disconnect()
 		node.parameterChangeEvent.removeAllSubscriptions()
 
+		/** Does not work when reusing device by patch
 		for (const { id } of node.dataBufferDescriptions) {
 			node.releaseDataBuffer(id).then()
 		}
+		**/
 
 		// empty attempt using disposedRnbos instead
 		// createDevice({context: node.context, patcher: <IPatcher>engineCache.rnboCache?.get('empty')}, node).then()

@@ -1,18 +1,17 @@
 import type { SceneConfig } from '../lib/scene'
 import { triggerHandler } from '../lib/trigger-handler'
 import { circle, spiral } from '../lib/rail-primitives'
+import { NodeConfig } from '../lib/audio'
 
 const generator = {
-	tone: 'Synth',
-	params: {
-		'envelope.attack': 0.1,
-		'envelope.decay': 0.2,
-		'envelope.sustain': 0.5,
-		'envelope.release': 0.8,
-		volume: -13,
-		'oscillator.type': 'fatsawtooth'
-	}
+	rnbo: 'formant-synth',
+	preset: 'Muted'
 }
+
+const fx: NodeConfig[] = [
+	{ tone: 'Volume', params: { volume: -6 } },
+	{ tone: 'OnePoleFilter', params: { frequency: 60, type: 'highpass' } }
+]
 
 let bc = 1 - 4
 const b = () => (bc += 4)
@@ -27,37 +26,8 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	polar: true,
 	tint: [1.4, 1, 1],
-	view: {
-		layout: 'horizontal',
-		bloomDefaults: { strength: 0.5, radius: 0.2, threshold: 0.5 },
-		splits: [
-			{ camera: [25, 18, 12], fov: 50, bloom: true },
-			{
-				maxAngleSpeed: Math.PI / 6,
-				camera: 0,
-				target: 1,
-				tangentOffset: 1,
-				smoothnessRadius: 0.05,
-				smoothnessYaw: 0.05,
-				smoothnessTarget: 0.005,
-				fov: 60,
-				bloom: true
-			}, // chase marble 1
-			{
-				target: 1,
-				camera: 1,
-				maxAngleSpeed: 2,
-				tangentOffset: 50,
-				smoothnessRadius: 0.0001,
-				smoothnessYaw: 0.01,
-				smoothnessTarget: 0.01,
-				fov: 23,
-				bloom: true
-			} // watch marble 0
-		]
-	},
 	audioView: {
-		color: '#88ffcc'
+		color: '#cc88ff'
 	},
 	audio: {
 		master: {
@@ -65,7 +35,7 @@ export const scene: SceneConfig = {
 				{
 					tone: 'Compressor',
 					params: {
-						threshold: -30
+						threshold: -12
 					}
 				}
 			]
@@ -88,7 +58,7 @@ export const scene: SceneConfig = {
 				offset: [0, 4.5, 0],
 				nodes: [...spiral({ rounds: 9, height: -4.5 }), 'oo out u2.5 uit iiii ilt l2.5 lot']
 			},
-			color: '#00ffcc',
+			color: '#ff00cc',
 			marbles: [{ type: 'ball', note: 66 }],
 			instruments: [
 				{
@@ -96,7 +66,8 @@ export const scene: SceneConfig = {
 					kind: 'plain',
 					beat: b(),
 					audio: {
-						generator
+						generator,
+						fx
 					}
 				},
 				{
@@ -106,6 +77,7 @@ export const scene: SceneConfig = {
 					audio: {
 						generator,
 						fx: [
+							...fx,
 							{
 								rnbo: 'filterdelay',
 								preset: 'Wide'
@@ -120,9 +92,22 @@ export const scene: SceneConfig = {
 					audio: {
 						generator,
 						fx: [
+							...fx,
 							{
 								rnbo: 'autofilter',
-								preset: 'Resonant'
+								params: {
+									sense: 47,
+									attack: 0,
+									release: 66,
+									type: 2,
+									bottom: 0,
+									mix: 86,
+									volume: 0,
+									reson: 80,
+									top: 100,
+									slope: 50
+								},
+								preset: 'Extreme'
 							}
 						]
 					}
@@ -134,6 +119,7 @@ export const scene: SceneConfig = {
 					audio: {
 						generator,
 						fx: [
+							...fx,
 							{
 								rnbo: 'flanger'
 								// preset: 'Wide'
@@ -148,6 +134,7 @@ export const scene: SceneConfig = {
 					audio: {
 						generator,
 						fx: [
+							...fx,
 							{
 								rnbo: 'freqshifter',
 								preset: 'Extreme'
@@ -162,9 +149,75 @@ export const scene: SceneConfig = {
 					audio: {
 						generator,
 						fx: [
+							...fx,
 							{
 								rnbo: 'octaver',
 								preset: 'Octave2'
+							}
+						]
+					}
+				},
+				{
+					type: 'arrow',
+					kind: 'plain',
+					beat: b(),
+					audio: {
+						generator,
+						fx: [
+							...fx,
+							{
+								rnbo: 'freeverb'
+							}
+						]
+					}
+				},
+				{
+					type: 'arrow',
+					kind: 'plain',
+					beat: b(),
+					audio: {
+						generator,
+						fx: [
+							...fx,
+							{
+								rnbo: 'overdrive',
+								params: {
+									lowcut: 0,
+									highcut: 50,
+									drive: 50,
+									mix: 90,
+									volume: -70,
+									midfreq: -60,
+									treble: -70,
+									mid: 25,
+									bass: -25
+								},
+								preset: 'Scream'
+							}
+						]
+					}
+				},
+				{
+					type: 'arrow',
+					kind: 'plain',
+					beat: b(),
+					audio: {
+						generator,
+						fx: [
+							...fx,
+							{
+								rnbo: 'talkwah',
+								params: {
+									tone: 48,
+									manual: 50,
+									spread: 17,
+									sense: 75,
+									voice: 4,
+									slope: 50,
+									auto: 1,
+									color: 28
+								},
+								preset: 'Mouse'
 							}
 						]
 					}
