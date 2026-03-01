@@ -223,7 +223,7 @@
 	const _rects: SplitRect[] = untrack(() =>
 		config.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
 	)
-	const _lastSize = { w: 0, h: 0 }
+	const _lastSize = { w: 0, h: 0, dpr: 0 }
 
 	function onPointerMove(e: PointerEvent) {
 		const canvas = (renderer as unknown as { domElement: HTMLCanvasElement }).domElement
@@ -276,9 +276,20 @@
 				n,
 				size.current.width,
 				size.current.height,
+				dpr.current,
 				_rects,
 				_lastSize
 			)
+
+			// setViewport/setScissor after render() so _pixelRatio is populated
+			if (viewportDirty) {
+				for (let i = 0; i < n; i++) {
+					const r = _rects[i]
+					_scenePasses[i]?.setPixelRatio(_lastSize.dpr)
+					_scenePasses[i]?.setViewport(r.x, 0, r.width, r.height)
+					_scenePasses[i]?.setScissor(r.x, 0, r.width, r.height)
+				}
+			}
 
 			for (let i = 0; i < n; i++) {
 				const cam = cameras[i]
@@ -335,17 +346,6 @@
 			}
 
 			postProcessing.render()
-
-			// setViewport/setScissor after render() so _pixelRatio is populated
-			if (viewportDirty || _devicePixelRatio !== dpr.current) {
-				_devicePixelRatio = dpr.current
-
-				for (let i = 0; i < n; i++) {
-					const r = _rects[i]
-					_scenePasses[i]?.setViewport(r.x, 0, r.width, r.height)
-					_scenePasses[i]?.setScissor(r.x, 0, r.width, r.height)
-				}
-			}
 		},
 		{ stage: renderStage, autoInvalidate: false }
 	)

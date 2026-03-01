@@ -63,12 +63,14 @@ export function updateRects(
 	n: number,
 	w: number,
 	h: number,
+	dpr: number,
 	out: SplitRect[],
-	_last: { w: number; h: number }
+	_last: { w: number; h: number, dpr: number }
 ): boolean {
-	if (w === _last.w && h === _last.h) return false
+	if (w === _last.w && h === _last.h && _last.dpr === dpr) return false
 	_last.w = w
 	_last.h = h
+	_last.dpr = dpr
 	if (layout === 'horizontal') {
 		const sw = Math.floor(w / n)
 		for (let i = 0; i < n; i++) {
