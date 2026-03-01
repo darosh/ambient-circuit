@@ -11,7 +11,7 @@
 		RenderTarget
 	} from 'three/webgpu'
 	import type { WebGPURenderer, Scene } from 'three/webgpu'
-	import { pass, select, screenUV, mix, max, uniform } from 'three/tsl'
+	import { pass, select, screenUV, mix, max, uniform, vec4 } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 	import type { ViewConfig, ViewSplitConfig, BloomConfig } from '../lib/scene'
 	import type { SceneCtx } from '../lib/scene-ctx'
@@ -129,14 +129,14 @@
 		}
 		const cols = Math.ceil(Math.sqrt(n))
 		const rows = Math.ceil(n / cols)
+		const empty = vec4(0, 0, 0, 1)
 		const rowNodes: any[] = []
 		for (let row = 0; row < rows; row++) {
 			const base = row * cols
-			let rowResult = nodes[Math.min(base + cols - 1, n - 1)]
-			for (let col = cols - 2; col >= 0; col--) {
-				const idx = base + col
-				if (idx < n)
-					rowResult = select(screenUV.x.lessThan((col + 1) / cols), nodes[idx], rowResult)
+			const actualCols = Math.min(cols, n - base)
+			let rowResult: any = actualCols < cols ? empty : nodes[base + actualCols - 1]
+			for (let col = actualCols - 1; col >= 0; col--) {
+				rowResult = select(screenUV.x.lessThan((col + 1) / cols), nodes[base + col], rowResult)
 			}
 			rowNodes.push(rowResult)
 		}
