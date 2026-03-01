@@ -222,7 +222,7 @@ export function updateCameraForSplit(
 
 const EPS = 0.0001
 
-function isClose(a: Vector3, b: Vector3) {
+export function isClose(a: Vector3, b: Vector3) {
 	return Math.abs(a.x - b.x) < EPS && Math.abs(a.y - b.y) < EPS && Math.abs(a.z - b.z) < EPS
 }
 

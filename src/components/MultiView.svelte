@@ -22,7 +22,8 @@
 		updateCameraForSplit,
 		updateTargetLerp,
 		type SplitRect,
-		type ResolvedTarget
+		type ResolvedTarget,
+		isClose
 	} from '../lib/multi-view'
 
 	type OC = import('three/addons/controls/OrbitControls.js').OrbitControls
@@ -159,29 +160,30 @@
 
 	// ── Pipeline building ──────────────────────────────────────────────────────
 
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let _scenePasses: any[] = []
+
 	$effect(() => {
 		const cams = cameras
 		if (cams.some((c) => !c)) return
+		if (children) {
+			return hudCamera.subscribe((hudCam) => {
+				if (!hudCam) return
+				untrack(() => buildPipeline(cams as ThreePerspectiveCamera[]))
+			})
+		}
 		untrack(() => buildPipeline(cams as ThreePerspectiveCamera[]))
-	})
-
-	$effect(() => {
-		if (!children) return
-		return hudCamera.subscribe((cam) => {
-			if (!cam) return
-			const cams = cameras
-			if (cams.some((c) => !c)) return
-			buildPipeline(cams as ThreePerspectiveCamera[])
-		})
 	})
 
 	const SINGLE_BLOOM = true
 
 	function buildPipeline(cams: ThreePerspectiveCamera[]) {
 		const n = config.splits.length
+		_scenePasses = []
 		const splitOutputs = cams.map((cam, i) => {
 			const splitCfg = config.splits[i]
 			const scenePass = pass(scene, cam)
+			_scenePasses[i] = scenePass
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const passTexNode = scenePass.getTextureNode('output') as any
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -198,13 +200,14 @@
 
 		let composed = buildComposite(splitOutputs, config.layout, n)
 
-
 		if (SINGLE_BLOOM) {
 			const splitCfg = config.splits[0]
 			const bloomCfg = resolveBloom(splitCfg.bloom, config.bloomDefaults)
 
 			if (bloomCfg) {
-				composed = composed.add(bloom(composed, bloomCfg.strength, bloomCfg.radius, bloomCfg.threshold))
+				composed = composed.add(
+					bloom(composed, bloomCfg.strength, bloomCfg.radius, bloomCfg.threshold)
+				)
 			}
 		}
 
@@ -275,7 +278,20 @@
 	useTask(
 		(delta) => {
 			const n = config.splits.length
-			updateRects(config.layout, n, size.current.width, size.current.height, _rects, _lastSize)
+			const rectsChanged = updateRects(
+				config.layout,
+				n,
+				size.current.width,
+				size.current.height,
+				_rects,
+				_lastSize
+			)
+			if (rectsChanged) {
+				for (let i = 0; i < n; i++) {
+					const r = _rects[i]
+					_scenePasses[i]?.setSize(r.width, r.height)
+				}
+			}
 
 			for (let i = 0; i < n; i++) {
 				const cam = cameras[i]
@@ -306,10 +322,6 @@
 				const tgtResolved = resolveMarbleOrVec(tgtVal, sceneCtx, _resolveOut)
 				if (tgtResolved) {
 					updateTargetLerp(lerpTargetPos[i], tgtResolved.pos, alphaTgt, cs.inited)
-					const oc = orbitControls[i]
-					if (oc && !oc.target.equals(lerpTargetPos[i])) {
-						// oc.target.copy(lerpTargetPos[i])
-					}
 				}
 
 				// ── Camera world position ────────────────────────────────────
@@ -324,7 +336,14 @@
 						_desired.add(_tmp)
 					}
 					updateCameraForSplit(cam.position, cs, state, lerpTargetPos[i], _desired, delta)
-					cam.lookAt(lerpTargetPos[i])
+
+					if (
+						tgtResolved &&
+						orbitControls[i] &&
+						!isClose(lerpTargetPos[i], orbitControls[i]!.target)
+					) {
+						cam.lookAt(lerpTargetPos[i])
+					}
 				}
 			}
 
