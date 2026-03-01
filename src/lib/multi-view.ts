@@ -5,7 +5,7 @@
 import { Vector3 } from 'three/webgpu'
 import type { ViewConfig, ViewSplitConfig } from './scene'
 import type { SceneCtx, MarbleEntity, ViewSplitState } from './scene-ctx'
-import { dirToAngles } from './camera-math'
+import { dirToAngles, anglesToDir, dampAngleStep, dampStep } from './camera-math'
 
 export type SplitCamState = {
 	radius: number
@@ -134,6 +134,7 @@ export function resolveMarbleOrVec(
 // ── Camera follow ─────────────────────────────────────────────────────────────
 
 const _tmpAngles = { yaw: 0, pitch: 0 }
+const _tmpDir = { x: 0, y: 0, z: 0 }
 
 function syncSpherical(
 	camPosition: { x: number; y: number; z: number },
@@ -174,34 +175,41 @@ export function updateCameraForSplit(
 	}
 
 	if (camState.inited) {
-		// World-space exponential damp — correct for both moving cam and static cam
-		// with moving target (spherical reconstruction would drift in the latter case)
 		const alphaPos = 1 - Math.exp(-state.smoothnessPos * delta * 60)
-		let sx = (desired.x - camPosition.x) * alphaPos
-		let sy = (desired.y - camPosition.y) * alphaPos
-		let sz = (desired.z - camPosition.z) * alphaPos
-		// Clamp step by maxAngleSpeed (world units = radius * angle at current radius)
-		if (state.maxAngleSpeed !== Infinity) {
-			const maxStep = camState.radius * state.maxAngleSpeed * delta
-			const stepLen = Math.hypot(sx, sy, sz)
-			if (stepLen > maxStep && stepLen > 0) {
-				const f = maxStep / stepLen
-				sx *= f
-				sy *= f
-				sz *= f
-			}
-		}
-		camPosition.x += sx
-		camPosition.y += sy
-		camPosition.z += sz
+
+		// Desired spherical coords relative to lerped target
+		const ddx = lerpTargetPos.x - desired.x
+		const ddy = lerpTargetPos.y - desired.y
+		const ddz = lerpTargetPos.z - desired.z
+		const desiredRadius = Math.hypot(ddx, ddy, ddz) || camState.radius
+		dirToAngles(ddx, ddy, ddz, _tmpAngles)
+		const desiredYaw = _tmpAngles.yaw
+		const desiredPitch = _tmpAngles.pitch
+
+		// Max angular step (angle = arc / radius)
+		const maxAngleDelta = state.maxAngleSpeed === Infinity ? Infinity : state.maxAngleSpeed * delta
+
+		// Dead zone prevents micro-drift when static camera looks at a slowly moving target
+		const deadZone = 0.005
+		camState.yaw = dampAngleStep(camState.yaw, desiredYaw, alphaPos, deadZone, maxAngleDelta)
+		camState.pitch = dampStep(camState.pitch, desiredPitch, alphaPos)
+		camState.radius = dampStep(camState.radius, desiredRadius, alphaPos)
 	} else {
-		camPosition.x = desired.x
-		camPosition.y = desired.y
-		camPosition.z = desired.z
+		const ddx = lerpTargetPos.x - desired.x
+		const ddy = lerpTargetPos.y - desired.y
+		const ddz = lerpTargetPos.z - desired.z
+		camState.radius = Math.hypot(ddx, ddy, ddz) || camState.radius
+		dirToAngles(ddx, ddy, ddz, _tmpAngles)
+		camState.yaw = _tmpAngles.yaw
+		camState.pitch = _tmpAngles.pitch
 		camState.inited = true
 	}
 
-	syncSpherical(camPosition, camState, lerpTargetPos)
+	// Reconstruct world position from spherical coords
+	anglesToDir(camState.yaw, camState.pitch, _tmpDir)
+	camPosition.x = lerpTargetPos.x - _tmpDir.x * camState.radius
+	camPosition.y = lerpTargetPos.y - _tmpDir.y * camState.radius
+	camPosition.z = lerpTargetPos.z - _tmpDir.z * camState.radius
 }
 
 /**

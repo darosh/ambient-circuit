@@ -29,7 +29,7 @@ export const scene: SceneConfig = {
 				bloom: true
 			},
 			{
-				maxAngleSpeed: Math.PI / 6,
+				maxAngleSpeed: Math.PI,
 				camera: 0,
 				target: 2,
 				tangentOffset: 0,
