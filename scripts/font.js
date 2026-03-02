@@ -1,4 +1,4 @@
-// usage node ./scripts/font.js ./.fonts/NanumGothicCoding-Regular.ttf ./public/fonts/nanumgothiccoding-regular.json "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-_:.,;|()[]{} #*/'…<>?◃▹▵▿♭♯♪♬♩☆★"
+// usage node ./scripts/font.js ./.fonts/NanumGothicCoding-Regular.ttf ./public/fonts/nanumgothiccoding-regular.json "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ+-_:.,;|()[]{} #*/'…<>?◃▹▵▿♭♯♪♬♩☆★\""
 
 import opentype from 'opentype.js'
 import { readFile, writeFile } from 'node:fs/promises'
