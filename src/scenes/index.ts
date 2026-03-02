@@ -25,6 +25,8 @@ import { scene as sceneToneInstruments } from './scene-tone-instruments'
 import { scene as sceneCreateDestroy } from './scene-create-destroy'
 import { scene as sceneSingleCamera } from './scene-single-camera'
 import { scene as sceneMultiCamera } from './scene-multi-camera'
+import { scene as sceneMultiRows } from './scene-multi-rows'
+import { scene as sceneMultiColumns } from './scene-multi-columns'
 import { scene as sceneRnbo } from './scene-rnbo'
 
 export const scenes: SceneConfig[] = [
@@ -50,6 +52,8 @@ export const scenes: SceneConfig[] = [
 	...floatingScenes,
 	sceneSingleCamera,
 	sceneMultiCamera,
+	sceneMultiRows,
+	sceneMultiColumns,
 	sceneCreateDestroy,
 	sceneAudio,
 	sceneCollisions,

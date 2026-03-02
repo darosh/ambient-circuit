@@ -64,7 +64,7 @@ export const scene: SceneConfig = {
 		},
 		{
 			rail: {
-				id: 'camera',
+				id: 'camera2',
 				offset: [0, 7, 0],
 				nodes: circle({ radius: 13 })
 			},
