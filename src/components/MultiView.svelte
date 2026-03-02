@@ -43,6 +43,9 @@
 		children?: Snippet<[{ ref: Scene }]>
 	} = $props()
 
+	const DRAGGING_COOLDOWN = 1.6 // seconds
+	const DRAGGING_DELAY = 800 // milliseconds
+
 	const { renderer, scene, renderStage, autoRender, size, dpr } = useThrelte()
 
 	const { scene: hudScene } = createSceneContext()
@@ -79,9 +82,9 @@
 			}
 			const onEnd = () => {
 				to = <number>(<unknown>setTimeout(() => {
-					cs.isDraggingEnd = 0.2
+					cs.isDraggingEnd = DRAGGING_COOLDOWN
 					cs.isDragging = false
-				}, 800))
+				}, DRAGGING_DELAY))
 			}
 			oc.addEventListener('start', onStart)
 			oc.addEventListener('end', onEnd)
@@ -184,9 +187,12 @@
 	const SINGLE_BLOOM = false
 
 	function buildPipeline(cams: ThreePerspectiveCamera[]) {
-		const n = config.splits.length
+		const n = config?.splits?.length ?? 0
+
 		for (const p of _scenePasses) p?.dispose()
+
 		_scenePasses = []
+
 		if (_lastSize.w === 0)
 			updateRects(
 				config.layout,
@@ -197,6 +203,11 @@
 				_rects,
 				_lastSize
 			)
+
+		if (!n) {
+			return
+		}
+
 		const cw = _lastSize.w
 		const ch = _lastSize.h
 		for (let i = 0; i < n; i++) {
