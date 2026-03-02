@@ -1,6 +1,9 @@
 # TODO (no AI)
 
 - [ ] Dust?
+- [ ] RNBO scene
+- [ ] RNBO mono export
+- [ ] poly default 4
 - [ ] https://threlte.xyz/docs/reference/extras/fake-glow-material
 - [ ] https://threlte.xyz/docs/reference/extras/transitions
 - [ ] https://threlte.xyz/docs/reference/extras/uv-material
