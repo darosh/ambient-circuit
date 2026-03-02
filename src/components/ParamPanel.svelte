@@ -141,7 +141,7 @@
 		if (!activeNode) return 8
 		let mx = 0
 		for (const p of activeNode.params) {
-			const sn = shortName(p.path)
+			const sn = shortName(p.path, maxName)
 			const snLength = textW(sn)
 
 			if (snLength > mx) mx = snLength
@@ -262,6 +262,10 @@
 	const contentX = $derived(-panelW / 2 + sidebarW)
 	const contentY = $derived(panelH / 2)
 	const contentW = $derived(panelW - sidebarW)
+	const maxName = $derived.by(() => {
+		const chars = contentW / charW
+		return Math.max(6, Math.floor(chars / (chars > 40 ? 3 : 4)))
+	})
 	const contentRight = $derived(contentX + contentW)
 
 	// Header layout: node tabs left
@@ -831,10 +835,24 @@
 		return v.toFixed(VAL_DECIMALS).toUpperCase()
 	}
 
-	function shortName(path: string): string {
+	function shortName(path: string, max = 12): string {
+		if (path.length <= max) {
+			return path
+		}
+
 		const parts = path.split('.')
-		if (parts.length > 1) return parts[0].slice(0, 3) + ELLIP + parts.at(-1)
-		return path.length > 12 ? path.slice(0, 11) + '.' : path
+
+		if (parts.length > 1 && Number.parseInt(parts[0]).toString() !== parts[0]) {
+			let last = parts.at(-1)
+
+			if (last!.length > max - 5) {
+				last = last!.slice(0, max - 6) + '.'
+			}
+
+			return parts[0].slice(0, 3) + ELLIP + last
+		}
+
+		return path.length > max ? path.slice(0, max - 1) + '.' : path
 	}
 
 	function onkeydown(e: KeyboardEvent) {
@@ -1155,7 +1173,7 @@
 				{@const py = contentY - textMid - (vi + 3) * rowH}
 				{@const val = activeNode.paramValues[info.path] ?? info.value}
 				{@const norm = info.max > info.min ? (val - info.min) / (info.max - info.min) : 0}
-				{@const labelText = shortName(info.path)}
+				{@const labelText = shortName(info.path, maxName)}
 				{@const valText = fmt(val)}
 				{@const trackX = contentX + labelW + charW}
 				{@const thumbX = trackX + norm * sliderW}
