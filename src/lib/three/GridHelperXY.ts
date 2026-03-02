@@ -7,7 +7,14 @@ import { Color } from 'three/webgpu'
 class GridHelperXY extends LineSegments {
 	type = 'GridHelperXY'
 
-	constructor(sizeX = 10, sizeY = 10, divisionsX = 10, divisionsY = 10, color = 0x88_88_88) {
+	constructor(
+		sizeX = 10,
+		sizeY = 10,
+		divisionsX = 10,
+		divisionsY = 10,
+		color = 0x88_88_88,
+		border = true
+	) {
 		const halfX = sizeX / 2
 		const halfY = sizeY / 2
 
@@ -17,13 +24,19 @@ class GridHelperXY extends LineSegments {
 		const vertices = []
 
 		// Vertical lines (parallel to Y axis)
-		for (let i = 0; i <= divisionsX; i++) {
+		const startX = border ? 0 : 1
+		const endX = border ? divisionsX : divisionsX - 1
+
+		for (let i = startX; i <= endX; i++) {
 			const x = -halfX + i * stepX
 			vertices.push(x, -halfY, 0, x, halfY, 0)
 		}
 
 		// Horizontal lines (parallel to X axis)
-		for (let j = 0; j <= divisionsY; j++) {
+		const startY = border ? 0 : 1
+		const endY = border ? divisionsY : divisionsY - 1
+
+		for (let j = startY; j <= endY; j++) {
 			const y = -halfY + j * stepY
 			vertices.push(-halfX, y, 0, halfX, y, 0)
 		}

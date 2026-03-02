@@ -105,6 +105,23 @@ export function updateRects(
 	return true
 }
 
+export function getGrid(
+	layout: ViewConfig['layout'],
+	n: number
+	// w: number,
+	// h: number
+) {
+	if (layout === 'horizontal') {
+		return { x: n, y: 1 }
+	} else if (layout === 'vertical') {
+		return { x: 1, y: n }
+	} else {
+		const x = Math.ceil(Math.sqrt(n))
+		const y = Math.ceil(n / x)
+		return { x, y }
+	}
+}
+
 // ── Resolve ───────────────────────────────────────────────────────────────────
 
 type MarbleOrVec = MarbleEntity | number | [number, number, number] | null

@@ -15,6 +15,9 @@
 	import { onDestroy, onMount } from 'svelte'
 	import type { TempoState } from '../lib/tempo'
 	import type { SceneCtx } from '../lib/scene-ctx'
+	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
+	import { GridHelperXY } from '../lib/three/GridHelperXY'
+	import { getGrid } from '../lib/multi-view'
 
 	function readLS(key: string, def: boolean): boolean {
 		if (typeof localStorage === 'undefined') return def
@@ -738,11 +741,42 @@
 	}
 
 	const mouseZoneWidth = 10
+
+	const gridColor = $derived.by(() => {
+		const base = sceneCtx?.config?.audioView && sceneCtx?.config.audioView?.color
+
+		if (!base) {
+			return 0x77_77_77
+		}
+
+		const rgb = <Rgb>parseHex(base)
+		const oklab = convertRgbToOklab(rgb)
+		oklab.l = 0.5
+		const backRgb = convertOklabToRgb(oklab)
+
+		return formatHex(backRgb)
+	})
+
+	const grid = $derived.by(() => {
+		if (!sceneCtx?.config?.view) {
+			return { x: 1, y: 1 }
+		}
+
+		return getGrid(sceneCtx.config.view.layout, sceneCtx.config.view.splits.length)
+	})
 </script>
 
 <svelte:window {onkeydown} />
 
 <T.OrthographicCamera makeDefault zoom={80} position={[0, 0, 10]} />
+
+{#if sceneCtx?.config?.view}
+	<T
+		is={GridHelperXY}
+		position.y={-0.01}
+		args={[$size.width / HUD_ZOOM, $size.height / HUD_ZOOM, grid.x, grid.y, gridColor, false]}
+	/>
+{/if}
 
 <T.Mesh
 	position.x={$size.width / HUD_ZOOM / 2 - (sphereR * mouseZoneWidth) / 2}
