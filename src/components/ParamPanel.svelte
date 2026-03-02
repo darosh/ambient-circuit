@@ -1,3 +1,13 @@
+<script module lang="ts">
+	// Module-level shadow clipboard — persists across component destroy/create, no permissions needed
+	let shadowClipboard = $state<{
+		rnbo?: string
+		tone?: string
+		params?: Record<string, number>
+		preset?: string
+	} | null>(null)
+</script>
+
 <script lang="ts">
 	import { T, useTask, useThrelte } from '@threlte/core'
 	import { connectSharedAnalyzer } from '../lib/audio'
@@ -187,6 +197,7 @@
 	const analyzerFx = buildImpactMaterial(_c, _c, 0.9, true, 0.9, 0.6, 2.5)
 	const closeFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
 	const copyFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
+	const pasteFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
 	const trigFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
 	const soloFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
 
@@ -220,6 +231,8 @@
 
 	let copyFlash = 0
 	let trigFlash = 0
+	let pasteFlash = 0
+	let lastSelectedChainTarget = $state<PanelTarget | null>(null)
 
 	// --- Sidebar items ---
 	type SidebarItem = { label: string; targetKey: string; panelTarget: PanelTarget }
@@ -278,32 +291,6 @@
 
 	// Slider layout: label | slider | value(right-aligned) | - | +
 	const sliderW = $derived(Math.max(1, contentW - labelW - valueW - charW * 2 - charW * 7))
-
-	const actionButtons = [
-		{
-			label: 'CLOSE',
-			onclick: () => close && close(),
-			mat: closeFx
-		},
-		{
-			label: 'COPY',
-			onclick: () => copyParams(),
-			mat: copyFx
-		},
-		{
-			label: 'SOLO',
-			onclick: () => {
-				toggleSolo()
-			},
-			mat: soloFx,
-			solo: true
-		},
-		{
-			label: 'TRIG',
-			mat: trigFx,
-			onclick: () => trigCurrent()
-		}
-	]
 
 	// Resolve chain/bus
 	function getChain(): AudioChain | null {
@@ -460,6 +447,11 @@
 		}
 	})
 
+	// Track last selected chain target for TRIG fallback on bus/master
+	$effect(() => {
+		if (target?.type === 'chain') lastSelectedChainTarget = target
+	})
+
 	// Solo: sync to engine
 	$effect(() => {
 		if (!engine) return
@@ -606,16 +598,74 @@
 			out = { ...(Object.keys(params).length > 0 ? { params } : {}), ...(preset ? { preset } : {}) }
 		}
 		navigator.clipboard.writeText(JSON.stringify(out))
+		shadowClipboard = out as typeof shadowClipboard
 		copyFlash = FLASH_DUR
 	}
 
 	function trigCurrent() {
-		const chain = getChain()
+		let chain = getChain()
+		if (!chain) {
+			// bus/master selected — use last chain or first chain
+			const fallbackTarget =
+				lastSelectedChainTarget ??
+				sidebarItems.find((i) => i.panelTarget.type === 'chain')?.panelTarget ??
+				null
+			if (fallbackTarget?.type === 'chain') {
+				const chains = engine?.instanceChains.filter((c) => c.generator) ?? []
+				chain = chains[fallbackTarget.index] ?? null
+			}
+		}
 		if (!chain) return
-		const lastNote = chain.audioSignal?.lastNote ?? 60
+		const lastNote = chain.audioSignal?.lastNote || 60
 		triggerChain(chain, lastNote, 100, 200)
 		trigFlash = FLASH_DUR
 	}
+
+	function getActiveNodeCfg() {
+		if (!activeNode) return null
+		const chain = getChain()
+		const bus = getBus()
+		const nodeIndex = activeNode.nodeIndex
+		if (chain) return nodeIndex === -1 ? chain.config.generator : (chain.config.fx ?? [])[nodeIndex]
+		if (bus) return (bus.config.fx ?? [])[nodeIndex]
+		return null
+	}
+
+	const pasteCompat = $derived.by(() => {
+		if (!shadowClipboard || !activeNode) return false
+		const nodeCfg = getActiveNodeCfg()
+		if (!nodeCfg) return false
+		if ('rnbo' in nodeCfg) return 'rnbo' in shadowClipboard && shadowClipboard.rnbo === nodeCfg.rnbo
+		if ('tone' in nodeCfg) return 'tone' in shadowClipboard && shadowClipboard.tone === nodeCfg.tone
+		return false
+	})
+
+	async function pasteParams() {
+		if (!shadowClipboard || !activeNode) return
+		const { params, preset } = shadowClipboard
+		const presetInfo = activeNode.presets
+		if (preset && presetInfo) {
+			presetInfo.set(preset)
+			await new Promise<void>((r) => setTimeout(r, 50))
+			paramVersion++
+		}
+		if (params) {
+			for (const [path, val] of Object.entries(params)) {
+				setParam(activeNode.nodeIndex, path, val)
+			}
+		}
+		pasteFlash = FLASH_DUR
+	}
+
+const actionButtons = $derived(
+		[
+			{ label: 'CLOSE', onclick: () => close && close(), mat: closeFx, visible: true },
+			{ label: 'COPY', onclick: () => copyParams(), mat: copyFx, visible: true },
+			{ label: 'PASTE', onclick: () => pasteParams(), mat: pasteFx, visible: pasteCompat },
+			{ label: 'SOLO', onclick: () => toggleSolo(), mat: soloFx, solo: true, visible: target?.type !== 'master' },
+			{ label: 'TRIG', onclick: () => trigCurrent(), mat: trigFx, visible: true }
+		].filter((b) => b.visible)
+	)
 
 	function toggleSolo() {
 		soloMode = !soloMode
@@ -724,6 +774,7 @@
 			thumbFx,
 			activeFx,
 			copyFx,
+			pasteFx,
 			trigFx,
 			soloFx,
 			closeFx,
@@ -758,6 +809,10 @@
 			copyFlash = Math.max(0, copyFlash - delta)
 			copyFx.impactT.value = copyFlash / FLASH_DUR
 		}
+		if (pasteFlash > 0) {
+			pasteFlash = Math.max(0, pasteFlash - delta)
+			pasteFx.impactT.value = pasteFlash / FLASH_DUR
+		}
 		if (trigFlash > 0) {
 			trigFlash = Math.max(0, trigFlash - delta)
 			trigFx.impactT.value = trigFlash / FLASH_DUR
@@ -786,6 +841,9 @@
 		} else if (e.code === 'KeyC' && (e.ctrlKey || e.metaKey)) {
 			actionButtons.find((x) => x.label === 'COPY')?.onclick()
 			e.preventDefault()
+		} else if (e.code === 'KeyV' && (e.ctrlKey || e.metaKey)) {
+			actionButtons.find((x) => x.label === 'PASTE')?.onclick()
+			e.preventDefault()
 		}
 	}
 
@@ -797,6 +855,7 @@
 		thumbFx.mat.dispose()
 		activeFx.mat.dispose()
 		copyFx.mat.dispose()
+		pasteFx.mat.dispose()
 		trigFx.mat.dispose()
 		soloFx.mat.dispose()
 		for (const fx of sidebarFxPool) fx.mat.dispose()

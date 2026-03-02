@@ -94,6 +94,7 @@
 		{ text: 'T              TRIGGER SOUND' },
 		{ text: 'CTRL/META + S  SOLO CHAIN' },
 		{ text: 'CTRL/META + C  COPY PARAMS' },
+		{ text: 'CTRL/META + V  PASTE PARAMS' },
 		{ text: 'DRAG + SHIFT   FINE-TUNING' },
 		{ text: 'ESC            CLOSE' },
 		{},
