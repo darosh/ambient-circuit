@@ -245,5 +245,3 @@ export const scenes: SceneConfig[] = [
 	}
 	**/
 ]
-
-console.log(scenes)
