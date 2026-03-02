@@ -16,6 +16,7 @@ import type { ToneAudioNode } from 'tone'
 import { createDevice, type IPatcher, MIDIEvent } from '@rnbo/js'
 import type { Device, MIDIByte } from '@rnbo/js'
 import TONE_DEFAULTS from './tone-defaults'
+import { PATCHERS } from './patchers'
 import { debug } from 'debug'
 
 const log = debug('audio')
@@ -951,7 +952,8 @@ async function loadRNBO(
 
 	let patcher = engine.rnboCache.get(path)
 	if (!patcher) {
-		const resp = await fetch(`./patchers/${path}.json`)
+		const resolvedPath = PATCHERS[path] ?? path
+		const resp = await fetch(`./patchers/${resolvedPath}.json`)
 		patcher = await resp.json()
 		engine.rnboCache.set(path, patcher)
 
@@ -992,15 +994,19 @@ async function loadRNBO(
 			(presetEntries.some((p) => p.name === 'Default') ? 'Default' : presetEntries[0].name)
 		const entry = presetEntries.find((p) => p.name === target)
 		if (entry) {
+			log('preset', entry.name, entry.preset)
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			await device.setPreset(entry.preset as any)
+			device.setPreset(entry.preset as any)
+			await pause(0)
 			activePreset = entry.name
 		}
 	}
 
 	// Apply explicit params AFTER preset (overrides)
 	if (params) {
+		log('param')
 		for (const [key, val] of Object.entries(params)) {
+			log('param', key, val)
 			const p = findRnboParam(device, key)
 			if (p) p.value = val as number
 		}
@@ -1194,6 +1200,7 @@ import { detect as scale } from '@tonaljs/scale'
 import { tones, toneNames } from '../midi/tones'
 import type { ChordInfo } from './types'
 import type { SceneCtx } from '../core/scene-ctx'
+import { pause } from '../helpers/pause'
 
 function computeChordInfo(activeNotes: { midi: number; end: number }[], now: number): ChordInfo {
 	const alive: { midi: number; end: number }[] = []
