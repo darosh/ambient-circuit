@@ -89,8 +89,15 @@ export function updateRects(
 			out[i].height = i === n - 1 ? h - i * sh : sh
 		}
 	} else {
-		const cols = Math.ceil(Math.sqrt(n))
-		const rows = Math.ceil(n / cols)
+		let cols = Math.ceil(Math.sqrt(n))
+		let rows = Math.ceil(n / cols)
+
+		if (w > h && cols < rows) {
+			const tempCols = cols
+			cols = rows
+			rows = tempCols
+		}
+
 		const sw = Math.floor(w / cols)
 		const sh = Math.floor(h / rows)
 		for (let i = 0; i < n; i++) {
@@ -107,17 +114,24 @@ export function updateRects(
 
 export function getGrid(
 	layout: ViewConfig['layout'],
-	n: number
-	// w: number,
-	// h: number
+	n: number,
+	w: number,
+	h: number
 ) {
 	if (layout === 'horizontal') {
 		return { x: n, y: 1 }
 	} else if (layout === 'vertical') {
 		return { x: 1, y: n }
 	} else {
-		const x = Math.ceil(Math.sqrt(n))
-		const y = Math.ceil(n / x)
+		let x = Math.ceil(Math.sqrt(n))
+		let y = Math.ceil(n / x)
+
+		if (w > h && x < y) {
+			const tempX = x
+			x = y
+			y = tempX
+		}
+
 		return { x, y }
 	}
 }
