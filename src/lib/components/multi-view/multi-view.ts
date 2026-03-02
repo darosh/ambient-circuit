@@ -112,12 +112,7 @@ export function updateRects(
 	return true
 }
 
-export function getGrid(
-	layout: ViewConfig['layout'],
-	n: number,
-	w: number,
-	h: number
-) {
+export function getGrid(layout: ViewConfig['layout'], n: number, w: number, h: number) {
 	if (layout === 'horizontal') {
 		return { x: n, y: 1 }
 	} else if (layout === 'vertical') {
