@@ -55,6 +55,7 @@
 		"format": "prettier --write .",
 		"lint": "eslint .",
 		"preview": "vite preview",
+		"patchers": "node scripts/patchers.js",
 		"heap": "node scripts/heap-snapshot.js",
 		"heap:play": "node scripts/heap-snapshot.js --url=http://localhost:5173/#scene-rings --no-headless --wait=30",
 		"heap:play:tone": "node scripts/heap-snapshot.js --url=http://localhost:5173/#scene-tone-instruments --no-headless --wait=30",
