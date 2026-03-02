@@ -106,7 +106,10 @@ export type SpiralOpts = {
 	radiusStep?: number
 	/** Straight lead-in/out length. Default: 1 */
 	lead?: number
+	trail?: number
 	tangent?: number
+	first?: number
+	last?: number | true
 }
 
 export function spiral(opts: SpiralOpts = {}): (Vec3 | RailPointFull)[] {
@@ -118,7 +121,10 @@ export function spiral(opts: SpiralOpts = {}): (Vec3 | RailPointFull)[] {
 		startRadius = 0.5,
 		radiusStep = 0.5,
 		lead = 1,
-		tangent
+		trail = 1,
+		tangent,
+		first: firstBeat,
+		last: lastBeat
 	} = opts
 	const len = rounds * density + 1
 	const spiralPoints: RailPointFull[] = Array.from({ length: len }, (_, i) => {
@@ -133,9 +139,43 @@ export function spiral(opts: SpiralOpts = {}): (Vec3 | RailPointFull)[] {
 	})
 
 	const first = spiralPoints[0].p
-	const leadIn: Vec3 = [first[0], first[1], first[2] - lead]
-	const last = spiralPoints[len - 1].p
-	const leadOut: Vec3 = [last[0], last[1], last[2] + lead]
+	const result: (RailPointFull | Vec3)[] = []
 
-	return [leadIn, ...spiralPoints, leadOut]
+	if (lead) {
+		const leadIn: Vec3 = [first[0], first[1], first[2] - lead]
+
+		result.push(leadIn)
+	}
+
+	result.push(...spiralPoints)
+
+	if (trail) {
+		const last = spiralPoints[len - 1].p
+		const leadOut: Vec3 = [last[0], last[1], last[2] + lead]
+		result.push(leadOut)
+	}
+
+	if (firstBeat !== undefined) {
+		const node = result[0]
+
+		result[0] = {
+			p: lead ? <Vec3>node : (node as RailPointFull).p,
+			round: lead ? undefined : (node as RailPointFull).round,
+			tangent: lead ? undefined : (node as RailPointFull).tangent,
+			beat: firstBeat
+		}
+	}
+
+	if (lastBeat !== undefined) {
+		const node = result.at(-1)
+
+		result[result.length - 1] = {
+			p: trail ? <Vec3>node : (node as RailPointFull).p,
+			round: trail ? undefined : (node as RailPointFull).round,
+			tangent: trail ? undefined : (node as RailPointFull).tangent,
+			beat: lastBeat === true ? result.length - 1 : lastBeat
+		}
+	}
+
+	return result
 }

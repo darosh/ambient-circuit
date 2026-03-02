@@ -1,15 +1,19 @@
 import type { SceneConfig } from '../lib/core/scene'
 import { triggerHandler } from '../lib/core/trigger-handler'
-import { circle, spiral } from '../lib/core/rail-primitives'
+import { spiral } from '../lib/core/rail-primitives'
 import { NodeConfig } from '../lib/audio'
 
 const generator = {
-	rnbo: 'supersaw'
+	rnbo: 'formant-synth',
+	preset: 'Slow'
+	// tone: 'Synth',
+	// params: {
+	// 	'oscillator.type': 'fatsquare',
+	// 	volume: -12
+	// }
 }
 
 const fx: NodeConfig[] = [
-	{ tone: 'Volume', params: { volume: -6 } },
-	{ tone: 'OnePoleFilter', params: { frequency: 60, type: 'highpass' } }
 ]
 
 let bc = 1 - 4
@@ -18,7 +22,7 @@ const b = () => (bc += 4)
 export const scene: SceneConfig = {
 	id: 'scene-rnbo',
 	description: 'RNBO effects test',
-	bpm: 120,
+	bpm: 300,
 	camera: [25, 18, 12],
 	sequencerBeats: 16,
 	sequencerMode: 'time',
@@ -26,16 +30,31 @@ export const scene: SceneConfig = {
 	polar: true,
 	tint: [1.4, 1, 1],
 	audioView: {
+		defaultAnalyser: 'fft',
+		all: true,
 		color: '#cc88ff',
-		offset: [0,-4.5,0]
+		offset: [0, -4.5, 0]
 	},
 	audio: {
 		master: {
+			analyzer: true,
 			fx: [
+				{
+					tone: 'Volume',
+					params: {
+						volume: 12
+					}
+				},
 				{
 					tone: 'Compressor',
 					params: {
-						threshold: -12
+						threshold: -6
+					}
+				},
+				{
+					tone: 'Limiter',
+					params: {
+						threshold: -3
 					}
 				}
 			]
@@ -44,24 +63,18 @@ export const scene: SceneConfig = {
 	rails: [
 		{
 			rail: {
-				id: 'camera',
-				offset: [0, 8, 0],
-				nodes: [...circle({ radius: 7 }), 'ddddb rrr uuuub lll']
-			},
-			marbles: [{ start: 0, speed: 0.1 }],
-			color: '#113344',
-			visible: false
-		},
-		{
-			rail: {
 				id: 'synth',
 				offset: [0, 4.5, 0],
-				nodes: [...spiral({ rounds: 9, height: -4.5 }), 'oo out u2.5 uit iiii ilt l2.5 lot']
+				nodes: [
+					...spiral({ rounds: 9, height: -4.5, trail: 0, last: true }),
+					'ooo out u2.5 uit iiii ilt l2.5 lot 38'
+				]
 			},
 			color: '#ff00cc',
-			marbles: [{ type: 'ball', note: 66 }],
+			marbles: [{ type: 'ball' }],
 			instruments: [
 				{
+					note: 67,
 					type: 'arrow',
 					kind: 'plain',
 					beat: b(),
@@ -71,6 +84,7 @@ export const scene: SceneConfig = {
 					}
 				},
 				{
+					note: 60,
 					type: 'arrow',
 					kind: 'plain',
 					beat: b(),
@@ -86,6 +100,7 @@ export const scene: SceneConfig = {
 					}
 				},
 				{
+					note: 52,
 					type: 'arrow',
 					kind: 'plain',
 					beat: b(),
@@ -113,6 +128,7 @@ export const scene: SceneConfig = {
 					}
 				},
 				{
+					note: 50,
 					type: 'arrow',
 					kind: 'plain',
 					beat: b(),
@@ -128,6 +144,7 @@ export const scene: SceneConfig = {
 					}
 				},
 				{
+					note: 48,
 					type: 'arrow',
 					kind: 'plain',
 					beat: b(),
@@ -166,7 +183,9 @@ export const scene: SceneConfig = {
 						fx: [
 							...fx,
 							{
-								rnbo: 'freeverb'
+								rnbo: 'freeverb',
+								params: { damp: 0.5, fb1: 0.99, spread: 400, fb2: 0.99, dry: 1 },
+								preset: 'Default'
 							}
 						]
 					}
@@ -207,17 +226,7 @@ export const scene: SceneConfig = {
 							...fx,
 							{
 								rnbo: 'talkwah',
-								params: {
-									tone: 48,
-									manual: 50,
-									spread: 17,
-									sense: 75,
-									voice: 4,
-									slope: 50,
-									auto: 1,
-									color: 28
-								},
-								preset: 'Mouse'
+								preset: 'Auto'
 							}
 						]
 					}
