@@ -275,4 +275,20 @@ describe('resolveRail', () => {
 		const r = resolveRail(rail)
 		expect(() => validateNoDuplicateMidPathPositions(r.points, rail.id)).not.toThrow()
 	})
+
+	it('beats positions should be always incremental', () => {
+		const rail: Rail = {
+			id: 'beats',
+			nodes: [
+				{ p: [0, 0, 0] },
+				{ p: [1, 0, 0] },
+				{ p: [1, 1, 0], beat: 5 },
+				{ p: [0, 1, 0] },
+				{ p: [0, 0, 0] }
+			]
+		}
+
+		const r = resolveRail(rail)
+		expect(r.points.map(p => p.beat)).toEqual([0, 2.5, 5, 6, 7])
+	})
 })

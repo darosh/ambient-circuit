@@ -123,10 +123,10 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 				points[i].beat = sb + ((eb - sb) * (i - si)) / (ei - si)
 			}
 		}
-		// After last anchor: same beat
+		// After last anchor: continue incrementing by 1
 		const last = anchors.at(-1)!
 		for (let i = last + 1; i < points.length; i++) {
-			points[i].beat = points[last].beat
+			points[i].beat = points[last].beat + (i - last)
 		}
 	}
 
