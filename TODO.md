@@ -3,6 +3,7 @@
 - [ ] Dust?
 - [ ] RNBO scene
 - [ ] RNBO mono export
+- [ ] RNBO giga dry type
 - [ ] poly default 4
 - [ ] https://threlte.xyz/docs/reference/extras/fake-glow-material
 - [ ] https://threlte.xyz/docs/reference/extras/transitions
@@ -11,8 +12,6 @@
 - [ ] https://threlte.xyz/docs/reference/extras/use-fbo
 - [ ] make RNBO synth
 - [ ] make RNBO karplus-strong synth https://rnbo.cycling74.com/explore/synth-building-blocks-intro
-- [ ] use gigaverb from examples
-- [ ] freeverb too
 - [ ] optimize notes scale update
 - [ ] `onSceneCtx={(ctx) => (sceneCtx = ctx)}` might be suboptimal
 - [ ] review need for lazy instruments load
@@ -31,6 +30,8 @@
   - [x] scroll presets
   - [x] scroll chains
   - [ ] remove limit, use available space
+- [x] ~~use gigaverb from examples~~
+- [x] freeverb too
 - [x] try marbles as camera pos / target
 - [x] ~~use rails for camera path? or scene path? and keep the camera for user only~~
 - [x] responsive help line-breaking
