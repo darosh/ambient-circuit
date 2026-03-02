@@ -1,11 +1,10 @@
-import type { SceneConfig } from '../lib/scene'
-import { triggerHandler } from '../lib/trigger-handler'
-import { circle, spiral } from '../lib/rail-primitives'
+import type { SceneConfig } from '../lib/core/scene'
+import { triggerHandler } from '../lib/core/trigger-handler'
+import { circle, spiral } from '../lib/core/rail-primitives'
 import { NodeConfig } from '../lib/audio'
 
 const generator = {
-	rnbo: 'formant-synth',
-	preset: 'Muted'
+	rnbo: 'supersaw'
 }
 
 const fx: NodeConfig[] = [
@@ -27,7 +26,8 @@ export const scene: SceneConfig = {
 	polar: true,
 	tint: [1.4, 1, 1],
 	audioView: {
-		color: '#cc88ff'
+		color: '#cc88ff',
+		offset: [0,-4.5,0]
 	},
 	audio: {
 		master: {
