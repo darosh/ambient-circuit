@@ -1002,7 +1002,7 @@ async function loadRNBO(
 			log('preset', entry.name, entry.preset)
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			device.setPreset(entry.preset as any)
-			await pause(0)
+			await pause(50) // Helps when reusing devices by patch :-(
 			activePreset = entry.name
 		}
 	}
