@@ -33,12 +33,7 @@ export const scene: SceneConfig = {
 		master: {
 			analyzer: true,
 			fx: [
-				// { tone: 'OnePoleFilter', params: { frequency: 1200, type: 'lowpass' } },
-				// { tone: 'OnePoleFilter', params: { frequency: 30, type: 'highpass' } },
 				{ tone: 'Freeverb', params: { wet: 0.3 } },
-				// { rnbo: 'gigaverb' },
-				// { rnbo: 'platereverb' },
-				// { tone: 'Compressor', params: { threshold: -32 } },
 				{ tone: 'Compressor', params: { threshold: -32 } },
 				{ tone: 'Limiter' }
 			]

@@ -22,6 +22,7 @@ import { debug } from 'debug'
 const log = debug('audio')
 
 const KEEP_PAST = 16
+const DEFAULT_POLY = 4
 
 export function resolveAnalyzerType(cfg?: AnalyzerType, def?: string) {
 	if (cfg === 'meter') return 'meter'
@@ -328,7 +329,11 @@ export async function buildChain(
 
 	const genPoly = config.generator?.poly
 	const maxVoices =
-		genPoly === undefined ? (config.generator && 'rnbo' in config.generator ? 8 : 1) : genPoly
+		genPoly === undefined
+			? config.generator && 'rnbo' in config.generator && !config.generator.rnbo.endsWith('-mono')
+				? DEFAULT_POLY
+				: 1
+			: genPoly
 	const voices: VoiceTracker = { max: maxVoices, endTimes: [] }
 
 	const chain: AudioChain = {

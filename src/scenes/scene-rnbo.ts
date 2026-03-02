@@ -16,7 +16,7 @@ const FX = [
 
 	'freeverb',
 	['filterdelay', 'Wide'],
-	['gigaverb', 'Dry'],
+	['gigaverb', 'Wet'],
 	['platereverb', 'Large'],
 	'shimmerev',
 	['chorus', 'Wide'],

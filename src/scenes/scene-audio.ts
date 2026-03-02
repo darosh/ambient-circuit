@@ -44,8 +44,7 @@ export const scene: SceneConfig = {
 			reverb: {
 				fx: [
 					{
-						rnbo: 'gigaverb',
-						params: {}
+						rnbo: 'gigaverb'
 					}
 				]
 			}
