@@ -6,7 +6,7 @@ import type { ResolvedRail } from './rail'
 import type { MarbleState } from './marble-state'
 import type { InstrumentState } from './instrument-state'
 import type { RailState } from './rail-state'
-import type { AudioChain, ChordInfo } from './audio'
+import type { AudioChain, ChordInfo } from '../audio'
 import { SceneConfig } from './scene'
 
 /**

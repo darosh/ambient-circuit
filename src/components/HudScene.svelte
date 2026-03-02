@@ -11,13 +11,13 @@
 	import HelpPanel from './HelpPanel.svelte'
 	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
 	import GeoText from './GeoText.svelte'
-	import { easeInCubic, easeOutCubic } from '../lib/easing'
+	import { easeInCubic, easeOutCubic } from '../lib/helpers/easing'
 	import { onDestroy, onMount } from 'svelte'
-	import type { TempoState } from '../lib/tempo'
-	import type { SceneCtx } from '../lib/scene-ctx'
+	import type { TempoState } from '../lib/core/tempo'
+	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
 	import { GridHelperXY } from '../lib/three/GridHelperXY'
-	import { getGrid } from '../lib/multi-view'
+	import { getGrid } from '../lib/components/multi-view/multi-view'
 
 	function readLS(key: string, def: boolean): boolean {
 		if (typeof localStorage === 'undefined') return def

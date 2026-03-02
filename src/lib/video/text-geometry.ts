@@ -3,8 +3,8 @@
 import { Vector3, type BufferGeometry } from 'three/webgpu'
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 
-import { expandPathString } from '../rail-path'
-import { Vec3 } from '../rail'
+import { expandPathString } from '../core/rail-path'
+import { Vec3 } from '../core/rail'
 
 const NUMBERS = [
 	'uu ur dr dd ld lu',

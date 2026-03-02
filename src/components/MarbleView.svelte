@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import { onDestroy, untrack } from 'svelte'
-	import type { Marble } from '../lib/marble'
+	import type { Marble } from '../lib/core/marble'
 	import { Vector3, Euler, Matrix4 } from 'three/webgpu'
-	import { makeMarbleMaterial } from '../lib/config'
-	import { easeOutQuart } from '../lib/easing'
-	import type { ResolvedRail } from '../lib/rail'
-	import type { RailData } from '../lib/rail-data'
+	import { makeMarbleMaterial } from '../lib/components/config'
+	import { easeOutQuart } from '../lib/helpers/easing'
+	import type { ResolvedRail } from '../lib/core/rail'
+	import type { RailData } from '../lib/core/rail-data'
 	import {
 		createMarbleGeometry,
 		BALL_RADIUS,

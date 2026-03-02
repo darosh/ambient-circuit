@@ -1,4 +1,4 @@
-import type { SceneConfig } from '../lib/scene'
+import type { SceneConfig } from '../lib/core/scene'
 
 import { scene as sceneTest, floatingScenes } from './scene-test'
 import { scene as sceneInstruments } from './scene-instruments'

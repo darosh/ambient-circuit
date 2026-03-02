@@ -1,7 +1,7 @@
 import type { AudioEngine, AudioChain } from './types'
-import type { SceneConfig } from '../scene'
-import type { SceneCtx } from '../scene-ctx'
-import type { RailData } from '../rail-data'
+import type { SceneConfig } from '../core/scene'
+import type { SceneCtx } from '../core/scene-ctx'
+import type { RailData } from '../core/rail-data'
 import { initAudio, buildChain, buildBuses } from './engine'
 
 export function hasAudioConfig(scene: SceneConfig, rails: RailData[]): boolean {

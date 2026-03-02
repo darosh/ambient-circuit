@@ -5,7 +5,7 @@
 	import { Vector3, LineCurve3, CubicBezierCurve3, MeshStandardMaterial } from 'three/webgpu'
 	import AnalyserView from './AnalyserView.svelte'
 	import { MathUtils } from 'three/webgpu'
-	import { audioLayout } from '../lib/audio-layout'
+	import { audioLayout } from '../lib/components/audio-view/audio-layout'
 	import TubeText from './TubeText.svelte'
 	import { resolveAnalyzerType } from '../lib/audio/engine'
 	import { buildImpactMaterial } from '../lib/video/material-impact'

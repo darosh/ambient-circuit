@@ -1193,7 +1193,7 @@ import { detect } from '@tonaljs/chord-detect'
 import { detect as scale } from '@tonaljs/scale'
 import { tones, toneNames } from '../midi/tones'
 import type { ChordInfo } from './types'
-import type { SceneCtx } from '../scene-ctx'
+import type { SceneCtx } from '../core/scene-ctx'
 
 function computeChordInfo(activeNotes: { midi: number; end: number }[], now: number): ChordInfo {
 	const alive: { midi: number; end: number }[] = []

@@ -5,8 +5,8 @@ import {
 	updateTargetLerp,
 	type SplitCamState,
 	type ResolvedTarget
-} from '../src/lib/multi-view'
-import type { ViewSplitState } from '../src/lib/scene-ctx'
+} from '../src/lib/components/multi-view/multi-view'
+import type { ViewSplitState } from '../src/lib/core/scene-ctx'
 
 function makeState(): SplitCamState {
 	return { radius: 10, yaw: 0, pitch: 0, inited: false, isDragging: false, isDraggingEnd: 0 }

@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createMarble } from '../src/lib/marble'
-import { MarbleState } from '../src/lib/marble-state'
-import { updateMarble } from '../src/lib/marble-system'
-import { resolveRail } from '../src/lib/rail-resolve'
-import type { SceneConfig } from '../src/lib/scene'
-import { createTempoState, type TempoState } from '../src/lib/tempo'
-import type { TriggerHandler } from '../src/lib/scene'
-import { createSceneCtx } from '../src/lib/scene-ctx-factory'
-import type { RailData } from '../src/lib/rail-data'
+import { createMarble } from '../src/lib/core/marble'
+import { MarbleState } from '../src/lib/core/marble-state'
+import { updateMarble } from '../src/lib/core/marble-system'
+import { resolveRail } from '../src/lib/core/rail-resolve'
+import type { SceneConfig } from '../src/lib/core/scene'
+import { createTempoState, type TempoState } from '../src/lib/core/tempo'
+import type { TriggerHandler } from '../src/lib/core/scene'
+import { createSceneCtx } from '../src/lib/core/scene-ctx-factory'
+import type { RailData } from '../src/lib/core/rail-data'
 
 describe('Rail Switching API', () => {
 	// Helper to create test rails

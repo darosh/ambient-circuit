@@ -12,8 +12,8 @@
 		Element
 	} from 'svelte-tweakpane-ui'
 	import type { Theme } from 'svelte-tweakpane-ui'
-	import { createTempoState } from './lib/tempo'
-	import { easingNames } from './lib/easing'
+	import { createTempoState } from './lib/core/tempo'
+	import { easingNames } from './lib/helpers/easing'
 	import { scenes } from './scenes'
 	import { initMidi, setMidiPort, type MidiState, setMidiState } from './lib/midi/midi'
 	import type { SelectedEntity } from './components/Scene.svelte'

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { circle, roundedRect, coil, spiral } from '../src/lib/rail-primitives'
-import type { RailPointFull, Vec3 } from '../src/lib/rail'
-import { isPointFull, isVec3 } from '../src/lib/rail'
+import { circle, roundedRect, coil, spiral } from '../src/lib/core/rail-primitives'
+import type { RailPointFull, Vec3 } from '../src/lib/core/rail'
+import { isPointFull, isVec3 } from '../src/lib/core/rail'
 
 function getPositions(nodes: (Vec3 | RailPointFull)[]): Vec3[] {
 	return nodes.map((n: Vec3 | RailPointFull) => (Array.isArray(n) ? n : n.p))

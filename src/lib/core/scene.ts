@@ -1,6 +1,6 @@
 import type { InstrumentTriggerContext } from './instrument'
 import type { RailData } from './rail-data'
-import type { AudioChainConfig } from './audio/types'
+import type { AudioChainConfig } from '../audio/types'
 import type { SceneCtx, MarbleEntity, InstrumentEntity, RailEntity } from './scene-ctx'
 import { Vector3Tuple } from 'three/webgpu'
 
@@ -114,8 +114,8 @@ export type SceneConfig = {
 	/** Audio config: named/shared chains, buses, master */
 	audio?: {
 		chains?: Record<string, AudioChainConfig>
-		buses?: Record<string, import('./audio/types').BusConfig>
-		master?: import('./audio/types').MasterConfig
+		buses?: Record<string, import('../audio/types').BusConfig>
+		master?: import('../audio/types').MasterConfig
 	}
 	/** Factory to auto-assign render fn to rails without one */
 	renderFactory?: (railData: RailData, index: number) => RailData['render'] | undefined

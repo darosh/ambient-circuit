@@ -1,7 +1,7 @@
 import { MathUtils, Matrix4, Euler, Vector3 } from 'three/webgpu'
 import type { Vector2Tuple } from 'three/webgpu'
-import type { SceneCtx } from '../../lib/scene-ctx'
-import type { TempoState } from '../../lib/tempo'
+import type { SceneCtx } from '../../lib/core/scene-ctx'
+import type { TempoState } from '../../lib/core/tempo'
 import {
 	easeInBounceCustom,
 	easeInElastic,
@@ -9,10 +9,10 @@ import {
 	easeOutBack,
 	easeOutElastic,
 	type EasingFunction
-} from '../../lib/easing'
-import type { RailData } from '../../lib/rail-data'
-import type { Vec3 } from '../../lib/rail'
-import { resolveRail } from '../../lib/rail-resolve'
+} from '../../lib/helpers/easing'
+import type { RailData } from '../../lib/core/rail-data'
+import type { Vec3 } from '../../lib/core/rail'
+import { resolveRail } from '../../lib/core/rail-resolve'
 
 export type FloatingConfig = {
 	speed?: number | [number, number, number]

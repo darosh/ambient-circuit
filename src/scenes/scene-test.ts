@@ -1,8 +1,8 @@
-import type { SceneConfig } from '../lib/scene'
+import type { SceneConfig } from '../lib/core/scene'
 import { color2 as colors, colorFactory } from './utils/colors'
-import { triggerHandler } from '../lib/trigger-handler'
+import { triggerHandler } from '../lib/core/trigger-handler'
 
-import { circle, roundedRect, coil, spiral } from '../lib/rail-primitives'
+import { circle, roundedRect, coil, spiral } from '../lib/core/rail-primitives'
 import {
 	createFloating,
 	FLOATING_BOUNCING,

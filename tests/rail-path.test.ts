@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { expandPathString } from '../src/lib/rail-path'
+import { expandPathString } from '../src/lib/core/rail-path'
 
 describe('expandPathString', () => {
 	it('space-delimited tokens emit points', () => {

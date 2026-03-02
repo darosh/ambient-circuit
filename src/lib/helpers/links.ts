@@ -1,10 +1,10 @@
-import type { InstrumentEntity, MarbleEntity } from '../scene-ctx'
+import type { InstrumentEntity, MarbleEntity } from '../core/scene-ctx'
 import { Vector3, Matrix4, Quaternion } from 'three/webgpu'
 import type { Vector3Tuple } from 'three/webgpu'
-import type { RailData } from '../rail-data'
-import type { NodeInfo } from '../audio-layout'
-import { resolveRail } from '../rail-resolve'
-import { getBeatTransform, getPointsForPath } from '../rail-curve'
+import type { RailData } from '../core/rail-data'
+import type { NodeInfo } from '../components/audio-view/audio-layout'
+import { resolveRail } from '../core/rail-resolve'
+import { getBeatTransform, getPointsForPath } from '../core/rail-curve'
 
 export function getMidiSignalLinks(
 	instruments: InstrumentEntity[],

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { T, useThrelte, useTask } from '@threlte/core'
 	import { Align } from '@threlte/extras'
-	import type { ResolvedPoint } from '../lib/rail'
-	import type { RailData } from '../lib/rail-data'
-	import type { SceneCtx } from '../lib/scene-ctx'
-	import type { TempoState } from '../lib/tempo'
-	import { resolveRail } from '../lib/rail-resolve'
-	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/rail-curve'
+	import type { ResolvedPoint } from '../lib/core/rail'
+	import type { RailData } from '../lib/core/rail-data'
+	import type { SceneCtx } from '../lib/core/scene-ctx'
+	import type { TempoState } from '../lib/core/tempo'
+	import { resolveRail } from '../lib/core/rail-resolve'
+	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/core/rail-curve'
 	import {
 		type BufferGeometry,
 		CurvePath,
@@ -24,7 +24,7 @@
 	import LineText from './TubeText.svelte'
 	import { onDestroy, untrack } from 'svelte'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
-	import { makeRailMaterial } from '../lib/config'
+	import { makeRailMaterial } from '../lib/components/config'
 	import { computeRailNamePosition, scalePoints, scaleSplits } from '../lib/helpers/rail-geometry'
 	import type { Material } from 'three/webgpu'
 

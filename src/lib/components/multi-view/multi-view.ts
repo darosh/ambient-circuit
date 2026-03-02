@@ -3,8 +3,8 @@
  */
 
 import { Vector3 } from 'three/webgpu'
-import type { ViewConfig, ViewSplitConfig } from './scene'
-import type { SceneCtx, MarbleEntity, ViewSplitState } from './scene-ctx'
+import type { ViewConfig, ViewSplitConfig } from '../../core/scene'
+import type { SceneCtx, MarbleEntity, ViewSplitState } from '../../core/scene-ctx'
 import { dirToAngles, anglesToDir, dampAngleStep, dampStep, unwrapAngle } from './camera-math'
 
 export type SplitCamState = {

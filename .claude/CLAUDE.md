@@ -302,33 +302,39 @@ Create a "marble-machine-inspired" music sequencer where:
 ## Code Organization
 
 ```
-/src/lib/rail.ts           - Rail types (authored + resolved) and type guards
-/src/lib/rail-path.ts      - expandPathString(): string path shorthand → Vec3/RailPointFull[]
-/src/lib/rail-resolve.ts   - resolveRail(): authored → engine-internal form (flattens path strings)
-/src/lib/rail-curve.ts     - buildRailCurve(): resolved points → Vector3 polyline
-/src/lib/rail-primitives.ts - circle(), roundedRect(), coil(), spiral() helpers
-/src/lib/tempo.ts          - Global tempo/beat system (BPM, play/pause)
-/src/lib/marble.ts         - Marble types (config, state, direction, easing)
-/src/lib/marble-state.ts   - MarbleState API (safe mutations with visible/active/destroy)
-/src/lib/marble-system.ts  - Marble movement logic (direct segment interpolation)
-/src/lib/instrument.ts     - Instrument type with MIDI properties
-/src/lib/instrument-state.ts - InstrumentState API (safe mutations with visible/active)
-/src/lib/rail-state.ts     - RailState API (safe mutations with visible/active/create)
-/src/lib/scene.ts          - TriggerContext, GlobalBeatContext, SceneConfig, ViewConfig types
-/src/lib/scene-ctx.ts      - SceneCtx types (MarbleEntity/InstrumentEntity/RailEntity/ViewState/ViewSplitState)
-/src/lib/scene-ctx-factory.ts - createSceneCtx(), updateSceneCtx()
-/src/lib/easing.ts         - Easing functions (maath + custom)
+/src/lib/core/rail.ts           - Rail types (authored + resolved) and type guards
+/src/lib/core/rail-path.ts      - expandPathString(): string path shorthand → Vec3/RailPointFull[]
+/src/lib/core/rail-resolve.ts   - resolveRail(): authored → engine-internal form (flattens path strings)
+/src/lib/core/rail-curve.ts     - buildRailCurve(): resolved points → Vector3 polyline
+/src/lib/core/rail-primitives.ts - circle(), roundedRect(), coil(), spiral() helpers
+/src/lib/core/tempo.ts          - Global tempo/beat system (BPM, play/pause)
+/src/lib/core/marble.ts         - Marble types (config, state, direction, easing)
+/src/lib/core/marble-state.ts   - MarbleState API (safe mutations with visible/active/destroy)
+/src/lib/core/marble-system.ts  - Marble movement logic (direct segment interpolation)
+/src/lib/core/instrument.ts     - Instrument type with MIDI properties
+/src/lib/core/instrument-state.ts - InstrumentState API (safe mutations with visible/active)
+/src/lib/core/rail-state.ts     - RailState API (safe mutations with visible/active/create)
+/src/lib/core/scene.ts          - TriggerContext, GlobalBeatContext, SceneConfig, ViewConfig types
+/src/lib/core/scene-ctx.ts      - SceneCtx types (MarbleEntity/InstrumentEntity/RailEntity/ViewState/ViewSplitState)
+/src/lib/core/scene-ctx-factory.ts - createSceneCtx(), updateSceneCtx()
+/src/lib/core/trigger-handler.ts - default trigger/bounce handlers
+/src/lib/core/rail-data.ts      - Rail definitions with MIDI-enabled onTrigger handlers
+/src/lib/helpers/easing.ts      - Easing functions (maath + custom)
+/src/lib/helpers/rail-geometry.ts - computeRailNamePosition, scalePoints, scaleSplits
+/src/lib/helpers/scene-init.ts   - createInstrumentSignals, assignInstrumentSignals, createMarbleConfigs
+/src/lib/helpers/keyboard.ts     - createKeydownHandler (config-driven key map)
+/src/lib/helpers/audio-params.ts - readChainParams, readBusParams, ParamInfo type
+/src/lib/components/config.ts   - shared config
+/src/lib/components/audio-view/audio-layout.ts - AudioView layout helpers
+/src/lib/components/hud/panel-state.svelte.ts  - HUD panel state
+/src/lib/components/multi-view/camera-math.ts  - camera math utilities
+/src/lib/components/multi-view/multi-view.ts   - MultiView helpers
 /src/lib/midi/midi.ts      - Web MIDI API wrapper (init, port selection, sendNote)
-/src/lib/rail-data.ts      - Rail definitions with MIDI-enabled onTrigger handlers
 /src/lib/audio/types.ts    - Audio types (AudioChainConfig, AudioChain, AudioEngine)
 /src/lib/audio/engine.ts   - Audio engine lifecycle (init, build, trigger, dispose)
 /src/lib/audio/scene-audio.ts - buildSceneAudio(), hasAudioConfig() (extracted from Scene.svelte)
 /src/lib/audio/index.ts    - Re-exports from types + engine
 /src/lib/audio/patchers/   - RNBO exported patchers (JSON from Max)
-/src/lib/helpers/rail-geometry.ts - computeRailNamePosition, scalePoints, scaleSplits
-/src/lib/helpers/scene-init.ts   - createInstrumentSignals, assignInstrumentSignals, createMarbleConfigs
-/src/lib/helpers/keyboard.ts     - createKeydownHandler (config-driven key map)
-/src/lib/helpers/audio-params.ts - readChainParams, readBusParams, ParamInfo type
 /src/components/Bloom.svelte        - Post-processing bloom (scene only)
 /src/components/BloomHud.svelte     - Post-processing bloom + HUD compositing
 /src/components/HudScene.svelte     - HUD overlay content (ortho camera, transport, sequencer rows)

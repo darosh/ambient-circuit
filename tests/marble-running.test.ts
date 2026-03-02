@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { createMarble } from '../src/lib/marble'
-import { updateMarble } from '../src/lib/marble-system'
-import { createTempoState } from '../src/lib/tempo'
-import { resolveRail } from '../src/lib/rail-resolve'
-import { createSceneCtx } from '../src/lib/scene-ctx-factory'
-import type { Rail } from '../src/lib/rail'
-import type { RailData } from '../src/lib/rail-data'
-import type { SceneConfig } from '../src/lib/scene'
+import { createMarble } from '../src/lib/core/marble'
+import { updateMarble } from '../src/lib/core/marble-system'
+import { createTempoState } from '../src/lib/core/tempo'
+import { resolveRail } from '../src/lib/core/rail-resolve'
+import { createSceneCtx } from '../src/lib/core/scene-ctx-factory'
+import type { Rail } from '../src/lib/core/rail'
+import type { RailData } from '../src/lib/core/rail-data'
+import type { SceneConfig } from '../src/lib/core/scene'
 
 const rail: Rail = { id: 'r', nodes: [[0, 0, 0], 'r r r r r'] }
 const resolvedRail = resolveRail(rail)

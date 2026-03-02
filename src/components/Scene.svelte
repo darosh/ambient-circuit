@@ -5,24 +5,24 @@
 	import { interactivity } from '@threlte/extras'
 	import RailView from './RailView.svelte'
 	import MarbleView from './MarbleView.svelte'
-	import { createTempoState, updateTempo, type TempoState } from '../lib/tempo'
+	import { createTempoState, updateTempo, type TempoState } from '../lib/core/tempo'
 	import {
 		updateMarbles,
 		fireGlobalBeatInit,
 		fireGlobalBeatDestroy,
 		resetMarbleToConfig,
 		type MarbleMutations
-	} from '../lib/marble-system'
-	import type { SceneConfig } from '../lib/scene'
+	} from '../lib/core/marble-system'
+	import type { SceneConfig } from '../lib/core/scene'
 	import {
 		createSceneCtx,
 		updateSceneCtx,
 		addMarbleEntity,
 		removeMarbleEntity,
 		reindexMarbles
-	} from '../lib/scene-ctx-factory'
-	import { createMarble, type Marble } from '../lib/marble'
-	import type { Instrument } from '../lib/instrument'
+	} from '../lib/core/scene-ctx-factory'
+	import { createMarble, type Marble } from '../lib/core/marble'
+	import type { Instrument } from '../lib/core/instrument'
 	import { createAudioEngine, disposeScene } from '../lib/audio'
 	import type { AudioEngine, AudioChain } from '../lib/audio'
 	import { hasAudioConfig, buildSceneAudio } from '../lib/audio/scene-audio'
@@ -36,7 +36,7 @@
 	import MidiSignalView from './MidiSignalView.svelte'
 	import { getMarbleSignalLinks, getMidiSignalLinks } from '../lib/helpers/links'
 	import Stars from './Stars.svelte'
-	import type { SceneCtx } from '../lib/scene-ctx'
+	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import { toggleMute } from '../lib/audio/engine'
 	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
 	import { GridHelperIO } from '../lib/three/GridHelperIO'
@@ -345,7 +345,7 @@
 			}
 
 			// 6. Sync sceneCtx.marbles order (reuse existing entities, just reorder)
-			const entityById: Record<number, import('../lib/scene-ctx').MarbleEntity> = {}
+			const entityById: Record<number, import('../lib/core/scene-ctx').MarbleEntity> = {}
 			for (const e of sceneCtx.marbles) entityById[e.id] = e
 			sceneCtx.marbles.length = 0
 			for (const m of marbles) {

@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { createSceneCtx, updateSceneCtx } from '../src/lib/scene-ctx-factory'
-import { createMarble } from '../src/lib/marble'
-import { createTempoState } from '../src/lib/tempo'
-import { resolveRail } from '../src/lib/rail-resolve'
-import type { RailData } from '../src/lib/rail-data'
-import type { SceneConfig } from '../src/lib/scene'
+import { createSceneCtx, updateSceneCtx } from '../src/lib/core/scene-ctx-factory'
+import { createMarble } from '../src/lib/core/marble'
+import { createTempoState } from '../src/lib/core/tempo'
+import { resolveRail } from '../src/lib/core/rail-resolve'
+import type { RailData } from '../src/lib/core/rail-data'
+import type { SceneConfig } from '../src/lib/core/scene'
 
 describe('scene-ctx', () => {
 	it('createSceneCtx creates correct entity counts', () => {

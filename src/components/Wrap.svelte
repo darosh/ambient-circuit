@@ -5,9 +5,9 @@
 	import Bloom from './Bloom.svelte'
 	import HudScene from './HudScene.svelte'
 	import BloomHud from './BloomHud.svelte'
-	import type { SceneCtx } from '../lib/scene-ctx'
+	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import type { AudioChain } from '../lib/audio'
-	import { panelState } from '../lib/hud/panel-state.svelte'
+	import { panelState } from '../lib/components/hud/panel-state.svelte'
 
 	let {
 		sceneId,

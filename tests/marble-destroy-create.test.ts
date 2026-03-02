@@ -1,18 +1,18 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { createMarble, resetMarbleIdCounter, type MarbleConfig } from '../src/lib/marble'
-import { MarbleState } from '../src/lib/marble-state'
-import { updateMarbles } from '../src/lib/marble-system'
-import { resolveRail } from '../src/lib/rail-resolve'
-import { createTempoState, type TempoState } from '../src/lib/tempo'
-import type { Instrument } from '../src/lib/instrument'
+import { createMarble, resetMarbleIdCounter, type MarbleConfig } from '../src/lib/core/marble'
+import { MarbleState } from '../src/lib/core/marble-state'
+import { updateMarbles } from '../src/lib/core/marble-system'
+import { resolveRail } from '../src/lib/core/rail-resolve'
+import { createTempoState, type TempoState } from '../src/lib/core/tempo'
+import type { Instrument } from '../src/lib/core/instrument'
 import {
 	createSceneCtx,
 	addMarbleEntity,
 	removeMarbleEntity,
 	reindexMarbles
-} from '../src/lib/scene-ctx-factory'
-import type { RailData } from '../src/lib/rail-data'
-import type { SceneConfig } from '../src/lib/scene'
+} from '../src/lib/core/scene-ctx-factory'
+import type { RailData } from '../src/lib/core/rail-data'
+import type { SceneConfig } from '../src/lib/core/scene'
 
 function createTestRail(id = 'test-rail') {
 	return resolveRail({

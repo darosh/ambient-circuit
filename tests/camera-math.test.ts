@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { unwrapAngle, dampAngleStep, dirToAngles, anglesToDir } from '../src/lib/camera-math'
+import {
+	unwrapAngle,
+	dampAngleStep,
+	dirToAngles,
+	anglesToDir
+} from '../src/lib/components/multi-view/camera-math'
 
 describe('unwrapAngle', () => {
 	it('no wrapping needed', () => {

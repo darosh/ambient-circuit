@@ -6,7 +6,7 @@
 	import type { ParamInfo } from '../lib/audio/engine'
 	import { readChainParams, readBusParams } from '../lib/helpers/audio-params'
 	import { buildImpactMaterial } from '../lib/video/material-impact'
-	import { panelState } from '../lib/hud/panel-state.svelte'
+	import { panelState } from '../lib/components/hud/panel-state.svelte'
 	import GeoText from './GeoText.svelte'
 	import { onDestroy } from 'svelte'
 	import { parseHex, formatHex, convertRgbToOklab, convertOklabToRgb, type Rgb } from 'culori/fn'

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { Vector3 } from 'three/webgpu'
-import type { ResolvedPoint } from '../src/lib/rail'
-import { computeBeatPositions, buildSegmentCurve } from '../src/lib/rail-curve'
+import type { ResolvedPoint } from '../src/lib/core/rail'
+import { computeBeatPositions, buildSegmentCurve } from '../src/lib/core/rail-curve'
 
 function pt(
 	p: [number, number, number],

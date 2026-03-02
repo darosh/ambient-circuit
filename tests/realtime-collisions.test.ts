@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { createMarble } from '../src/lib/marble'
-import { updateMarbles } from '../src/lib/marble-system'
-import { createTempoState, updateTempo } from '../src/lib/tempo'
-import { resolveRail } from '../src/lib/rail-resolve'
-import type { Rail } from '../src/lib/rail'
+import { createMarble } from '../src/lib/core/marble'
+import { updateMarbles } from '../src/lib/core/marble-system'
+import { createTempoState, updateTempo } from '../src/lib/core/tempo'
+import { resolveRail } from '../src/lib/core/rail-resolve'
+import type { Rail } from '../src/lib/core/rail'
 
 /**
  * Returns the cyclic order of marbles on the rail as an array of marble IDs,

@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createMarble } from '../src/lib/marble'
-import { updateMarble } from '../src/lib/marble-system'
-import { createTempoState } from '../src/lib/tempo'
-import { computeBeatPositions } from '../src/lib/rail-curve'
-import { resolveRail } from '../src/lib/rail-resolve'
-import type { ResolvedRail } from '../src/lib/rail'
-import type { RailData } from '../src/lib/rail-data'
-import type { TriggerHandler, SceneConfig } from '../src/lib/scene'
-import { createSceneCtx } from '../src/lib/scene-ctx-factory'
+import { createMarble } from '../src/lib/core/marble'
+import { updateMarble } from '../src/lib/core/marble-system'
+import { createTempoState } from '../src/lib/core/tempo'
+import { computeBeatPositions } from '../src/lib/core/rail-curve'
+import { resolveRail } from '../src/lib/core/rail-resolve'
+import type { ResolvedRail } from '../src/lib/core/rail'
+import type { RailData } from '../src/lib/core/rail-data'
+import type { TriggerHandler, SceneConfig } from '../src/lib/core/scene'
+import { createSceneCtx } from '../src/lib/core/scene-ctx-factory'
 
 describe('marble-system', () => {
 	const testRail: ResolvedRail = {

@@ -1,6 +1,6 @@
-import type { SceneConfig } from '../lib/scene'
+import type { SceneConfig } from '../lib/core/scene'
 import { colors } from './utils/colors'
-import { triggerHandler } from '../lib/trigger-handler'
+import { triggerHandler } from '../lib/core/trigger-handler'
 
 let ci = 0
 const c = () => colors[ci++ % colors.length]

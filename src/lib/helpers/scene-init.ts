@@ -1,7 +1,7 @@
-import type { RailData, EaterMarbleData } from '../rail-data'
-import type { Marble } from '../marble'
-import { createMarble } from '../marble'
-import { resolveRail } from '../rail-resolve'
+import type { RailData, EaterMarbleData } from '../core/rail-data'
+import type { Marble } from '../core/marble'
+import { createMarble } from '../core/marble'
+import { resolveRail } from '../core/rail-resolve'
 
 export function createInstrumentSignals(rails: RailData[]): {
 	signals: Array<{ intensity: number }>

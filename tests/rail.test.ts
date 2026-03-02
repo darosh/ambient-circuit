@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import type { Rail } from '../src/lib/rail'
-import { resolveRail, validateNoDuplicateMidPathPositions } from '../src/lib/rail-resolve'
+import type { Rail } from '../src/lib/core/rail'
+import { resolveRail, validateNoDuplicateMidPathPositions } from '../src/lib/core/rail-resolve'
 
 describe('resolveRail', () => {
 	it('straight rail: auto-increments beats from 0', () => {

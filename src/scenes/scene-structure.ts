@@ -1,6 +1,6 @@
-import type { SceneConfig } from '../lib/scene'
+import type { SceneConfig } from '../lib/core/scene'
 import { colors } from './utils/colors'
-import { triggerHandler } from '../lib/trigger-handler'
+import { triggerHandler } from '../lib/core/trigger-handler'
 import { randomizer } from './utils/randomizer'
 
 let ci = 0

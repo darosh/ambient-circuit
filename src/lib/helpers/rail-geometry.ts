@@ -1,4 +1,4 @@
-import type { ResolvedPoint, ResolvedSplit } from '../rail'
+import type { ResolvedPoint, ResolvedSplit } from '../core/rail'
 import { Vector3 } from 'three/webgpu'
 
 export function computeRailNamePosition(

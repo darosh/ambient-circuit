@@ -13,8 +13,8 @@
 	import type { WebGPURenderer, Scene } from 'three/webgpu'
 	import { pass, select, screenUV, mix, max, uniform, vec4 } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
-	import type { ViewConfig, ViewSplitConfig, BloomConfig } from '../lib/scene'
-	import type { SceneCtx } from '../lib/scene-ctx'
+	import type { ViewConfig, ViewSplitConfig, BloomConfig } from '../lib/core/scene'
+	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import {
 		initSplitStates,
 		initCamStates,
@@ -26,7 +26,7 @@
 		type SplitRect,
 		type ResolvedTarget,
 		isClose
-	} from '../lib/multi-view'
+	} from '../lib/components/multi-view/multi-view'
 
 	type OC = import('three/addons/controls/OrbitControls.js').OrbitControls
 	type MarbleOrVec = number | [number, number, number] | null

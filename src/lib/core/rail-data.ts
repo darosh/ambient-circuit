@@ -1,7 +1,7 @@
 import type { MarbleSequenceMode, MarbleDirection } from './marble'
 import type { Rail } from './rail'
 import type { Instrument } from './instrument'
-import type { AudioChainConfig } from './audio/types'
+import type { AudioChainConfig } from '../audio/types'
 import type { SceneCtx } from './scene-ctx'
 import type { TempoState } from './tempo'
 import type { Matrix4 } from 'three/webgpu'

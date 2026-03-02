@@ -1,5 +1,5 @@
 import type { MarbleDirection } from './marble'
-import type { AudioChainConfig } from './audio/types'
+import type { AudioChainConfig } from '../audio/types'
 import { TriggerHandler } from './scene'
 
 export type InstrumentSignal = { intensity: number }

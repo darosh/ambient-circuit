@@ -1,6 +1,6 @@
-import type { SceneConfig } from '../lib/scene'
+import type { SceneConfig } from '../lib/core/scene'
 import { color3 as colors } from './utils/colors'
-import { triggerHandler } from '../lib/trigger-handler'
+import { triggerHandler } from '../lib/core/trigger-handler'
 import { Matrix4, Vector3, MathUtils } from 'three/webgpu'
 
 // Cached math objects for render functions (allocated once, reused every frame)

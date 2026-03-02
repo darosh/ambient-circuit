@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	import type { Instrument } from '../lib/instrument'
-	import type { ResolvedRail } from '../lib/rail'
-	import { getBeatTransform, getPointsForPath } from '../lib/rail-curve'
+	import type { Instrument } from '../lib/core/instrument'
+	import type { ResolvedRail } from '../lib/core/rail'
+	import { getBeatTransform, getPointsForPath } from '../lib/core/rail-curve'
 	import { Vector3, Euler, Matrix4, Color } from 'three/webgpu'
-	import { easeOutQuart, easeInBounce, easeOutBack } from '../lib/easing'
-	import { makeInstrumentMaterial } from '../lib/config'
+	import { easeOutQuart, easeInBounce, easeOutBack } from '../lib/helpers/easing'
+	import { makeInstrumentMaterial } from '../lib/components/config'
 	import {
 		createInstrumentGeometry,
 		createInstrumentFillGeometry,
@@ -20,7 +20,7 @@
 	const _ROT_HALF_PI = new Matrix4().makeRotationZ(Math.PI / 2)
 	const _ROT_NEG_PI = new Matrix4().makeRotationZ(-Math.PI)
 
-	import type { RailData } from '../lib/rail-data'
+	import type { RailData } from '../lib/core/rail-data'
 
 	type Props = {
 		instrument: Instrument

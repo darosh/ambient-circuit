@@ -1,6 +1,6 @@
 import { Vector3 } from 'three/webgpu'
-import { AudioBus, AudioChain } from './audio'
-import { cfgName } from './audio/engine'
+import { AudioBus, AudioChain } from '../../audio'
+import { cfgName } from '../../audio/engine'
 
 export type NodeInfo = {
 	x: number
