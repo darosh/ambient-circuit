@@ -1,10 +1,6 @@
 # TODO (no AI)
 
 - [ ] Dust?
-- [ ] RNBO scene
-- [ ] RNBO mono export
-- [ ] RNBO giga dry type
-- [ ] poly default 4
 - [ ] https://threlte.xyz/docs/reference/extras/fake-glow-material
 - [ ] https://threlte.xyz/docs/reference/extras/transitions
 - [ ] https://threlte.xyz/docs/reference/extras/uv-material
@@ -30,6 +26,10 @@
   - [x] scroll presets
   - [x] scroll chains
   - [ ] remove limit, use available space
+- [x] RNBO scene
+- [x] RNBO mono export
+- [x] RNBO giga dry type
+- [x] poly default 4
 - [x] ~~use gigaverb from examples~~
 - [x] freeverb too
 - [x] try marbles as camera pos / target
