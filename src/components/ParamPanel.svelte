@@ -657,12 +657,18 @@
 		pasteFlash = FLASH_DUR
 	}
 
-const actionButtons = $derived(
+	const actionButtons = $derived(
 		[
 			{ label: 'CLOSE', onclick: () => close && close(), mat: closeFx, visible: true },
 			{ label: 'COPY', onclick: () => copyParams(), mat: copyFx, visible: true },
 			{ label: 'PASTE', onclick: () => pasteParams(), mat: pasteFx, visible: pasteCompat },
-			{ label: 'SOLO', onclick: () => toggleSolo(), mat: soloFx, solo: true, visible: target?.type !== 'master' },
+			{
+				label: 'SOLO',
+				onclick: () => toggleSolo(),
+				mat: soloFx,
+				solo: true,
+				visible: target?.type !== 'master'
+			},
 			{ label: 'TRIG', onclick: () => trigCurrent(), mat: trigFx, visible: true }
 		].filter((b) => b.visible)
 	)
