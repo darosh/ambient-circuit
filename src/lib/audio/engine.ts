@@ -222,7 +222,9 @@ async function buildBus(
 			log('parameterChangeEvent.count', f.parameterChangeEvent.listenerCount)
 			f.parameterChangeEvent.subscribe((param) => {
 				log('parameterChangeEvent', param)
-				if (bus.onParamChange) bus.onParamChange(param.id, param.value)
+				const idx = (f as Device).parameters.indexOf(param)
+				const key = rnboParamKey(param, idx, (f as Device).parameters)
+				if (bus.onParamChange) bus.onParamChange(key, param.value)
 			})
 		}
 	}
@@ -374,7 +376,9 @@ export async function buildChain(
 		log('parameterChangeEvent.count', (node as Device).parameterChangeEvent.listenerCount)
 		;(node as Device).parameterChangeEvent.subscribe((param) => {
 			log('parameterChangeEvent', param)
-			if (chain.onParamChange) chain.onParamChange(param.id, param.value)
+			const idx = (node as Device).parameters.indexOf(param)
+			const key = rnboParamKey(param, idx, (node as Device).parameters)
+			if (chain.onParamChange) chain.onParamChange(key, param.value)
 		})
 	}
 
@@ -668,7 +672,7 @@ export function setNodeParam(node: ToneAudioNode | Device, path: string, value: 
 	log('setting', path, value)
 
 	if (isDevice(node)) {
-		const p = node.parameters.find((p) => p.name === path || p.id === path)
+		const p = findRnboParam(node, path)
 		if (p) p.value = value as number
 	} else {
 		// Tone.js: walk dot-path
@@ -700,7 +704,7 @@ export function getNodeParam(
 	forceValue = true
 ): ParamValue | undefined {
 	if (isDevice(node)) {
-		const p = node.parameters.find((p) => p.name === path || p.id === path)
+		const p = findRnboParam(node, path)
 		return p ? p.value : undefined
 	} else {
 		const parts = path.split('.')
@@ -743,8 +747,8 @@ function listNodeParams(
 	toneClass?: string
 ): ParamInfo[] {
 	if (isDevice(node)) {
-		return node.parameters.map((p) => ({
-			path: p.name || p.id,
+		return node.parameters.map((p, i) => ({
+			path: rnboParamKey(p, i, node.parameters),
 			value: p.value,
 			min: p.min,
 			max: p.max
@@ -997,7 +1001,7 @@ async function loadRNBO(
 	// Apply explicit params AFTER preset (overrides)
 	if (params) {
 		for (const [key, val] of Object.entries(params)) {
-			const p = device.parameters.find((p) => p.name === key || p.id === key)
+			const p = findRnboParam(device, key)
 			if (p) p.value = val as number
 		}
 	}
@@ -1036,6 +1040,31 @@ function createToneNode(
 
 function isDevice(node: ToneAudioNode | Device): node is Device {
 	return 'scheduleEvent' in node
+}
+
+/** Build unique path for RNBO param — appends _index when name/id collides */
+function rnboParamKey(
+	p: { name: string; id: string },
+	index: number,
+	allParams: { name: string; id: string }[]
+): string {
+	const name = p.name || p.id
+	const isDuplicate = allParams.some((q, j) => j !== index && (q.name || q.id) === name)
+	return isDuplicate ? `${name}_${index}` : name
+}
+
+/** Resolve path back to RNBO Parameter (handles compound keys) */
+function findRnboParam(
+	device: Device,
+	path: string
+): (typeof device.parameters)[number] | undefined {
+	const exact = device.parameters.find((p) => p.name === path || p.id === path)
+	if (exact) return exact
+	const lastUnderscore = path.lastIndexOf('_')
+	if (lastUnderscore === -1) return undefined
+	const idx = Number.parseInt(path.slice(lastUnderscore + 1))
+	if (Number.isNaN(idx) || idx < 0 || idx >= device.parameters.length) return undefined
+	return device.parameters[idx]
 }
 
 type AudioNodeLike = ToneAudioNode | Device | AnalyserNode | GainNode
