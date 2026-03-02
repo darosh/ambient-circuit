@@ -27,7 +27,7 @@ import { scene as sceneSingleCamera } from './scene-single-camera'
 import { scene as sceneMultiCamera } from './scene-multi-camera'
 import { scene as sceneMultiRows } from './scene-multi-rows'
 import { scene as sceneMultiColumns } from './scene-multi-columns'
-import { scene as sceneRnbo } from './scene-rnbo'
+import { scenes as scenesRnbo } from './scene-rnbo'
 
 export const scenes: SceneConfig[] = [
 	sceneTest,
@@ -58,5 +58,5 @@ export const scenes: SceneConfig[] = [
 	sceneAudio,
 	sceneCollisions,
 	sceneToneInstruments,
-	sceneRnbo
+	...scenesRnbo
 ]

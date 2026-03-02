@@ -3,9 +3,59 @@ import { triggerHandler } from '../lib/core/trigger-handler'
 import { spiral } from '../lib/core/rail-primitives'
 import { NodeConfig } from '../lib/audio'
 
+const FX = [
+	'rotavibe',
+	['tremolo', 'Fast'],
+	['vibrato', 'Extreme'],
+	['volume', 'Fast Attack'],
+	['freqshifter', 'High'],
+	['phaser', 'Wide'],
+	['pitchshifter', 'Fivth+'],
+	['guitarsynth', 'Timbre'],
+	['autofilter', 'HP'],
+
+	'freeverb',
+	['filterdelay', 'Wide'],
+	['gigaverb', 'Dry'],
+	['platereverb', 'Large'],
+	'shimmerev',
+	['chorus', 'Wide'],
+	['flanger', 'Wide'],
+	['ringmod', 'High'],
+	['octaver', 'Octave2'],
+
+	'param-eq',
+	'graphic-eq',
+	'shelving-eq',
+
+	'autoswell',
+	'booster',
+	'compressor',
+	'freezer',
+	'guitarsynth',
+	'limiter',
+	'noisegate',
+	'overdrive',
+	'talkwah',
+	'wahwah',
+
+	'looper'
+]
+
+let currentFx = 0
+const getFx = () => {
+	const item = FX[currentFx++]
+
+	return {
+		rnbo: Array.isArray(item) ? item[0] : item,
+		preset: Array.isArray(item) ? item[1] : undefined
+	}
+}
+
 const generator = {
-	rnbo: 'formant-synth',
-	preset: 'Slow'
+	rnbo: 'supersaw-mono'
+	// tone: 'PluckSynth',
+	// params: { resonance: 0.95, attackNoise: 0.5, dampening: 6000 }
 	// tone: 'Synth',
 	// params: {
 	// 	'oscillator.type': 'fatsquare',
@@ -14,12 +64,14 @@ const generator = {
 }
 
 const fx: NodeConfig[] = [
+	// { tone: 'Split', params: { channels: 1 } },
+	// { tone: 'OnePoleFilter', params: { frequency: 30, type: 'highpass' } }
 ]
 
 let bc = 1 - 4
 const b = () => (bc += 4)
 
-export const scene: SceneConfig = {
+const scene: SceneConfig = {
 	id: 'scene-rnbo',
 	description: 'RNBO effects test',
 	bpm: 300,
@@ -30,6 +82,7 @@ export const scene: SceneConfig = {
 	polar: true,
 	tint: [1.4, 1, 1],
 	audioView: {
+		text: true,
 		defaultAnalyser: 'fft',
 		all: true,
 		color: '#cc88ff',
@@ -75,163 +128,122 @@ export const scene: SceneConfig = {
 			instruments: [
 				{
 					note: 67,
+					duration: 1000,
 					type: 'arrow',
 					kind: 'plain',
 					beat: b(),
 					audio: {
 						generator,
-						fx
+						fx: [...fx, getFx()]
 					}
 				},
 				{
 					note: 60,
+					duration: 1000,
 					type: 'arrow',
 					kind: 'plain',
 					beat: b(),
 					audio: {
 						generator,
-						fx: [
-							...fx,
-							{
-								rnbo: 'filterdelay',
-								preset: 'Wide'
-							}
-						]
+						fx: [...fx, getFx()]
 					}
 				},
 				{
 					note: 52,
+					duration: 1000,
 					type: 'arrow',
 					kind: 'plain',
 					beat: b(),
 					audio: {
 						generator,
-						fx: [
-							...fx,
-							{
-								rnbo: 'autofilter',
-								params: {
-									sense: 47,
-									attack: 0,
-									release: 66,
-									type: 2,
-									bottom: 0,
-									mix: 86,
-									volume: 0,
-									reson: 80,
-									top: 100,
-									slope: 50
-								},
-								preset: 'Extreme'
-							}
-						]
+						fx: [...fx, getFx()]
 					}
 				},
 				{
 					note: 50,
+					duration: 1000,
 					type: 'arrow',
 					kind: 'plain',
 					beat: b(),
 					audio: {
 						generator,
-						fx: [
-							...fx,
-							{
-								rnbo: 'flanger'
-								// preset: 'Wide'
-							}
-						]
+						fx: [...fx, getFx()]
 					}
 				},
 				{
 					note: 48,
+					duration: 1000,
 					type: 'arrow',
 					kind: 'plain',
 					beat: b(),
 					audio: {
 						generator,
-						fx: [
-							...fx,
-							{
-								rnbo: 'freqshifter',
-								preset: 'Extreme'
-							}
-						]
+						fx: [...fx, getFx()]
 					}
 				},
 				{
 					type: 'arrow',
+					duration: 1000,
 					kind: 'plain',
 					beat: b(),
 					audio: {
 						generator,
-						fx: [
-							...fx,
-							{
-								rnbo: 'octaver',
-								preset: 'Octave2'
-							}
-						]
+						fx: [...fx, getFx()]
 					}
 				},
 				{
 					type: 'arrow',
+					duration: 1000,
 					kind: 'plain',
 					beat: b(),
 					audio: {
 						generator,
-						fx: [
-							...fx,
-							{
-								rnbo: 'freeverb',
-								params: { damp: 0.5, fb1: 0.99, spread: 400, fb2: 0.99, dry: 1 },
-								preset: 'Default'
-							}
-						]
+						fx: [...fx, getFx()]
 					}
 				},
 				{
 					type: 'arrow',
+					duration: 1000,
 					kind: 'plain',
 					beat: b(),
 					audio: {
 						generator,
-						fx: [
-							...fx,
-							{
-								rnbo: 'overdrive',
-								params: {
-									lowcut: 0,
-									highcut: 50,
-									drive: 50,
-									mix: 90,
-									volume: -70,
-									midfreq: -60,
-									treble: -70,
-									mid: 25,
-									bass: -25
-								},
-								preset: 'Scream'
-							}
-						]
+						fx: [...fx, getFx()]
 					}
 				},
 				{
 					type: 'arrow',
+					duration: 1000,
 					kind: 'plain',
 					beat: b(),
 					audio: {
 						generator,
-						fx: [
-							...fx,
-							{
-								rnbo: 'talkwah',
-								preset: 'Auto'
-							}
-						]
+						fx: [...fx, getFx()]
 					}
 				}
 			]
 		}
 	]
 }
+
+export const scenes: SceneConfig[] = [
+	{ ...scene /*, id: 'scene-rnbo-1'*/ }
+	/**
+	{
+		...scene,
+		id: 'scene-rnbo-2',
+		rails: scene.rails.map((r) => ({
+			...r,
+			instruments: r.instruments!.map((i) => ({
+				...i,
+				audio: {
+					generator,
+					fx: [...fx, getFx()]
+				}
+			}))
+		}))
+	}
+	**/
+]
+
+console.log(scenes)
