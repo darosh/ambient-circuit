@@ -48,18 +48,31 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 
 	for (const node of nodes_) {
 		if (isVec3(node)) {
-			points.push({ p: node, beat, round: null, tangent: 0.39 })
-			anchors.push(points.length - 1)
-			beat++
+			if (hasExplicitBeats) {
+				points.push({ p: node, beat: Number.NaN, round: null, tangent: 0.39 })
+			} else {
+				points.push({ p: node, beat, round: null, tangent: 0.39 })
+				anchors.push(points.length - 1)
+				beat++
+			}
 		} else if (isVec3Curve(node)) {
-			points.push({
-				p: <Vec3>node.slice(0, 3),
-				beat,
-				round: <Rounding>(<unknown>node[3]),
-				tangent: node[4] ?? 0.39
-			})
-			anchors.push(points.length - 1)
-			beat++
+			if (hasExplicitBeats) {
+				points.push({
+					p: <Vec3>node.slice(0, 3),
+					beat: Number.NaN,
+					round: <Rounding>(<unknown>node[3]),
+					tangent: node[4] ?? 0.39
+				})
+			} else {
+				points.push({
+					p: <Vec3>node.slice(0, 3),
+					beat,
+					round: <Rounding>(<unknown>node[3]),
+					tangent: node[4] ?? 0.39
+				})
+				anchors.push(points.length - 1)
+				beat++
+			}
 		} else if (isPointFull(node)) {
 			if (node.beat !== undefined) {
 				beat = node.beat

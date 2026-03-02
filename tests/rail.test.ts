@@ -291,4 +291,22 @@ describe('resolveRail', () => {
 		const r = resolveRail(rail)
 		expect(r.points.map(p => p.beat)).toEqual([0, 2.5, 5, 6, 7])
 	})
+
+	it('beats positions should be interpolated between anchor nodes', () => {
+		const rail: Rail = {
+			id: 'beats',
+			nodes: ['l 0 l l l 6 l']
+		}
+		const r = resolveRail(rail)
+		expect(r.points.map(p => p.beat)).toEqual([0, 2, 4, 6, 7])
+	})
+
+	it('first node is anchor', () => {
+		const rail: Rail = {
+			id: 'beats',
+			nodes: ['l l l l 6 l']
+		}
+		const r = resolveRail(rail)
+		expect(r.points.map(p => p.beat)).toEqual([0, 2, 4, 6, 7])
+	})
 })
