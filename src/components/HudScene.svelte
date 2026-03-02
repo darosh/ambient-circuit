@@ -762,7 +762,12 @@
 			return { x: 1, y: 1 }
 		}
 
-		return getGrid(sceneCtx.config.view.layout, sceneCtx.config.view.splits.length, $size.width, $size.height)
+		return getGrid(
+			sceneCtx.config.view.layout,
+			sceneCtx.config.view.splits.length,
+			$size.width,
+			$size.height
+		)
 	})
 </script>
 
