@@ -13,7 +13,7 @@
 	import { HalfFloatType } from 'three/webgpu'
 	import { pass, mix, max, texture } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
-	import type { ViewConfig, ViewSplitConfig, BloomConfig } from '../lib/core/scene'
+	import type { ViewConfig, ViewSplitConfig } from '../lib/core/scene'
 	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import {
 		initSplitStates,
@@ -27,6 +27,8 @@
 		type ResolvedTarget,
 		isClose
 	} from '../lib/components/multi-view/multi-view'
+	import { resolveBloom } from '../lib/components/multi-view/tsl'
+	import { hudBloom } from '../lib/components/config'
 
 	type OC = import('three/addons/controls/OrbitControls.js').OrbitControls
 	type MarbleOrVec = number | [number, number, number] | null
@@ -97,20 +99,6 @@
 			for (const fn of cleanups) fn()
 		}
 	})
-
-	// ── TSL pipeline helpers ───────────────────────────────────────────────────
-
-	function resolveBloom(cfg: ViewSplitConfig['bloom'], defaults?: BloomConfig): BloomConfig | null {
-		if (!cfg) return null
-		const d = defaults ?? {}
-		if (cfg === true)
-			return { strength: d.strength ?? 0.5, radius: d.radius ?? 0.2, threshold: d.threshold ?? 0.5 }
-		return {
-			strength: cfg.strength ?? d.strength ?? 0.5,
-			radius: cfg.radius ?? d.radius ?? 0.2,
-			threshold: cfg.threshold ?? d.threshold ?? 0.5
-		}
-	}
 
 	// ── Atlas render target ────────────────────────────────────────────────────
 	// All splits rendered into one atlas texture via viewport/scissor per camera.
@@ -183,7 +171,7 @@
 		let composed: any = _atlasTexNode //.sample(screenUV)
 
 		// Global bloom — use first split's bloom config or scene defaults
-		const firstBloom = true // config.splits.find((s) => s.bloom)?.bloom
+		const firstBloom = config.splits.find((s) => s.bloom)?.bloom ?? true
 		const bloomCfg = resolveBloom(firstBloom ?? !!config.bloomDefaults, config.bloomDefaults)
 		if (bloomCfg) {
 			composed = composed.add(
@@ -197,7 +185,7 @@
 			const hudMask = max(hudColor.r, hudColor.g, hudColor.b, hudColor.a)
 			const doHudBloom = config.hudBloom ?? true
 			if (doHudBloom) {
-				const b = config.bloomDefaults ?? { strength: 0.5, radius: 0.2, threshold: 0.5 }
+				const b = config.bloomDefaults ?? hudBloom
 				const hudBloomed = hudColor.add(bloom(hudColor, b.strength, b.radius, b.threshold))
 				const hudMaskBloom = hudBloomed.a.smoothstep(1, 2.5).sub(0.01).mul(1.02).clamp(0, 1)
 				composed = mix(composed, hudBloomed, hudMaskBloom)

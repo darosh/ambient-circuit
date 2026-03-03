@@ -13,7 +13,7 @@
 	import type { WebGPURenderer, Scene } from 'three/webgpu'
 	import { pass, select, screenUV, mix, max, uniform, vec4 } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
-	import type { ViewConfig, ViewSplitConfig, BloomConfig } from '../lib/core/scene'
+	import type { ViewConfig, ViewSplitConfig } from '../lib/core/scene'
 	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import {
 		initSplitStates,
@@ -27,6 +27,8 @@
 		type ResolvedTarget,
 		isClose
 	} from '../lib/components/multi-view/multi-view'
+	import { resolveBloom } from '../lib/components/multi-view/tsl'
+	import { hudBloom } from '../lib/components/config'
 
 	type OC = import('three/addons/controls/OrbitControls.js').OrbitControls
 	type MarbleOrVec = number | [number, number, number] | null
@@ -99,21 +101,6 @@
 	})
 
 	// ── TSL pipeline helpers ───────────────────────────────────────────────────
-
-	function resolveBloom(
-		cfg: ViewSplitConfig['bloom'],
-		defaults: BloomConfig | undefined
-	): BloomConfig | null {
-		if (!cfg) return null
-		const d = defaults ?? {}
-		if (cfg === true)
-			return { strength: d.strength ?? 0.5, radius: d.radius ?? 0.2, threshold: d.threshold ?? 0.5 }
-		return {
-			strength: cfg.strength ?? d.strength ?? 0.5,
-			radius: cfg.radius ?? d.radius ?? 0.2,
-			threshold: cfg.threshold ?? d.threshold ?? 0.5
-		}
-	}
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	function buildComposite(nodes: any[], rects: SplitRect[], w: number, h: number): any {
@@ -237,7 +224,12 @@
 			return color
 		})
 
-		let composed = buildComposite(splitOutputs, _rects, _lastSize.w || size.current.width, _lastSize.h || size.current.height)
+		let composed = buildComposite(
+			splitOutputs,
+			_rects,
+			_lastSize.w || size.current.width,
+			_lastSize.h || size.current.height
+		)
 
 		if (SINGLE_BLOOM) {
 			const splitCfg = config.splits[0]
@@ -256,7 +248,7 @@
 			const hudMask = max(hudColor.r, hudColor.g, hudColor.b, hudColor.a)
 			const doHudBloom = config.hudBloom ?? true
 			if (doHudBloom) {
-				const b = config.bloomDefaults ?? { strength: 0.5, radius: 0.2, threshold: 0.5 }
+				const b = config.bloomDefaults ?? hudBloom
 				const hudBloomed = hudColor.add(bloom(hudColor, b.strength, b.radius, b.threshold))
 				const hudMaskBloom = hudBloomed.a.smoothstep(1, 2.5).sub(0.01).mul(1.02).clamp(0, 1)
 				composed = mix(composed, hudBloomed, hudMaskBloom)

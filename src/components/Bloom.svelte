@@ -4,6 +4,7 @@
 	import { PostProcessing, type WebGPURenderer } from 'three/webgpu'
 	import { pass, uniform, vec3 } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
+	import { defaultBloom } from '../lib/components/config'
 
 	type Props = {
 		strength?: number
@@ -12,7 +13,12 @@
 		tint?: [number, number, number]
 	}
 
-	let { strength = 1, radius = 0.1, threshold = 1, tint = [1, 1, 1] }: Props = $props()
+	let {
+		strength = defaultBloom.strength,
+		radius = defaultBloom.radius,
+		threshold = defaultBloom.threshold,
+		tint = [1, 1, 1]
+	}: Props = $props()
 
 	const { renderer, scene, camera, renderStage, autoRender } = useThrelte()
 

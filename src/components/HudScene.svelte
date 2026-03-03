@@ -760,11 +760,16 @@
 	let splitRects = $state<SplitRect[]>([])
 	const _splitRectsLast = { w: 0, h: 0, dpr: 0 }
 	$effect(() => {
-		const w = $size.width, h = $size.height
+		const w = $size.width,
+			h = $size.height
 		const view = untrack(() => sceneCtx?.config?.view)
-		if (!view) { splitRects = []; return }
+		if (!view) {
+			splitRects = []
+			return
+		}
 		const n = view.splits.length
-		if (splitRects.length !== n) splitRects = view.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
+		if (splitRects.length !== n)
+			splitRects = view.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
 		updateRects(view.layout, view.splits, w, h, 1, splitRects, _splitRectsLast)
 	})
 </script>
@@ -777,7 +782,14 @@
 	<T
 		is={GridHelperCells}
 		position.y={-0.01}
-		args={[splitRects, $size.width, $size.height, $size.width / HUD_ZOOM, $size.height / HUD_ZOOM, gridColor]}
+		args={[
+			splitRects,
+			$size.width,
+			$size.height,
+			$size.width / HUD_ZOOM,
+			$size.height / HUD_ZOOM,
+			gridColor
+		]}
 	/>
 {/if}
 

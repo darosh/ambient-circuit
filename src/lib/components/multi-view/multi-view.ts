@@ -16,7 +16,7 @@ export type SplitCamState = {
 	isDraggingEnd: number
 }
 
-export type SplitRect = { x: number; y: number; width: number; height: number, aspect?: number }
+export type SplitRect = { x: number; y: number; width: number; height: number; aspect?: number }
 
 export type ResolvedTarget = {
 	pos: Vector3
@@ -140,8 +140,7 @@ export function updateRects(
 						if (col + sc > gridCols || row + sr > gridRows) continue
 						let fits = true
 						for (let dr = 0; dr < sr && fits; dr++)
-							for (let dc = 0; dc < sc && fits; dc++)
-								if (occupied[row + dr][col + dc]) fits = false
+							for (let dc = 0; dc < sc && fits; dc++) if (occupied[row + dr][col + dc]) fits = false
 						if (fits) {
 							for (let dr = 0; dr < sr; dr++)
 								for (let dc = 0; dc < sc; dc++) occupied[row + dr][col + dc] = true

@@ -132,16 +132,9 @@
 
 	<!-- Example: <BloomHud hudFx={fxPost ? (color) => gaussianBlur(color, null, 2) : undefined} -->
 	{#if fxPost && !(showHud && activeScene && tempo)}
-		<Bloom strength={0.5} radius={0.2} threshold={0.5} tint={activeScene.tint} />
+		<Bloom tint={activeScene.tint} />
 	{:else}
-		<BloomHud
-			enabled={fxPost}
-			hudBloom={fxPost && fxHud}
-			strength={0.5}
-			radius={0.2}
-			threshold={0.5}
-			tint={activeScene.tint}
-		>
+		<BloomHud enabled={fxPost} hudBloom={fxPost && fxHud} tint={activeScene.tint}>
 			{#snippet children(_arg)}
 				<!-- eslint-disable-next-line sonarjs/no-use-of-empty-return-value -->
 				{@render hudContent(_arg)}

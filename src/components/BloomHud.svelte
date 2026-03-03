@@ -5,6 +5,7 @@
 	import { PostProcessing, type WebGPURenderer, type Scene, type Node } from 'three/webgpu'
 	import { pass, mix, max, vec3, uniform } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
+	import { defaultBloom } from '../lib/components/config'
 
 	type TslNode = Node
 
@@ -23,9 +24,9 @@
 
 	let {
 		enabled = true,
-		strength = 1,
-		radius = 0.1,
-		threshold = 1,
+		strength = defaultBloom.strength,
+		radius = defaultBloom.radius,
+		threshold = defaultBloom.threshold,
 		hudBloom = false,
 		tint = [1, 1, 1],
 		hudFx,

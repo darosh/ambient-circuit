@@ -1,4 +1,10 @@
-import { LineSegments, LineBasicMaterial, Float32BufferAttribute, BufferGeometry, Color } from 'three/webgpu'
+import {
+	LineSegments,
+	LineBasicMaterial,
+	Float32BufferAttribute,
+	BufferGeometry,
+	Color
+} from 'three/webgpu'
 import type { SplitRect } from '../components/multi-view/multi-view'
 
 /**
