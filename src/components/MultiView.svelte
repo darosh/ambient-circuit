@@ -217,7 +217,7 @@
 			if (_splitTargets[i]) {
 				_splitTargets[i].setSize(w, h)
 			} else {
-				_splitTargets[i] = new RenderTarget(w, h, { samples: 4 })
+				_splitTargets[i] = new RenderTarget(w, h, { samples: 0 })
 			}
 			const rx = cw > 0 ? r.x / cw : 0
 			const ry = ch > 0 ? r.y / ch : 0
