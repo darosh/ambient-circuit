@@ -350,27 +350,21 @@ scene.view = {
 				camera: [cx + side + 0.25, cy + 3 + r() * 2 + 0.25, cz + 4 + r() * 2 + 0.25].map(
 					(v) => v * 1.85
 				),
-				// tangentOffset: 1,
 				fov,
 				bloom: true,
 				smoothnessPitch: 0.05,
 				smoothnessYaw: 0.05,
 				smoothnessRadius: 0.01,
 				smoothnessTarget: 0.01
-				// smoothnessPitch: 1,
-				// smoothnessYaw: 1,
-				// smoothnessRadius: 1,
-				// smoothnessTarget: 1
 			}
 		})
 		.slice(0, 7)
 }
+
 // scene.view.splits = [...scene.view.splits, ...scene.view.splits, ...scene.view.splits]
 
 scene.view.splits[6].cols = 3
 scene.view.splits[0].rows = 2
 scene.view.splits[0].cols = 2
 
-// scene.view.splits = [scene.view.splits[3]]
-
-// console.log(scene.view.splits[3])
+scene.camera = [0,0,100] // sets default camera for names and beats billboards
