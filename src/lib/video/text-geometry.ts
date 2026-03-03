@@ -48,6 +48,40 @@ const LETTERS = [
 	'r ddl r'
 ]
 
+const LETTERS_CONNECTED = [
+	'uu rr uul ddl rr dd',
+	'uuuuuu drrr d dlll drrr d dlll',
+	'ul uu ur dr ul dl dd dr ur dl', // 'ul dl dd dr ur'
+	'uuuu drr dd dll',
+	'u r l u r l dd r', // 'l d r l d r'
+	'l d r l d',
+	'ul dl dd dr ur u l',
+	'dd u r d uu',
+	'u d', // 'u'
+	'dr ur uuu',
+	'ld u dd u rd',
+	'dd r',
+	'uuu dr ur ddd',
+	'uu rdd uu dd', // 'uu rdd uu'
+	'uu ur dr dd ld lu',
+	'uuuuu rrd d lld',
+	'dl uull uuuu uurr ddrr dddd ld rd uull',
+	'uuuu drr dll ddrr',
+	'lu ld rrdd ld lu',
+	'uuuu l rr l dddd', // 'r dddd uuuu r'
+	'ul uuu ddd dr ur uuu ddd dl', // 'ddd dr ur uuu'
+	'dddr uuur',
+	'dddddr uur ddr uuuuur',
+	'ddddrr uul ddl uuuurr',
+	'ddr uur ddl dd',
+	'r ddl r'
+]
+
+const LIGATURES = {
+	NT: ['uu rdd uu', 'r dddd uuuu r'],
+	IT: ['u', 'r dddd uuuu r']
+}
+
 const DOT = 'dr dl ul ur uuuuuuuuu'
 const ASTER =
 	'd u u d l r r l d0.7l0.7 u0.7r0.7 d0.7r0.7 u0.7l0.7 u0.7r0.7 d0.7l0.7 u0.7l0.7 d0.7r0.7'
