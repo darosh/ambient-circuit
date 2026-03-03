@@ -78,8 +78,8 @@ const LETTERS_CONNECTED = [
 ]
 
 const LIGATURES = {
-	NT: ['uu rdd uu', 'r dddd uuuu r'],
-	IT: ['u', 'r dddd uuuu r']
+	NT: ['uu rdd uu', 'r0.5 dddd uuuu r'],
+	IT: ['u', 'r0.5 dddd uuuu r']
 }
 
 const DOT = 'dr dl ul ur uuuuuuuuu'
