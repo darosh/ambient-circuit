@@ -213,7 +213,7 @@
 	// ── Viewport rects ─────────────────────────────────────────────────────────
 
 	const _rects: SplitRect[] = untrack(() =>
-		config.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
+		config.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0, aspect: 0 }))
 	)
 	const _rectsDpr: SplitRect[] = untrack(() =>
 		config.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
@@ -264,7 +264,6 @@
 
 	const _tmp = new Vector3()
 	const _desired = new Vector3()
-	const _lastAspect: number[] = untrack(() => config.splits.map(() => 0))
 
 	// Pre-allocated resolve scratch (reused per split per frame)
 	const _resolveOut: ResolvedTarget = {
@@ -364,12 +363,9 @@
 
 					const rect = _rects[i]
 
-					const aspect = rect.width / rect.height
-
-					if (aspect !== _lastAspect[i]) {
-						cam.aspect = aspect
+					if (cam.aspect !== rect.aspect) {
+						cam.aspect = rect.aspect!
 						cam.updateProjectionMatrix()
-						_lastAspect[i] = aspect
 					}
 
 					r.setRenderTarget(_atlasTarget)

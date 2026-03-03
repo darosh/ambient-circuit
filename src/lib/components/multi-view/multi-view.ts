@@ -16,7 +16,7 @@ export type SplitCamState = {
 	isDraggingEnd: number
 }
 
-export type SplitRect = { x: number; y: number; width: number; height: number }
+export type SplitRect = { x: number; y: number; width: number; height: number, aspect?: number }
 
 export type ResolvedTarget = {
 	pos: Vector3
@@ -84,6 +84,7 @@ export function updateRects(
 			out[i].y = 0
 			out[i].width = sw
 			out[i].height = h
+			out[i].aspect = sw / h
 			x += sw
 		}
 	} else if (layout === 'vertical') {
@@ -97,6 +98,7 @@ export function updateRects(
 			out[i].y = y
 			out[i].width = w
 			out[i].height = sh
+			out[i].aspect = w / sh
 			y += sh
 		}
 	} else {
@@ -151,6 +153,7 @@ export function updateRects(
 							out[i].y = y
 							out[i].width = x2 - x
 							out[i].height = y2 - y
+							out[i].aspect = out[i].width / out[i].height
 							return true
 						}
 					}
@@ -163,6 +166,7 @@ export function updateRects(
 				out[i].y = 0
 				out[i].width = w
 				out[i].height = h
+				out[i].aspect = w / h
 			}
 		}
 	}

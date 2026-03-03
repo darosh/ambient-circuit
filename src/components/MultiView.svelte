@@ -312,7 +312,6 @@
 
 	const _tmp = new Vector3()
 	const _desired = new Vector3()
-	const _lastAspect: number[] = untrack(() => config.splits.map(() => 0))
 
 	// Pre-allocated resolve scratch (reused per split per frame)
 	const _resolveOut: ResolvedTarget = {
@@ -355,11 +354,10 @@
 				if (!cam) continue
 
 				const rect = _rects[i]
-				const aspect = rect.width / rect.height
-				if (aspect !== _lastAspect[i]) {
-					cam.aspect = aspect
+
+				if (cam.aspect !== rect.aspect) {
+					cam.aspect = rect.aspect!
 					cam.updateProjectionMatrix()
-					_lastAspect[i] = aspect
 				}
 
 				const splitCfg: ViewSplitConfig = config.splits[i]
