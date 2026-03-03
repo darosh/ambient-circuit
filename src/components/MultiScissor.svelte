@@ -207,6 +207,10 @@
 	const _rects: SplitRect[] = untrack(() =>
 		config.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
 	)
+	const _rectsDpr: SplitRect[] = untrack(() =>
+		config.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
+	)
+
 	const _lastSize = { w: 0, h: 0, dpr: 0 }
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -283,6 +287,15 @@
 				_lastSize
 			)
 
+			if (viewportDirty) {
+				for (let i = 0; i < n; i++) {
+					_rectsDpr[i].x = _rects[i].x * dpr.current
+					_rectsDpr[i].y = _rects[i].y * dpr.current
+					_rectsDpr[i].width = _rects[i].width * dpr.current
+					_rectsDpr[i].height = _rects[i].height * dpr.current
+				}
+			}
+
 			if (viewportDirty && _atlasTarget) {
 				const pw = Math.max(1, Math.round(_lastSize.w * _lastSize.dpr))
 				const ph = Math.max(1, Math.round(_lastSize.h * _lastSize.dpr))
@@ -293,14 +306,6 @@
 			for (let i = 0; i < n; i++) {
 				const cam = cameras[i]
 				if (!cam) continue
-
-				const rect = _rects[i]
-				const aspect = rect.width / rect.height
-				if (aspect !== _lastAspect[i]) {
-					cam.aspect = aspect
-					cam.updateProjectionMatrix()
-					_lastAspect[i] = aspect
-				}
 
 				const splitCfg: ViewSplitConfig = config.splits[i]
 				const state = splitStates[i]
@@ -345,8 +350,6 @@
 			}
 
 			// ── Render all splits into atlas via viewport/scissor ────────────
-			// Three.js setViewport/setScissor take CSS pixel coords —
-			// renderer multiplies by pixelRatio internally. Y uses GL bottom-left.
 			if (_atlasTarget) {
 				const r = renderer as unknown as R
 				// const totalH = _lastSize.h  // CSS height for GL Y-flip
@@ -360,21 +363,25 @@
 				for (let i = 0; i < n; i++) {
 					const cam = cameras[i]
 					if (!cam) continue
+
 					const rect = _rects[i]
-					const px = rect.x
-					const pw = rect.width
-					const ph = rect.height
-					const py = rect.y
+
+					const aspect = rect.width / rect.height
+
+					if (aspect !== _lastAspect[i]) {
+						cam.aspect = aspect
+						cam.updateProjectionMatrix()
+						_lastAspect[i] = aspect
+					}
+
 					r.setRenderTarget(_atlasTarget)
 					r.setScissorTest(true)
-					r.setScissor(px, py, pw, ph)
-					r.setViewport(px, py, pw, ph)
-					_atlasTarget.viewport.set(
-						px * dpr.current,
-						py * dpr.current,
-						pw * dpr.current,
-						ph * dpr.current
-					)
+					r.setScissor(rect.x, rect.y, rect.width, rect.height)
+					r.setViewport(rect.x, rect.y, rect.width, rect.height)
+
+					const rectDpr = _rectsDpr[i]
+					_atlasTarget.viewport.set(rectDpr.x, rectDpr.y, rectDpr.width, rectDpr.height)
+
 					r.render(scene, cam)
 				}
 
