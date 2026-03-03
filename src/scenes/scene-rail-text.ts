@@ -2,6 +2,12 @@ import { SceneConfig } from '../lib/core/scene'
 import { getTextRailNodes } from '../lib/video/text-geometry'
 import { RailData } from '../lib/core/rail-data'
 import { triggerHandler } from '../lib/core/trigger-handler'
+import { AudioChainConfig } from '../lib/audio'
+
+const audio: AudioChainConfig[] = [
+	{ generator: { sample: 'flute' } },
+	{ generator: { sample: 'guitar-electric' } }
+]
 
 export const scene: SceneConfig[] = [
 	{
@@ -40,7 +46,7 @@ export const scene: SceneConfig[] = [
 					speed: 2.5,
 					start
 				})),
-				instruments: [{ type: 'cone', beat: [0, 40][i] }]
+				instruments: [{ type: 'cone', beat: [0, 40][i], audio: audio[i] }]
 			})
 		)
 	}

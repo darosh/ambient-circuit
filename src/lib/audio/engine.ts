@@ -17,6 +17,7 @@ import { createDevice, type IPatcher, MIDIEvent } from '@rnbo/js'
 import type { Device, MIDIByte } from '@rnbo/js'
 import TONE_DEFAULTS from './tone-defaults'
 import { PATCHERS } from './patchers'
+import { SAMPLES } from './samples'
 import { debug } from 'debug'
 
 const log = debug('audio')
@@ -327,7 +328,7 @@ export async function buildChain(
 		}
 	}
 
-	const genPoly = config.generator?.poly
+	const genPoly = config.generator && 'poly' in config.generator ? config.generator.poly : undefined
 	const maxVoices =
 		genPoly === undefined
 			? config.generator && 'rnbo' in config.generator && !config.generator.rnbo.endsWith('-mono')
@@ -451,19 +452,18 @@ export function connectSharedAnalyzer(
 }
 
 export function genName(chain: AudioChain) {
-	return chain.config.generator
-		? 'tone' in chain.config.generator
-			? chain.config.generator.tone
-			: chain.config.generator.rnbo
-		: undefined
+	const g = chain.config.generator
+	if (!g) return
+	if ('tone' in g) return g.tone
+	if ('rnbo' in g) return g.rnbo
+	return g.sample
 }
 
 export function cfgName(chain: GeneratorConfig | FxConfig | undefined) {
-	if (!chain) {
-		return
-	}
-
-	return 'tone' in chain ? chain.tone : chain.rnbo
+	if (!chain) return
+	if ('tone' in chain) return chain.tone
+	if ('rnbo' in chain) return chain.rnbo
+	return chain.sample
 }
 
 /**
@@ -925,7 +925,13 @@ async function buildNode(
 ): Promise<NodeResult> {
 	log('build-node', cfgName(config))
 
-	if ('rnbo' in config) {
+	if ('sample' in config) {
+		return {
+			node: await createSamplerNode(engine, config.sample, config.params, config.max),
+			presetNames: [],
+			activePreset: null
+		}
+	} else if ('rnbo' in config) {
 		const result = await loadRNBO(engine, config.rnbo, config.params, config.preset)
 		return {
 			node: result.device,
@@ -1018,6 +1024,49 @@ async function loadRNBO(
 	}
 
 	return { device, presetNames, activePreset }
+}
+
+const NOTE_ORDER = ['C', 'Cs', 'D', 'Ds', 'E', 'F', 'Fs', 'G', 'Gs', 'A', 'As', 'B']
+function noteToMidi(name: string): number {
+	const m = name.match(/^([A-G][sb]?)(\d)$/)
+	if (!m) return 999
+	const n = NOTE_ORDER.indexOf(m[1])
+	return (Number.parseInt(m[2]) + 1) * 12 + (n === -1 ? 999 : n)
+}
+
+async function createSamplerNode(
+	engine: AudioEngine,
+	name: string,
+	params?: Record<string, ParamValue>,
+	max?: number
+): Promise<ToneAudioNode> {
+	if (!engine.Tone) throw new Error('Tone.js not loaded')
+	const available = SAMPLES[name]
+	if (!available) throw new Error(`Unknown sample instrument: ${name}`)
+
+	let entries = Object.entries(available).toSorted((a, b) => noteToMidi(a[0]) - noteToMidi(b[0]))
+
+	if (max !== undefined && max > 0 && entries.length > max) {
+		const n = entries.length
+		const selected: typeof entries = []
+		for (let i = 0; i < max; i++) {
+			selected.push(entries[Math.round((i * (n - 1)) / (max - 1))])
+		}
+		entries = selected
+	}
+
+	const urls: Record<string, string> = {}
+	for (const [note, path] of entries) urls[note] = path
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const ToneLib = engine.Tone as any
+	const opts = {
+		urls,
+		baseUrl: './samples/',
+		release: 1,
+		...(params ? unflattenParams(params) : {})
+	}
+	return new ToneLib.Sampler(opts) as ToneAudioNode
 }
 
 function createToneNode(

@@ -9,6 +9,7 @@ export type ParamMap = Record<string, ParamValue>
 export type NodeConfig =
 	| { tone: string; params?: ParamMap; poly?: number }
 	| { rnbo: string; params?: ParamMap; preset?: string; poly?: number }
+	| { sample: string; params?: ParamMap; max?: number }
 
 // eslint-disable-next-line sonarjs/redundant-type-aliases
 export type GeneratorConfig = NodeConfig
