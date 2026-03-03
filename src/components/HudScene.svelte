@@ -12,7 +12,7 @@
 	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
 	import GeoText from './GeoText.svelte'
 	import { easeInCubic, easeOutCubic } from '../lib/helpers/easing'
-	import { onDestroy, onMount } from 'svelte'
+	import { onDestroy, onMount, untrack } from 'svelte'
 	import type { TempoState } from '../lib/core/tempo'
 	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
@@ -757,13 +757,15 @@
 		return formatHex(backRgb)
 	})
 
-	const splitRects = $derived.by((): SplitRect[] => {
-		const view = sceneCtx?.config?.view
-		if (!view) return []
-		const out: SplitRect[] = view.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
-		const _last = { w: 0, h: 0, dpr: 0 }
-		updateRects(view.layout, view.splits, $size.width, $size.height, 1, out, _last)
-		return out
+	let splitRects = $state<SplitRect[]>([])
+	const _splitRectsLast = { w: 0, h: 0, dpr: 0 }
+	$effect(() => {
+		const w = $size.width, h = $size.height
+		const view = untrack(() => sceneCtx?.config?.view)
+		if (!view) { splitRects = []; return }
+		const n = view.splits.length
+		if (splitRects.length !== n) splitRects = view.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
+		updateRects(view.layout, view.splits, w, h, 1, splitRects, _splitRectsLast)
 	})
 </script>
 
