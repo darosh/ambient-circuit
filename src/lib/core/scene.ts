@@ -123,6 +123,9 @@ export type SceneConfig = {
 	}
 	/** Factory to auto-assign render fn to rails without one */
 	renderFactory?: (railData: RailData, index: number) => RailData['render'] | undefined
+	/** Fixed world-space direction text labels face (e.g. [0,0,1] = face +Z).
+	 *  When absent, defaults to billboard (tracks main camera). */
+	textOrientation?: Vector3Tuple
 	/** Multi-view split-screen config */
 	view?: ViewConfig
 	audioView?:

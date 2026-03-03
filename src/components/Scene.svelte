@@ -538,6 +538,7 @@
 			{sceneCtx}
 			visible={sceneReady}
 			renderPlayOnly={scene.renderPlayOnly}
+			textOrientation={scene.textOrientation ?? (scene.view ? [0, 0, 1] : undefined)}
 			railIdx={railIndex}
 			selectedInstrumentIdx={selectedEntity?.type === 'instrument' &&
 			selectedEntity.railIdx === railIndex

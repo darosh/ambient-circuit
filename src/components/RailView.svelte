@@ -47,6 +47,7 @@
 		railIdx?: number
 		selectedInstrumentIdx?: number | null
 		onSelectInstrument?: (railIdx: number, idx: number) => void
+		textOrientation?: [number, number, number]
 	}
 
 	let {
@@ -66,7 +67,8 @@
 		id,
 		railIdx = 0,
 		selectedInstrumentIdx = null,
-		onSelectInstrument
+		onSelectInstrument,
+		textOrientation
 	}: Props = $props()
 
 	const BEAT_TEXT_WIDTH = 2
@@ -296,6 +298,11 @@
 	let nameGroup = $state<Group | undefined>()
 	const beatGroups = $state<(Group | undefined)[]>([])
 
+	const _lookMat = new Matrix4()
+	const _upVec = new Vector3(0, 1, 0)
+	const _dirVec = new Vector3()
+	const _fixedQuat = new Quaternion()
+
 	// Progressive rendering: batch text creation to avoid blocking
 	let visibleBeats = $state<typeof beatPositions>([])
 	let renderCancelled = false
@@ -380,9 +387,17 @@
 			}
 		}
 
-		// Billboard text to camera
-		if (!camera.current) return
-		const rot = camera.current.quaternion
+		// Billboard text
+		let rot: Quaternion
+		if (textOrientation) {
+			_dirVec.set(textOrientation[0], textOrientation[1], textOrientation[2])
+			_lookMat.lookAt(_dirVec, new Vector3(0, 0, 0), _upVec)
+			_fixedQuat.setFromRotationMatrix(_lookMat)
+			rot = _fixedQuat
+		} else {
+			if (!camera.current) return
+			rot = camera.current.quaternion
+		}
 		if (nameGroup) nameGroup.quaternion.copy(rot)
 		for (const group of beatGroups) {
 			if (group) group.quaternion.copy(rot)
