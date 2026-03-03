@@ -123,17 +123,17 @@ export function getTextGeometryCached(text: string, spacing: number) {
 	return geometry
 }
 
-export function getTextPathsCached(text: string, spacing: number): Vector3[][] {
+export function getTextPathsCached(text: string, spacing: number, connected = false): Vector3[][] {
 	if (!text) {
 		return []
 	}
 
-	const key = `paths_${text}_${spacing}`
+	const key = `paths_${text}_${spacing}_${connected}`
 	const cached = pathCache.get(key)
 
 	if (cached) return cached
 
-	const paths = getTextPaths(text, spacing)
+	const paths = getTextPaths(text, spacing, connected)
 
 	pathCache.set(key, paths)
 
@@ -175,7 +175,9 @@ function getBoundingBox(points: Vector3[]): BoundingBox {
 function buildCharacterPoints(
 	char: string,
 	cursorX: number,
-	spacing: number
+	spacing: number,
+	connected = false,
+	pathOverride?: string
 ): { points: Vector3[]; newCursorX: number } {
 	if (char === ' ') {
 		return { points: [], newCursorX: cursorX + 0.3 + spacing * 0.15 }
@@ -189,7 +191,8 @@ function buildCharacterPoints(
 		? Number.parseInt(char, 10)
 		: (char.codePointAt(0) ?? 0) - ('A'.codePointAt(0) ?? 0)
 
-	const path = isNumber ? NUMBERS[n] : (MISC[char] ?? LETTERS[n] ?? UNKNOWN)
+	const letterTable = connected ? LETTERS_CONNECTED : LETTERS
+	const path = pathOverride ?? (isNumber ? NUMBERS[n] : (MISC[char] ?? letterTable[n] ?? UNKNOWN))
 
 	// ---- Build points once ----
 
@@ -241,11 +244,26 @@ function buildCharacterPoints(
 	return { points, newCursorX }
 }
 
-export function getTextPaths(text: string, spacing: number): Vector3[][] {
+export function getTextPaths(text: string, spacing: number, connected = false): Vector3[][] {
+	const chars = [...text]
+	const overrides: (string | undefined)[] = Array.from({ length: chars.length })
+
+	if (connected) {
+		for (const [i, char] of chars.entries()) {
+			if (i >= chars.length - 1) break
+			const pair = char + chars[i + 1]
+			const lig = LIGATURES[pair as keyof typeof LIGATURES]
+			if (lig) {
+				overrides[i] = lig[0]
+				overrides[i + 1] = lig[1]
+			}
+		}
+	}
+
 	let cursorX = 0
 
-	return [...text].map((char) => {
-		const { points, newCursorX } = buildCharacterPoints(char, cursorX, spacing)
+	return chars.map((char, i) => {
+		const { points, newCursorX } = buildCharacterPoints(char, cursorX, spacing, connected, overrides[i])
 		cursorX = newCursorX
 		return points
 	})
@@ -257,13 +275,13 @@ export function getTextRailNodes(
 	connected = false
 ): [number, number, number][][] {
 	if (!connected) {
-		return getTextPathsCached(text, spacing)
+		return getTextPathsCached(text, spacing, false)
 			.filter((pts) => pts.length > 0)
 			.map((pts) => pts.map((p) => [p.x, p.y, p.z] as [number, number, number]))
 	}
 
 	// Split into words, merge letters within each word into one path
-	const paths = getTextPathsCached(text, spacing)
+	const paths = getTextPathsCached(text, spacing, true)
 	const chars = [...text]
 	const wordPaths: [number, number, number][][][] = []
 	let current: [number, number, number][][] = []
