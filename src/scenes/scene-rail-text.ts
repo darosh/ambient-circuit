@@ -13,7 +13,7 @@ export const scene: SceneConfig[] = [
 				color: `hsl(${((i * 360) / arr.length) % 360}, 100%, 60%)`,
 				rail: {
 					offset: [-4.9, 1, 0],
-					id: `char-${i}`,
+					id: `${i + 1}`,
 					nodes
 				},
 				marbles: [{ type: 'ball', mode: 'ping-pong' }]
@@ -30,7 +30,7 @@ export const scene: SceneConfig[] = [
 				color: `hsl(${((i * 360) / (arr.length - 1.39)) % 360}, 100%, 60%)`,
 				rail: {
 					offset: [-4.75, 1, 0],
-					id: `char-${i}`,
+					id: `${i + 1}`,
 					nodes
 				},
 				marbles: [[20.91], [11.91]][i].map((start) => ({
@@ -40,7 +40,7 @@ export const scene: SceneConfig[] = [
 					speed: 2.5,
 					start
 				})),
-				instruments: [{type: 'cone', beat: [0, 40][i] }]
+				instruments: [{ type: 'cone', beat: [0, 40][i] }]
 			})
 		)
 	}
