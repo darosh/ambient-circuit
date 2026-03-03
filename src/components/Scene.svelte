@@ -32,7 +32,7 @@
 		createMarbleConfigs
 	} from '../lib/helpers/scene-init'
 	import AudioView from './AudioView.svelte'
-	import MultiView from './MultiView.svelte'
+	import MultiView from './MultiScissor.svelte'
 	import MidiSignalView from './MidiSignalView.svelte'
 	import { getMarbleSignalLinks, getMidiSignalLinks } from '../lib/helpers/links'
 	import Stars from './Stars.svelte'
