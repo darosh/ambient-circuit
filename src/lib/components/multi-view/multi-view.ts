@@ -101,10 +101,23 @@ export function updateRects(
 		}
 	} else {
 		let totalCells = 0
+
 		for (let i = 0; i < n; i++) totalCells += (splits[i].cols ?? 1) * (splits[i].rows ?? 1)
-		let gridCols = Math.ceil(Math.sqrt(totalCells))
+
+		let gridCols = Math.max(Math.ceil(Math.sqrt(totalCells)))
 		let gridRows = Math.ceil(totalCells / gridCols)
-		if (w > h && gridCols < gridRows) {
+
+		for (let i = 0; i < n; i++) {
+			if (gridCols < (splits[i].cols ?? 1)) {
+				gridCols = splits[i].cols!
+			}
+
+			if (gridRows < (splits[i].rows ?? 1)) {
+				gridRows = splits[i].rows!
+			}
+		}
+
+		if (w < h && gridCols > gridRows) {
 			const tmp = gridCols
 			gridCols = gridRows
 			gridRows = tmp
@@ -153,6 +166,7 @@ export function updateRects(
 			}
 		}
 	}
+
 	return true
 }
 
