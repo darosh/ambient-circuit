@@ -28,6 +28,7 @@ import { scene as sceneMultiCamera } from './scene-multi-camera'
 import { scene as sceneMultiRows } from './scene-multi-rows'
 import { scene as sceneMultiColumns } from './scene-multi-columns'
 import { scene as sceneMultiTest } from './scene-multi-test'
+import { scene as sceneRailText } from './scene-rail-text'
 import { scenes as scenesRnbo } from './scene-rnbo'
 
 export const scenes: SceneConfig[] = [
@@ -56,6 +57,7 @@ export const scenes: SceneConfig[] = [
 	sceneMultiRows,
 	sceneMultiColumns,
 	sceneMultiTest,
+	...sceneRailText,
 	sceneCreateDestroy,
 	sceneAudio,
 	sceneCollisions,
