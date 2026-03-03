@@ -263,7 +263,13 @@ export function getTextPaths(text: string, spacing: number, connected = false): 
 	let cursorX = 0
 
 	return chars.map((char, i) => {
-		const { points, newCursorX } = buildCharacterPoints(char, cursorX, spacing, connected, overrides[i])
+		const { points, newCursorX } = buildCharacterPoints(
+			char,
+			cursorX,
+			spacing,
+			connected,
+			overrides[i]
+		)
 		cursorX = newCursorX
 		return points
 	})
