@@ -30,6 +30,10 @@ export type ViewSplitConfig = {
 	fov?: number
 	/** Per-split bloom — true uses defaults, object overrides params, false/absent = no bloom */
 	bloom?: boolean | BloomConfig
+	/** Column span (default 1). Horizontal: extra width units; Grid: colspan */
+	cols?: number
+	/** Row span (default 1). Vertical: extra height units; Grid: rowspan */
+	rows?: number
 }
 
 export type ViewConfig = {

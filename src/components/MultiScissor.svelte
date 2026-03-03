@@ -152,7 +152,7 @@
 		if (_lastSize.w === 0)
 			updateRects(
 				config.layout,
-				n,
+				config.splits,
 				size.current.width,
 				size.current.height,
 				dpr.current,
@@ -275,7 +275,7 @@
 			const n = config.splits.length
 			const viewportDirty = updateRects(
 				config.layout,
-				n,
+				config.splits,
 				size.current.width,
 				size.current.height,
 				dpr.current,
@@ -361,11 +361,9 @@
 					const cam = cameras[i]
 					if (!cam) continue
 					const rect = _rects[i]
-					// CSS pixels, Y flipped to GL bottom-left origin
 					const px = rect.x
 					const pw = rect.width
 					const ph = rect.height
-					// const py = totalH - rect.y - rect.height
 					const py = rect.y
 					r.setRenderTarget(_atlasTarget)
 					r.setScissorTest(true)

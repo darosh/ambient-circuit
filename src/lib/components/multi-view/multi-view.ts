@@ -61,7 +61,7 @@ export function initLerpTargets(splits: ViewSplitConfig[]): Vector3[] {
 
 export function updateRects(
 	layout: ViewConfig['layout'],
-	n: number,
+	splits: Pick<ViewSplitConfig, 'cols' | 'rows'>[],
 	w: number,
 	h: number,
 	dpr: number,
@@ -72,61 +72,115 @@ export function updateRects(
 	_last.w = w
 	_last.h = h
 	_last.dpr = dpr
+	const n = splits.length
 	if (layout === 'horizontal') {
-		const sw = Math.floor(w / n)
+		let totalCols = 0
+		for (let i = 0; i < n; i++) totalCols += splits[i].cols ?? 1
+		let x = 0
 		for (let i = 0; i < n; i++) {
-			out[i].x = i * sw
+			const sc = splits[i].cols ?? 1
+			const sw = i === n - 1 ? w - x : Math.floor((sc / totalCols) * w)
+			out[i].x = x
 			out[i].y = 0
-			out[i].width = i === n - 1 ? w - i * sw : sw
+			out[i].width = sw
 			out[i].height = h
+			x += sw
 		}
 	} else if (layout === 'vertical') {
-		const sh = Math.floor(h / n)
+		let totalRows = 0
+		for (let i = 0; i < n; i++) totalRows += splits[i].rows ?? 1
+		let y = 0
 		for (let i = 0; i < n; i++) {
+			const sr = splits[i].rows ?? 1
+			const sh = i === n - 1 ? h - y : Math.floor((sr / totalRows) * h)
 			out[i].x = 0
-			out[i].y = i * sh
+			out[i].y = y
 			out[i].width = w
-			out[i].height = i === n - 1 ? h - i * sh : sh
+			out[i].height = sh
+			y += sh
 		}
 	} else {
-		let cols = Math.ceil(Math.sqrt(n))
-		let rows = Math.ceil(n / cols)
-
-		if (w > h && cols < rows) {
-			const tempCols = cols
-			cols = rows
-			rows = tempCols
+		let totalCells = 0
+		for (let i = 0; i < n; i++) totalCells += (splits[i].cols ?? 1) * (splits[i].rows ?? 1)
+		let gridCols = Math.ceil(Math.sqrt(totalCells))
+		let gridRows = Math.ceil(totalCells / gridCols)
+		if (w > h && gridCols < gridRows) {
+			const tmp = gridCols
+			gridCols = gridRows
+			gridRows = tmp
 		}
-
-		const sw = Math.floor(w / cols)
-		const sh = Math.floor(h / rows)
+		// Greedy row-major auto-placement
+		const occupied: boolean[][] = []
+		for (let r = 0; r < gridRows; r++) {
+			occupied[r] = []
+			for (let c = 0; c < gridCols; c++) occupied[r][c] = false
+		}
 		for (let i = 0; i < n; i++) {
-			const col = i % cols
-			const row = Math.floor(i / cols)
-			out[i].x = col * sw
-			out[i].y = row * sh
-			out[i].width = col === cols - 1 ? w - col * sw : sw
-			out[i].height = row === rows - 1 ? h - row * sh : sh
+			const sc = splits[i].cols ?? 1
+			const sr = splits[i].rows ?? 1
+			let placed = false
+			const place = (): boolean => {
+				for (let row = 0; row < gridRows; row++) {
+					for (let col = 0; col < gridCols; col++) {
+						if (col + sc > gridCols || row + sr > gridRows) continue
+						let fits = true
+						for (let dr = 0; dr < sr && fits; dr++)
+							for (let dc = 0; dc < sc && fits; dc++)
+								if (occupied[row + dr][col + dc]) fits = false
+						if (fits) {
+							for (let dr = 0; dr < sr; dr++)
+								for (let dc = 0; dc < sc; dc++) occupied[row + dr][col + dc] = true
+							const x = Math.floor((col / gridCols) * w)
+							const y = Math.floor((row / gridRows) * h)
+							const x2 = col + sc === gridCols ? w : Math.floor(((col + sc) / gridCols) * w)
+							const y2 = row + sr === gridRows ? h : Math.floor(((row + sr) / gridRows) * h)
+							out[i].x = x
+							out[i].y = y
+							out[i].width = x2 - x
+							out[i].height = y2 - y
+							return true
+						}
+					}
+				}
+				return false
+			}
+			placed = place()
+			if (!placed) {
+				out[i].x = 0
+				out[i].y = 0
+				out[i].width = w
+				out[i].height = h
+			}
 		}
 	}
 	return true
 }
 
-export function getGrid(layout: ViewConfig['layout'], n: number, w: number, h: number) {
+export function getGrid(
+	layout: ViewConfig['layout'],
+	splits: Pick<ViewSplitConfig, 'cols' | 'rows'>[],
+	w: number,
+	h: number
+) {
+	const n = splits.length
 	if (layout === 'horizontal') {
-		return { x: n, y: 1 }
+		let totalCols = 0
+		for (let i = 0; i < n; i++) totalCols += splits[i].cols ?? 1
+		return { x: totalCols, y: 1 }
 	} else if (layout === 'vertical') {
-		return { x: 1, y: n }
+		let totalRows = 0
+		for (let i = 0; i < n; i++) totalRows += splits[i].rows ?? 1
+		return { x: 1, y: totalRows }
 	} else {
-		let x = Math.ceil(Math.sqrt(n))
-		let y = Math.ceil(n / x)
-
+		let totalCells = 0
+		for (let i = 0; i < n; i++) totalCells += (splits[i].cols ?? 1) * (splits[i].rows ?? 1)
+		let x = Math.ceil(Math.sqrt(totalCells))
+		let y = Math.ceil(totalCells / x)
 		if (w > h && x < y) {
-			const tempX = x
+			const tmp = x
 			x = y
-			y = tempX
+			y = tmp
 		}
-
 		return { x, y }
 	}
 }

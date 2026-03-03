@@ -19,6 +19,7 @@ export const scene: SceneConfig = {
 				nodes: [[0, 0, 0], 'l i i u i lf i rrrr ddd ll oooo uu']
 			},
 			color: c(),
+			marbles: [{start: .001}],
 			instruments: [
 				{
 					beat: 7.3,
@@ -346,16 +347,28 @@ scene.view = {
 			const fov = 20 + r() * 20
 			return <ViewSplitConfig>{
 				target: Math.floor(r() * scene.rails.length), //[cx, cy, cz],
-				camera: [cx + side, cy + 3 + r() * 2, cz + 4 + r() * 2],
-				// tangentOffset: 8,
+				camera: [cx + side + .25, cy + 3 + r() * 2 + .25, cz + 4 + r() * 2 + .25].map(v => v * 1.85),
+				// tangentOffset: 1,
 				fov,
 				bloom: true,
 				smoothnessPitch: 0.05,
 				smoothnessYaw: 0.05,
-				smoothnessRadius: 0.001,
+				smoothnessRadius: 0.01,
 				smoothnessTarget: 0.01
+				// smoothnessPitch: 1,
+				// smoothnessYaw: 1,
+				// smoothnessRadius: 1,
+				// smoothnessTarget: 1
 			}
 		})
-		.slice(0, 12)
+		.slice(0, 7)
 }
 // scene.view.splits = [...scene.view.splits, ...scene.view.splits, ...scene.view.splits]
+
+scene.view.splits[6].cols = 3
+scene.view.splits[0].rows = 2
+scene.view.splits[0].cols = 2
+
+// scene.view.splits = [scene.view.splits[3]]
+
+// console.log(scene.view.splits[3])

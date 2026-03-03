@@ -116,36 +116,22 @@
 	}
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
-	function buildComposite(nodes: any[], layout: ViewConfig['layout'], n: number): any {
+	function buildComposite(nodes: any[], rects: SplitRect[], w: number, h: number): any {
+		const n = nodes.length
 		if (n === 1) return nodes[0]
-		if (layout === 'horizontal') {
-			let result = nodes[n - 1]
-			for (let i = n - 2; i >= 0; i--)
-				result = select(screenUV.x.lessThan((i + 1) / n), nodes[i], result)
-			return result
+		let result: any = vec4(0, 0, 0, 1)
+		for (let i = n - 1; i >= 0; i--) {
+			const r = rects[i]
+			const x1 = r.x / w
+			const x2 = (r.x + r.width) / w
+			const y1 = r.y / h
+			const y2 = (r.y + r.height) / h
+			const inBounds = (screenUV.x.greaterThanEqual(x1) as any)
+				.and(screenUV.x.lessThan(x2))
+				.and(screenUV.y.greaterThanEqual(y1))
+				.and(screenUV.y.lessThan(y2))
+			result = select(inBounds, nodes[i], result)
 		}
-		if (layout === 'vertical') {
-			let result = nodes[n - 1]
-			for (let i = n - 2; i >= 0; i--)
-				result = select(screenUV.y.lessThan((i + 1) / n), nodes[i], result)
-			return result
-		}
-		const cols = Math.ceil(Math.sqrt(n))
-		const rows = Math.ceil(n / cols)
-		const empty = vec4(0, 0, 0, 1)
-		const rowNodes: any[] = []
-		for (let row = 0; row < rows; row++) {
-			const base = row * cols
-			const actualCols = Math.min(cols, n - base)
-			let rowResult: any = actualCols < cols ? empty : nodes[base + actualCols - 1]
-			for (let col = actualCols - 1; col >= 0; col--) {
-				rowResult = select(screenUV.x.lessThan((col + 1) / cols), nodes[base + col], rowResult)
-			}
-			rowNodes.push(rowResult)
-		}
-		let result = rowNodes[rows - 1]
-		for (let row = rows - 2; row >= 0; row--)
-			result = select(screenUV.y.lessThan((row + 1) / rows), rowNodes[row], result)
 		return result
 	}
 	/* eslint-enable @typescript-eslint/no-explicit-any */
@@ -196,7 +182,7 @@
 		if (_lastSize.w === 0)
 			updateRects(
 				config.layout,
-				n,
+				config.splits,
 				size.current.width,
 				size.current.height,
 				dpr.current,
@@ -251,7 +237,7 @@
 			return color
 		})
 
-		let composed = buildComposite(splitOutputs, config.layout, n)
+		let composed = buildComposite(splitOutputs, _rects, _lastSize.w || size.current.width, _lastSize.h || size.current.height)
 
 		if (SINGLE_BLOOM) {
 			const splitCfg = config.splits[0]
@@ -340,7 +326,7 @@
 			const n = config.splits.length
 			const viewportDirty = updateRects(
 				config.layout,
-				n,
+				config.splits,
 				size.current.width,
 				size.current.height,
 				dpr.current,

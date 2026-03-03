@@ -16,8 +16,8 @@
 	import type { TempoState } from '../lib/core/tempo'
 	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
-	import { GridHelperXY } from '../lib/three/GridHelperXY'
-	import { getGrid } from '../lib/components/multi-view/multi-view'
+	import { updateRects, type SplitRect } from '../lib/components/multi-view/multi-view'
+	import { GridHelperCells } from '../lib/three/GridHelperCells'
 
 	function readLS(key: string, def: boolean): boolean {
 		if (typeof localStorage === 'undefined') return def
@@ -757,17 +757,13 @@
 		return formatHex(backRgb)
 	})
 
-	const grid = $derived.by(() => {
-		if (!sceneCtx?.config?.view) {
-			return { x: 1, y: 1 }
-		}
-
-		return getGrid(
-			sceneCtx.config.view.layout,
-			sceneCtx.config.view.splits.length,
-			$size.width,
-			$size.height
-		)
+	const splitRects = $derived.by((): SplitRect[] => {
+		const view = sceneCtx?.config?.view
+		if (!view) return []
+		const out: SplitRect[] = view.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
+		const _last = { w: 0, h: 0, dpr: 0 }
+		updateRects(view.layout, view.splits, $size.width, $size.height, 1, out, _last)
+		return out
 	})
 </script>
 
@@ -775,11 +771,11 @@
 
 <T.OrthographicCamera makeDefault zoom={80} position={[0, 0, 10]} />
 
-{#if sceneCtx?.config?.view}
+{#if sceneCtx?.config?.view && splitRects?.length}
 	<T
-		is={GridHelperXY}
+		is={GridHelperCells}
 		position.y={-0.01}
-		args={[$size.width / HUD_ZOOM, $size.height / HUD_ZOOM, grid.x, grid.y, gridColor, false]}
+		args={[splitRects, $size.width, $size.height, $size.width / HUD_ZOOM, $size.height / HUD_ZOOM, gridColor]}
 	/>
 {/if}
 
