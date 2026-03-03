@@ -149,7 +149,7 @@
 		const n = config?.splits?.length ?? 0
 		if (!n) return
 
-		if (_lastSize.w === 0)
+		if (_lastSize.w === 0) {
 			updateRects(
 				config.layout,
 				config.splits,
@@ -159,6 +159,14 @@
 				_rects,
 				_lastSize
 			)
+
+			for (let i = 0; i < n; i++) {
+				_rectsDpr[i].x = _rects[i].x * dpr.current
+				_rectsDpr[i].y = _rects[i].y * dpr.current
+				_rectsDpr[i].width = _rects[i].width * dpr.current
+				_rectsDpr[i].height = _rects[i].height * dpr.current
+			}
+		}
 
 		const pw = Math.max(1, Math.round(_lastSize.w * _lastSize.dpr))
 		const ph = Math.max(1, Math.round(_lastSize.h * _lastSize.dpr))
@@ -213,17 +221,8 @@
 
 	const _lastSize = { w: 0, h: 0, dpr: 0 }
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	type R = WebGPURenderer & {
-		setRenderTarget: (t: any) => void
-		setScissorTest: (v: boolean) => void
-		setScissor: (x: number, y: number, w: number, h: number) => void
-		setViewport: (x: number, y: number, w: number, h: number) => void
-		clear: () => void
-	}
-
 	function resetViewport() {
-		const r = renderer as unknown as R
+		const r = renderer as unknown as WebGPURenderer
 		r.setRenderTarget(null)
 		r.setScissorTest(false)
 		r.setViewport(0, 0, size.current.width, size.current.height)
@@ -351,12 +350,11 @@
 
 			// ── Render all splits into atlas via viewport/scissor ────────────
 			if (_atlasTarget) {
-				const r = renderer as unknown as R
-				// const totalH = _lastSize.h  // CSS height for GL Y-flip
+				const r = renderer as unknown as WebGPURenderer
 
-				// Clear full atlas once to black before rendering splits
 				r.setRenderTarget(_atlasTarget)
 				r.setScissorTest(false)
+				// Clear full atlas once to black before rendering splits
 				r.clear()
 				r.autoClear = false
 
