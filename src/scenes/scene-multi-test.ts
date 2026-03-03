@@ -367,4 +367,4 @@ scene.view.splits[6].cols = 3
 scene.view.splits[0].rows = 2
 scene.view.splits[0].cols = 2
 
-scene.camera = [0,0,100] // sets default camera for names and beats billboards
+scene.camera = [0, 0, 100] // sets default camera for names and beats billboards
