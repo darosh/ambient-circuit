@@ -143,6 +143,10 @@ function buildCharacterPoints(
 	cursorX: number,
 	spacing: number
 ): { points: Vector3[]; newCursorX: number } {
+	if (char === ' ') {
+		return { points: [], newCursorX: cursorX + 0.3 + spacing * 0.15 }
+	}
+
 	const isNumber = /\d/.test(char)
 	const isDash = char === '-'
 	const isDot = char === '.'
@@ -211,6 +215,36 @@ export function getTextPaths(text: string, spacing: number): Vector3[][] {
 		cursorX = newCursorX
 		return points
 	})
+}
+
+export function getTextRailNodes(
+	text: string,
+	spacing: number,
+	connected = false
+): [number, number, number][][] {
+	if (!connected) {
+		return getTextPathsCached(text, spacing)
+			.filter((pts) => pts.length > 0)
+			.map((pts) => pts.map((p) => [p.x, p.y, p.z] as [number, number, number]))
+	}
+
+	// Split into words, merge letters within each word into one path
+	const paths = getTextPathsCached(text, spacing)
+	const chars = [...text]
+	const wordPaths: [number, number, number][][][] = []
+	let current: [number, number, number][][] = []
+
+	for (const [i, char] of chars.entries()) {
+		if (char === ' ') {
+			if (current.length > 0) wordPaths.push(current)
+			current = []
+		} else if (paths[i].length > 0) {
+			current.push(paths[i].map((p) => [p.x, p.y, p.z] as [number, number, number]))
+		}
+	}
+	if (current.length > 0) wordPaths.push(current)
+
+	return wordPaths.map((word) => word.flat())
 }
 
 export function getTextGeometry(text: string, spacing: number) {
