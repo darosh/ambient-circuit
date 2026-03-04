@@ -185,6 +185,10 @@ export const scene: SceneConfig = {
 			},
 			color: c(),
 			instruments: [
+				{ type: 'arrow', beat: 1, kind: 'tri' },
+				{ type: 'arrow', beat: 1.5, kind: 'ring' },
+				{ type: 'arrow', beat: 2, kind: 'point' },
+				{ type: 'arrow', beat: 2.5, kind: 'dot' },
 				{ type: 'arrow', beat: 3.5, kind: 'repro' },
 				{ type: 'arrow', beat: 4.5, kind: 'muted' },
 				{ type: 'eater', beat: 5.5, angle: 90 },
