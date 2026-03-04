@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { circle, roundedRect, coil, spiral } from '../src/lib/core/rail-primitives'
+import { circle, roundedRect, coil, spiral, svgRail } from '../src/lib/core/rail-primitives'
 import type { RailPointFull, Vec3 } from '../src/lib/core/rail'
 import { isPointFull, isVec3 } from '../src/lib/core/rail'
 
@@ -168,6 +168,52 @@ describe('coil', () => {
 		// first coil point at angle 0: x = cos(0)*1 + 10 = 11
 		expect(inner[0].p[0]).toBeCloseTo(11)
 		expect(inner[0].p[1]).toBeCloseTo(5)
+	})
+})
+
+describe('svgRail', () => {
+	// M 25,70 V 20 H 67 C 80,20 80,40 67,40 H 35 v 30  (scale=10, XZ plane)
+	// C tangent: handle=13 SVG, chord=20 SVG → t = 13/20 = 0.65
+	it('M/V/H/C/H/v → 6 points', () => {
+		const nodes = svgRail('M 25,70 V 20 H 67 C 80,20 80,40 67,40 H 35 v 30')
+		expect(nodes).toHaveLength(6)
+	})
+
+	it('straight commands produce plain Vec3', () => {
+		const nodes = svgRail('M 25,70 V 20 H 67 C 80,20 80,40 67,40 H 35 v 30')
+		expect(isVec3(nodes[0])).toBe(true) // M
+		expect(isVec3(nodes[1])).toBe(true) // V
+		expect(isVec3(nodes[4])).toBe(true) // H
+		expect(isVec3(nodes[5])).toBe(true) // v
+	})
+
+	it('point before C gets round:from with tangent', () => {
+		const nodes = svgRail('M 25,70 V 20 H 67 C 80,20 80,40 67,40 H 35 v 30')
+		const fromPt = nodes[2] as RailPointFull
+		expect(isPointFull(fromPt)).toBe(true)
+		expect(fromPt.round).toBe('from')
+		expect(fromPt.tangent).toBeCloseTo(0.65)
+	})
+
+	it('C endpoint gets round:to with tangent', () => {
+		const nodes = svgRail('M 25,70 V 20 H 67 C 80,20 80,40 67,40 H 35 v 30')
+		const toPt = nodes[3] as RailPointFull
+		expect(isPointFull(toPt)).toBe(true)
+		expect(toPt.round).toBe('to')
+		expect(toPt.tangent).toBeCloseTo(0.65)
+	})
+
+	it('coordinates match (XZ plane, scale 10)', () => {
+		const nodes = svgRail('M 25,70 V 20 H 67 C 80,20 80,40 67,40 H 35 v 30')
+		const positions = nodes.map((n) => (Array.isArray(n) ? n : (n as RailPointFull).p))
+		expect(positions[0]).toEqual([2.5, 0, 7]) // M 25,70
+		expect(positions[1]).toEqual([2.5, 0, 2]) // V 20
+		expect(positions[2][0]).toBeCloseTo(6.7) // H 67 (from-point)
+		expect(positions[2][2]).toBeCloseTo(2)
+		expect(positions[3][0]).toBeCloseTo(6.7) // C endpoint
+		expect(positions[3][2]).toBeCloseTo(4)
+		expect(positions[4]).toEqual([3.5, 0, 4]) // H 35
+		expect(positions[5]).toEqual([3.5, 0, 7]) // v 30
 	})
 })
 
