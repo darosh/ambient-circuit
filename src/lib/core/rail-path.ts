@@ -11,6 +11,7 @@ const DIR: Record<string, Vec3> = {
 
 const ROUND_CHARS = new Set(['t', 'f', 'b'])
 const ROUND_MAP: Record<string, 'to' | 'from' | 'both'> = { t: 'to', f: 'from', b: 'both' }
+const ROUND_MAP_REV: Record<string, string> = { to: 't', from: 'f', both: 'b' }
 
 export function expandPathString(
 	str: string,
@@ -89,4 +90,56 @@ export function expandPathString(
 	}
 
 	return result
+}
+
+const fmtNum = String
+
+export function railToString(
+	points: Array<Vec3 | RailPointFull>,
+	startPos: Vec3 = [0, 0, 0]
+): string {
+	const tokens: string[] = []
+	const pos: [number, number, number] = [startPos[0], startPos[1], startPos[2]]
+
+	for (const point of points) {
+		const p: Vec3 = Array.isArray(point) ? (point as Vec3) : (point as RailPointFull).p
+		const dx = p[0] - pos[0]
+		const dy = p[1] - pos[1]
+		const dz = p[2] - pos[2]
+		pos[0] = p[0]
+		pos[1] = p[1]
+		pos[2] = p[2]
+
+		let dirStr = ''
+		if (dx !== 0) {
+			const mag = Math.abs(dx)
+			dirStr += (dx > 0 ? 'r' : 'l') + (mag === 1 ? '' : fmtNum(mag))
+		}
+		if (dy !== 0) {
+			const mag = Math.abs(dy)
+			dirStr += (dy > 0 ? 'u' : 'd') + (mag === 1 ? '' : fmtNum(mag))
+		}
+		if (dz !== 0) {
+			const mag = Math.abs(dz)
+			dirStr += (dz < 0 ? 'i' : 'o') + (mag === 1 ? '' : fmtNum(mag))
+		}
+		if (!dirStr) dirStr = 'r0'
+
+		if (!Array.isArray(point)) {
+			const full = point as RailPointFull
+			if (full.round) {
+				dirStr += ROUND_MAP_REV[full.round]
+				if (full.tangent !== undefined) dirStr += fmtNum(full.tangent)
+			}
+		}
+
+		tokens.push(dirStr)
+
+		if (!Array.isArray(point)) {
+			const full = point as RailPointFull
+			if (full.beat !== undefined) tokens.push(fmtNum(full.beat))
+		}
+	}
+
+	return tokens.join(' ')
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { expandPathString } from '../src/lib/core/rail-path'
+import { expandPathString, railToString } from '../src/lib/core/rail-path'
 
 describe('expandPathString', () => {
 	it('space-delimited tokens emit points', () => {
@@ -149,5 +149,98 @@ describe('expandPathString', () => {
 			[0, 0, -1],
 			[0, 0, 0]
 		])
+	})
+})
+
+describe('railToString', () => {
+	function roundtrip(str: string, startPos?: [number, number, number]) {
+		const points = expandPathString(str, startPos)
+		const back = railToString(points, startPos)
+		return expandPathString(back, startPos)
+	}
+
+	it('basic directions roundtrip', () => {
+		expect(roundtrip('r u i')).toEqual(expandPathString('r u i'))
+	})
+
+	it('multipliers roundtrip', () => {
+		expect(roundtrip('l3u2')).toEqual(expandPathString('l3u2'))
+	})
+
+	it('rounding suffix roundtrip', () => {
+		expect(roundtrip('l i ib u i lb i')).toEqual(expandPathString('l i ib u i lb i'))
+	})
+
+	it('rounding + tangent roundtrip', () => {
+		expect(roundtrip('l i ib1 u i lb0.2 i')).toEqual(expandPathString('l i ib1 u i lb0.2 i'))
+	})
+
+	it('beat annotation roundtrip', () => {
+		expect(roundtrip('llll 10 llll 11')).toEqual(expandPathString('llll 10 llll 11'))
+	})
+
+	it('beat on RailPointFull roundtrip', () => {
+		expect(roundtrip('lb 10')).toEqual(expandPathString('lb 10'))
+	})
+
+	it('float beat roundtrip', () => {
+		expect(roundtrip('r 7.5 u')).toEqual(expandPathString('r 7.5 u'))
+	})
+
+	it('float multiplier roundtrip', () => {
+		expect(roundtrip('l0.1')).toEqual(expandPathString('l0.1'))
+	})
+
+	it('startPos offset roundtrip', () => {
+		expect(roundtrip('r u i', [5, 3, -2])).toEqual(expandPathString('r u i', [5, 3, -2]))
+	})
+
+	it('complex token roundtrip', () => {
+		expect(roundtrip('r2u3l ilt0.5')).toEqual(expandPathString('r2u3l ilt0.5'))
+	})
+
+	it('all axes roundtrip', () => {
+		expect(roundtrip('r l u d i o')).toEqual(expandPathString('r l u d i o'))
+	})
+
+	it('negative delta roundtrip', () => {
+		expect(roundtrip('r3 l5 u2 d4')).toEqual(expandPathString('r3 l5 u2 d4'))
+	})
+
+	it('mixed axes in single token roundtrip', () => {
+		expect(roundtrip('r2u3i4')).toEqual(expandPathString('r2u3i4'))
+	})
+
+	it('rounding + beat roundtrip', () => {
+		expect(roundtrip('rt 4 u lb 8')).toEqual(expandPathString('rt 4 u lb 8'))
+	})
+
+	it('direct: Vec3 array', () => {
+		const points = expandPathString('r u i')
+		const str = railToString(points)
+		expect(str).toBe('r u i')
+	})
+
+	it('direct: multipliers', () => {
+		const points = expandPathString('l3u2')
+		const str = railToString(points)
+		expect(str).toBe('l3u2')
+	})
+
+	it('direct: rounding both', () => {
+		const points = expandPathString('ib')
+		const str = railToString(points)
+		expect(str).toBe('ib')
+	})
+
+	it('direct: rounding to + tangent', () => {
+		// axis order may differ; roundtrip must match
+		expect(roundtrip('ilt0.5')).toEqual(expandPathString('ilt0.5'))
+	})
+
+	it('direct: beat on plain point', () => {
+		const points = expandPathString('r 7.5 u')
+		const str = railToString(points)
+		expect(str).toBe('r 7.5 u')
 	})
 })
