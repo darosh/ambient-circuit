@@ -1060,13 +1060,19 @@ async function createSamplerNode(
 
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	const ToneLib = engine.Tone as any
+	let resolve
 	const opts = {
 		urls,
 		baseUrl: './samples/',
-		release: 1,
+		// release: 1,
+		onload: () => resolve!(),
 		...(params ? unflattenParams(params) : {})
 	}
-	return new ToneLib.Sampler(opts) as ToneAudioNode
+
+	const node = new ToneLib.Sampler(opts) as ToneAudioNode
+	await new Promise((r) => (resolve = r))
+
+	return node
 }
 
 function createToneNode(
