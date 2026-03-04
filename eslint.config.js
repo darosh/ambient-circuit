@@ -66,7 +66,7 @@ export default tseslint.config(
 			'dist/',
 			'docs/',
 			'.build-check/',
-			'rnbo/',
+			'resources/',
 			'.heap-snapshots/',
 			'.fonts/'
 		]

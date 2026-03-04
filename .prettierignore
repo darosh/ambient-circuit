@@ -7,6 +7,6 @@ yarn.lock
 docs/
 public/
 .build-check/
-rnbo/
+resources/
 .heap-snapshots/
 .fonts/

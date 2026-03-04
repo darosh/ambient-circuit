@@ -46,7 +46,7 @@ Create a "marble-machine-inspired" music sequencer where:
 - `AudioChain` — signal path: generator → fx → analyzer → output. Per-instrument by default, but named chains can be shared across instruments. Exposed via `ctx.instrument.audio` in handlers.
 - `AudioEngine` — two engines sharing one `AudioContext`:
   - **Tone.js**: instruments, fx, analyzers. Dynamic import: `const Tone = await import('tone')`
-  - **RNBO**: instruments & fx from Max patchers. Load by path: `rnbo.shimmerev` → `./rnbo/rnbo.shimmerev.json` (cached). Tone by name: `new Tone[name]`
+  - **RNBO**: instruments & fx from Max patchers. Load by path: `shimmerev` → `./patchers/shimmerev.json` (cached). Tone by name: `new Tone[name]`
   - Unified param interface across both engines
 - `Marble audio` — marbles can have their own audio chain (independent of instruments). Collision between marbles triggers sound using notes from colliding marbles.
 - `Event log` — global log of trigger/audio events, eventually displayed tracker-style
@@ -204,7 +204,7 @@ Create a "marble-machine-inspired" music sequencer where:
   - [x] Chain access from SceneCtx: `ctx.instrument.audio`, `ctx.marble.audio`
   - [x] Default triggerHandler plays audio automatically (like MIDI)
   - [x] Default bouncerHandler signals both marbles + triggers their audio chains on collision
-  - [x] RNBO patcher loading with cache (`./rnbo/*.json` from static)
+  - [x] RNBO patcher loading with cache (`./patchers/*.json` from static)
   - [x] Tone.js instrument creation by name (`new Tone[name]`)
   - [x] RNBO fx in chains (Tone Synth → RNBO shimmerev works)
   - [x] RNBO as generator (feedback-synth.export)
@@ -656,7 +656,7 @@ const fx = $derived(makeInstrumentMaterial(effectiveColor))
 
 **DON'T:**
 
-- Read files in `/archive` (obsolete experiments)
+- Read files in `/resources`
 - Use Line2/MeshLine/examples/jsm materials with WebGPU renderer
 - Use `any` without `eslint-disable` — TSL `Fn()` param types require it, wrap with block comments
 - Block path to JSON scene serialization (avoid closures in audio chain config)
