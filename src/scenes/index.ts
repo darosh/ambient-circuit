@@ -30,6 +30,7 @@ import { scene as sceneMultiColumns } from './scene-multi-columns'
 import { scene as sceneMultiTest } from './scene-multi-test'
 import { scene as sceneRailText } from './scene-rail-text'
 import { scenes as scenesRnbo } from './scene-rnbo'
+import { scene as scene1 } from './scene-1'
 
 export const scenes: SceneConfig[] = [
 	sceneTest,
@@ -58,6 +59,7 @@ export const scenes: SceneConfig[] = [
 	sceneMultiColumns,
 	sceneMultiTest,
 	...sceneRailText,
+	scene1,
 	sceneCreateDestroy,
 	sceneAudio,
 	sceneCollisions,
