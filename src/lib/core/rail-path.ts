@@ -92,7 +92,7 @@ export function expandPathString(
 	return result
 }
 
-const fmtNum = String
+const fmtNum = (n: number) => n.toFixed(2).replace('.00', '').replace(/^0./, '.')
 
 export function railToString(
 	points: Array<Vec3 | RailPointFull>,
