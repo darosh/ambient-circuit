@@ -8,6 +8,7 @@ import {
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { buildTubeGeometry } from './tube-geometry'
 import { lerp } from 'three/src/math/MathUtils.js'
+import type { ArrowInstrument } from '../core/instrument'
 
 // Geometry segment multipliers
 const SPIRAL_SEGMENTS_PER_ROUND = 32
@@ -35,16 +36,7 @@ export type InstrumentType =
 	| 'sun'
 	| 'eater'
 
-export type ArrowKind =
-	| 'plain'
-	| 'play'
-	| 'fwd'
-	| 'rec'
-	| 'stop'
-	| 'step'
-	| 'pause'
-	| 'repro'
-	| 'muted'
+export type ArrowKind = ArrowInstrument['kind']
 
 export type InstrumentGeometryParams = {
 	type: InstrumentType
@@ -403,6 +395,59 @@ function buildConeGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	)
 }
 
+function recPath(radius: number, path: CurvePath<Vector3>, zOffset = 0) {
+	const segments = ARROW_CIRCLE_SEGMENTS
+	for (let i = 0; i < segments; i++) {
+		const angle1 = (i / segments) * Math.PI * 2
+		const angle2 = ((i + 1) / segments) * Math.PI * 2
+		const p1 = new Vector3(
+			0,
+			Math.cos(angle1) * radius,
+			Math.sin(angle1) * radius + zOffset * radius
+		)
+		const p2 = new Vector3(
+			0,
+			Math.cos(angle2) * radius,
+			Math.sin(angle2) * radius + zOffset * radius
+		)
+		path.add(new LineCurve3(p1, p2))
+	}
+}
+
+function playGeometry(
+	height: number,
+	zScale: number,
+	length: number,
+	zOffset: number,
+	cr: number,
+	path: CurvePath<Vector3>
+) {
+	const halfBase = height / Math.sqrt(3)
+	const verts = [
+		new Vector3(0, 0, zScale * (height + length * zOffset)),
+		new Vector3(0, halfBase, zScale * (length * zOffset)),
+		new Vector3(0, -halfBase, zScale * (length * zOffset))
+	]
+
+	for (let i = 0; i < 3; i++) {
+		const curr = verts[i]
+		const next = verts[(i + 1) % 3]
+		const prev = verts[(i - 1 + 3) % 3]
+
+		const inDir = new Vector3().subVectors(curr, prev).normalize()
+		const outDir = new Vector3().subVectors(next, curr).normalize()
+
+		const arcStart = curr.clone().addScaledVector(inDir, -cr)
+		const arcEnd = curr.clone().addScaledVector(outDir, cr)
+		const nextArcStart = next.clone().addScaledVector(outDir, -cr)
+
+		if (cr > 0) {
+			path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
+		}
+		path.add(new LineCurve3(arcEnd, nextArcStart))
+	}
+}
+
 function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	const {
 		size,
@@ -420,7 +465,18 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 
 	const length = size * 1
 
-	const zOffset = align === 'tip' ? 0 : align === 'back' ? -1 : -0.5
+	const zOffset =
+		kind === 'rec' || kind === 'dot' || kind === 'ring' || kind === 'point'
+			? align === 'tip'
+				? 1
+				: align === 'back'
+					? -1
+					: 0
+			: align === 'tip'
+				? 0
+				: align === 'back'
+					? -1
+					: -0.5
 	const zScale = point === 'backward' ? -1 : 1
 
 	switch (kind) {
@@ -440,46 +496,35 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 
 			break
 		}
+		case 'tri': {
+			playGeometry(width * 4, zScale, length, zOffset / Math.sqrt(6), cr / 2, path)
+			break
+		}
 		case 'play':
 		case 'fwd': {
-			const height = length
-			const halfBase = height / Math.sqrt(3)
-			const verts = [
-				new Vector3(0, 0, zScale * (height + length * zOffset)),
-				new Vector3(0, halfBase, zScale * (length * zOffset)),
-				new Vector3(0, -halfBase, zScale * (length * zOffset))
-			]
+			playGeometry(length, zScale, length, zOffset, cr, path)
+			break
+		}
+		case 'dot': {
+			const radius = width / 2
+			recPath(radius, path, zOffset)
 
-			for (let i = 0; i < 3; i++) {
-				const curr = verts[i]
-				const next = verts[(i + 1) % 3]
-				const prev = verts[(i - 1 + 3) % 3]
+			break
+		}
+		case 'point': {
+			recPath(width, path, zOffset)
 
-				const inDir = new Vector3().subVectors(curr, prev).normalize()
-				const outDir = new Vector3().subVectors(next, curr).normalize()
-
-				const arcStart = curr.clone().addScaledVector(inDir, -cr)
-				const arcEnd = curr.clone().addScaledVector(outDir, cr)
-				const nextArcStart = next.clone().addScaledVector(outDir, -cr)
-
-				if (cr > 0) {
-					path.add(new QuadraticBezierCurve3(arcStart, curr, arcEnd))
-				}
-				path.add(new LineCurve3(arcEnd, nextArcStart))
-			}
+			break
+		}
+		case 'ring': {
+			const radius = width * 2
+			recPath(radius, path, zOffset)
 
 			break
 		}
 		case 'rec': {
 			const radius = length / 2
-			const segments = ARROW_CIRCLE_SEGMENTS
-			for (let i = 0; i < segments; i++) {
-				const angle1 = (i / segments) * Math.PI * 2
-				const angle2 = ((i + 1) / segments) * Math.PI * 2
-				const p1 = new Vector3(0, Math.cos(angle1) * radius, Math.sin(angle1) * radius)
-				const p2 = new Vector3(0, Math.cos(angle2) * radius, Math.sin(angle2) * radius)
-				path.add(new LineCurve3(p1, p2))
-			}
+			recPath(radius, path, zOffset)
 
 			break
 		}
@@ -607,7 +652,7 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 
 	const closed = !['plain', 'step', 'pause'].includes(kind)
 	const tubularSegments =
-		kind === 'rec'
+		kind === 'rec' || kind === 'dot'
 			? TUBULAR_SEGMENTS_ARROW_CIRCLE
 			: kind === 'play' || kind === 'fwd'
 				? 3 * TUBULAR_SEGMENTS_POLY

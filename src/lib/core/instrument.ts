@@ -15,7 +15,7 @@ export interface InstrumentRuntime {
 	counterCW?: boolean
 	align?: 'center' | 'tip' | 'back'
 	point?: 'forward' | 'backward'
-	kind?: 'plain' | 'play' | 'fwd' | 'rec' | 'stop' | 'step' | 'pause' | 'repro' | 'muted'
+	kind?: ArrowInstrument['kind']
 	angle?: number
 	pulse?: boolean
 	spinning?: boolean
@@ -123,10 +123,23 @@ type ConeInstrument = InstrumentBase & {
 	spinning?: boolean
 }
 
-type ArrowInstrument = InstrumentBase & {
+export type ArrowInstrument = InstrumentBase & {
 	type: 'arrow'
 	/** Shape variant (default 'plain') */
-	kind?: 'plain' | 'play' | 'fwd' | 'rec' | 'stop' | 'step' | 'pause' | 'repro' | 'muted'
+	kind?:
+		| 'plain'
+		| 'play'
+		| 'fwd'
+		| 'rec'
+		| 'stop'
+		| 'step'
+		| 'pause'
+		| 'repro'
+		| 'muted'
+		| 'dot'
+		| 'point'
+		| 'ring'
+		| 'tri'
 	/** V-shape opening angle in radians (only for 'plain' and 'step') */
 	angle?: number
 	/** Arrow alignment: which part is at beat position (default 'center') */
