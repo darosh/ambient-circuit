@@ -22,11 +22,11 @@
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 	// import LineText from './LineText.svelte'
 	import LineText from './TubeText.svelte'
-	import { onDestroy, untrack } from 'svelte'
+	import { onDestroy } from 'svelte'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
-	import { makeRailMaterial } from '../lib/components/config'
+	import { railMaterial } from '../lib/components/config'
 	import { computeRailNamePosition, scalePoints, scaleSplits } from '../lib/helpers/rail-geometry'
-	import type { Material } from 'three/webgpu'
+	import { Color, type Mesh, type Material } from 'three/webgpu'
 
 	type Props = {
 		railData: RailData
@@ -99,29 +99,39 @@
 	}
 
 	const resolved = $derived(resolveRail(rail))
-	// Create materials once, update uniforms on color change
-	const fxMaterialObj = makeRailMaterial(
-		untrack(() => color),
-		0.7,
-		true,
-		0.04,
-		1
-	)
-	const plainMaterial = $derived(fxRails ? null : makeStandardMaterial(untrack(() => color)))
+	const plainMaterial = $derived(fxRails ? null : makeStandardMaterial(color))
+
+	// Per-rail data written to shared material uniforms in onBeforeRender
+	const ud = { color: new Color(), initialIntensity: 0.7, intensity: 0, active: 1 }
 
 	$effect(() => {
-		fxMaterialObj.emissiveColor.value.set(color)
-
-		if (plainMaterial) {
-			plainMaterial.color.set(color)
-		}
+		ud.color.set(color)
+		if (plainMaterial) plainMaterial.color.set(color)
 	})
 
 	const effectiveActive = $derived(railData.runtime?.active ?? true)
 
 	$effect(() => {
-		fxMaterialObj.activeUniform.value = effectiveActive ? 1 : 0
+		ud.active = effectiveActive ? 1 : 0
 		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
+	})
+
+	let meshRefs = $state<(Mesh | undefined)[]>([])
+
+	function setupRailMesh(mesh: Mesh) {
+		mesh.onBeforeRender = () => {
+			railMaterial.emissiveColor.value.copy(ud.color)
+			railMaterial.initialIntensity.value = ud.initialIntensity
+			railMaterial.impactIntensity.value = ud.intensity
+			railMaterial.activeUniform.value = ud.active
+			railMaterial.uvFreqUniform.value = 0.04
+		}
+	}
+
+	$effect(() => {
+		for (const mesh of meshRefs) {
+			if (mesh) setupRailMesh(mesh)
+		}
 	})
 
 	// Runtime render transform (pre-allocated, filled in-place by render fn)
@@ -176,11 +186,8 @@
 	})
 
 	$effect(() => {
-		fxMaterialObj.mat.wireframe = wireframe
-
-		if (plainMaterial) {
-			plainMaterial.wireframe = wireframe
-		}
+		railMaterial.mat.wireframe = wireframe
+		if (plainMaterial) plainMaterial.wireframe = wireframe
 	})
 	const beatPositions = $derived.by(() => {
 		if (!showBeats) return []
@@ -270,17 +277,28 @@
 		showNames ? computeRailNamePosition(displayPoints, displaySplits) : null
 	)
 
-	const beatLabelPositions = $derived.by(() => {
+	const beatLabelPositions = $state<[number, number, number][]>([])
+
+	$effect(() => {
+		const vb = visibleBeats
 		const gp = groupPosition
-		return visibleBeats.map((bp) => {
+
+		for (const [i, bp] of vb.entries()) {
 			const isDownbeat = bp.beat === resolved.beatOffset
 			_scratchVec.copy(bp.position)
 			_scratchVec.applyQuaternion(groupQuaternion)
 			_scratchVec.x += gp[0] + 0.2
 			_scratchVec.y += gp[1] + (isDownbeat ? -0.2 : 0.2)
 			_scratchVec.z += gp[2]
-			return [_scratchVec.x, _scratchVec.y, _scratchVec.z] as [number, number, number]
-		})
+
+			if (beatLabelPositions[i]) {
+				beatLabelPositions[i][0] = _scratchVec.x
+				beatLabelPositions[i][1] = _scratchVec.y
+				beatLabelPositions[i][2] = _scratchVec.z
+			} else {
+				beatLabelPositions[i] = [_scratchVec.x, _scratchVec.y, _scratchVec.z]
+			}
+		}
 	})
 
 	const nameLabelPosition = $derived.by(() => {
@@ -310,8 +328,12 @@
 	$effect(() => {
 		// Reset when beatPositions or showBeats changes
 		if (!showBeats || beatPositions.length === 0) {
-			visibleBeats = []
 			renderCancelled = true
+
+			if (visibleBeats?.length) {
+				visibleBeats = []
+			}
+
 			return
 		}
 
@@ -346,9 +368,8 @@
 			return
 		}
 
-		setTimeout(() => {
-			showNameDeferred = true
-		}, Math.random() * 250)
+		// Used to be: setTimeout(() => {}, Math.random() * 250)
+		showNameDeferred = true
 	})
 
 	// Progressive instrument rendering
@@ -405,19 +426,10 @@
 	})
 
 	onDestroy(() => {
-		const current = [...mainMeshes, ...branchMeshes]
-
-		for (const mesh of current) {
+		for (const mesh of [...mainMeshes, ...branchMeshes]) {
 			mesh.geometry.dispose()
 		}
-
-		if (fxMaterialObj) {
-			fxMaterialObj.mat.dispose()
-		}
-
-		if (plainMaterial) {
-			plainMaterial.dispose()
-		}
+		plainMaterial?.dispose()
 	})
 </script>
 
@@ -459,7 +471,11 @@
 
 <T.Group position={groupPosition} rotation={groupRotation} {visible}>
 	{#each allMeshes as { geometry }, idx (idx)}
-		<T.Mesh {geometry} material={<Material>(fxRails ? fxMaterialObj.mat : plainMaterial)} />
+		<T.Mesh
+			bind:ref={meshRefs[idx]}
+			{geometry}
+			material={<Material>(fxRails ? railMaterial.mat : plainMaterial)}
+		/>
 	{/each}
 
 	{#if showPoints}

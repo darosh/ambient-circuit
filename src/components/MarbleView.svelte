@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	import { onDestroy, untrack } from 'svelte'
+	import { onDestroy } from 'svelte'
 	import type { Marble } from '../lib/core/marble'
-	import { Vector3, Euler, Matrix4 } from 'three/webgpu'
-	import { makeMarbleMaterial } from '../lib/components/config'
+	import { Color, Vector3, Euler, Matrix4, type Mesh } from 'three/webgpu'
+	import { marbleMaterial } from '../lib/components/config'
 	import { easeOutQuart } from '../lib/helpers/easing'
 	import type { ResolvedRail } from '../lib/core/rail'
 	import type { RailData } from '../lib/core/rail-data'
@@ -73,33 +73,36 @@
 		return basePos
 	})
 
-	const fx = makeMarbleMaterial(untrack(() => effectiveColor))
-	const plainMaterial = $derived(
-		fxMarbles ? null : makeStandardMaterial(untrack(() => effectiveColor))
-	)
+	const plainMaterial = $derived(fxMarbles ? null : makeStandardMaterial(effectiveColor))
+
+	// Per-instance data written to shared material uniforms in onBeforeRender
+	const ud = { color: new Color(), initialIntensity: 0.51, intensity: 0, active: 1 }
 
 	$effect(() => {
-		if (fx) {
-			fx.emissiveColor.value.set(effectiveColor)
-		}
-
-		if (plainMaterial) {
-			plainMaterial.color.set(effectiveColor)
-		}
+		ud.color.set(effectiveColor)
+		if (plainMaterial) plainMaterial.color.set(effectiveColor)
 	})
 
 	$effect(() => {
-		if (fx) fx.activeUniform.value = effectiveActive ? 1 : 0
+		marbleMaterial.mat.wireframe = wireframe
+		if (plainMaterial) plainMaterial.wireframe = wireframe
+	})
+
+	$effect(() => {
+		ud.active = effectiveActive ? 1 : 0
 		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
 	})
 
-	$effect(() => {
-		if (fx) {
-			fx.mat.wireframe = wireframe
-		}
+	let meshRef = $state<Mesh | undefined>()
 
-		if (plainMaterial) {
-			plainMaterial.wireframe = wireframe
+	$effect(() => {
+		if (!meshRef) return
+		meshRef.onBeforeRender = () => {
+			marbleMaterial.emissiveColor.value.copy(ud.color)
+			marbleMaterial.initialIntensity.value = ud.initialIntensity
+			marbleMaterial.impactIntensity.value = ud.intensity
+			marbleMaterial.activeUniform.value = ud.active
+			marbleMaterial.uvFreqEffective.value = 0.1
 		}
 	})
 
@@ -171,11 +174,11 @@
 			marble.signal.intensity = 0
 		}
 
-		if (impactTime > 0 && fx) {
+		if (impactTime > 0) {
 			impactTime = Math.max(0, impactTime - delta)
-			fx.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION) + glowBaseline
-		} else if (fx) {
-			fx.impactIntensity.value = glowBaseline
+			ud.intensity = easeOutQuart(impactTime / IMPACT_DURATION) + glowBaseline
+		} else {
+			ud.intensity = glowBaseline
 		}
 
 		// Continuous spinning for coil type
@@ -186,23 +189,17 @@
 
 	onDestroy(() => {
 		geometry?.dispose()
-
-		if (fx) {
-			fx.mat.dispose()
-		}
-
-		if (plainMaterial) {
-			plainMaterial.dispose()
-		}
+		plainMaterial?.dispose()
 	})
 </script>
 
 {#if effectiveVisible}
 	{#if type === 'ball'}
 		<T.Mesh
+			bind:ref={meshRef}
 			position={[transformedPosition.x, transformedPosition.y, transformedPosition.z]}
 			{rotation}
-			material={<Material>(fxMarbles ? fx.mat : plainMaterial)}
+			material={<Material>(fxMarbles ? marbleMaterial.mat : plainMaterial)}
 			onclick={(e: Event) => {
 				e.stopPropagation()
 				onselect?.()
@@ -218,10 +215,11 @@
 		</T.Mesh>
 	{:else if geometry}
 		<T.Mesh
+			bind:ref={meshRef}
 			position={[transformedPosition.x, transformedPosition.y, transformedPosition.z]}
 			{rotation}
 			{geometry}
-			material={<Material>(fxMarbles ? fx.mat : plainMaterial)}
+			material={<Material>(fxMarbles ? marbleMaterial.mat : plainMaterial)}
 			onclick={(e: Event) => {
 				e.stopPropagation()
 				onselect?.()

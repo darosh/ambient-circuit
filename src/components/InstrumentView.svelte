@@ -5,15 +5,15 @@
 	import { getBeatTransform, getPointsForPath } from '../lib/core/rail-curve'
 	import { Vector3, Euler, Matrix4, Color } from 'three/webgpu'
 	import { easeOutQuart, easeInBounce, easeOutBack } from '../lib/helpers/easing'
-	import { makeInstrumentMaterial } from '../lib/components/config'
+	import { instrumentMaterial } from '../lib/components/config'
 	import {
 		createInstrumentGeometry,
 		createInstrumentFillGeometry,
 		type InstrumentType
 	} from '../lib/video/instrument-geometry'
-	import { onDestroy, untrack } from 'svelte'
+	import { onDestroy } from 'svelte'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
-	import type { Material } from 'three/webgpu'
+	import { type Mesh, type Material } from 'three/webgpu'
 
 	// Constant rotation matrices for type-based offsets (computed once at module load)
 	const _ROT_NEG_HALF_PI = new Matrix4().makeRotationZ(-Math.PI / 2)
@@ -74,48 +74,53 @@
 	const effectiveRays = $derived(instrument.runtime?.rays ?? (instrument as any).rays)
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
-	const fxMaterial = makeInstrumentMaterial(
-		untrack(() => effectiveColor),
-		true
-	)
-	const plainMaterial = $derived(
-		fxInstruments ? null : makeStandardMaterial(untrack(() => effectiveColor))
-	)
+	const plainMaterial = $derived(fxInstruments ? null : makeStandardMaterial(effectiveColor))
 	const effectiveVisible = $derived(instrument.runtime?.visible ?? true)
 	const effectiveActive = $derived(
 		(instrument.runtime?.active ?? instrument.active ?? true) && (railData?.runtime?.active ?? true)
 	)
-	const colorValue = new Color()
+
+	// Per-instance data stored in plain object, written to shared material uniforms in onBeforeRender
+	const ud = { color: new Color(), initialIntensity: 0.51, intensity: 0, active: 1, uvFreq: 0.1 }
 
 	$effect(() => {
-		colorValue.set(effectiveColor)
+		ud.color.set(effectiveColor)
+		if (plainMaterial) plainMaterial.color.set(effectiveColor)
 	})
 
 	$effect(() => {
-		if (fxMaterial && !fxMaterial.emissiveColor.value.equals(colorValue)) {
-			fxMaterial.emissiveColor.value = colorValue
-		}
-
-		if (plainMaterial && !plainMaterial.color.equals(colorValue)) {
-			plainMaterial.color = colorValue
-		}
+		instrumentMaterial.mat.wireframe = wireframe
+		if (plainMaterial) plainMaterial.wireframe = wireframe
 	})
 
 	$effect(() => {
-		fxMaterial.mat.wireframe = wireframe
-
-		if (plainMaterial) {
-			plainMaterial.wireframe = wireframe
-		}
-	})
-
-	$effect(() => {
-		fxMaterial.activeUniform.value = effectiveActive ? 1 : 0
+		ud.active = effectiveActive ? 1 : 0
 		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
 	})
 
 	$effect(() => {
-		fxMaterial.setUvMax(geometry?.userData?.uvMax ?? 0)
+		const uvMax = geometry?.userData?.uvMax ?? 0
+		ud.uvFreq = instrumentMaterial.getUvMax(0.1, uvMax)
+	})
+
+	let meshRef = $state<Mesh | undefined>()
+	let innerMeshRef = $state<Mesh | undefined>()
+
+	function setupOnBeforeRender(mesh: Mesh) {
+		mesh.onBeforeRender = () => {
+			instrumentMaterial.emissiveColor.value.copy(ud.color)
+			instrumentMaterial.initialIntensity.value = ud.initialIntensity
+			instrumentMaterial.impactIntensity.value = ud.intensity
+			instrumentMaterial.activeUniform.value = ud.active
+			instrumentMaterial.uvFreqEffective.value = ud.uvFreq
+		}
+	}
+
+	$effect(() => {
+		if (meshRef) setupOnBeforeRender(meshRef)
+	})
+	$effect(() => {
+		if (innerMeshRef) setupOnBeforeRender(innerMeshRef)
 	})
 
 	// Get points for the instrument's path
@@ -301,7 +306,7 @@
 
 		if (impactTime > 0) {
 			impactTime = Math.max(0, impactTime - delta)
-			fxMaterial.impactIntensity.value = easeOutQuart(impactTime / IMPACT_DURATION) + glowBaseline
+			ud.intensity = easeOutQuart(impactTime / IMPACT_DURATION) + glowBaseline
 
 			// Impact spin for non-pulse types
 			if (!pulseAnimationEnabled) {
@@ -311,7 +316,7 @@
 
 		// Apply hover/select glow when no impact
 		if (impactTime === 0) {
-			fxMaterial.impactIntensity.value = glowBaseline
+			ud.intensity = glowBaseline
 		}
 
 		// Detect misalignment when impact completes and trigger snap
@@ -338,23 +343,17 @@
 	onDestroy(() => {
 		geometry?.dispose()
 		innerGeometry?.dispose()
-
-		if (fxMaterial) {
-			fxMaterial.mat.dispose()
-		}
-
-		if (plainMaterial) {
-			plainMaterial.dispose()
-		}
+		plainMaterial?.dispose()
 	})
 </script>
 
 {#if transform && effectiveVisible}
 	<T.Mesh
+		bind:ref={meshRef}
 		{position}
 		{rotation}
 		{geometry}
-		material={<Material>(fxInstruments ? fxMaterial.mat : plainMaterial)}
+		material={<Material>(fxInstruments ? instrumentMaterial.mat : plainMaterial)}
 		onclick={(e: Event) => {
 			e.stopPropagation()
 			onselect?.()
@@ -368,10 +367,11 @@
 	/>
 	{#if innerGeometry}
 		<T.Mesh
+			bind:ref={innerMeshRef}
 			{position}
 			{rotation}
 			geometry={innerGeometry}
-			material={<Material>(fxInstruments ? fxMaterial.mat : plainMaterial)}
+			material={<Material>(fxInstruments ? instrumentMaterial.mat : plainMaterial)}
 		/>
 	{/if}
 {/if}

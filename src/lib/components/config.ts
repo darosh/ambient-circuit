@@ -1,10 +1,10 @@
-import { buildInstrumentMaterial } from '../video/material-instrument-gen'
+import { sharedInstrumentMaterial } from '../video/material-instrument-gen'
+import { sharedRailMaterial } from '../video/material-rail-gen'
 
-export const makeMarbleMaterial = (c: string) => buildInstrumentMaterial(c, 0.51)
-export const makeInstrumentMaterial = (c: string, transparent = true) =>
-	buildInstrumentMaterial(c, 0.51, transparent)
-
-export { buildRailMaterial as makeRailMaterial } from '../video/material-rail-gen'
+// Singleton material instances — never disposed, live for app lifetime
+export const railMaterial = sharedRailMaterial()
+export const instrumentMaterial = sharedInstrumentMaterial()
+export const marbleMaterial = instrumentMaterial
 
 export const defaultBloom = {
 	strength: 0.5,
