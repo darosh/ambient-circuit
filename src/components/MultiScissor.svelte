@@ -62,7 +62,9 @@
 	})
 
 	// Single camera used for all rendering
-	const renderCam = untrack(() => new ThreePerspectiveCamera(config.splits[0]?.fov ?? 30, 1, 0.1, 1000))
+	const renderCam = untrack(
+		() => new ThreePerspectiveCamera(config.splits[0]?.fov ?? 30, 1, 0.1, 1000)
+	)
 	renderCam.position.set(5, 7, 9)
 
 	// Per-split proxy cameras — used only by OrbitControls, never rendered
@@ -161,7 +163,6 @@
 		_splitReady = Array.from({ length: n }, () => false)
 		const r = renderer as unknown as WebGPURenderer
 		_splitReady.fill(false)
-
 		;(async () => {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			await (r as any).compileAsync(scene, renderCam)
