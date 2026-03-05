@@ -140,6 +140,7 @@ export type ArrowInstrument = InstrumentBase & {
 		| 'point'
 		| 'ring'
 		| 'tri'
+		| 'trip'
 	/** V-shape opening angle in radians (only for 'plain' and 'step') */
 	angle?: number
 	/** Arrow alignment: which part is at beat position (default 'center') */

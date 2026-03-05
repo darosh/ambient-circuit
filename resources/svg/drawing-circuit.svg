@@ -24,9 +24,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      showgrid="true"
-     inkscape:zoom="5.3279265"
-     inkscape:cx="45.045666"
-     inkscape:cy="51.614826"
+     inkscape:zoom="15.455261"
+     inkscape:cx="57.262056"
+     inkscape:cy="67.743924"
      inkscape:current-layer="layer1">
     <inkscape:grid
        id="grid3"
@@ -80,7 +80,7 @@
        sodipodi:nodetypes="cccccczcccccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 20,95 v -7.5 l 2.5,-5 v -5 l 2.5,-5 V 70 c 0,0 5,-5 5,-15 0,-10 -5,-14 -5,-14 v -3.5 l -2.5,-5 V 15 L 20,7.5 V 5"
+       d="m 20,95 v -7.5 l 2.5,-5 v -5 l 2.5,-5 v -5 C 25,67.5 30,65 30,55 30,45 25,42.5 25,42.5 v -5 l -2.5,-5 V 15 L 20,7.5 V 5"
        id="path5"
        sodipodi:nodetypes="cccccczcccccc" />
     <path
@@ -95,9 +95,12 @@
        sodipodi:nodetypes="cccccccccccccccccccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 94.934259,5 v 10 l -2.5,5 v 5 l -2.5,5 v 15 15 l 2.5,5 v 17.5 l 2.5,7.5 v 5"
-       id="path8"
-       sodipodi:nodetypes="ccccccccccc" />
+       d="m 90,50 -0.06574,10 2.5,5 v 17.5 l 2.5,7.5 v 5"
+       id="path1" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 94.934259,5 v 10 l -2.5,5 v 5 l -2.5,5 L 90,40"
+       id="path8" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 89.934259,5 v 7.5 l -2.5,5 v 5 l -2.5,5 V 40 c 0,0 -5,0 -5,5 0,5 5,5 5,5 v 12.5 l 2.5,5 V 85 l 2.5,7.5 V 95"
@@ -105,24 +108,27 @@
        sodipodi:nodetypes="cccccczcccccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 84.934259,5 v 7.5 l -2.5,5 v 5 l -2.5,5 V 35 c 0,0 -5,2.5 -5,10 0,7.5 5,9 5,9 v 8.5 l 2.5,5 V 85 l 2.5,7.5 V 95"
+       d="m 84.934259,5 v 7.5 l -2.5,5 v 5 l -2.5,5 V 35 L 75,37.5 V 51.226845 L 79.934259,54 v 8.5 l 2.5,5 V 85 l 2.5,7.5 V 95"
        id="path10"
-       sodipodi:nodetypes="cccccczcccccc" />
+       sodipodi:nodetypes="cccccccccccccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 79.934259,5 v 7.5 l -2.5,5 v 5 l -2.5,5 V 30 c 0,0 -5,5 -5,15 0,10 5,14 5,14 v 3.5 l 2.5,5 V 85 l 2.5,7.5 V 95"
+       d="m 79.934259,5 v 7.5 l -2.5,5 v 5 l -2.5,5 0.131482,5 L 70,35 v 17.5 l 5.065741,5 -0.131481,5 2.5,5 V 85 l 2.5,7.5 V 95"
        id="path11"
-       sodipodi:nodetypes="cccccczcccccc" />
+       sodipodi:nodetypes="cccccccccccccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 74.934259,5 v 7.5 l -2.5,5 v 5 l -2.5,5 V 30 l -2.5,2.5 c -2.5,2.5 -2.5,7.5 -2.5,12.5 v 7.5 l 2.5,5 h -2.5 v 5 h 5 l 2.5,5 V 85 l 2.5,7.5 V 95"
-       id="path12"
-       sodipodi:nodetypes="ccccccccccccccccc" />
+       d="m 70,60 2.5,7.5 -0.06574,17.5 2.5,7.5 V 95"
+       id="path21" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 69.934259,5 v 7.5 l -2.5,5 v 5 l -2.5,5 h -2.5 v 5 l -5,7.5 h 5 v 12.5 l -2.5,5 h 2.5 v 5 l -2.5,2.5 v 2.5 h 7.5 V 70 85 l 2.5,7.5 V 95"
+       d="M 74.934259,5 75,12.5 70,20 v 10"
+       id="path12" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 65,5 v 5 l -5,5 v 11.5 c 2.5,1 5.717282,0.638206 6.249599,3.538774 -0.07821,3.781521 -7.393771,1.138727 -7.498871,4.908972 -0.108064,3.876654 7.488746,1.217136 7.499265,5.047104 0.01054,3.838671 -7.585766,1.178469 -7.499527,5.046942 C 58.834875,48.82818 66.25,46.178993 66.25,50 c 0,3.772275 -7.122145,1.155826 -7.312547,5.000951 C 58.746661,58.853915 66.25,56.161084 66.25,60 c 0,3.827614 -7.5,1.172386 -7.5,5 0.810356,3.222034 6.049085,2.792315 8.75,3.211732 L 67.4,85 69.9,92.5 V 95"
        id="path13"
-       sodipodi:nodetypes="cccccccccccccccccccc" />
+       sodipodi:nodetypes="ccccsssssssscccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 45.238096,50 v 38.095238 c 0,7.142858 -4.785058,11.908832 -11.904762,11.904762 H 5 C 2.5,100 0,97.5 0,95 V 5 C 0,2.5 2.5,0 5,0 H 38.095238 C 45.238096,0 50,4.7619048 50,11.904762 V 88.095238 C 50,95.238096 54.761906,100 61.904762,100 H 95 c 2.5,0 5,-2.5 5,-5 V 5 C 100,2.5 97.5,0 95,0 H 66.666668 C 59.52381,0 54.761906,4.7619048 54.761906,11.904762 V 50"
@@ -130,29 +136,29 @@
        sodipodi:nodetypes="cccccccccccccccccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 57.5,95 v -7.5 l 5,-2.5 V 72.5 L 55,82.5 V 60"
+       d="m 65,95 -7.5,-5 5,-5 V 75 L 55,82.5 V 60"
        id="path15"
        sodipodi:nodetypes="cccccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 37.5,95 v -7.5 -5 l 5,-10"
+       d="M 35,95 V 87.5 L 40,85 v -7.5"
        id="path16"
        sodipodi:nodetypes="cccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 42.5,5 v 7.5 l -5,2.5 V 27.5 L 45,17.5 V 40"
+       d="m 35,5 2.5,7.5 5,-2.5 -5,17.5 7.5,-10 V 40"
        id="path17"
        sodipodi:nodetypes="cccccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="m 62.5,5 v 7.5 5 l -5,10"
+       d="m 70,5 v 7.5 l -5,5 v 5"
        id="path18"
        sodipodi:nodetypes="cccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.999999px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-       d="M 95,59.999998 V 29.999999"
+       d="M 95,59.999998 V 40 l -5,5 h -5"
        id="path19"
-       sodipodi:nodetypes="cc" />
+       sodipodi:nodetypes="cccc" />
     <path
        style="fill:none;stroke:#000000;stroke-width:0.999999px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="M 5,70 V 40.000001"

@@ -500,6 +500,10 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 			playGeometry(width * 4, zScale, length, zOffset / Math.sqrt(6), cr / 2, path)
 			break
 		}
+		case 'trip': {
+			playGeometry(width * 3, zScale, length, zOffset / Math.sqrt(8), cr / 3, path)
+			break
+		}
 		case 'play':
 		case 'fwd': {
 			playGeometry(length, zScale, length, zOffset, cr, path)

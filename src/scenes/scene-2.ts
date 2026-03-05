@@ -22,7 +22,7 @@ const c = colorFactory(color3)
 */
 
 export const scene: SceneConfig = {
-	id: 'scene-one',
+	id: 'scene-two',
 	bpm: 60,
 	camera: [-3, 12, 17],
 	target: [0, -0.5, 0],
@@ -73,7 +73,7 @@ export const scene: SceneConfig = {
 scene.renderFactory = (_, seed) =>
 	createFloating({
 		seed,
-		floatIntensity: _.rail.id[0] === 'y' ? [-0.05, 0.2, 0.1] : _.rail.id[0] === 'z' ? 0 : undefined
+		floatIntensity: _.rail.id[0] === 'y' ? [-0.05, 0.1, 0.1] : _.rail.id[0] === 'z' ? 0 : undefined
 	})
 
 for (const v of [3, 8, 10, 13, 21, 27, 28, 33, 35, 40]) {
@@ -100,9 +100,11 @@ for (const v of [3, 12, 15, 22, 32, 36, 40, 45]) {
 
 const r = randomizer()
 const svgs = [...DRAWING_CIRCUIT].toSorted(() => r() - 0.5)
-const last = 8
+const last = 10
 const m = randomizer(100)
 const q = randomizer()
+
+const order = [20, 17, 15, 2, 7, 6, 14, 19, 18, 13, 5, 1, 16, 10, 21, 4, 12, 3, 9, 8]
 
 scene.rails = []
 const first = scene.rails.length
@@ -110,7 +112,7 @@ scene.rails!.push(
 	...svgs.map(
 		(d, i) =>
 			<RailData>{
-				color: c(),
+				color: color3[order.indexOf(i + 1) % 2],
 				rail: {
 					offset: i === last ? [0, -0.2, 0] : undefined,
 					id: i === last ? 'z' : `y${i + 1}`,
@@ -118,19 +120,28 @@ scene.rails!.push(
 				},
 				marbles: [
 					{
+						type: i === 19 ? 'coil' : undefined,
+						mode: i === 19 ? 'ping-pong' : undefined,
 						start: Math.floor(m() * (expandPathString(d).length - 1)),
 						easing: q() < 0.25 ? 'easeOutQuad' : undefined
 					}
 				],
 				instruments: [
 					{ type: 'arrow', kind: 'tri', beat: 0, align: 'back' },
-					{ type: 'arrow', kind: 'point', beat: expandPathString(d).length - 1, align: 'tip' }
+					{
+						type: 'arrow',
+						point: i === 19 ? 'backward' : 0,
+						kind: i === 19 ? 'tri' : 'ring',
+						beat: expandPathString(d).length - 1,
+						align: i === 19 ? 'back' : 'tip'
+					}
 				]
 			}
 	)
 )
 
 scene.rails[last + first]!.color = color4[1] // '#111111'
+scene.rails[last + first]!.rail.nodes[0] += '12'
 
 // scene.rails.push(<RailData>{
 // 	color: c(),
