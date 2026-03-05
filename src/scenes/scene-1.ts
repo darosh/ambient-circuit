@@ -21,7 +21,6 @@ const c = colorFactory(color3)
  ]
 */
 
-
 export const scene: SceneConfig = {
 	id: 'scene-one',
 	bpm: 60,
