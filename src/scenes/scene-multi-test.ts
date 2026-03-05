@@ -4,6 +4,7 @@ import { triggerHandler } from '../lib/core/trigger-handler'
 
 import { circle, roundedRect, coil, spiral } from '../lib/core/rail-primitives'
 import { randomizer } from './utils/randomizer'
+import { clone } from 'rambdax'
 
 const c = colorFactory(colors)
 
@@ -337,31 +338,43 @@ const r = randomizer(2)
 
 scene.view = {
 	layout: 'grid',
-	splits: scene.rails
-		.map((rail) => {
-			const off = (rail.rail as { offset?: [number, number, number] }).offset ?? [0, 0, 0]
-			const cx = off[0] + 1,
-				cy = off[1],
-				cz = off[2] + 1
-			const side = (r() - 0.5) * 4
-			const fov = 20 + r() * 20
-			return <ViewSplitConfig>{
-				target: Math.floor(r() * scene.rails.length), //[cx, cy, cz],
-				camera: [cx + side + 0.25, cy + 3 + r() * 2 + 0.25, cz + 4 + r() * 2 + 0.25].map(
-					(v) => v * 1.85
-				),
-				fov,
-				bloom: true,
-				smoothnessPitch: 0.05,
-				smoothnessYaw: 0.05,
-				smoothnessRadius: 0.01,
-				smoothnessTarget: 0.01
-			}
-		})
-		.slice(0, 7)
+	splits: scene.rails.map((rail) => {
+		const off = (rail.rail as { offset?: [number, number, number] }).offset ?? [0, 0, 0]
+		const cx = off[0] + 1,
+			cy = off[1],
+			cz = off[2] + 1
+		const side = (r() - 0.5) * 4
+		const fov = 20 + r() * 20
+		return <ViewSplitConfig>{
+			target: Math.floor(r() * scene.rails.length), //[cx, cy, cz],
+			camera: [cx + side + 0.25, cy + 3 + r() * 2 + 0.25, cz + 4 + r() * 2 + 0.25].map(
+				(v) => v * 1.85
+			),
+			fov,
+			bloom: true,
+			smoothnessPitch: 0.05,
+			smoothnessYaw: 0.05,
+			smoothnessRadius: 0.01,
+			smoothnessTarget: 0.01
+		}
+	})
 }
 
-// scene.view.splits = [...scene.view.splits, ...scene.view.splits, ...scene.view.splits]
+export const sceneMulti32: SceneConfig = {
+	...scene,
+	rails: clone(scene.rails),
+	id: 'multi-32',
+	view: {
+		layout: 'grid',
+		splits: [...scene.view!.splits].map((v) => ({ ...v }))
+	}
+}
+
+sceneMulti32.view!.splits = [...sceneMulti32.view!.splits, ...sceneMulti32.view!.splits].toSorted(
+	() => r() - 0.25
+)
+
+scene.view!.splits = [...scene.view!.splits].slice(0, 7).map((v) => ({ ...v }))
 
 scene.view.splits[6].cols = 3
 scene.view.splits[0].rows = 2
