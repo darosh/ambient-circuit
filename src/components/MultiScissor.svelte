@@ -29,6 +29,7 @@
 	} from '../lib/components/multi-view/multi-view'
 	import { resolveBloom } from '../lib/components/multi-view/tsl'
 	import { hudBloom } from '../lib/components/config'
+	import { pause } from '../lib/helpers/pause'
 
 	type OC = import('three/addons/controls/OrbitControls.js').OrbitControls
 	type MarbleOrVec = number | [number, number, number] | null
@@ -108,6 +109,8 @@
 	let _atlasTarget: RenderTarget | null = null
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let _atlasTexNode: any = null
+	// Per-split compile ready flags — split renders as soon as its cam compiles
+	let _splitReady: boolean[] = []
 
 	let _buildPending = false
 	function scheduleBuild(cams: ThreePerspectiveCamera[]) {
@@ -196,6 +199,23 @@
 
 		postProcessing.outputNode = composed
 		postProcessing.needsUpdate = true
+
+		// Per-split async compile: each split becomes ready as soon as its camera's
+		// materials are compiled. Splits with different view frustums see different
+		// objects → each camera compiles its own subset of scene materials.
+		// Progressive rendering shows splits as they become ready instead of waiting
+		// for all N cameras to finish (avoids N×compile_time total stall).
+		_splitReady = Array.from({ length: _cams.length }, () => false)
+		const r = renderer as unknown as WebGPURenderer
+
+		(async () => {
+			for (const [i, _cam] of _cams.entries()) {
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				await (r as any).compileAsync(scene, _cam)
+				await pause(0)
+				_splitReady[i] = true
+			}
+		})()
 	}
 
 	// ── Viewport rects ─────────────────────────────────────────────────────────
@@ -286,7 +306,8 @@
 				const pw = Math.max(1, Math.round(_lastSize.w * _lastSize.dpr))
 				const ph = Math.max(1, Math.round(_lastSize.h * _lastSize.dpr))
 				_atlasTarget.setSize(pw, ph)
-				postProcessing.needsUpdate = true
+				// No needsUpdate — atlas texture node is shared by reference, resize
+				// doesn't change the TSL graph structure so no recompile needed
 			}
 
 			for (let i = 0; i < n; i++) {
@@ -335,17 +356,17 @@
 				}
 			}
 
-			// ── Render all splits into atlas via viewport/scissor ────────────
-			if (_atlasTarget) {
+			// ── Render ready splits into atlas via viewport/scissor ─────────
+			if (_atlasTarget && _splitReady.length > 0) {
 				const r = renderer as unknown as WebGPURenderer
 
 				r.setRenderTarget(_atlasTarget)
 				r.setScissorTest(false)
-				// Clear full atlas once to black before rendering splits
 				r.clear()
 				r.autoClear = false
 
 				for (let i = 0; i < n; i++) {
+					if (!_splitReady[i]) continue
 					const cam = cameras[i]
 					if (!cam) continue
 
