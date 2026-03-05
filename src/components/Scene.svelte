@@ -413,7 +413,7 @@
 		}
 
 		// Show scene after 2 frames (render transforms + marble positions computed)
-		if (!sceneReady && ++warmupFrames >= (2 + (scene?.view?.splits?.length ?? 0 ))) sceneReady = true
+		if (!sceneReady && ++warmupFrames >= 2) sceneReady = true
 
 		if (audioInitialized || noAudioScene) {
 			// prevent big jump on play start

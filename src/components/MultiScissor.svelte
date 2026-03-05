@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useThrelte, useTask, createSceneContext, createCameraContext } from '@threlte/core'
-	import { OrbitControls } from '@threlte/extras'
+	import { OrbitControls as OCClass } from 'three/addons/controls/OrbitControls.js'
 	import { onMount, untrack } from 'svelte'
 	import type { Snippet } from 'svelte'
 	import {
@@ -29,12 +29,9 @@
 	} from '../lib/components/multi-view/multi-view'
 	import { resolveBloom } from '../lib/components/multi-view/tsl'
 	import { hudBloom } from '../lib/components/config'
-	import { pause } from '../lib/helpers/pause'
 
 	type OC = import('three/addons/controls/OrbitControls.js').OrbitControls
 	type MarbleOrVec = number | [number, number, number] | null
-	type CamRef = ThreePerspectiveCamera | undefined
-	type OCRef = OC | undefined
 
 	let {
 		config,
@@ -64,79 +61,41 @@
 		sceneCtx.view = { splits: splitStates }
 	})
 
-	/* eslint-disable @typescript-eslint/no-explicit-any */
-	let cameras = $state<CamRef[]>(untrack(() => config.splits.map((): any => void 0)))
-	let orbitControls = $state<OCRef[]>(untrack(() => config.splits.map((): any => void 0)))
-	/* eslint-enable @typescript-eslint/no-explicit-any */
+	// Single camera used for all rendering
+	const renderCam = untrack(() => new ThreePerspectiveCamera(config.splits[0]?.fov ?? 30, 1, 0.1, 1000))
+	renderCam.position.set(5, 7, 9)
+
+	// Per-split proxy cameras — used only by OrbitControls, never rendered
+	const ocCams: ThreePerspectiveCamera[] = untrack(() =>
+		config.splits.map(() => {
+			const cam = new ThreePerspectiveCamera(30, 1, 0.1, 1000)
+			cam.position.set(5, 7, 9)
+			return cam
+		})
+	)
+	const orbitControls: OC[] = []
 
 	let activeSplitIndex = $state(-1)
-
-	// Track OC user interaction via start/end events
-	$effect(() => {
-		const ocs = orbitControls
-		const cleanups: (() => void)[] = []
-		for (const [i, oc] of ocs.entries()) {
-			if (!oc) continue
-			const cs = camStates[i]
-			let to: number
-			const onStart = () => {
-				cs.isDragging = true
-				clearTimeout(to)
-			}
-			const onEnd = () => {
-				to = <number>(<unknown>setTimeout(() => {
-					cs.isDraggingEnd = DRAGGING_COOLDOWN
-					cs.isDragging = false
-				}, DRAGGING_DELAY))
-			}
-			oc.addEventListener('start', onStart)
-			oc.addEventListener('end', onEnd)
-			cleanups.push(() => {
-				oc.removeEventListener('start', onStart)
-				oc.removeEventListener('end', onEnd)
-			})
-		}
-		return () => {
-			for (const fn of cleanups) fn()
-		}
-	})
+	let nextSplitIndex = $state(-1)
 
 	// ── Atlas render target ────────────────────────────────────────────────────
-	// All splits rendered into one atlas texture via viewport/scissor per camera.
-	// This keeps the TSL pipeline to a single texture sampler regardless of split count,
-	// avoiding WebGPU's 16-sampler-per-stage limit.
 
 	let _atlasTarget: RenderTarget | null = null
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let _atlasTexNode: any = null
-	// Per-split compile ready flags — split renders as soon as its cam compiles
 	let _splitReady: boolean[] = []
 
 	let _buildPending = false
-	function scheduleBuild(cams: ThreePerspectiveCamera[]) {
+	function scheduleBuild() {
 		if (_buildPending) return
 		_buildPending = true
 		queueMicrotask(() => {
 			_buildPending = false
-			buildPipeline(cams)
+			buildPipeline()
 		})
 	}
 
-	$effect(() => {
-		const cams = cameras
-		if (cams.some((c) => !c)) return
-		if (children) {
-			return untrack(() =>
-				hudCamera.subscribe((hudCam) => {
-					if (!hudCam) return
-					scheduleBuild(cams as ThreePerspectiveCamera[])
-				})
-			)
-		}
-		untrack(() => scheduleBuild(cams as ThreePerspectiveCamera[]))
-	})
-
-	function buildPipeline(_cams: ThreePerspectiveCamera[]) {
+	function buildPipeline() {
 		const n = config?.splits?.length ?? 0
 		if (!n) return
 
@@ -167,13 +126,11 @@
 		} else {
 			_atlasTarget = new RenderTarget(pw, ph, { samples: 0, type: HalfFloatType })
 		}
-		// Recreate tex node after (re)build so it references current texture
 		_atlasTexNode = texture(_atlasTarget.texture)
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		let composed: any = _atlasTexNode //.sample(screenUV)
+		let composed: any = _atlasTexNode
 
-		// Global bloom — use first split's bloom config or scene defaults
 		const firstBloom = config.splits.find((s) => s.bloom)?.bloom ?? true
 		const bloomCfg = resolveBloom(firstBloom ?? !!config.bloomDefaults, config.bloomDefaults)
 		if (bloomCfg) {
@@ -200,21 +157,16 @@
 		postProcessing.outputNode = composed
 		postProcessing.needsUpdate = true
 
-		// Per-split async compile: each split becomes ready as soon as its camera's
-		// materials are compiled. Splits with different view frustums see different
-		// objects → each camera compiles its own subset of scene materials.
-		// Progressive rendering shows splits as they become ready instead of waiting
-		// for all N cameras to finish (avoids N×compile_time total stall).
-		_splitReady = Array.from({ length: _cams.length }, () => false)
+		// Compile once — set all splits ready together
+		_splitReady = Array.from({ length: n }, () => false)
 		const r = renderer as unknown as WebGPURenderer
+		_splitReady.fill(false)
 
-		(async () => {
-			for (const [i, _cam] of _cams.entries()) {
-				// eslint-disable-next-line @typescript-eslint/no-explicit-any
-				await (r as any).compileAsync(scene, _cam)
-				await pause(0)
-				_splitReady[i] = true
-			}
+		;(async () => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			await (r as any).compileAsync(scene, renderCam)
+			// await pause(0)
+			_splitReady.fill(true)
 		})()
 	}
 
@@ -236,6 +188,8 @@
 		r.setViewport(0, 0, size.current.width, size.current.height)
 	}
 
+	let _orbitPending = false
+
 	function onPointerMove(e: PointerEvent) {
 		const canvas = (renderer as unknown as { domElement: HTMLCanvasElement }).domElement
 		const rect = canvas.getBoundingClientRect()
@@ -243,7 +197,16 @@
 		const py = e.clientY - rect.top
 		for (const [i, r] of _rects.entries()) {
 			if (px >= r.x && px < r.x + r.width && py >= r.y && py < r.y + r.height) {
-				activeSplitIndex = i
+				if (_orbitPending) {
+					nextSplitIndex = i
+				} else {
+					nextSplitIndex = -1
+					if (activeSplitIndex > -1) {
+						orbitControls[activeSplitIndex].enabled = false
+					}
+					activeSplitIndex = i
+					orbitControls[activeSplitIndex].enabled = true
+				}
 				break
 			}
 		}
@@ -256,10 +219,60 @@
 		canvas.addEventListener('pointermove', onPointerMove)
 		canvas.addEventListener('pointerdown', onPointerMove)
 
-		return () => {
+		// Create one OC per split, each bound to its proxy camera
+		for (const [i, cam] of ocCams.entries()) {
+			const oc = new OCClass(cam, canvas)
+			oc.enableDamping = false
+			// Only the active split's OC responds to pointer events
+			oc.enabled = activeSplitIndex === i
+			orbitControls.push(oc)
+
+			const cs = camStates[i]
+			let to: number
+			oc.addEventListener('start', () => {
+				_orbitPending = true
+				cs.isDragging = true
+				clearTimeout(to)
+			})
+			oc.addEventListener('end', () => {
+				_orbitPending = false
+				if (nextSplitIndex > -1 && nextSplitIndex !== activeSplitIndex) {
+					orbitControls[activeSplitIndex].enabled = false
+					if (nextSplitIndex > -1) {
+						orbitControls[nextSplitIndex].enabled = true
+						nextSplitIndex = -1
+					}
+				}
+
+				to = <number>(<unknown>setTimeout(() => {
+					cs.isDraggingEnd = DRAGGING_COOLDOWN
+
+					cs.isDragging = false
+				}, DRAGGING_DELAY))
+			})
+		}
+
+		// Trigger pipeline build (wait for HUD camera if needed)
+		if (children) {
+			const unsub = hudCamera.subscribe((hc) => {
+				if (hc) scheduleBuild()
+			})
+			return () => {
+				unsub()
+				cleanup()
+			}
+		} else {
+			scheduleBuild()
+		}
+
+		return cleanup
+
+		function cleanup() {
 			autoRender.set(before)
 			canvas.removeEventListener('pointermove', onPointerMove)
 			canvas.removeEventListener('pointerdown', onPointerMove)
+			for (const oc of orbitControls) oc.dispose()
+			orbitControls.length = 0
 			sceneCtx.view = undefined
 			resetViewport()
 			_atlasTarget?.dispose()
@@ -273,7 +286,6 @@
 	const _tmp = new Vector3()
 	const _desired = new Vector3()
 
-	// Pre-allocated resolve scratch (reused per split per frame)
 	const _resolveOut: ResolvedTarget = {
 		pos: new Vector3(),
 		tangent: new Vector3(),
@@ -306,14 +318,11 @@
 				const pw = Math.max(1, Math.round(_lastSize.w * _lastSize.dpr))
 				const ph = Math.max(1, Math.round(_lastSize.h * _lastSize.dpr))
 				_atlasTarget.setSize(pw, ph)
-				// No needsUpdate — atlas texture node is shared by reference, resize
-				// doesn't change the TSL graph structure so no recompile needed
 			}
 
 			for (let i = 0; i < n; i++) {
-				const cam = cameras[i]
-				if (!cam) continue
-
+				const ocCam = ocCams[i]
+				const oc = orbitControls[i]
 				const splitCfg: ViewSplitConfig = config.splits[i]
 				const state = splitStates[i]
 				const cs = camStates[i]
@@ -324,7 +333,6 @@
 
 				const alphaTgt = 1 - Math.exp(-state.smoothnessTarget * delta * 60)
 
-				// ── Target (look-at pivot) ───────────────────────────────────
 				const tgtVal = (
 					state.target == null ? (splitCfg.target ?? null) : state.target
 				) as MarbleOrVec
@@ -333,7 +341,6 @@
 					updateTargetLerp(lerpTargetPos[i], tgtResolved.pos, alphaTgt, cs.inited)
 				}
 
-				// ── Camera world position ────────────────────────────────────
 				const camVal = (
 					state.camera == null ? (splitCfg.camera ?? null) : state.camera
 				) as MarbleOrVec
@@ -344,14 +351,10 @@
 						_tmp.copy(camResolved.tangent).multiplyScalar(-splitCfg.tangentOffset)
 						_desired.add(_tmp)
 					}
-					updateCameraForSplit(cam.position, cs, state, lerpTargetPos[i], _desired, delta)
+					updateCameraForSplit(ocCam.position, cs, state, lerpTargetPos[i], _desired, delta)
 
-					if (
-						tgtResolved &&
-						orbitControls[i] &&
-						!isClose(lerpTargetPos[i], orbitControls[i]!.target)
-					) {
-						cam.lookAt(lerpTargetPos[i])
+					if (tgtResolved && oc && !isClose(lerpTargetPos[i], oc.target)) {
+						ocCam.lookAt(lerpTargetPos[i])
 					}
 				}
 			}
@@ -367,15 +370,18 @@
 
 				for (let i = 0; i < n; i++) {
 					if (!_splitReady[i]) continue
-					const cam = cameras[i]
-					if (!cam) continue
 
 					const rect = _rects[i]
+					const splitCfg = config.splits[i]
 
-					if (cam.aspect !== rect.aspect) {
-						cam.aspect = rect.aspect!
-						cam.updateProjectionMatrix()
+					// Apply split state to shared render camera
+					renderCam.fov = splitCfg.fov ?? 30
+					if (renderCam.aspect !== rect.aspect) {
+						renderCam.aspect = rect.aspect!
+						renderCam.updateProjectionMatrix()
 					}
+					renderCam.position.copy(ocCams[i].position)
+					renderCam.lookAt(lerpTargetPos[i])
 
 					r.setRenderTarget(_atlasTarget)
 					r.setScissorTest(true)
@@ -385,7 +391,7 @@
 					const rectDpr = _rectsDpr[i]
 					_atlasTarget.viewport.set(rectDpr.x, rectDpr.y, rectDpr.width, rectDpr.height)
 
-					r.render(scene, cam)
+					r.render(scene, renderCam)
 				}
 
 				r.setRenderTarget(null)
@@ -398,24 +404,6 @@
 		{ stage: renderStage, autoInvalidate: false }
 	)
 </script>
-
-{#each config.splits as splitCfg, i (i)}
-	<T.PerspectiveCamera
-		fov={splitCfg.fov ?? 30}
-		near={0.1}
-		far={1000}
-		position={[5, 7, 9]}
-		bind:ref={cameras[i]}
-	>
-		<OrbitControls
-			enableDamping={false}
-			enabled={activeSplitIndex === i}
-			autoRotate={splitCfg.autoRotate === true || typeof splitCfg.autoRotate === 'number'}
-			autoRotateSpeed={typeof splitCfg.autoRotate === 'number' ? splitCfg.autoRotate * 0.5 : 0.5}
-			bind:ref={orbitControls[i]}
-		/>
-	</T.PerspectiveCamera>
-{/each}
 
 <!-- HUD overlay scene (children render here via snippet) -->
 <T is={hudScene} attach={false}>
