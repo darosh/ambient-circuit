@@ -481,16 +481,16 @@
 	{#if showPoints}
 		{#each displayPoints as pt, ptIndex (ptIndex)}
 			<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
-				<T.SphereGeometry args={[0.04, 8, 8]} />
-				<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
+				<T.SphereGeometry args={[0.06, 8, 8]} />
+				<T.MeshBasicMaterial {color} />
 			</T.Mesh>
 		{/each}
 		{#each displaySplits as split, splitIndex (splitIndex)}
 			{#each split.branches as branch, branchIndex (branchIndex)}
 				{#each branch.points as pt, ptIndex (ptIndex)}
 					<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
-						<T.SphereGeometry args={[0.04, 8, 8]} />
-						<T.MeshBasicMaterial color={pt.round ? '#ffffff' : color} />
+						<T.SphereGeometry args={[0.06, 8, 8]} />
+						<T.MeshBasicMaterial {color} />
 					</T.Mesh>
 				{/each}
 			{/each}
