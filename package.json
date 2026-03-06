@@ -51,6 +51,7 @@
 		"build": "npm version patch --no-git-tag-version && vite build",
 		"format": "prettier --write .",
 		"lint": "eslint .",
+		"lint:fix": "eslint --fix .",
 		"check": "svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
 		"heap": "node scripts/heap-snapshot.js",

@@ -16,6 +16,8 @@ export type RailPointFull = {
 	p: Vec3
 	/** Beat index override. Default: previous + 1 */
 	beat?: number
+	/** Beat interpolation mode for the section ending at this point. Default: 'points' (linear by index) */
+	mode?: 'points' | 'curve'
 	/** Rounding at this point: 'to' (incoming curved), 'from' (outgoing curved), 'both'. Default: none */
 	round?: Rounding
 	/** Tangent handle scale for Bezier control points. Default: 0.39 */

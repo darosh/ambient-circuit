@@ -132,7 +132,7 @@ scene.rails!.push(
 						type: 'arrow',
 						point: i === 19 ? 'backward' : 0,
 						kind: i === 19 ? 'tri' : 'ring',
-						beat: expandPathString(d).length - 1,
+						beat: i === last ? 12 : expandPathString(d).length - 1,
 						align: i === 19 ? 'back' : 'tip'
 					}
 				]
@@ -141,7 +141,7 @@ scene.rails!.push(
 )
 
 scene.rails[last + first]!.color = color4[1] // '#111111'
-scene.rails[last + first]!.rail.nodes[0] += '12'
+scene.rails[last + first]!.rail.nodes[0] += ' 12c'
 
 // scene.rails.push(<RailData>{
 // 	color: c(),

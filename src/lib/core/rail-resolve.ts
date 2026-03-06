@@ -12,6 +12,7 @@ import {
 } from './rail'
 import { isVec3, isSplit, isPointFull, isPathString } from './rail'
 import { expandPathString } from './rail-path'
+import { buildSegmentCurve } from './rail-curve'
 import { Vector3, Matrix4 } from 'three/webgpu'
 
 function flattenNodes(nodes: RailDef): Array<Exclude<RailNode, string>> {
@@ -35,14 +36,17 @@ function flattenNodes(nodes: RailDef): Array<Exclude<RailNode, string>> {
 	return out
 }
 
-function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { endBeat: number } {
+export function resolveNodes(
+	nodes: RailDef,
+	startBeat: number
+): ResolvedSegment & { endBeat: number } {
 	const nodes_ = flattenNodes(nodes)
 	// If any RailPointFull has an explicit beat, treat RailPointFull without
 	// beat as geometric-only (no auto-increment, beat interpolated later).
 	const hasExplicitBeats = nodes_.some((n) => isPointFull(n) && n.beat !== undefined)
 
 	const points: ResolvedPoint[] = []
-	const anchors: number[] = []
+	const anchors: Array<{ idx: number; mode: 'points' | 'curve' }> = []
 	const splits: ResolvedSplit[] = []
 	let beat = startBeat
 
@@ -52,7 +56,7 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 				points.push({ p: node, beat: Number.NaN, round: null, tangent: 0.39 })
 			} else {
 				points.push({ p: node, beat, round: null, tangent: 0.39 })
-				anchors.push(points.length - 1)
+				anchors.push({ idx: points.length - 1, mode: 'points' })
 				beat++
 			}
 		} else if (isVec3Curve(node)) {
@@ -70,14 +74,14 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 					round: <Rounding>(<unknown>node[3]),
 					tangent: node[4] ?? 0.39
 				})
-				anchors.push(points.length - 1)
+				anchors.push({ idx: points.length - 1, mode: 'points' })
 				beat++
 			}
 		} else if (isPointFull(node)) {
 			if (node.beat !== undefined) {
 				beat = node.beat
 				points.push({ p: node.p, beat, round: node.round ?? null, tangent: node.tangent ?? 0.39 })
-				anchors.push(points.length - 1)
+				anchors.push({ idx: points.length - 1, mode: node.mode ?? 'points' })
 				beat++
 			} else if (hasExplicitBeats) {
 				// Geometric-only: placeholder, will be interpolated
@@ -89,7 +93,7 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 				})
 			} else {
 				points.push({ p: node.p, beat, round: node.round ?? null, tangent: node.tangent ?? 0.39 })
-				anchors.push(points.length - 1)
+				anchors.push({ idx: points.length - 1, mode: 'points' })
 				beat++
 			}
 		} else if (isSplit(node)) {
@@ -99,7 +103,7 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 
 			// Add split point to main rail
 			points.push({ p: node.split.p, beat: splitBeat, round: null, tangent: 0.39 })
-			anchors.push(points.length - 1)
+			anchors.push({ idx: points.length - 1, mode: 'points' })
 
 			const resolvedBranches: ResolvedSegment[] = []
 			for (const branch of node.split.branches) {
@@ -121,23 +125,56 @@ function resolveNodes(nodes: RailDef, startBeat: number): ResolvedSegment & { en
 	// Interpolate beats for geometric-only points
 	if (hasExplicitBeats && anchors.length > 0) {
 		// Before first anchor: interpolate from startBeat
-		const firstAnchorIdx = anchors[0]
+		const firstAnchor = anchors[0]
+		const firstAnchorIdx = firstAnchor.idx
 		const firstAnchorBeat = points[firstAnchorIdx].beat
-		for (let i = 0; i < firstAnchorIdx; i++) {
-			points[i].beat = startBeat + ((firstAnchorBeat - startBeat) * i) / firstAnchorIdx
+		if (firstAnchor.mode === 'curve' && firstAnchorIdx > 1) {
+			const cumLen: number[] = [0]
+			for (let j = 0; j < firstAnchorIdx; j++) {
+				const curve = buildSegmentCurve(points, j)
+				const segLen = curve
+					? curve.getLength()
+					: new Vector3(...points[j].p).distanceTo(new Vector3(...points[j + 1].p))
+				cumLen.push(cumLen.at(-1) + segLen)
+			}
+			const totalLen = cumLen.at(-1)
+			for (let i = 0; i < firstAnchorIdx; i++) {
+				points[i].beat = startBeat + ((firstAnchorBeat - startBeat) * cumLen[i]) / totalLen
+			}
+		} else {
+			for (let i = 0; i < firstAnchorIdx; i++) {
+				points[i].beat = startBeat + ((firstAnchorBeat - startBeat) * i) / firstAnchorIdx
+			}
 		}
-		// Between consecutive anchors: linear interpolation
+		// Between consecutive anchors
 		for (let a = 0; a < anchors.length - 1; a++) {
-			const si = anchors[a]
-			const ei = anchors[a + 1]
+			const si = anchors[a].idx
+			const ei = anchors[a + 1].idx
 			const sb = points[si].beat
-			const eb = points[ei].beat
-			for (let i = si + 1; i < ei; i++) {
-				points[i].beat = sb + ((eb - sb) * (i - si)) / (ei - si)
+			const endAnchorMode = anchors[a + 1].mode
+			if (endAnchorMode === 'curve') {
+				// Arc-length interpolation: build cumulative lengths for segments si..ei-1
+				const cumLen: number[] = [0]
+				for (let j = si; j < ei; j++) {
+					const curve = buildSegmentCurve(points, j)
+					const segLen = curve
+						? curve.getLength()
+						: new Vector3(...points[j].p).distanceTo(new Vector3(...points[j + 1].p))
+					cumLen.push(cumLen.at(-1) + segLen)
+				}
+				const totalLen = cumLen.at(-1)
+				for (let i = si + 1; i < ei; i++) {
+					points[i].beat = sb + ((points[ei].beat - sb) * cumLen[i - si]) / totalLen
+				}
+			} else {
+				// Linear by index (original behaviour)
+				for (let i = si + 1; i < ei; i++) {
+					points[i].beat = sb + ((points[ei].beat - sb) * (i - si)) / (ei - si)
+				}
 			}
 		}
 		// After last anchor: continue incrementing by 1
-		const last = anchors.at(-1)!
+		const last = anchors.at(-1).idx
 		for (let i = last + 1; i < points.length; i++) {
 			points[i].beat = points[last].beat + (i - last)
 		}

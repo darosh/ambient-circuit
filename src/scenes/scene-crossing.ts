@@ -1,6 +1,8 @@
 import type { SceneConfig } from '../lib/core/scene'
 import { colors } from './utils/colors'
 import { triggerHandler } from '../lib/core/trigger-handler'
+import { roundedRect } from '../lib/core/rail-primitives'
+import { railToString } from '../lib/core/rail-path'
 
 let ci = 0
 const c = () => colors[ci++ % colors.length]
@@ -22,6 +24,22 @@ export const scene: SceneConfig = {
 			rail: {
 				id: 'eight-no-cross',
 				nodes: [[0, 0, -3], 'ir or ol ilu0.01 il ol or ird0.01 ']
+			},
+			color: c()
+		},
+		{
+			rail: {
+				id: 'rect-beats',
+				offset: [-3, 0, 2],
+				nodes: [railToString(roundedRect()) + ' 8']
+			},
+			color: c()
+		},
+		{
+			rail: {
+				id: 'rect-curve',
+				offset: [3, 0, 2],
+				nodes: [railToString(roundedRect()) + ' 8c']
 			},
 			color: c()
 		}

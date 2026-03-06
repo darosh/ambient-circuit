@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { expandPathString, railToString } from '../src/lib/core/rail-path'
+import { resolveRail } from '../src/lib/core/rail-resolve'
+import { roundedRect } from '../src/lib/core/rail-primitives'
+import { Rail } from '../src/lib/core/rail'
 
 describe('expandPathString', () => {
 	it('space-delimited tokens emit points', () => {
@@ -242,5 +245,56 @@ describe('railToString', () => {
 		const points = expandPathString('r 7.5 u')
 		const str = railToString(points)
 		expect(str).toBe('r 7.5 u')
+	})
+
+	it('curve mode beat roundtrip', () => {
+		const points = expandPathString('r 8c u')
+		const str = railToString(points)
+		expect(str).toBe('r 8c u')
+	})
+})
+
+describe('beat interpolation mode', () => {
+	it('expandPathString: c suffix sets mode curve', () => {
+		const pts = expandPathString('r u 8c l')
+		expect(pts[1]).toMatchObject({ beat: 8, mode: 'curve' })
+	})
+
+	it('expandPathString: plain number has no mode', () => {
+		const pts = expandPathString('r u 8 l')
+		expect((pts[1] as { mode?: string }).mode).toBeUndefined()
+	})
+
+	it('points mode: uniform beat distribution', () => {
+		// roundedRect has 9 points (indices 0-8); single anchor at index 8 beat 8
+		const rail = <Rail>{ id: 'r', nodes: [railToString(roundedRect()) + ' 8'] }
+		const res = resolveRail(rail)
+		for (let i = 0; i < res.points.length; i++) expect(res.points[i].beat).toBeCloseTo(i)
+	})
+
+	it('curve mode: arc-length beat distribution', () => {
+		const rail = <Rail>{ id: 'r', nodes: [railToString(roundedRect()) + ' 8c'] }
+		const res = resolveRail(rail)
+		// roundedRect corners are shorter than straight sides, so corner points
+		// (odd indices, round:'from') should get beats less than their index
+		for (let i = 1; i < res.points.length - 1; i += 2) {
+			expect(res.points[i].beat).toBeLessThan(i)
+		}
+		// straight-side midpoints (even indices 2,4,6) land at their index (symmetric rect)
+		expect(res.points[0].beat).toBeCloseTo(0)
+		expect(res.points[2].beat).toBeCloseTo(2)
+		expect(res.points[4].beat).toBeCloseTo(4)
+		expect(res.points[6].beat).toBeCloseTo(6)
+		expect(res.points[8].beat).toBeCloseTo(8)
+	})
+
+	it('curve mode: beats differ from points mode', () => {
+		const railP = <Rail>{ id: 'p', nodes: [railToString(roundedRect()) + ' 8'] }
+		const railC = <Rail>{ id: 'c', nodes: [railToString(roundedRect()) + ' 8c'] }
+		const resP = resolveRail(railP)
+		const resC = resolveRail(railC)
+		// at least one intermediate point must differ
+		const differs = resP.points.some((pt, i) => Math.abs(pt.beat - resC.points[i].beat) > 0.01)
+		expect(differs).toBe(true)
 	})
 })

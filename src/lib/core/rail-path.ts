@@ -23,15 +23,22 @@ export function expandPathString(
 	for (const token of str.trim().split(/\s+/)) {
 		if (!token) continue
 
-		// Standalone number = beat for previous point
-		if (/^-?(?:\d+(?:\.\d+)?|\.\d+)$/.test(token)) {
+		// Standalone number (with optional 'c' suffix) = beat for previous point
+		const beatMatch = token.match(/^(-?(?:\d+(?:\.\d+)?|\.\d+))(c?)$/)
+		if (beatMatch) {
 			if (result.length > 0) {
-				const beat = Number.parseFloat(token)
+				const beat = Number.parseFloat(beatMatch[1])
+				const curveMode = beatMatch[2] === 'c'
 				const last = result.at(-1)
 				if (Array.isArray(last)) {
-					result[result.length - 1] = { p: last as Vec3, beat }
+					result[result.length - 1] = {
+						p: last as Vec3,
+						beat,
+						...(curveMode ? { mode: 'curve' as const } : {})
+					}
 				} else {
 					;(last as RailPointFull).beat = beat
+					if (curveMode) (last as RailPointFull).mode = 'curve'
 				}
 			}
 			continue
@@ -92,7 +99,12 @@ export function expandPathString(
 	return result
 }
 
-const fmtNum = (n: number) => n.toFixed(2).replace('.00', '').replace(/^0./, '.')
+const fmtNum = (n: number) =>
+	n
+		.toFixed(2)
+		.replace('.00', '')
+		.replace(/^0./, '.')
+		.replace(/(\.\d)0$/, '$1')
 
 export function railToString(
 	points: Array<Vec3 | RailPointFull>,
@@ -137,7 +149,8 @@ export function railToString(
 
 		if (!Array.isArray(point)) {
 			const full = point as RailPointFull
-			if (full.beat !== undefined) tokens.push(fmtNum(full.beat))
+			if (full.beat !== undefined)
+				tokens.push(fmtNum(full.beat) + (full.mode === 'curve' ? 'c' : ''))
 		}
 	}
 

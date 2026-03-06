@@ -204,7 +204,9 @@ describe('svgRail', () => {
 	})
 
 	it('coordinates match (XZ plane, scale 10)', () => {
-		const nodes = svgRail('M 25,70 V 20 H 67 C 80,20 80,40 67,40 H 35 v 30')
+		const nodes = svgRail('M 25,70 V 20 H 67 C 80,20 80,40 67,40 H 35 v 30', {
+			pos: { x: 0, y: 0, z: 0 }
+		})
 		const positions = nodes.map((n) => (Array.isArray(n) ? n : (n as RailPointFull).p))
 		expect(positions[0]).toEqual([2.5, 0, 7]) // M 25,70
 		expect(positions[1]).toEqual([2.5, 0, 2]) // V 20
