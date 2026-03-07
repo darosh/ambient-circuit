@@ -171,10 +171,11 @@
 	const THROTTLE_DURATION = SPIN_DURATION + 0.05
 	const SPIN = Math.PI
 	const HOVER_INTENSITY = 0.3
-	const IDLE_TIMEOUT = 6 // seconds before fade
+	const IDLE_TIMEOUT = 3 // seconds before fade
 	const FADE_DURATION = 0.4 // seconds for fade in/out
 
-	let idleTimer = 0
+	let idleTimer = $state(0)
+	let prevCursor = true
 	let controlsOpacity = $state(1)
 	let targetOpacity = 1
 
@@ -871,6 +872,19 @@
 		if (splitRects.length !== n)
 			splitRects = view.splits.map(() => ({ x: 0, y: 0, width: 0, height: 0 }))
 		updateRects(view.layout, view.splits, w, h, 1, splitRects, _splitRectsLast)
+	})
+
+	$effect(() => {
+		if (pinHud) {
+			return
+		}
+
+		const cursor = idleTimer < IDLE_TIMEOUT
+
+		if (cursor !== prevCursor) {
+			prevCursor = cursor
+			globalThis.document.querySelector('canvas')!.style.cursor = cursor ? 'default' : 'none'
+		}
 	})
 </script>
 
