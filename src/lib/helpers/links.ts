@@ -75,7 +75,7 @@ export function getMarbleSignalLinks(
 		const genNode = nodes.find((n) => n.chain === me.audio && n.isGenerator)
 		if (!genNode) continue
 
-		const currentRailId: string = me.marble.runtime.railId ?? me.marble.config.resolvedRail.id
+		const currentRailId: string = me.marble.runtime.railId ?? me.marble.resolved.resolvedRail.id
 		const railIdx = rails.findIndex((r) => r.id === currentRailId)
 		const railData = rails[railIdx]
 
@@ -96,7 +96,8 @@ export function getMarbleSignalLinks(
 			from: pos.toArray() as [number, number, number],
 			to: [wx, wy, wz],
 			signal: me.marble.midiSignal,
-			color: me.marble.runtime.color ?? me.marble.config.color ?? rails[railIdx].color ?? '#ffffff'
+			color:
+				me.marble.runtime.color ?? me.marble.resolved.color ?? rails[railIdx].color ?? '#ffffff'
 		})
 	}
 	return links

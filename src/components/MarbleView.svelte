@@ -106,10 +106,10 @@
 		}
 	})
 
-	const type = $derived(marble.runtime.type ?? marble.config.type ?? 'ball')
-	const sides = $derived(marble.runtime.sides ?? marble.config.sides ?? 6)
-	const rounds = $derived(marble.runtime.rounds ?? marble.config.rounds ?? 3)
-	const angle = $derived(marble.runtime.angle ?? marble.config.angle ?? 60)
+	const type = $derived(marble.runtime.type ?? marble.resolved.type ?? 'ball')
+	const sides = $derived(marble.runtime.sides ?? marble.resolved.sides ?? 6)
+	const rounds = $derived(marble.runtime.rounds ?? marble.resolved.rounds ?? 3)
+	const angle = $derived(marble.runtime.angle ?? marble.resolved.angle ?? 60)
 
 	// Create memoized geometry based on type
 	const geometry = $derived.by(() => {

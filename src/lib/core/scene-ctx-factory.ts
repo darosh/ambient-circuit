@@ -1,4 +1,4 @@
-import type { MarbleInstance, MarbleConfig } from './marble'
+import type { MarbleInstance, ResolvedMarble } from './marble'
 import type { RailConfig } from './rail-config'
 import { toRailShapeConfig } from './rail-config'
 import type { TempoState } from './tempo'
@@ -22,22 +22,22 @@ export function createSceneCtx(
 ): SceneCtx {
 	// Snapshot initial marble configs for rewind
 	const initialSnapshot = {
-		configs: marbles.map((m) => ({ ...m.config }) as MarbleConfig),
+		configs: marbles.map((m) => ({ ...m.resolved }) as ResolvedMarble),
 		railIndices: [...marbleRailIndices],
 		originalIds: marbles.map((m) => m.id)
 	}
 
 	// Deferred creation queue (shared with RailState instances)
-	const pendingCreations: { railId: string; data: import('./rail-config').MarbleInputConfig }[] = []
+	const pendingCreations: { railId: string; data: import('./rail-config').MarbleConfig }[] = []
 
 	// Build marble entities with pre-created State wrappers
 	const marbleVisRefs = marbles.map(() => ({ value: true }))
-	const marbleActRefs = marbles.map((m) => ({ value: m.config.active ?? true }))
+	const marbleActRefs = marbles.map((m) => ({ value: m.resolved.active ?? true }))
 
 	const marbleEntities: MarbleEntity[] = marbles.map((m, i) => {
 		// Init runtime.running from config
-		if (m.runtime.running === undefined && m.config.running !== undefined) {
-			m.runtime.running = m.config.running
+		if (m.runtime.running === undefined && m.resolved.running !== undefined) {
+			m.runtime.running = m.resolved.running
 		}
 		return {
 			id: m.id,
@@ -87,7 +87,7 @@ export function createSceneCtx(
 		}
 
 		// Find resolved rail from marble configs, or resolve it if not found
-		let resolvedRail = marbles.find((m) => m.config.resolvedRail.id === rd.id)?.config
+		let resolvedRail = marbles.find((m) => m.resolved.resolvedRail.id === rd.id)?.resolved
 			.resolvedRail
 
 		// If no marble uses this rail, resolve it now
@@ -157,7 +157,7 @@ export function createSceneCtx(
  */
 export function addMarbleEntity(ctx: SceneCtx, marble: MarbleInstance): MarbleEntity {
 	const visRef = { value: true }
-	const actRef = { value: marble.config.active ?? true }
+	const actRef = { value: marble.resolved.active ?? true }
 	const entity: MarbleEntity = {
 		id: marble.id,
 		marble,

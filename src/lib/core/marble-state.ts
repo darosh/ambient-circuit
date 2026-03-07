@@ -14,7 +14,7 @@ export class MarbleState {
 
 	// Speed (runtime override or config default)
 	get speed(): number {
-		return this.marble.runtime.speed ?? this.marble.config.speed ?? 1
+		return this.marble.runtime.speed ?? this.marble.resolved.speed ?? 1
 	}
 	set speed(value: number) {
 		this.marble.runtime.speed = value
@@ -59,7 +59,7 @@ export class MarbleState {
 
 	// Note (runtime override or config default)
 	get note(): number | undefined {
-		return this.marble.runtime.note ?? this.marble.config.note
+		return this.marble.runtime.note ?? this.marble.resolved.note
 	}
 	set note(value: number | undefined) {
 		this.marble.runtime.note = value
@@ -81,7 +81,7 @@ export class MarbleState {
 
 	// Rail switching (deferred to end of update)
 	get railId(): string {
-		return this.marble.runtime.railId ?? this.marble.config.resolvedRail.id
+		return this.marble.runtime.railId ?? this.marble.resolved.resolvedRail.id
 	}
 	set railId(value: string) {
 		if (value === this.railId) return // no-op if same rail
@@ -95,28 +95,28 @@ export class MarbleState {
 
 	// Visual properties (runtime overrides)
 	get type() {
-		return this.marble.runtime.type ?? this.marble.config.type ?? 'ball'
+		return this.marble.runtime.type ?? this.marble.resolved.type ?? 'ball'
 	}
 	set type(value: import('./marble').MarbleType) {
 		this.marble.runtime.type = value
 	}
 
 	get sides() {
-		return this.marble.runtime.sides ?? this.marble.config.sides ?? 6
+		return this.marble.runtime.sides ?? this.marble.resolved.sides ?? 6
 	}
 	set sides(value: number) {
 		this.marble.runtime.sides = value
 	}
 
 	get angle() {
-		return this.marble.runtime.angle ?? this.marble.config.angle ?? 60
+		return this.marble.runtime.angle ?? this.marble.resolved.angle ?? 60
 	}
 	set angle(value: number) {
 		this.marble.runtime.angle = value
 	}
 
 	get rounds() {
-		return this.marble.runtime.rounds ?? this.marble.config.rounds ?? 3
+		return this.marble.runtime.rounds ?? this.marble.resolved.rounds ?? 3
 	}
 	set rounds(value: number) {
 		this.marble.runtime.rounds = value
@@ -130,7 +130,7 @@ export class MarbleState {
 	}
 
 	get easing(): import('./marble').EasingMode {
-		return this.marble.runtime.easing ?? this.marble.config.easing
+		return this.marble.runtime.easing ?? this.marble.resolved.easing
 	}
 	set easing(value: import('./marble').EasingMode) {
 		this.marble.runtime.easing = value
@@ -155,7 +155,7 @@ export class MarbleState {
 	}
 
 	get running(): boolean {
-		return this.marble.runtime.running ?? this.marble.config.running ?? true
+		return this.marble.runtime.running ?? this.marble.resolved.running ?? true
 	}
 	set running(v: boolean) {
 		this.marble.runtime.running = v

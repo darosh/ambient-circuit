@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createMarbleInstance, type MarbleConfig } from '../src/lib/core/marble'
+import { createMarbleInstance, type ResolvedMarble } from '../src/lib/core/marble'
 import { MarbleState } from '../src/lib/core/marble-state'
 import { updateMarble } from '../src/lib/core/marble-system'
 import { resolveRail } from '../src/lib/core/rail-resolve'
@@ -42,7 +42,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 
 	it('direction reversal prevents immediate re-trigger', () => {
 		const rail = createTestRail()
-		const config: MarbleConfig = {
+		const config: ResolvedMarble = {
 			resolvedRail: rail,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -54,9 +54,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 		const instruments: InstrumentConfig[] = [{ type: 'sun', beat: 4 }]
-		const railData: RailConfig[] = [
-			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
-		]
+		const railData: RailConfig[] = [{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 
 		const triggerHandler: TriggerHandler = vi.fn((ctx) => {
@@ -89,7 +87,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 
 	it('beat jumping maintains state consistency', () => {
 		const rail = createTestRail()
-		const config: MarbleConfig = {
+		const config: ResolvedMarble = {
 			resolvedRail: rail,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -104,9 +102,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			{ type: 'sun', beat: 2 },
 			{ type: 'sun', beat: 6 }
 		]
-		const railData: RailConfig[] = [
-			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
-		]
+		const railData: RailConfig[] = [{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 
 		const triggerHandler: TriggerHandler = vi.fn((ctx) => {
@@ -145,7 +141,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 
 	it('speed changes apply on next update', () => {
 		const rail = createTestRail()
-		const config: MarbleConfig = {
+		const config: ResolvedMarble = {
 			resolvedRail: rail,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -157,9 +153,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 		const instruments: InstrumentConfig[] = [{ type: 'sun', beat: 2 }]
-		const railData: RailConfig[] = [
-			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
-		]
+		const railData: RailConfig[] = [{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 
 		const triggerHandler: TriggerHandler = vi.fn((ctx) => {
@@ -187,7 +181,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 
 	it('note changes are reflected in state', () => {
 		const rail = createTestRail()
-		const config: MarbleConfig = {
+		const config: ResolvedMarble = {
 			resolvedRail: rail,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -203,7 +197,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		state.note = 72 // C5
 		expect(state.note).toBe(72)
 		expect(marble.runtime.note).toBe(72)
-		expect(marble.config.note).toBe(60) // config unchanged
+		expect(marble.resolved.note).toBe(60) // config unchanged
 
 		state.note = undefined
 		expect(state.note).toBe(60)
@@ -211,7 +205,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 
 	it('multiple instruments trigger in sequence', () => {
 		const rail = createTestRail()
-		const config: MarbleConfig = {
+		const config: ResolvedMarble = {
 			resolvedRail: rail,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -227,9 +221,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			{ type: 'sun', beat: 4 },
 			{ type: 'sun', beat: 6 }
 		]
-		const railData: RailConfig[] = [
-			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
-		]
+		const railData: RailConfig[] = [{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 
 		const triggers: number[] = []
@@ -247,7 +239,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 
 	it('looping mode with direction reversal works correctly', () => {
 		const rail = createTestRail()
-		const config: MarbleConfig = {
+		const config: ResolvedMarble = {
 			resolvedRail: rail,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -259,9 +251,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 		const instruments: InstrumentConfig[] = [{ type: 'sun', beat: 4 }]
-		const railData: RailConfig[] = [
-			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
-		]
+		const railData: RailConfig[] = [{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 
 		let reverseCount = 0
@@ -296,7 +286,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 
 	it('beat jump triggers instrument at target', () => {
 		const rail = createTestRail()
-		const config: MarbleConfig = {
+		const config: ResolvedMarble = {
 			resolvedRail: rail,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -311,9 +301,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			{ type: 'sun', beat: 2 },
 			{ type: 'sun', beat: 6 }
 		]
-		const railData: RailConfig[] = [
-			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
-		]
+		const railData: RailConfig[] = [{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 
 		const triggeredBeats: number[] = []

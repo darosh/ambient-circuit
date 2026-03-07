@@ -18,7 +18,7 @@ export type EasingMode =
 
 export type MarbleType = 'ball' | 'poly' | 'coil' | 'eater'
 
-export interface MarbleConfig {
+export interface ResolvedMarble {
 	resolvedRail: ResolvedRail
 	startBeat: number
 	direction: MarbleDirection
@@ -74,7 +74,7 @@ export interface MarbleRuntime {
 export interface MarbleInstance {
 	id: number // stable ID (survives array mutations)
 	index: number
-	config: MarbleConfig
+	resolved: ResolvedMarble
 	runtime: MarbleRuntime
 	currentBeat: number // float for sub-beat positioning
 	previousBeat: number // previous beat to detect crossings
@@ -96,11 +96,11 @@ export function resetMarbleIdCounter(): void {
 	_nextId = 0
 }
 
-export function createMarbleInstance(config: MarbleConfig, index = 0): MarbleInstance {
+export function createMarbleInstance(config: ResolvedMarble, index = 0): MarbleInstance {
 	return {
 		id: _nextId++,
 		index,
-		config,
+		resolved: config,
 		runtime: {
 			color: config.color
 		},

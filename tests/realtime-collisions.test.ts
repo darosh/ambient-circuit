@@ -85,7 +85,7 @@ describe('realtime collisions — marble order preservation', () => {
 				beat: m.currentBeat,
 				normBeat: ((((m.currentBeat - minBeat) % range) + range) % range).toFixed(3),
 				dir: m.direction,
-				speed: (m.runtime.speed ?? m.config.speed ?? 1).toFixed(2)
+				speed: (m.runtime.speed ?? m.resolved.speed ?? 1).toFixed(2)
 			}))
 		}
 

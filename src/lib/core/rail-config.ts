@@ -6,7 +6,7 @@ import type { SceneCtx } from './scene-ctx'
 import type { TempoState } from './tempo'
 import type { Matrix4, Vector3 } from 'three/webgpu'
 
-export type MarbleInputBase = {
+export type MarbleBase = {
 	audio?: AudioChainConfig
 	direction?: MarbleDirection
 	mode?: MarbleSequenceMode
@@ -23,26 +23,26 @@ export type MarbleInputBase = {
 	running?: boolean
 }
 
-type BallMarbleInput = MarbleInputBase & {
+type BallMarble = MarbleBase & {
 	type?: 'ball'
 }
 
-type PolyMarbleInput = MarbleInputBase & {
+type PolyMarble = MarbleBase & {
 	type: 'poly'
 	sides: number
 }
 
-type CoilMarbleInput = MarbleInputBase & {
+type CoilMarble = MarbleBase & {
 	type: 'coil'
 	rounds: number
 }
 
-export type EaterMarbleInput = MarbleInputBase & {
+export type EaterMarble = MarbleBase & {
 	type: 'eater'
 	angle: number
 }
 
-export type MarbleInputConfig = BallMarbleInput | PolyMarbleInput | CoilMarbleInput | EaterMarbleInput
+export type MarbleConfig = BallMarble | PolyMarble | CoilMarble | EaterMarble
 
 export type RailRuntime = {
 	color?: string
@@ -68,7 +68,7 @@ export type RailConfig = {
 	transform?: Matrix4 | ((v: Vector3) => Vector3)
 	// Presentation + sequencing
 	color: string
-	marbles?: MarbleInputConfig[] | false
+	marbles?: MarbleConfig[] | false
 	instruments?: InstrumentConfig[]
 	runtime?: RailRuntime
 	visible?: false

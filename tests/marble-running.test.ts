@@ -60,7 +60,12 @@ describe('marble running: false in config', () => {
 
 describe('rail running: false', () => {
 	it('marble on rail with running:false stays at startBeat', () => {
-		const rd: RailConfig = { id: 'r', nodes: [[0, 0, 0], 'r r r r r'], color: '#fff', running: false }
+		const rd: RailConfig = {
+			id: 'r',
+			nodes: [[0, 0, 0], 'r r r r r'],
+			color: '#fff',
+			running: false
+		}
 		const marble = createMarbleInstance({
 			resolvedRail,
 			startBeat: 0,

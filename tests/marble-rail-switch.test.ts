@@ -94,7 +94,7 @@ describe('Rail Switching API', () => {
 		)
 
 		// Verify initial state
-		expect(marble.config.resolvedRail.id).toBe('rail-1')
+		expect(marble.resolved.resolvedRail.id).toBe('rail-1')
 		expect(marble.currentBeat).toBe(2)
 		expect(marble.runtime.railId).toBeUndefined()
 
@@ -108,7 +108,7 @@ describe('Rail Switching API', () => {
 		updateMarble(marble, tempo, [], 'rail-1', 0, undefined, sceneCtx)
 
 		// Verify switch applied
-		expect(marble.config.resolvedRail.id).toBe('rail-2')
+		expect(marble.resolved.resolvedRail.id).toBe('rail-2')
 		expect(marble.runtime.railId).toBe('rail-2')
 		expect(marble.currentBeat).toBe(0) // reset to minBeat of rail2
 		expect(marble.branchIndex).toBeNull() // branch reset
@@ -146,7 +146,7 @@ describe('Rail Switching API', () => {
 
 		// Verify warning and no change
 		expect(warnSpy).toHaveBeenCalledWith('[rail-switch] Rail "nonexistent" not found')
-		expect(marble.config.resolvedRail.id).toBe('rail-1')
+		expect(marble.resolved.resolvedRail.id).toBe('rail-1')
 		expect(marble.runtime.railId).toBeUndefined()
 
 		warnSpy.mockRestore()
@@ -205,13 +205,13 @@ describe('Rail Switching API', () => {
 
 		// Verify identity preserved
 		expect(marble.direction).toBe('backward')
-		expect(marble.config.sequenceMode).toBe('ping-pong')
+		expect(marble.resolved.sequenceMode).toBe('ping-pong')
 		expect(marble.runtime.speed).toBe(2)
 		expect(marble.runtime.note).toBe(72)
 		expect(marble.runtime.color).toBe('#ff00ff')
 		expect(marble.runtime.easing).toBe('easeOutBounce')
-		expect(marble.config.type).toBe('poly')
-		expect(marble.config.sides).toBe(8)
+		expect(marble.resolved.type).toBe('poly')
+		expect(marble.resolved.sides).toBe(8)
 
 		// Verify rail-specific state reset
 		expect(marble.currentBeat).toBe(0)
@@ -264,12 +264,14 @@ describe('Rail Switching API', () => {
 
 		const railDataList: RailConfig[] = [
 			{
-				id: rail1.id, nodes: [],
+				id: rail1.id,
+				nodes: [],
 				color: '#ff0000',
 				instruments: [{ type: 'sun', beat: 1 }]
 			},
 			{
-				id: rail2.id, nodes: [],
+				id: rail2.id,
+				nodes: [],
 				color: '#00ff00',
 				instruments: [{ type: 'heart', beat: 1 }]
 			}
@@ -292,7 +294,7 @@ describe('Rail Switching API', () => {
 		updateMarble(marble, tempo, [], 'rail-1', 0, triggerHandler, sceneCtx)
 
 		// Verify on rail2
-		expect(marble.config.resolvedRail.id).toBe('rail-2')
+		expect(marble.resolved.resolvedRail.id).toBe('rail-2')
 
 		// Advance to beat 1 on rail2
 		advanceTempo(tempo, 1)
@@ -365,7 +367,7 @@ describe('Rail Switching API', () => {
 		updateMarble(marble, tempo, [], 'rail-1', 0, undefined, sceneCtx)
 
 		// Verify on rail3
-		expect(marble.config.resolvedRail.id).toBe('rail-3')
+		expect(marble.resolved.resolvedRail.id).toBe('rail-3')
 		expect(marble.runtime.railId).toBe('rail-3')
 	})
 
@@ -414,7 +416,7 @@ describe('Rail Switching API', () => {
 		updateMarble(marble, tempo, [], 'rail-1', 0, undefined, sceneCtx)
 
 		// Verify on rail2 at beat 2
-		expect(marble.config.resolvedRail.id).toBe('rail-2')
+		expect(marble.resolved.resolvedRail.id).toBe('rail-2')
 		expect(marble.currentBeat).toBe(2)
 	})
 })

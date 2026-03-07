@@ -127,7 +127,9 @@ export const scene: SceneConfig = {
 			color: c()
 		},
 		{
-			id: 'round-all', offset: [0, 0, -3], nodes: circle({ pos: { y: -0.5 } }),
+			id: 'round-all',
+			offset: [0, 0, -3],
+			nodes: circle({ pos: { y: -0.5 } }),
 			marbles: [{ type: 'poly' as const, sides: 3 }],
 			color: c(),
 			instruments: [
@@ -137,7 +139,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			id: 'round-rect', nodes: roundedRect({ pos: { x: 3.5 } }),
+			id: 'round-rect',
+			nodes: roundedRect({ pos: { x: 3.5 } }),
 			marbles: [{ type: 'poly' as const, sides: 6 }],
 			color: c(),
 			instruments: [
@@ -148,7 +151,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			id: 'coil', nodes: coil({ pos: { x: -3 }, lead: 1 }),
+			id: 'coil',
+			nodes: coil({ pos: { x: -3 }, lead: 1 }),
 			marbles: [{ type: 'coil' as const, rounds: 4, speed: 0.5 }],
 			color: c()
 		},

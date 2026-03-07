@@ -1,4 +1,4 @@
-import type { RailConfig, EaterMarbleInput } from '../core/rail-config'
+import type { RailConfig, EaterMarble } from '../core/rail-config'
 import { toRailShapeConfig } from '../core/rail-config'
 import type { MarbleInstance } from '../core/marble'
 import { createMarbleInstance } from '../core/marble'
@@ -74,7 +74,7 @@ export function createMarbleConfigs(
 						velocity: m.velocity,
 						duration: m.duration,
 						type: m.type,
-						angle: (<EaterMarbleInput>m)?.angle ?? 60,
+						angle: (<EaterMarble>m)?.angle ?? 60,
 						bouncer: m.bouncer ?? false,
 						snake: m.snake ?? false,
 						active: m.active,

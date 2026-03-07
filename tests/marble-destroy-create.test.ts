@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { createMarbleInstance, resetMarbleIdCounter, type MarbleConfig } from '../src/lib/core/marble'
+import {
+	createMarbleInstance,
+	resetMarbleIdCounter,
+	type ResolvedMarble
+} from '../src/lib/core/marble'
 import { MarbleState } from '../src/lib/core/marble-state'
 import { updateMarbles } from '../src/lib/core/marble-system'
 import { resolveRail } from '../src/lib/core/rail-resolve'
@@ -64,7 +68,7 @@ describe('Marble destroy/create', () => {
 		tempo.isPlaying = true
 	})
 
-	function makeConfig(overrides: Partial<MarbleConfig> = {}): MarbleConfig {
+	function makeConfig(overrides: Partial<ResolvedMarble> = {}): ResolvedMarble {
 		return {
 			resolvedRail: resolved,
 			startBeat: 0,
@@ -181,8 +185,8 @@ describe('Marble destroy/create', () => {
 
 		expect(mutations).not.toBeNull()
 		expect(mutations!.created).toHaveLength(1)
-		expect(mutations!.created[0].marble.config.direction).toBe('backward')
-		expect(mutations!.created[0].marble.config.note).toBe(72)
+		expect(mutations!.created[0].marble.resolved.direction).toBe('backward')
+		expect(mutations!.created[0].marble.resolved.note).toBe(72)
 		expect(mutations!.created[0].marble.runtime.created).toBe(true)
 		expect(mutations!.created[0].railIndex).toBe(0)
 	})
@@ -210,7 +214,7 @@ describe('Marble destroy/create', () => {
 			true
 		)
 
-		expect(mutations!.created[0].marble.config.startBeat).toBe(2)
+		expect(mutations!.created[0].marble.resolved.startBeat).toBe(2)
 		expect(mutations!.created[0].marble.currentBeat).toBe(2)
 	})
 

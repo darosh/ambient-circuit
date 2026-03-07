@@ -1,4 +1,4 @@
-import type { MarbleInstance, MarbleConfig, MarbleType } from './marble'
+import type { MarbleInstance, ResolvedMarble, MarbleType } from './marble'
 import { createMarbleInstance } from './marble'
 import type { TempoState } from './tempo'
 import type { InstrumentConfig } from './instrument'
@@ -160,7 +160,7 @@ export function fireGlobalBeatDestroy(
  * Get current path points based on marble's branch state.
  */
 function getCurrentPathPoints(marble: MarbleInstance): ResolvedPoint[] {
-	const rail = marble.config.resolvedRail
+	const rail = marble.resolved.resolvedRail
 
 	// If on a branch, return: main points up to split + split point + branch points
 	if (marble.branchIndex !== null && rail.splits.length > 0) {
@@ -252,7 +252,7 @@ function calculateMarblePosition(
 		}
 	}
 
-	if (marble.config.snake) {
+	if (marble.resolved.snake) {
 		const phase_x = 2 * Math.PI * (marble.currentBeat * SNAKE_FREQUENCY + 0.25)
 		const phase_y = 2 * Math.PI * (marble.currentBeat * SNAKE_FREQUENCY)
 		const phase_r = 2 * Math.PI * (marble.currentBeat * SNAKE_FREQUENCY + 0.25)
@@ -270,9 +270,9 @@ function calculateMarblePosition(
 		marble.position.z += marble.up.z * offsetY
 
 		// Recompute tangent to follow spiral path
-		if (typeof marble.config.snake === 'number') {
+		if (typeof marble.resolved.snake === 'number') {
 			const derivY = (smootherstep((Math.sin(phase_r) + 1) / 2, 0, 1) - 0.5) * 2
-			const snake = marble.config.snake
+			const snake = marble.resolved.snake
 			const sx = marble.tangent.x + marble.up.x * derivY * snake
 			const sy = marble.tangent.y + marble.up.y * derivY * snake
 			const sz = marble.tangent.z + marble.up.z * derivY * snake
@@ -325,7 +325,7 @@ function checkMarbleCollisions(
 	wrapThreshold: number = 5 // Skip collision if beat delta > threshold (indicates wrap)
 ): void {
 	if (bouncerOnlyMode) {
-		marbles = marbles.filter((m) => m.config.bouncer)
+		marbles = marbles.filter((m) => m.resolved.bouncer)
 	}
 
 	// Check all pairs of marbles
@@ -347,12 +347,12 @@ function checkMarbleCollisions(
 		for (let j = i + 1; j < marbles.length; j++) {
 			const m2 = marbles[j]
 			// Check if on same rail
-			const rail1 = m1.runtime.railId ?? m1.config.resolvedRail.id
-			const rail2 = m2.runtime.railId ?? m2.config.resolvedRail.id
+			const rail1 = m1.runtime.railId ?? m1.resolved.resolvedRail.id
+			const rail2 = m2.runtime.railId ?? m2.resolved.resolvedRail.id
 			if (rail1 !== rail2) continue
 
 			// Skip if NEITHER is a bouncer (unless bouncerOnlyMode assumes all are)
-			if (!m1.config.bouncer && !m2.config.bouncer) continue
+			if (!m1.resolved.bouncer && !m2.resolved.bouncer) continue
 
 			// Skip if recently collided
 			if (
@@ -378,15 +378,15 @@ function checkMarbleCollisions(
 
 				// Check if either marble is non-running — bouncer starts it
 				const rail1Running =
-					sceneCtx?.railById.get(m1.runtime.railId ?? m1.config.resolvedRail.id)?.railData.runtime
+					sceneCtx?.railById.get(m1.runtime.railId ?? m1.resolved.resolvedRail.id)?.railData.runtime
 						?.running ?? true
 				const rail2Running =
-					sceneCtx?.railById.get(m2.runtime.railId ?? m2.config.resolvedRail.id)?.railData.runtime
+					sceneCtx?.railById.get(m2.runtime.railId ?? m2.resolved.resolvedRail.id)?.railData.runtime
 						?.running ?? true
-				const m1Running = (m1.runtime.running ?? m1.config.running ?? true) && rail1Running
-				const m2Running = (m2.runtime.running ?? m2.config.running ?? true) && rail2Running
+				const m1Running = (m1.runtime.running ?? m1.resolved.running ?? true) && rail1Running
+				const m2Running = (m2.runtime.running ?? m2.resolved.running ?? true) && rail2Running
 
-				if (!m1Running && m2.config.bouncer) {
+				if (!m1Running && m2.resolved.bouncer) {
 					m1.runtime.running = true
 					m1.direction = m2.direction === 'forward' ? 'backward' : 'forward'
 					m1.runtime.lastCollisionTime = globalBeat
@@ -397,7 +397,7 @@ function checkMarbleCollisions(
 					continue
 				}
 
-				if (!m2Running && m1.config.bouncer) {
+				if (!m2Running && m1.resolved.bouncer) {
 					m2.runtime.running = true
 					m2.direction = m1.direction === 'forward' ? 'backward' : 'forward'
 					m2.runtime.lastCollisionTime = globalBeat
@@ -498,16 +498,16 @@ function preventBouncerCrossovers(marbles: MarbleInstance[]): void {
 	for (let i = 0; i < marbles.length; i++) {
 		const m1 = marbles[i]
 		if (m1.runtime.destroyed) continue
-		if (!m1.config.bouncer) continue
+		if (!m1.resolved.bouncer) continue
 
 		for (let j = i + 1; j < marbles.length; j++) {
 			const m2 = marbles[j]
 			if (m2.runtime.destroyed) continue
-			if (!m2.config.bouncer) continue
+			if (!m2.resolved.bouncer) continue
 
 			// Same rail + branch check
-			const rail1 = m1.runtime.railId ?? m1.config.resolvedRail.id
-			const rail2 = m2.runtime.railId ?? m2.config.resolvedRail.id
+			const rail1 = m1.runtime.railId ?? m1.resolved.resolvedRail.id
+			const rail2 = m2.runtime.railId ?? m2.resolved.resolvedRail.id
 			if (rail1 !== rail2) continue
 			if (m1.branchIndex !== m2.branchIndex) continue
 
@@ -705,9 +705,9 @@ function checkInstrumentTriggers(
  * Mutates in-place. Does NOT reset user-set overrides (speed, note, color, easing, visible).
  */
 export function rewindMarble(marble: MarbleInstance, globalBeat: number): void {
-	const speed = marble.runtime.speed ?? marble.config.speed ?? 1
+	const speed = marble.runtime.speed ?? marble.resolved.speed ?? 1
 	const rawBeat =
-		marble.config.startBeat +
+		marble.resolved.startBeat +
 		(marble.direction === 'forward' ? globalBeat * speed : -globalBeat * speed)
 
 	marble.runtime.lastTriggeredBeat = undefined
@@ -729,8 +729,8 @@ export function rewindMarble(marble: MarbleInstance, globalBeat: number): void {
  * Full reset of marble to snapshot config. Reuses object identity (preserves id).
  * Clears ALL runtime overrides — returns marble to initial state.
  */
-export function resetMarbleToConfig(marble: MarbleInstance, config: MarbleConfig): void {
-	marble.config = config
+export function resetMarbleToConfig(marble: MarbleInstance, config: ResolvedMarble): void {
+	marble.resolved = config
 	marble.runtime = { color: config.color }
 	if (config.running !== undefined) marble.runtime.running = config.running
 	marble.currentBeat = config.startBeat
@@ -756,9 +756,9 @@ export function updateMarble(
 	triggerHandler?: TriggerHandler,
 	sceneCtx?: SceneCtx
 ): void {
-	const { resolvedRail, sequenceMode, startBeat } = marble.config
-	const speed = marble.runtime.speed ?? marble.config.speed ?? 1
-	const easing = marble.runtime.easing ?? marble.config.easing
+	const { resolvedRail, sequenceMode, startBeat } = marble.resolved
+	const speed = marble.runtime.speed ?? marble.resolved.speed ?? 1
+	const easing = marble.runtime.easing ?? marble.resolved.easing
 
 	// Calculate delta from last update
 	const globalBeat = tempo.currentBeat + tempo.beatProgress
@@ -767,7 +767,7 @@ export function updateMarble(
 
 	// Check running state (rail overrides marble)
 	const railRunning = sceneCtx?.railById.get(railId)?.railData.runtime?.running ?? true
-	const marbleRunning = marble.runtime.running ?? marble.config.running ?? true
+	const marbleRunning = marble.runtime.running ?? marble.resolved.running ?? true
 	const isRunning = railRunning && marbleRunning
 
 	if (!isRunning) {
@@ -1012,7 +1012,7 @@ export function updateMarble(
 			const targetRail = sceneCtx.railById.get(targetRailId)
 			if (targetRail) {
 				// Perform switch
-				marble.config.resolvedRail = targetRail.resolvedRail
+				marble.resolved.resolvedRail = targetRail.resolvedRail
 				marble.runtime.railId = targetRailId
 				marble.runtime.railIndex = targetRail.index
 
@@ -1061,8 +1061,8 @@ export type MarbleMutations = {
 
 export function initMarblePositions(marbles: MarbleInstance[]): void {
 	for (const marble of marbles) {
-		const pts = marble.config.resolvedRail.points
-		calculateMarblePosition(marble, marble.currentBeat, pts, marble.config.easing || 'linear')
+		const pts = marble.resolved.resolvedRail.points
+		calculateMarblePosition(marble, marble.currentBeat, pts, marble.resolved.easing || 'linear')
 	}
 }
 
@@ -1135,7 +1135,7 @@ export function updateMarbles(
 			/* eslint-disable @typescript-eslint/no-explicit-any */
 			const d = req.data as any
 			/* eslint-enable @typescript-eslint/no-explicit-any */
-			const config: MarbleConfig = {
+			const config: ResolvedMarble = {
 				resolvedRail: resolved,
 				startBeat: d.start ?? resolved.points[0]?.beat ?? 0,
 				direction: d.direction ?? 'forward',

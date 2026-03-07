@@ -14,18 +14,44 @@ const FILES = [
 	'src/lib/core/marble.ts',
 	'src/lib/core/instrument.ts',
 	'src/lib/core/rail-data.ts',
-	'src/lib/audio/types.ts',
+	'src/lib/audio/types.ts'
 ]
 
 // Types to render as subgraphs — order controls top-down layout
 const TRACKED = [
 	'SceneConfig',
-	'RailData', 'RailRuntime', 'MarbleDataBase', 'MarbleData', 'Instrument', 'InstrumentBase', 'InstrumentRuntime',
-	'ViewConfig', 'ViewSplitConfig', 'BloomConfig',
-	'TriggerContext', 'TriggerHandler', 'BounceContext', 'BounceHandler', 'GlobalBeatContext', 'GlobalBeatHandler', 'InstrumentTriggerContext',
-	'SceneCtx', 'MarbleEntity', 'InstrumentEntity', 'RailEntity', 'ViewState', 'ViewSplitState',
-	'Marble', 'MarbleConfig', 'MarbleRuntime',
-	'AudioChainConfig', 'NodeConfig', 'AudioChain', 'BusConfig', 'MasterConfig', 'ChordInfo',
+	'RailData',
+	'RailRuntime',
+	'MarbleDataBase',
+	'MarbleData',
+	'Instrument',
+	'InstrumentBase',
+	'InstrumentRuntime',
+	'ViewConfig',
+	'ViewSplitConfig',
+	'BloomConfig',
+	'TriggerContext',
+	'TriggerHandler',
+	'BounceContext',
+	'BounceHandler',
+	'GlobalBeatContext',
+	'GlobalBeatHandler',
+	'InstrumentTriggerContext',
+	'SceneCtx',
+	'MarbleEntity',
+	'InstrumentEntity',
+	'RailEntity',
+	'ViewState',
+	'ViewSplitState',
+	'Marble',
+	'MarbleConfig',
+	'MarbleRuntime',
+	'AudioChainConfig',
+	'NodeConfig',
+	'AudioChain',
+	'BusConfig',
+	'MasterConfig',
+	'ChordInfo'
 ]
 const TRACKED_SET = new Set(TRACKED)
 
@@ -52,9 +78,12 @@ function flattenBraces(s: string): string {
 	let result = ''
 	let depth = 0
 	for (const c of s) {
-		if (c === '{') { depth++; if (depth === 1) result += '{...}' }
-		else if (c === '}') { depth-- }
-		else if (depth === 0) result += c
+		if (c === '{') {
+			depth++
+			if (depth === 1) result += '{...}'
+		} else if (c === '}') {
+			depth--
+		} else if (depth === 0) result += c
 	}
 	return result
 }
@@ -64,14 +93,18 @@ function parseTypesFromFile(src: string): TypeDef[] {
 
 	// Match: (export )? (type|interface) Name (extends X)? (= body | body)
 	// Also handles intersection: type X = A & { ... }
-	const declRe = /(?:export\s+)?(?:type|interface)\s+(\w+)(?:\s+extends\s+([\w,\s]+?))?\s*(?:[^=\n{]*=\s*(?:[\w<>[\],\s|&]+&\s*)?\{|\{)/g
+	const declRe =
+		/(?:export\s+)?(?:type|interface)\s+(\w+)(?:\s+extends\s+([\w,\s]+?))?\s*(?:[^=\n{]*=\s*(?:[\w<>[\],\s|&]+&\s*)?\{|\{)/g
 	let m: RegExpExecArray | null
 	while ((m = declRe.exec(src)) !== null) {
 		const name = m[1]
 		if (!TRACKED_SET.has(name)) continue
 		const extendsStr = m[2]
 		const extendsTypes = extendsStr
-			? extendsStr.split(',').map(s => s.trim()).filter(s => TRACKED_SET.has(s))
+			? extendsStr
+					.split(',')
+					.map((s) => s.trim())
+					.filter((s) => TRACKED_SET.has(s))
 			: undefined
 
 		// Find opening brace of body (last `{` in the match or right after)
@@ -86,12 +119,22 @@ function parseTypesFromFile(src: string): TypeDef[] {
 	while ((m = unionRe.exec(src)) !== null) {
 		const name = m[1]
 		if (!TRACKED_SET.has(name)) continue
-		if (results.some(t => t.name === name)) continue
+		if (results.some((t) => t.name === name)) continue
 		const rhs = m[2].trim()
 		if (rhs.startsWith('{') || rhs.startsWith('(')) continue // handled above
 		// Collect referenced tracked types from union/intersection
-		const refTypes = TRACKED.filter(t => t !== name && new RegExp(`\\b${t}\\b`).test(rhs))
-		results.push({ name, props: [{ name: '(union)', typeStr: rhs.length > 60 ? rhs.slice(0, 58) + '…' : rhs, optional: false }], extends: refTypes })
+		const refTypes = TRACKED.filter((t) => t !== name && new RegExp(`\\b${t}\\b`).test(rhs))
+		results.push({
+			name,
+			props: [
+				{
+					name: '(union)',
+					typeStr: rhs.length > 60 ? rhs.slice(0, 58) + '…' : rhs,
+					optional: false
+				}
+			],
+			extends: refTypes
+		})
 	}
 
 	// Handle function type aliases: type TriggerHandler = (ctx: TriggerContext) => void
@@ -99,13 +142,13 @@ function parseTypesFromFile(src: string): TypeDef[] {
 	while ((m = fnRe.exec(src)) !== null) {
 		const name = m[1]
 		if (!TRACKED_SET.has(name)) continue
-		if (results.some(t => t.name === name)) continue
+		if (results.some((t) => t.name === name)) continue
 		const param = m[2].trim()
 		// extract param: "ctx: TriggerContext" → prop
 		const pm = param.match(/(\w+)\s*:\s*(.+)/)
 		results.push({
 			name,
-			props: pm ? [{ name: pm[1], typeStr: pm[2].trim(), optional: false }] : [],
+			props: pm ? [{ name: pm[1], typeStr: pm[2].trim(), optional: false }] : []
 		})
 	}
 
@@ -148,7 +191,7 @@ function parseProps(body: string): PropDef[] {
 
 /** Find tracked types referenced inside a type string */
 function findRefs(typeStr: string, selfName: string): string[] {
-	return TRACKED.filter(t => t !== selfName && new RegExp(`\\b${t}\\b`).test(typeStr))
+	return TRACKED.filter((t) => t !== selfName && new RegExp(`\\b${t}\\b`).test(typeStr))
 }
 
 /** Shorten a type string for display */
@@ -167,7 +210,7 @@ function esc(s: string): string {
 // ---- Build diagram ----
 
 function buildFlowchart(allTypes: TypeDef[]): string {
-	const byName = new Map(allTypes.map(t => [t.name, t]))
+	const byName = new Map(allTypes.map((t) => [t.name, t]))
 	const lines: string[] = ['flowchart LR']
 
 	for (const name of TRACKED) {
@@ -207,7 +250,7 @@ function buildFlowchart(allTypes: TypeDef[]): string {
 		const type = byName.get(name)
 		if (!type) continue
 		for (const prop of type.props) {
-			const refs = findRefs(prop.typeStr, name).filter(r => byName.has(r))
+			const refs = findRefs(prop.typeStr, name).filter((r) => byName.has(r))
 			if (!refs.length) continue
 			const nodeId = `${name}__${prop.name.replace(/[^a-zA-Z0-9_]/g, '_')}`
 			for (const ref of refs) {
@@ -229,15 +272,18 @@ for (const rel of FILES) {
 
 // Deduplicate
 const seen = new Set<string>()
-const unique = allTypes.filter(t => {
+const unique = allTypes.filter((t) => {
 	if (seen.has(t.name)) return false
 	seen.add(t.name)
 	return true
 })
 
 const mermaid = buildFlowchart(unique)
-writeFileSync(resolve(ROOT, 'ARCHITECTURE.md'), `# Architecture\n\n\`\`\`mermaid\n${mermaid}\n\`\`\`\n`)
+writeFileSync(
+	resolve(ROOT, 'ARCHITECTURE.md'),
+	`# Architecture\n\n\`\`\`mermaid\n${mermaid}\n\`\`\`\n`
+)
 console.log(`Written ARCHITECTURE.md (${unique.length} types parsed)`)
-console.log('Parsed:', unique.map(t => t.name).join(', '))
-const missing = TRACKED.filter(t => !unique.some(u => u.name === t))
+console.log('Parsed:', unique.map((t) => t.name).join(', '))
+const missing = TRACKED.filter((t) => !unique.some((u) => u.name === t))
 if (missing.length) console.warn('Missing:', missing.join(', '))

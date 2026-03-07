@@ -141,10 +141,12 @@
 
 	// Pre-allocated, updated in-place on rail switch (no per-frame allocation)
 	const liveRailIndices: number[] = [...marbleRailIndices]
-	const instrumentsPerRail: InstrumentConfig[][] = liveRailIndices.map((i) => rails[i].instruments || [])
+	const instrumentsPerRail: InstrumentConfig[][] = liveRailIndices.map(
+		(i) => rails[i].instruments || []
+	)
 	const railIds: string[] = liveRailIndices.map((i) => rails[i].id)
 
-	const noBouncers = $derived(!marbles.some((m) => m.config.bouncer))
+	const noBouncers = $derived(!marbles.some((m) => m.resolved.bouncer))
 
 	// Init rail visibility (reset if length mismatch from scene change)
 	if (!railVisibility || railVisibility.length !== rails.length) {
@@ -436,7 +438,7 @@
 		// Update easing based on prop (respect runtime overrides)
 		for (const marble of marbles) {
 			if (!marble.runtime.easing) {
-				marble.config.easing = marble.config.easing || easing || 'linear'
+				marble.resolved.easing = marble.resolved.easing || easing || 'linear'
 			}
 		}
 
@@ -544,13 +546,13 @@
 {/each}
 
 {#each marbles as _m, idx (_m.id)}
-	{@const currentRailId = marbles[idx].runtime.railId ?? marbles[idx].config.resolvedRail.id}
+	{@const currentRailId = marbles[idx].runtime.railId ?? marbles[idx].resolved.resolvedRail.id}
 	{@const railIdx = rails.findIndex((r) => r.id === currentRailId)}
 	{@const railIndex = railIdx >= 0 ? railIdx : marbleRailIndices[idx]}
 	{#if railVisibility[railIndex]}
 		<MarbleView
 			bind:marble={marbles[idx]}
-			rail={marbles[idx].config.resolvedRail}
+			rail={marbles[idx].resolved.resolvedRail}
 			railData={rails[railIndex]}
 			color={rails[railIndex].color || '#ffffff'}
 			{wireframe}

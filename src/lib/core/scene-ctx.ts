@@ -1,7 +1,7 @@
-import type { MarbleInstance, MarbleConfig } from './marble'
+import type { MarbleInstance, ResolvedMarble } from './marble'
 import type { Vector3Tuple } from 'three/webgpu'
 import type { InstrumentConfig } from './instrument'
-import type { RailConfig, MarbleInputConfig } from './rail-config'
+import type { RailConfig, MarbleConfig } from './rail-config'
 import type { ResolvedRail } from './rail'
 import type { MarbleState } from './marble-state'
 import type { InstrumentState } from './instrument-state'
@@ -85,9 +85,9 @@ export type SceneCtx = {
 	view?: ViewState
 
 	// Deferred marble mutations
-	pendingCreations: { railId: string; data: MarbleInputConfig }[]
+	pendingCreations: { railId: string; data: MarbleConfig }[]
 	// Snapshot for rewind (restore initial state)
-	initialSnapshot: { configs: MarbleConfig[]; railIndices: number[]; originalIds: number[] }
+	initialSnapshot: { configs: ResolvedMarble[]; railIndices: number[]; originalIds: number[] }
 }
 
 /**
