@@ -43,6 +43,11 @@ Create a "marble-machine-inspired" music sequencer where:
   - visually: portals/rounded lenses around rails, like a lens in a laser beam's path
   - positioned at `Beat` positions
 - `AudioPaths`, `FX` — to be elaborated later; will serve as visualization of audio events and processing
+- **Naming convention**: `*Config` = authored immutable input, `*Instance` = live mutable engine object, `*Runtime` = mutable override state, `*State` = safe mutation API, `*Entity` = SceneCtx wrapper
+  - `RailConfig` (flat: shape + color + marbles + instruments), `RailShapeConfig` (geometry only)
+  - `MarbleInstance` (live marble), `MarbleConfig` (init params), `MarbleInputConfig` (scene definition)
+  - `InstrumentConfig` (authored), `InstrumentInstance` (live with runtime/signals)
+  - `toRailShapeConfig(rc)` extracts shape from flat RailConfig for `resolveRail()`
 - `AudioChain` — signal path: generator → fx → analyzer → output. Per-instrument by default, but named chains can be shared across instruments. Exposed via `ctx.instrument.audio` in handlers.
 - `AudioEngine` — two engines sharing one `AudioContext`:
   - **Tone.js**: instruments, fx, analyzers. Dynamic import: `const Tone = await import('tone')`
@@ -318,7 +323,8 @@ Create a "marble-machine-inspired" music sequencer where:
 /src/lib/core/scene-ctx.ts      - SceneCtx types (MarbleEntity/InstrumentEntity/RailEntity/ViewState/ViewSplitState)
 /src/lib/core/scene-ctx-factory.ts - createSceneCtx(), updateSceneCtx()
 /src/lib/core/trigger-handler.ts - default trigger/bounce handlers
-/src/lib/core/rail-data.ts      - Rail definitions with MIDI-enabled onTrigger handlers
+/src/lib/core/rail-config.ts     - RailConfig (flat: shape + presentation), MarbleInputConfig
+/src/lib/core/rail-data.ts      - Re-exports from rail-config.ts (deprecated aliases)
 /src/lib/helpers/easing.ts      - Easing functions (maath + custom)
 /src/lib/helpers/rail-geometry.ts - computeRailNamePosition, scalePoints, scaleSplits
 /src/lib/helpers/scene-init.ts   - createInstrumentSignals, assignInstrumentSignals, createMarbleConfigs

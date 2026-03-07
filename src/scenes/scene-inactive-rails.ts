@@ -31,11 +31,9 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	rails: [
 		{
-			rail: {
-				id: 'rail-5',
-				offset: [-3, 0, 2],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'rail-5',
+			offset: [-3, 0, 2],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			// running: false,
 			color: c(),
 			marbles: [{ type: 'ball', start: 0, running: false }],
@@ -47,11 +45,9 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'rail-4',
-				offset: [-3, 0, 1],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'rail-4',
+			offset: [-3, 0, 1],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'poly', sides: 4, start: 0, mode: 'ping-pong' }],
 			instruments: [
@@ -63,11 +59,9 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'rail-3',
-				offset: [-3, 0, 0],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'rail-3',
+			offset: [-3, 0, 0],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'coil', rounds: 2, start: 0 }],
 			instruments: [
@@ -78,11 +72,9 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'rail-2',
-				offset: [-3, 0, -1],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'rail-2',
+			offset: [-3, 0, -1],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0, speed: 2 }],
 			instruments: [
@@ -97,11 +89,9 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'rail-1',
-				offset: [-3, 0, -2],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'rail-1',
+			offset: [-3, 0, -2],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [

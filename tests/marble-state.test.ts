@@ -55,7 +55,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		tempo.isPlaying = true
 		const instruments: Instrument[] = [{ type: 'sun', beat: 4 }]
 		const railData: RailData[] = [
-			{ rail: { id: 'test-rail', nodes: [] }, color: '#ffffff', instruments }
+			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 
@@ -105,7 +105,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			{ type: 'sun', beat: 6 }
 		]
 		const railData: RailData[] = [
-			{ rail: { id: 'test-rail', nodes: [] }, color: '#ffffff', instruments }
+			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 
@@ -158,7 +158,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		tempo.isPlaying = true
 		const instruments: Instrument[] = [{ type: 'sun', beat: 2 }]
 		const railData: RailData[] = [
-			{ rail: { id: 'test-rail', nodes: [] }, color: '#ffffff', instruments }
+			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 
@@ -228,7 +228,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			{ type: 'sun', beat: 6 }
 		]
 		const railData: RailData[] = [
-			{ rail: { id: 'test-rail', nodes: [] }, color: '#ffffff', instruments }
+			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 
@@ -260,7 +260,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 		tempo.isPlaying = true
 		const instruments: Instrument[] = [{ type: 'sun', beat: 4 }]
 		const railData: RailData[] = [
-			{ rail: { id: 'test-rail', nodes: [] }, color: '#ffffff', instruments }
+			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 
@@ -312,7 +312,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			{ type: 'sun', beat: 6 }
 		]
 		const railData: RailData[] = [
-			{ rail: { id: 'test-rail', nodes: [] }, color: '#ffffff', instruments }
+			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
 

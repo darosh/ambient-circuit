@@ -56,17 +56,15 @@ export const scene: SceneConfig = {
 	},
 	rails: [
 		{
-			rail: {
-				id: 'x*1',
-				offset: [-1, -1, 0],
-				nodes: [
-					{ p: [0, 0, 0], round: 'both' },
-					{ p: [1, 0, 1], round: 'both' },
-					{ p: [2, 0, 0], round: 'both' },
-					{ p: [1, 0, -1], round: 'both' },
-					{ p: [0, 0, 0], round: 'both' }
-				]
-			},
+			id: 'x*1',
+			offset: [-1, -1, 0],
+			nodes: [
+				{ p: [0, 0, 0], round: 'both' },
+				{ p: [1, 0, 1], round: 'both' },
+				{ p: [2, 0, 0], round: 'both' },
+				{ p: [1, 0, -1], round: 'both' },
+				{ p: [0, 0, 0], round: 'both' }
+			],
 			instruments: [
 				{ beat: 2, type: 'star', sides: 7 },
 				{ beat: 2.5, type: 'star', sides: 7 }
@@ -82,32 +80,28 @@ export const scene: SceneConfig = {
 			}
 		},
 		{
-			rail: {
-				id: 'y*2',
-				offset: [-0.75, 0.5, 0],
-				nodes: [
-					{ p: [0, 0, 0], round: 'both' },
-					{ p: [0.5, 0, 0.5], round: 'both' },
-					{ p: [1, 0, 0], round: 'both' },
-					{ p: [0.5, 0, -0.5], round: 'both' },
-					{ p: [0, 0, 0], round: 'both' }
-				]
-			},
+			id: 'y*2',
+			offset: [-0.75, 0.5, 0],
+			nodes: [
+				{ p: [0, 0, 0], round: 'both' },
+				{ p: [0.5, 0, 0.5], round: 'both' },
+				{ p: [1, 0, 0], round: 'both' },
+				{ p: [0.5, 0, -0.5], round: 'both' },
+				{ p: [0, 0, 0], round: 'both' }
+			],
 			instruments: [{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, note: 60 - 12 }],
 			color: colors[1]
 		},
 		{
-			rail: {
-				id: 'x*4',
-				offset: [1.75, 0.5, 0],
-				nodes: [
-					{ p: [0, 0, 0], round: 'both' },
-					{ p: [0.5, 0, 0.5], round: 'both' },
-					{ p: [1, 0, 0], round: 'both' },
-					{ p: [0.5, 0, -0.5], round: 'both' },
-					{ p: [0, 0, 0], round: 'both', beat: 4 }
-				]
-			},
+			id: 'x*4',
+			offset: [1.75, 0.5, 0],
+			nodes: [
+				{ p: [0, 0, 0], round: 'both' },
+				{ p: [0.5, 0, 0.5], round: 'both' },
+				{ p: [1, 0, 0], round: 'both' },
+				{ p: [0.5, 0, -0.5], round: 'both' },
+				{ p: [0, 0, 0], round: 'both', beat: 4 }
+			],
 			instruments: [{ beat: 3, type: 'star', sides: 7 }],
 			marbles: [
 				{ start: 0, speed: 1 },
@@ -120,21 +114,19 @@ export const scene: SceneConfig = {
 			color: colors[0]
 		},
 		{
-			rail: {
-				id: 'y*3',
-				offset: [-1.25, 0, 0],
-				transform: (v: Vector3) => {
-					v.applyAxisAngle(new Vector3(0, 0, 1), MathUtils.DEG2RAD * -12.5)
-					return v
-				},
-				nodes: [
-					{ p: [0, 0, 0], round: 'both' },
-					{ p: [1.5, 0, 1.5], round: 'both' },
-					{ p: [3, 0, 0], round: 'both' },
-					{ p: [1.5, 0, -1.5], round: 'both' },
-					{ p: [0, 0, 0], round: 'both' }
-				]
+			id: 'y*3',
+			offset: [-1.25, 0, 0],
+			transform: (v: Vector3) => {
+				v.applyAxisAngle(new Vector3(0, 0, 1), MathUtils.DEG2RAD * -12.5)
+				return v
 			},
+			nodes: [
+				{ p: [0, 0, 0], round: 'both' },
+				{ p: [1.5, 0, 1.5], round: 'both' },
+				{ p: [3, 0, 0], round: 'both' },
+				{ p: [1.5, 0, -1.5], round: 'both' },
+				{ p: [0, 0, 0], round: 'both' }
+			],
 			render: (out) => {
 				const rotation = performance.now() * 0.001 * Math.PI * 0.125
 				out.makeRotationAxis(_axis_y, rotation)
@@ -146,17 +138,15 @@ export const scene: SceneConfig = {
 			color: colors[1]
 		},
 		{
-			rail: {
-				id: 'y*5',
-				offset: [-3.25, 0, 0],
-				nodes: [
-					{ p: [0, 0, 0], round: 'both' },
-					{ p: [3, 0, 3], round: 'both' },
-					{ p: [6, 0, 0], round: 'both' },
-					{ p: [3, 0, -3], round: 'both' },
-					{ p: [0, 0, 0], round: 'both' }
-				]
-			},
+			id: 'y*5',
+			offset: [-3.25, 0, 0],
+			nodes: [
+				{ p: [0, 0, 0], round: 'both' },
+				{ p: [3, 0, 3], round: 'both' },
+				{ p: [6, 0, 0], round: 'both' },
+				{ p: [3, 0, -3], round: 'both' },
+				{ p: [0, 0, 0], round: 'both' }
+			],
 			instruments: [
 				{ beat: 2.5, type: 'star', sides: 7 },
 				{ beat: 3.5, type: 'star', sides: 7 }
@@ -171,18 +161,16 @@ export const scene: SceneConfig = {
 			}
 		},
 		{
-			rail: {
-				id: 'x*6',
-				offset: [0, -2, -1],
-				transform: new Matrix4().makeRotationX(Math.PI / 4),
-				nodes: [
-					{ p: [0, 0, 0], round: 'both' },
-					{ p: [0, 2, 2], round: 'both' },
-					{ p: [0, 4, 0], round: 'both' },
-					{ p: [0, 2, -2], round: 'both' },
-					{ p: [0, 0, 0], round: 'both' }
-				]
-			},
+			id: 'x*6',
+			offset: [0, -2, -1],
+			transform: new Matrix4().makeRotationX(Math.PI / 4),
+			nodes: [
+				{ p: [0, 0, 0], round: 'both' },
+				{ p: [0, 2, 2], round: 'both' },
+				{ p: [0, 4, 0], round: 'both' },
+				{ p: [0, 2, -2], round: 'both' },
+				{ p: [0, 0, 0], round: 'both' }
+			],
 			instruments: [
 				{ beat: 2.5, type: 'star', sides: 7, audio: { id: 'synth' } },
 				{ beat: 3.5, type: 'star', sides: 7, audio: { id: 'synth' } }
@@ -199,17 +187,15 @@ export const scene: SceneConfig = {
 			color: colors[0]
 		},
 		{
-			rail: {
-				id: 'x*7',
-				offset: [-2, 1, 0],
-				nodes: [
-					{ p: [0, 0, 0], round: 'both' },
-					{ p: [2, 0, 2], round: 'both' },
-					{ p: [4, 0, 0], round: 'both' },
-					{ p: [2, 0, -2], round: 'both' },
-					{ p: [0, 0, 0], round: 'both' }
-				]
-			},
+			id: 'x*7',
+			offset: [-2, 1, 0],
+			nodes: [
+				{ p: [0, 0, 0], round: 'both' },
+				{ p: [2, 0, 2], round: 'both' },
+				{ p: [4, 0, 0], round: 'both' },
+				{ p: [2, 0, -2], round: 'both' },
+				{ p: [0, 0, 0], round: 'both' }
+			],
 			instruments: [
 				{ beat: 2.5, type: 'star', sides: 7 },
 				{ beat: 3.5, type: 'star', sides: 7 }
@@ -217,22 +203,20 @@ export const scene: SceneConfig = {
 			color: colors[0]
 		},
 		{
-			rail: {
-				id: 'y*8',
-				// offset: [-0.75, 3.5, 0],
-				transform: (v) => {
-					return v
-						.applyAxisAngle(new Vector3(1, 0, 0), MathUtils.DEG2RAD * -45)
-						.add(new Vector3(-0.5, 2.5, 0))
-				},
-				nodes: [
-					{ p: [0, 0, 0], round: 'both' },
-					{ p: [0.5, 0, 0.5], round: 'both' },
-					{ p: [1, 0, 0], round: 'both' },
-					{ p: [0.5, 0, -0.5], round: 'both' },
-					{ p: [0, 0, 0], round: 'both' }
-				]
+			id: 'y*8',
+			// offset: [-0.75, 3.5, 0],
+			transform: (v) => {
+				return v
+					.applyAxisAngle(new Vector3(1, 0, 0), MathUtils.DEG2RAD * -45)
+					.add(new Vector3(-0.5, 2.5, 0))
 			},
+			nodes: [
+				{ p: [0, 0, 0], round: 'both' },
+				{ p: [0.5, 0, 0.5], round: 'both' },
+				{ p: [1, 0, 0], round: 'both' },
+				{ p: [0.5, 0, -0.5], round: 'both' },
+				{ p: [0, 0, 0], round: 'both' }
+			],
 			instruments: [{ beat: 2, type: 'star', sides: 7, audio: { id: 'synth' }, note: 60 - 12 + 7 }],
 			color: colors[1],
 			render: (out) => {

@@ -285,9 +285,9 @@
 			{/if}
 		</Folder>
 		<Folder title="Rails" expanded={false}>
-			{#each activeScene.rails as { rail }, i (rail.id)}
+			{#each activeScene.rails as rc, i (rc.id)}
 				{#if i < railVisibility.length}
-					<Checkbox label={rail.id} bind:value={railVisibility[i]} />
+					<Checkbox label={rc.id} bind:value={railVisibility[i]} />
 				{/if}
 			{/each}
 		</Folder>

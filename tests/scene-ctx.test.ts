@@ -3,22 +3,21 @@ import { createSceneCtx, updateSceneCtx } from '../src/lib/core/scene-ctx-factor
 import { createMarble } from '../src/lib/core/marble'
 import { createTempoState } from '../src/lib/core/tempo'
 import { resolveRail } from '../src/lib/core/rail-resolve'
-import type { RailData } from '../src/lib/core/rail-data'
+import type { RailConfig } from '../src/lib/core/rail-config'
+import { toRailShapeConfig } from '../src/lib/core/rail-config'
 import type { SceneConfig } from '../src/lib/core/scene'
 
 describe('scene-ctx', () => {
 	it('createSceneCtx creates correct entity counts', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 
-		const rails: RailData[] = [
+		const rails: RailConfig[] = [
 			{
-				rail: {
-					id: 'rail1',
-					nodes: [
-						[0, 0, 0],
-						[1, 0, 0]
-					]
-				},
+				id: 'rail1',
+				nodes: [
+					[0, 0, 0],
+					[1, 0, 0]
+				],
 				color: '#ff0000',
 				instruments: [
 					{ beat: 0, sides: 3 },
@@ -26,20 +25,18 @@ describe('scene-ctx', () => {
 				]
 			},
 			{
-				rail: {
-					id: 'rail2',
-					nodes: [
-						[0, 0, 0],
-						[1, 0, 0]
-					]
-				},
+				id: 'rail2',
+				nodes: [
+					[0, 0, 0],
+					[1, 0, 0]
+				],
 				color: '#00ff00',
 				instruments: [{ beat: 0, sides: 5 }]
 			}
 		]
 
-		const resolvedRail1 = resolveRail(rails[0].rail)
-		const resolvedRail2 = resolveRail(rails[1].rail)
+		const resolvedRail1 = resolveRail(toRailShapeConfig(rails[0]))
+		const resolvedRail2 = resolveRail(toRailShapeConfig(rails[1]))
 
 		const marbles = [
 			createMarble({
@@ -88,21 +85,19 @@ describe('scene-ctx', () => {
 	it('entity State wrappers mutate underlying objects', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 
-		const rails: RailData[] = [
+		const rails: RailConfig[] = [
 			{
-				rail: {
-					id: 'rail1',
-					nodes: [
-						[0, 0, 0],
-						[1, 0, 0]
-					]
-				},
+				id: 'rail1',
+				nodes: [
+					[0, 0, 0],
+					[1, 0, 0]
+				],
 				color: '#ff0000',
 				instruments: [{ beat: 0, sides: 3 }]
 			}
 		]
 
-		const resolvedRail = resolveRail(rails[0].rail)
+		const resolvedRail = resolveRail(toRailShapeConfig(rails[0]))
 
 		const marbles = [
 			createMarble({
@@ -133,21 +128,19 @@ describe('scene-ctx', () => {
 	it('visibility/activity refs work with async mutations', async () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 
-		const rails: RailData[] = [
+		const rails: RailConfig[] = [
 			{
-				rail: {
-					id: 'rail1',
-					nodes: [
-						[0, 0, 0],
-						[1, 0, 0]
-					]
-				},
+				id: 'rail1',
+				nodes: [
+					[0, 0, 0],
+					[1, 0, 0]
+				],
 				color: '#ff0000',
 				instruments: [{ beat: 0, sides: 3 }]
 			}
 		]
 
-		const resolvedRail = resolveRail(rails[0].rail)
+		const resolvedRail = resolveRail(toRailShapeConfig(rails[0]))
 
 		const marbles = [
 			createMarble({
@@ -179,20 +172,18 @@ describe('scene-ctx', () => {
 	it('updateSceneCtx updates beat and play state', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 
-		const rails: RailData[] = [
+		const rails: RailConfig[] = [
 			{
-				rail: {
-					id: 'rail1',
-					nodes: [
-						[0, 0, 0],
-						[1, 0, 0]
-					]
-				},
+				id: 'rail1',
+				nodes: [
+					[0, 0, 0],
+					[1, 0, 0]
+				],
 				color: '#ff0000'
 			}
 		]
 
-		const resolvedRail = resolveRail(rails[0].rail)
+		const resolvedRail = resolveRail(toRailShapeConfig(rails[0]))
 
 		const marbles = [
 			createMarble({

@@ -17,11 +17,9 @@ export const scene: SceneConfig = {
 	rails: [
 		// Example 1: Reverse all marbles
 		{
-			rail: {
-				id: 'reverse-all',
-				offset: [-3, 0, 2],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'reverse-all',
+			offset: [-3, 0, 2],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [
@@ -45,11 +43,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 2: Target another marble
 		{
-			rail: {
-				id: 'speed-up&down-bottom',
-				offset: [-3, 0, 1],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'speed-up&down-bottom',
+			offset: [-3, 0, 1],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'poly', sides: 4, start: 0, mode: 'ping-pong' }],
 			instruments: [
@@ -75,11 +71,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 3: Blink all instruments (with cleanup)
 		{
-			rail: {
-				id: 'blink-instruments',
-				offset: [-3, 0, 0],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'blink-instruments',
+			offset: [-3, 0, 0],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'coil', rounds: 2, start: 0 }],
 			instruments: [
@@ -103,11 +97,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 4: Toggle active state (disables instrument triggers when inactive)
 		{
-			rail: {
-				id: 'toggle-spinning',
-				offset: [-3, 0, -1],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'toggle-spinning',
+			offset: [-3, 0, -1],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0, speed: 2 }],
 			instruments: [
@@ -130,11 +122,9 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'toggle-color',
-				offset: [-3, 0, -2],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'toggle-color',
+			offset: [-3, 0, -2],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [

@@ -1,7 +1,7 @@
-import type { Marble, MarbleConfig, MarbleType } from './marble'
-import { createMarble } from './marble'
+import type { MarbleInstance, MarbleConfig, MarbleType } from './marble'
+import { createMarbleInstance } from './marble'
 import type { TempoState } from './tempo'
-import type { Instrument } from './instrument'
+import type { InstrumentConfig } from './instrument'
 import type { TriggerHandler, GlobalBeatHandler } from './scene'
 import type { SceneCtx } from './scene-ctx'
 import { buildSegmentCurve } from './rail-curve'
@@ -43,7 +43,7 @@ const SNAKE_FREQUENCY = 0.5 // cycles per beat (1.0 = crosses at whole beats)
 /**
  * Select branch for marble at split using weighted round-robin.
  */
-function selectBranch(marble: Marble, split: ResolvedSplit): number {
+function selectBranch(marble: MarbleInstance, split: ResolvedSplit): number {
 	const weights = split.weights
 	const totalWeight = weights.reduce((sum: number, w: number) => sum + w, 0)
 	const position = marble.routingCounter % totalWeight
@@ -159,7 +159,7 @@ export function fireGlobalBeatDestroy(
 /**
  * Get current path points based on marble's branch state.
  */
-function getCurrentPathPoints(marble: Marble): ResolvedPoint[] {
+function getCurrentPathPoints(marble: MarbleInstance): ResolvedPoint[] {
 	const rail = marble.config.resolvedRail
 
 	// If on a branch, return: main points up to split + split point + branch points
@@ -184,7 +184,7 @@ function getCurrentPathPoints(marble: Marble): ResolvedPoint[] {
  * Calculate marble position from beat and points.
  */
 function calculateMarblePosition(
-	marble: Marble,
+	marble: MarbleInstance,
 	rawBeat: number,
 	points: ResolvedPoint[],
 	easing: string
@@ -315,7 +315,7 @@ function beatsOverlap(prev1: number, curr1: number, prev2: number, curr2: number
  * More robust than spatial checks - handles high speeds correctly.
  */
 function checkMarbleCollisions(
-	marbles: Marble[],
+	marbles: MarbleInstance[],
 	railIds: string[],
 	globalBeat: number,
 	sceneCtx?: SceneCtx,
@@ -494,7 +494,7 @@ function checkMarbleCollisions(
  * Elastic collision ≡ pass-through, so cyclic order is invariant.
  * Runs independently of collision cooldown.
  */
-function preventBouncerCrossovers(marbles: Marble[]): void {
+function preventBouncerCrossovers(marbles: MarbleInstance[]): void {
 	for (let i = 0; i < marbles.length; i++) {
 		const m1 = marbles[i]
 		if (m1.runtime.destroyed) continue
@@ -530,12 +530,12 @@ function preventBouncerCrossovers(marbles: Marble[]): void {
  * Check if marble crossed any instruments and fire triggers.
  */
 function checkInstrumentTriggers(
-	marble: Marble,
+	marble: MarbleInstance,
 	previousBeat: number,
 	currentBeat: number,
 	marbleBeat: number,
 	direction: 'forward' | 'backward',
-	instruments: Instrument[],
+	instruments: InstrumentConfig[],
 	railId: string,
 	marbleIndex: number,
 	globalBeat: number,
@@ -704,7 +704,7 @@ function checkInstrumentTriggers(
  * Reset sequencing state of a marble after a rewind.
  * Mutates in-place. Does NOT reset user-set overrides (speed, note, color, easing, visible).
  */
-export function rewindMarble(marble: Marble, globalBeat: number): void {
+export function rewindMarble(marble: MarbleInstance, globalBeat: number): void {
 	const speed = marble.runtime.speed ?? marble.config.speed ?? 1
 	const rawBeat =
 		marble.config.startBeat +
@@ -729,7 +729,7 @@ export function rewindMarble(marble: Marble, globalBeat: number): void {
  * Full reset of marble to snapshot config. Reuses object identity (preserves id).
  * Clears ALL runtime overrides — returns marble to initial state.
  */
-export function resetMarbleToConfig(marble: Marble, config: MarbleConfig): void {
+export function resetMarbleToConfig(marble: MarbleInstance, config: MarbleConfig): void {
 	marble.config = config
 	marble.runtime = { color: config.color }
 	if (config.running !== undefined) marble.runtime.running = config.running
@@ -748,9 +748,9 @@ export function resetMarbleToConfig(marble: Marble, config: MarbleConfig): void 
  * Uses arc-length beat positions + rail curve for smooth motion.
  */
 export function updateMarble(
-	marble: Marble,
+	marble: MarbleInstance,
 	tempo: TempoState,
-	instruments: Instrument[] = [],
+	instruments: InstrumentConfig[] = [],
 	railId: string = '',
 	marbleIndex: number = 0,
 	triggerHandler?: TriggerHandler,
@@ -1055,11 +1055,11 @@ export function updateMarble(
 
 export type MarbleMutations = {
 	destroyed: boolean // any marbles flagged for removal
-	created: { marble: Marble; railIndex: number }[]
+	created: { marble: MarbleInstance; railIndex: number }[]
 	rewind?: boolean // full reset to snapshot
 } | null
 
-export function initMarblePositions(marbles: Marble[]): void {
+export function initMarblePositions(marbles: MarbleInstance[]): void {
 	for (const marble of marbles) {
 		const pts = marble.config.resolvedRail.points
 		calculateMarblePosition(marble, marble.currentBeat, pts, marble.config.easing || 'linear')
@@ -1067,9 +1067,9 @@ export function initMarblePositions(marbles: Marble[]): void {
 }
 
 export function updateMarbles(
-	marbles: Marble[],
+	marbles: MarbleInstance[],
 	tempo: TempoState,
-	instrumentsPerRail: Instrument[][] = [],
+	instrumentsPerRail: InstrumentConfig[][] = [],
 	railIds: string[] = [],
 	triggerHandler?: TriggerHandler,
 	sceneCtx?: SceneCtx,
@@ -1123,7 +1123,7 @@ export function updateMarbles(
 	// NOTE: destroyed flag scan moved to Scene.svelte (bypasses $state proxy issues)
 	const hasDestroyed = sceneCtx ? sceneCtx.marbles.some((e) => e.marble.runtime.destroyed) : false
 
-	const created: { marble: Marble; railIndex: number }[] = []
+	const created: { marble: MarbleInstance; railIndex: number }[] = []
 	if (sceneCtx && sceneCtx.pendingCreations.length > 0) {
 		for (const req of sceneCtx.pendingCreations) {
 			const railEntity = sceneCtx.railById.get(req.railId)
@@ -1155,7 +1155,7 @@ export function updateMarbles(
 				active: d.active,
 				running: d.running
 			}
-			const marble = createMarble(config, marbles.length + created.length)
+			const marble = createMarbleInstance(config, marbles.length + created.length)
 			marble.runtime.created = true
 			marble.lastGlobalBeat = globalBeat
 			// Position marble at startBeat

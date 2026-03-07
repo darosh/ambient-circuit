@@ -52,10 +52,8 @@ export const scene: SceneConfig = {
 	},
 	rails: [
 		{
-			rail: {
-				id: 'synth-rail',
-				nodes: [[-4, 0, 0], 'r r r r r r r r']
-			},
+			id: 'synth-rail',
+			nodes: [[-4, 0, 0], 'r r r r r r r r'],
 			color: '#00ffcc',
 			marbles: [{ note: 60, speed: 2 }, { start: 1 }],
 			instruments: [
@@ -97,10 +95,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'rnbo-rail',
-				nodes: [[-4, 0, 3], 'r r r r r r r r']
-			},
+			id: 'rnbo-rail',
+			nodes: [[-4, 0, 3], 'r r r r r r r r'],
 			color: '#ff66aa',
 			marbles: [{ speed: 0.5 }],
 			instruments: [

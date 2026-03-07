@@ -1,6 +1,6 @@
 import {
 	isVec3Curve,
-	Rail,
+	RailShapeConfig,
 	RailDef,
 	RailNode,
 	ResolvedPoint,
@@ -241,7 +241,7 @@ export function validateNoDuplicateMidPathPositions(points: ResolvedPoint[], rai
 	}
 }
 
-export function resolveRail(rail: Rail): ResolvedRail {
+export function resolveRail(rail: RailShapeConfig): ResolvedRail {
 	const beatOffset = rail.beatOffset ?? 0
 	const offset = rail.offset ?? [0, 0, 0]
 	const { points, splits } = resolveNodes(rail.nodes, beatOffset)

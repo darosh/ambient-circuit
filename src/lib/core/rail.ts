@@ -44,8 +44,8 @@ export type RailNode = Vec3 | RailPointFull | RailSplit | string | Vec3Curve
 /** Sequence of nodes (used for branches too) */
 export type RailDef = RailNode[]
 
-/** Top-level rail */
-export type Rail = {
+/** Top-level rail shape (authored config for geometry) */
+export type RailShapeConfig = {
 	id: string
 	/** Starting beat. Default: 0 */
 	beatOffset?: number
@@ -59,6 +59,10 @@ export type Rail = {
 	transform?: Matrix4 | ((v: Vector3) => Vector3)
 	nodes: RailDef
 }
+
+/** @deprecated Use RailShapeConfig */
+// eslint-disable-next-line sonarjs/redundant-type-aliases
+export type Rail = RailShapeConfig
 
 // ── Resolved types (engine-internal) ────────────────────────
 

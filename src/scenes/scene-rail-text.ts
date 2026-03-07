@@ -12,11 +12,9 @@ export const scene: SceneConfig[] = [
 		rails: getTextRailNodes('AMBIENT CIRCUIT', 1.8).map(
 			(nodes, i, arr): RailData => ({
 				color: `hsl(${((i * 360) / arr.length) % 360}, 100%, 60%)`,
-				rail: {
-					offset: [-4.9, 1, 0],
-					id: `${i + 1}`,
-					nodes
-				},
+				offset: [-4.9, 1, 0],
+				id: `${i + 1}`,
+				nodes,
 				marbles: [{ type: 'ball', mode: 'ping-pong' }]
 			})
 		)
@@ -37,11 +35,9 @@ export const scene: SceneConfig[] = [
 		rails: getTextRailNodes('AMBIENT CIRCUIT', 1.8, true).map(
 			(nodes, i, arr): RailData => ({
 				color: `hsl(${((i * 360) / (arr.length - 1.39)) % 360}, 100%, 60%)`,
-				rail: {
-					offset: [-4.75, 1, 0],
-					id: `text-${i + 1}`,
-					nodes
-				},
+				offset: [-4.75, 1, 0],
+				id: `text-${i + 1}`,
+				nodes,
 				marbles: [[20.91], [11.91]][i].map((start) => ({
 					type: 'ball',
 					mode: 'ping-pong',

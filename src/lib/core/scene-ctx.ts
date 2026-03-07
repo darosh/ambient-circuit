@@ -1,7 +1,7 @@
-import type { Marble, MarbleConfig } from './marble'
+import type { MarbleInstance, MarbleConfig } from './marble'
 import type { Vector3Tuple } from 'three/webgpu'
-import type { Instrument } from './instrument'
-import type { RailData, MarbleData } from './rail-data'
+import type { InstrumentConfig } from './instrument'
+import type { RailConfig, MarbleInputConfig } from './rail-config'
 import type { ResolvedRail } from './rail'
 import type { MarbleState } from './marble-state'
 import type { InstrumentState } from './instrument-state'
@@ -14,7 +14,7 @@ import { SceneConfig } from './scene'
  */
 export type MarbleEntity = {
 	id: number // marble index
-	marble: Marble // raw marble object
+	marble: MarbleInstance // raw marble object
 	state: MarbleState // pre-built API wrapper
 	visibility: { value: boolean } // ref for async mutations
 	activity: { value: boolean }
@@ -26,7 +26,7 @@ export type MarbleEntity = {
  */
 export type InstrumentEntity = {
 	id: number // instrument index
-	instrument: Instrument // raw instrument object
+	instrument: InstrumentConfig // raw instrument object
 	state: InstrumentState // pre-built API wrapper
 	railId: string // parent rail ID
 	visibility: { value: boolean }
@@ -40,7 +40,7 @@ export type InstrumentEntity = {
 export type RailEntity = {
 	id: string // rail ID
 	index: number // position in scene rails array
-	railData: RailData // original rail data
+	railData: RailConfig // original rail config
 	resolvedRail: ResolvedRail // resolved geometry
 	state: RailState // pre-built API wrapper
 	visibility: { value: boolean }
@@ -58,7 +58,7 @@ export type SceneCtx = {
 
 	// O(1) lookup maps (built once at mount)
 	railById: Map<string, RailEntity>
-	instrumentByRef: WeakMap<Instrument, InstrumentEntity>
+	instrumentByRef: WeakMap<InstrumentConfig, InstrumentEntity>
 
 	// Global state
 	beat: number // current globalBeat (float)
@@ -85,7 +85,7 @@ export type SceneCtx = {
 	view?: ViewState
 
 	// Deferred marble mutations
-	pendingCreations: { railId: string; data: MarbleData }[]
+	pendingCreations: { railId: string; data: MarbleInputConfig }[]
 	// Snapshot for rewind (restore initial state)
 	initialSnapshot: { configs: MarbleConfig[]; railIndices: number[]; originalIds: number[] }
 }

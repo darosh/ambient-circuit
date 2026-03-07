@@ -4,14 +4,14 @@ import { updateMarble } from '../src/lib/core/marble-system'
 import { createTempoState } from '../src/lib/core/tempo'
 import { resolveRail } from '../src/lib/core/rail-resolve'
 import { createSceneCtx } from '../src/lib/core/scene-ctx-factory'
-import type { Rail } from '../src/lib/core/rail'
-import type { RailData } from '../src/lib/core/rail-data'
+import type { RailShapeConfig } from '../src/lib/core/rail'
+import type { RailConfig } from '../src/lib/core/rail-config'
 import type { SceneConfig } from '../src/lib/core/scene'
 
-const rail: Rail = { id: 'r', nodes: [[0, 0, 0], 'r r r r r'] }
+const rail: RailShapeConfig = { id: 'r', nodes: [[0, 0, 0], 'r r r r r'] }
 const resolvedRail = resolveRail(rail)
 
-const railData: RailData = { rail: rail, color: '#fff' }
+const railData: RailConfig = { id: 'r', nodes: [[0, 0, 0], 'r r r r r'], color: '#fff' }
 
 const sceneConfig: SceneConfig = { id: 'test', bpm: 120, rails: [] }
 
@@ -22,7 +22,7 @@ function makeTempo(beat = 1) {
 	return t
 }
 
-function makeCtx(marbles: ReturnType<typeof createMarble>[], rails: RailData[]) {
+function makeCtx(marbles: ReturnType<typeof createMarble>[], rails: RailConfig[]) {
 	const indices = marbles.map(() => 0)
 	return createSceneCtx(marbles, rails, indices, makeTempo(), sceneConfig)
 }
@@ -60,7 +60,7 @@ describe('marble running: false in config', () => {
 
 describe('rail running: false', () => {
 	it('marble on rail with running:false stays at startBeat', () => {
-		const rd: RailData = { rail, color: '#fff', running: false }
+		const rd: RailConfig = { id: 'r', nodes: [[0, 0, 0], 'r r r r r'], color: '#fff', running: false }
 		const marble = createMarble({
 			resolvedRail,
 			startBeat: 0,

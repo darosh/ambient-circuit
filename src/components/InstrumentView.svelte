@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	import type { Instrument } from '../lib/core/instrument'
+	import type { InstrumentConfig } from '../lib/core/instrument'
 	import type { ResolvedRail } from '../lib/core/rail'
 	import { getBeatTransform, getPointsForPath } from '../lib/core/rail-curve'
 	import { Vector3, Euler, Matrix4, Color } from 'three/webgpu'
@@ -20,12 +20,12 @@
 	const _ROT_HALF_PI = new Matrix4().makeRotationZ(Math.PI / 2)
 	const _ROT_NEG_PI = new Matrix4().makeRotationZ(-Math.PI)
 
-	import type { RailData } from '../lib/core/rail-data'
+	import type { RailConfig } from '../lib/core/rail-config'
 
 	type Props = {
-		instrument: Instrument
+		instrument: InstrumentConfig
 		rail: ResolvedRail
-		railData?: RailData
+		railData?: RailConfig
 		color: string
 		signal?: { intensity: number }
 		size?: number

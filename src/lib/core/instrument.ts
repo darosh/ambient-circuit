@@ -32,7 +32,7 @@ export type InstrumentTriggerContext = {
 	direction: MarbleDirection
 }
 
-type InstrumentBase = {
+type InstrumentConfigBase = {
 	/** Beat position on rail (can be fractional, e.g. 1.5) */
 	beat: number
 	/**
@@ -67,7 +67,7 @@ type InstrumentBase = {
 	runtime?: InstrumentRuntime
 }
 
-export type PolyInstrument = InstrumentBase & {
+export type PolyInstrument = InstrumentConfigBase & {
 	type?: 'poly'
 	/** Number of polygon sides (3=triangle, 4=square, 5=pentagon, etc.) */
 	sides: number
@@ -75,31 +75,31 @@ export type PolyInstrument = InstrumentBase & {
 	fill?: boolean
 }
 
-type StarInstrument = InstrumentBase & {
+type StarInstrument = InstrumentConfigBase & {
 	type: 'star'
 	/** Number of star points */
 	sides: number
 }
 
-type WhirlInstrument = InstrumentBase & {
+type WhirlInstrument = InstrumentConfigBase & {
 	type: 'whirl'
 	/** Number of whirl shapes */
 	sides: number
 }
 
-type CrossInstrument = InstrumentBase & {
+type CrossInstrument = InstrumentConfigBase & {
 	type: 'cross'
 	/** Number of cross shapes */
 	sides: number
 }
 
-type HeartInstrument = InstrumentBase & {
+type HeartInstrument = InstrumentConfigBase & {
 	type: 'heart'
 	/** Bounce animation on impact (default true) */
 	pulse?: boolean
 }
 
-type SpiralInstrument = InstrumentBase & {
+type SpiralInstrument = InstrumentConfigBase & {
 	type: 'spiral'
 	/** Number of spiral rounds (default 3) */
 	rounds?: number
@@ -109,7 +109,7 @@ type SpiralInstrument = InstrumentBase & {
 	spinning?: boolean
 }
 
-type ConeInstrument = InstrumentBase & {
+type ConeInstrument = InstrumentConfigBase & {
 	type: 'cone'
 	/** Number of spiral rounds (default 3) */
 	rounds?: number
@@ -123,7 +123,7 @@ type ConeInstrument = InstrumentBase & {
 	spinning?: boolean
 }
 
-export type ArrowInstrument = InstrumentBase & {
+export type ArrowInstrument = InstrumentConfigBase & {
 	type: 'arrow'
 	/** Shape variant (default 'plain') */
 	kind?:
@@ -149,20 +149,20 @@ export type ArrowInstrument = InstrumentBase & {
 	point?: 'forward' | 'backward'
 }
 
-type SunInstrument = InstrumentBase & {
+type SunInstrument = InstrumentConfigBase & {
 	type: 'sun'
 	/** Number of rays extending from center (default 6) */
 	rays?: number
 	brightness?: number
 }
 
-type EaterInstrument = InstrumentBase & {
+type EaterInstrument = InstrumentConfigBase & {
 	type: 'eater'
 	/** Mouth opening angle in degrees (default 60) */
 	angle?: number
 }
 
-export type Instrument =
+export type InstrumentConfig =
 	| PolyInstrument
 	| StarInstrument
 	| WhirlInstrument
@@ -173,3 +173,15 @@ export type Instrument =
 	| ArrowInstrument
 	| SunInstrument
 	| EaterInstrument
+
+/** @deprecated Use InstrumentConfig */
+// eslint-disable-next-line sonarjs/redundant-type-aliases
+export type Instrument = InstrumentConfig
+
+/** Live instrument object used by the engine at runtime */
+export type InstrumentInstance = {
+	config: InstrumentConfig
+	runtime: InstrumentRuntime
+	signal: InstrumentSignal
+	midiSignal: InstrumentSignal
+}

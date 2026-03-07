@@ -13,10 +13,8 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	rails: [
 		{
-			rail: {
-				id: 'poly',
-				nodes: [[-4, 0, 4], 'i i i i i i i i']
-			},
+			id: 'poly',
+			nodes: [[-4, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			marbles: [
 				{ type: 'poly', start: 1, sides: 2 },
@@ -30,10 +28,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'coil',
-				nodes: [[-2, 0, 4], 'i i i i i i i i']
-			},
+			id: 'coil',
+			nodes: [[-2, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			marbles: [
 				{ type: 'coil', start: 5, rounds: 1 },
@@ -43,18 +39,14 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'ball',
-				nodes: [[0, 0, 4], 'i i i i i i i i']
-			},
+			id: 'ball',
+			nodes: [[0, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 8 }]
 		},
 		{
-			rail: {
-				id: 'eater',
-				nodes: [[2, 0, 4], 'i i i i i i i i']
-			},
+			id: 'eater',
+			nodes: [[2, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			marbles: [{ type: 'eater', start: 8, angle: 75 }]
 		}

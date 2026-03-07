@@ -95,10 +95,8 @@ export const scene: SceneConfig = {
 	rails: [
 		// Simple rail with bouncer marbles
 		{
-			rail: {
-				id: 'two-bouncers',
-				nodes: [[-3, 0, -1], 'r r r r r r']
-			},
+			id: 'two-bouncers',
+			nodes: [[-3, 0, -1], 'r r r r r r'],
 			color: c(),
 			marbles: [
 				// Two bouncer marbles starting at opposite ends, moving toward each other
@@ -117,10 +115,8 @@ export const scene: SceneConfig = {
 
 		// Rail with mixed bouncer and non-bouncer (both affected if EITHER is bouncer)
 		{
-			rail: {
-				id: 'one-bouncer',
-				nodes: [[-3, 0, -2], 'r r r r r r']
-			},
+			id: 'one-bouncer',
+			nodes: [[-3, 0, -2], 'r r r r r r'],
 			color: c(),
 			marbles: [
 				// Bouncer marble - will affect non-bouncer on collision
@@ -142,10 +138,8 @@ export const scene: SceneConfig = {
 
 		// Multiple bouncers at different speeds (chaotic)
 		{
-			rail: {
-				id: 'chaos',
-				nodes: [[-1.5, 0, 1], 'r r r orb ol l l l ilb ir']
-			},
+			id: 'chaos',
+			nodes: [[-1.5, 0, 1], 'r r r orb ol l l l ilb ir'],
 			color: c(),
 			marbles: [
 				{
@@ -192,10 +186,8 @@ export const scene: SceneConfig = {
 
 		// Ping-pong rail with bouncer
 		{
-			rail: {
-				id: 'ping-pong',
-				nodes: [[-2, 0, -3], 'r r r r']
-			},
+			id: 'ping-pong',
+			nodes: [[-2, 0, -3], 'r r r r'],
 			color: c(),
 			marbles: [
 				{

@@ -20,11 +20,9 @@ export const scene: SceneConfig = {
 	},
 	rails: [
 		{
-			rail: {
-				id: 'synth',
-				offset: [0, 4.5, 0],
-				nodes: [...spiral({ rounds: 9, height: -4.5 }), 'oo out u2.5 uit iiii ilt l2.5 lot']
-			},
+			id: 'synth',
+			offset: [0, 4.5, 0],
+			nodes: [...spiral({ rounds: 9, height: -4.5 }), 'oo out u2.5 uit iiii ilt l2.5 lot'],
 			color: '#00aaff',
 			marbles: [{ type: 'ball', note: 66 }],
 			instruments: [

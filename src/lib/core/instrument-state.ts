@@ -1,4 +1,4 @@
-import type { Instrument } from './instrument'
+import type { InstrumentConfig } from './instrument'
 
 /**
  * Safe API for modifying instrument state from trigger handlers.
@@ -6,7 +6,7 @@ import type { Instrument } from './instrument'
  */
 export class InstrumentState {
 	constructor(
-		private instrument: Instrument,
+		private instrument: InstrumentConfig,
 		private visibility?: { value: boolean },
 		private activity?: { value: boolean }
 	) {

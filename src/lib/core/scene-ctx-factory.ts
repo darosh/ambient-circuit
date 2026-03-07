@@ -1,5 +1,6 @@
-import type { Marble, MarbleConfig } from './marble'
-import type { RailData } from './rail-data'
+import type { MarbleInstance, MarbleConfig } from './marble'
+import type { RailConfig } from './rail-config'
+import { toRailShapeConfig } from './rail-config'
 import type { TempoState } from './tempo'
 import type { SceneCtx, MarbleEntity, InstrumentEntity, RailEntity } from './scene-ctx'
 import { MarbleState } from './marble-state'
@@ -12,8 +13,8 @@ import { SceneConfig } from './scene'
  * Create SceneCtx from scene data (called once at mount)
  */
 export function createSceneCtx(
-	marbles: Marble[],
-	rails: RailData[],
+	marbles: MarbleInstance[],
+	rails: RailConfig[],
 	marbleRailIndices: number[],
 	tempo: TempoState,
 	scene: SceneConfig,
@@ -27,7 +28,7 @@ export function createSceneCtx(
 	}
 
 	// Deferred creation queue (shared with RailState instances)
-	const pendingCreations: { railId: string; data: import('./rail-data').MarbleData }[] = []
+	const pendingCreations: { railId: string; data: import('./rail-config').MarbleInputConfig }[] = []
 
 	// Build marble entities with pre-created State wrappers
 	const marbleVisRefs = marbles.map(() => ({ value: true }))
@@ -64,7 +65,7 @@ export function createSceneCtx(
 				id: instIdx++,
 				instrument: inst,
 				state: new InstrumentState(inst, visRef, actRef),
-				railId: rail.rail.id,
+				railId: rail.id,
 				visibility: visRef,
 				activity: actRef
 			})
@@ -86,16 +87,16 @@ export function createSceneCtx(
 		}
 
 		// Find resolved rail from marble configs, or resolve it if not found
-		let resolvedRail = marbles.find((m) => m.config.resolvedRail.id === rd.rail.id)?.config
+		let resolvedRail = marbles.find((m) => m.config.resolvedRail.id === rd.id)?.config
 			.resolvedRail
 
 		// If no marble uses this rail, resolve it now
 		if (!resolvedRail) {
-			resolvedRail = resolveRail(rd.rail)
+			resolvedRail = resolveRail(toRailShapeConfig(rd))
 		}
 
 		return {
-			id: rd.rail.id,
+			id: rd.id,
 			index: i,
 			railData: rd,
 			resolvedRail: resolvedRail!,
@@ -109,7 +110,7 @@ export function createSceneCtx(
 	const railById = new Map<string, RailEntity>()
 	for (const re of railEntities) railById.set(re.id, re)
 
-	const instrumentByRef = new WeakMap<import('./instrument').Instrument, InstrumentEntity>()
+	const instrumentByRef = new WeakMap<import('./instrument').InstrumentConfig, InstrumentEntity>()
 	for (const ie of instrumentEntities) instrumentByRef.set(ie.instrument, ie)
 
 	// Derive hasAnalyzers from config
@@ -154,7 +155,7 @@ export function createSceneCtx(
 /**
  * Add a marble entity to sceneCtx (after runtime creation)
  */
-export function addMarbleEntity(ctx: SceneCtx, marble: Marble): MarbleEntity {
+export function addMarbleEntity(ctx: SceneCtx, marble: MarbleInstance): MarbleEntity {
 	const visRef = { value: true }
 	const actRef = { value: marble.config.active ?? true }
 	const entity: MarbleEntity = {
@@ -179,7 +180,7 @@ export function removeMarbleEntity(ctx: SceneCtx, marbleId: number): void {
 /**
  * Re-index marble.index to match array positions
  */
-export function reindexMarbles(marbles: Marble[]): void {
+export function reindexMarbles(marbles: MarbleInstance[]): void {
 	for (const [i, marble] of marbles.entries()) {
 		marble.index = i
 	}

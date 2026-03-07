@@ -21,11 +21,9 @@ export const scene: SceneConfig = {
 	},
 	rails: [
 		{
-			rail: {
-				id: 'line-create',
-				offset: [-3, 0, 1],
-				nodes: [[0, 0, 0], { p: [6, 0, 0], beat: 13 }]
-			},
+			id: 'line-create',
+			offset: [-3, 0, 1],
+			nodes: [[0, 0, 0], { p: [6, 0, 0], beat: 13 }],
 			color: c(),
 			instruments: [
 				{
@@ -43,11 +41,9 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'line',
-				offset: [-3, 0, 0],
-				nodes: [[0, 0, 0], { p: [6, 0, 0], beat: 17 }]
-			},
+			id: 'line',
+			offset: [-3, 0, 0],
+			nodes: [[0, 0, 0], { p: [6, 0, 0], beat: 17 }],
 			color: c(),
 			marbles: false,
 			instruments: [
@@ -60,11 +56,9 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'line-destroy',
-				offset: [-3, 0, -1],
-				nodes: [[0, 0, 0], { p: [6, 0, 0], beat: 12 }]
-			},
+			id: 'line-destroy',
+			offset: [-3, 0, -1],
+			nodes: [[0, 0, 0], { p: [6, 0, 0], beat: 12 }],
 			color: c(),
 			instruments: [
 				{

@@ -1,5 +1,5 @@
 import type { MarbleEntity, SceneCtx } from './scene-ctx'
-import type { RailData, MarbleData } from './rail-data'
+import type { RailConfig, MarbleInputConfig } from './rail-config'
 
 /**
  * Safe API for modifying rail state from handlers.
@@ -10,10 +10,10 @@ export class RailState {
 	_sceneCtx?: SceneCtx
 
 	constructor(
-		private rail: RailData,
+		private rail: RailConfig,
 		private visibility: { value: boolean },
 		private activity: { value: boolean },
-		private pendingCreations?: { railId: string; data: MarbleData }[]
+		private pendingCreations?: { railId: string; data: MarbleInputConfig }[]
 	) {
 		// Initialize runtime if not present
 		if (!this.rail.runtime) {
@@ -44,7 +44,7 @@ export class RailState {
 	}
 
 	get id(): string {
-		return this.rail.rail.id
+		return this.rail.id
 	}
 
 	get color(): string {
@@ -55,16 +55,16 @@ export class RailState {
 	}
 
 	/** Queue a new marble on this rail (processed at end of update) */
-	create(data: MarbleData): void {
+	create(data: MarbleInputConfig): void {
 		if (this.pendingCreations) {
-			this.pendingCreations.push({ railId: this.rail.rail.id, data })
+			this.pendingCreations.push({ railId: this.rail.id, data })
 		}
 	}
 
 	/** Marbles currently on this rail */
 	get marbles(): MarbleEntity[] {
 		if (!this._sceneCtx) return []
-		const id = this.rail.rail.id
+		const id = this.rail.id
 		return this._sceneCtx.marbles.filter(
 			(m) => (m.marble.runtime.railId ?? m.marble.config.resolvedRail.id) === id
 		)

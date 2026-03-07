@@ -14,10 +14,8 @@ export const scene: SceneConfig = {
 	names: true,
 	rails: [
 		{
-			rail: {
-				id: 'fill',
-				nodes: [[-5, 0, 4], 'i i i i i i i i']
-			},
+			id: 'fill',
+			nodes: [[-5, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			instruments: [
 				{ type: 'poly', beat: 1.5, sides: 3, fill: true },
@@ -28,10 +26,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'poly',
-				nodes: [[-4, 0, 4], 'i i i i i i i i']
-			},
+			id: 'poly',
+			nodes: [[-4, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			instruments: [
 				{ type: 'poly', beat: 0.5, sides: 2 },
@@ -43,10 +39,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'cross',
-				nodes: [[-3, 0, 4], 'i i i i i i i i']
-			},
+			id: 'cross',
+			nodes: [[-3, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			instruments: [
 				{ type: 'cross', beat: 0.5, sides: 2 },
@@ -60,10 +54,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'whirl',
-				nodes: [[-1, 0, 4], 'i i i i i i i i']
-			},
+			id: 'whirl',
+			nodes: [[-1, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			instruments: [
 				{ type: 'whirl', beat: 0.5, sides: 2 },
@@ -77,10 +69,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'star',
-				nodes: [[-2, 0, 4], 'i i i i i i i i']
-			},
+			id: 'star',
+			nodes: [[-2, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			instruments: [
 				{ type: 'star', beat: 0.5, sides: 2 },
@@ -94,10 +84,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'arrow',
-				nodes: [[0, 0, 4], 'i i i i i i i i']
-			},
+			id: 'arrow',
+			nodes: [[0, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			instruments: [
 				{ type: 'arrow', beat: 0.5, kind: 'pause' },
@@ -111,10 +99,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'sun',
-				nodes: [[1, 0, 4], 'i i i i i i i i']
-			},
+			id: 'sun',
+			nodes: [[1, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			instruments: [
 				{ type: 'sun', beat: 0.5, rays: 0 },
@@ -128,10 +114,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'cone',
-				nodes: [[2, 0, 4], 'i i i i i i i i']
-			},
+			id: 'cone',
+			nodes: [[2, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			instruments: [
 				{ type: 'cone', beat: 0.5, rounds: 1, spinning: false },
@@ -144,10 +128,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'spiral',
-				nodes: [[3, 0, 4], 'i i i i i i i i']
-			},
+			id: 'spiral',
+			nodes: [[3, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			instruments: [
 				{ type: 'spiral', beat: 0.5, rounds: 1, spinning: false },
@@ -157,10 +139,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'active',
-				nodes: [[4, 0, 4], 'i i i i i i i i']
-			},
+			id: 'active',
+			nodes: [[4, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			instruments: [
 				{ type: 'cone', beat: 3.5, rounds: 5, active: false, visible: true },
@@ -179,10 +159,8 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'misc',
-				nodes: [[5, 0, 4], 'i i i i i i i i']
-			},
+			id: 'misc',
+			nodes: [[5, 0, 4], 'i i i i i i i i'],
 			color: c(),
 			instruments: [
 				{ type: 'arrow', beat: 1, kind: 'tri' },

@@ -22,8 +22,8 @@
 		removeMarbleEntity,
 		reindexMarbles
 	} from '../lib/core/scene-ctx-factory'
-	import { createMarble, type Marble } from '../lib/core/marble'
-	import type { Instrument } from '../lib/core/instrument'
+	import { createMarbleInstance, type MarbleInstance } from '../lib/core/marble'
+	import type { InstrumentConfig } from '../lib/core/instrument'
 	import { createAudioEngine, disposeScene } from '../lib/audio'
 	import type { AudioEngine, AudioChain } from '../lib/audio'
 	import { hasAudioConfig, buildSceneAudio } from '../lib/audio/scene-audio'
@@ -141,8 +141,8 @@
 
 	// Pre-allocated, updated in-place on rail switch (no per-frame allocation)
 	const liveRailIndices: number[] = [...marbleRailIndices]
-	const instrumentsPerRail: Instrument[][] = liveRailIndices.map((i) => rails[i].instruments || [])
-	const railIds: string[] = liveRailIndices.map((i) => rails[i].rail.id)
+	const instrumentsPerRail: InstrumentConfig[][] = liveRailIndices.map((i) => rails[i].instruments || [])
+	const railIds: string[] = liveRailIndices.map((i) => rails[i].id)
 
 	const noBouncers = $derived(!marbles.some((m) => m.config.bouncer))
 
@@ -304,11 +304,11 @@
 
 			// 2. Collect surviving marble IDs mapped by original snapshot index
 			//    Destroyed marbles were already spliced out — need to re-create those
-			const survivingById: Record<number, Marble> = {}
+			const survivingById: Record<number, MarbleInstance> = {}
 			for (const m of marbles) survivingById[m.id] = m
 
 			// 3. Build final array: reuse existing, recreate destroyed
-			const finalMarbles: Marble[] = []
+			const finalMarbles: MarbleInstance[] = []
 			for (let i = 0; i < snap.configs.length; i++) {
 				const origId = snap.originalIds[i]
 				const existing = survivingById[origId]
@@ -319,7 +319,7 @@
 					delete survivingById[origId]
 				} else {
 					// Was destroyed — recreate with same ID
-					const m = createMarble({ ...snap.configs[i] }, i)
+					const m = createMarbleInstance({ ...snap.configs[i] }, i)
 					// Overwrite auto-generated ID to reuse original (stable key)
 					m.id = origId
 					finalMarbles.push(m)
@@ -339,7 +339,7 @@
 				const ri = snap.railIndices[i]
 				liveRailIndices[i] = ri
 				instrumentsPerRail[i] = rails[ri].instruments || []
-				railIds[i] = rails[ri].rail.id
+				railIds[i] = rails[ri].id
 			}
 
 			// 6. Sync sceneCtx.marbles order (reuse existing entities, just reorder)
@@ -383,7 +383,7 @@
 			marbles.push(marble)
 			liveRailIndices.push(railIndex)
 			instrumentsPerRail.push(rails[railIndex].instruments || [])
-			railIds.push(rails[railIndex].rail.id)
+			railIds.push(rails[railIndex].id)
 			addMarbleEntity(sceneCtx, marble)
 		}
 
@@ -446,7 +446,7 @@
 			if (ri !== liveRailIndices[i]) {
 				liveRailIndices[i] = ri
 				instrumentsPerRail[i] = rails[ri].instruments || []
-				railIds[i] = rails[ri].rail.id
+				railIds[i] = rails[ri].id
 			}
 		}
 
@@ -545,7 +545,7 @@
 
 {#each marbles as _m, idx (_m.id)}
 	{@const currentRailId = marbles[idx].runtime.railId ?? marbles[idx].config.resolvedRail.id}
-	{@const railIdx = rails.findIndex((r) => r.rail.id === currentRailId)}
+	{@const railIdx = rails.findIndex((r) => r.id === currentRailId)}
 	{@const railIndex = railIdx >= 0 ? railIdx : marbleRailIndices[idx]}
 	{#if railVisibility[railIndex]}
 		<MarbleView

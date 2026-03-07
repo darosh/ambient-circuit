@@ -18,15 +18,13 @@ export const scene: SceneConfig = {
 	rails: [
 		{
 			color: colors[1],
-			rail: {
-				id: 'sector-a',
-				nodes: [
-					'o o o l l l l u u u u',
-					'o1 r1 u1 r1 d1 l1 d1 r1 u1 l1 u1 r1 d1 l1 d1 r1 ',
-					'o1 l1 u1 l1 d1 r1 d1 l1 u1 r1 u1 l1 d1 r1 d1 l1 ',
-					'i1 r1 i1 u1 i1 l1 i1 d1 i1 r1 i1 u1 i1 l1 i1 d1 '
-				]
-			},
+			id: 'sector-a',
+			nodes: [
+				'o o o l l l l u u u u',
+				'o1 r1 u1 r1 d1 l1 d1 r1 u1 l1 u1 r1 d1 l1 d1 r1 ',
+				'o1 l1 u1 l1 d1 r1 d1 l1 u1 r1 u1 l1 d1 r1 d1 l1 ',
+				'i1 r1 i1 u1 i1 l1 i1 d1 i1 r1 i1 u1 i1 l1 i1 d1 '
+			],
 			marbles: Array.from({ length: 12 }).map(() => ({
 				direction: r() < 0.5 ? 'backward' : 'forward',
 				start: Math.round(r() * 50),
@@ -39,15 +37,13 @@ export const scene: SceneConfig = {
 		},
 		{
 			color: colors[0],
-			rail: {
-				id: 'sector-b',
-				nodes: [
-					'o2 r2 u1 r1 u1 l2 u1 r1 d1 r2 d1 l1 d1 r1 d1 l1 ',
-					'u1 l1 u1 r1 u1 l1 u1 r1 d1 l1 d1 r1 d1 l1 d1 r1 ',
-					'i2 l2 i1 l1 i1 r2 i1 l1 u1 l2 u1 r1 u1 l1 u1 r1 ',
-					'o1 r1 o1 u1 o1 l1 o1 d1 o1 r1 o1 u1 o1 l1 o1 d1 '
-				]
-			},
+			id: 'sector-b',
+			nodes: [
+				'o2 r2 u1 r1 u1 l2 u1 r1 d1 r2 d1 l1 d1 r1 d1 l1 ',
+				'u1 l1 u1 r1 u1 l1 u1 r1 d1 l1 d1 r1 d1 l1 d1 r1 ',
+				'i2 l2 i1 l1 i1 r2 i1 l1 u1 l2 u1 r1 u1 l1 u1 r1 ',
+				'o1 r1 o1 u1 o1 l1 o1 d1 o1 r1 o1 u1 o1 l1 o1 d1 '
+			],
 			marbles: Array.from({ length: 12 }).map(() => ({
 				direction: r() < 0.5 ? 'backward' : 'forward',
 				start: Math.round(r() * 60),
@@ -60,19 +56,17 @@ export const scene: SceneConfig = {
 		},
 		{
 			color: colors[3],
-			rail: {
-				id: 'sector-c',
-				nodes: [
-					'r1 u1 r1 l1 r1 d1 r1 l1 u1 r1 u1 l1 u1 r1 u1 l1 ',
-					'i1 l1 i1 r1 i1 l1 i1 r1 d1 l1 d1 r1 d1 l1 d1 r1 ',
-					'o1 u1 o1 r1 o1 u1 o1 l1 o1 d1 o1 l1 o1 u1 o1 r1 ',
-					'l1 d1 l1 r1 l1 u1 l1 r1 d1 l1 d1 r1 d1 l1 d1 r1 ',
-					'i1 r1 i1 l1 i1 r1 i1 l1 u1 r1 u1 l1 u1 r1 u1 l1 ',
-					'u2 l2 u1 l1 u1 r2 u1 l1 d1 l2 d1 r1 d1 l1 d1 r1 ',
-					'o2 r2 o1 r1 o1 l2 o1 r1 u1 r2 u1 l1 u1 r1 u1 l1 ',
-					'd1 r1 d1 l1 d1 r1 d1 l1 i1 r1 i1 l1 i1 r1 i1 l1'
-				]
-			},
+			id: 'sector-c',
+			nodes: [
+				'r1 u1 r1 l1 r1 d1 r1 l1 u1 r1 u1 l1 u1 r1 u1 l1 ',
+				'i1 l1 i1 r1 i1 l1 i1 r1 d1 l1 d1 r1 d1 l1 d1 r1 ',
+				'o1 u1 o1 r1 o1 u1 o1 l1 o1 d1 o1 l1 o1 u1 o1 r1 ',
+				'l1 d1 l1 r1 l1 u1 l1 r1 d1 l1 d1 r1 d1 l1 d1 r1 ',
+				'i1 r1 i1 l1 i1 r1 i1 l1 u1 r1 u1 l1 u1 r1 u1 l1 ',
+				'u2 l2 u1 l1 u1 r2 u1 l1 d1 l2 d1 r1 d1 l1 d1 r1 ',
+				'o2 r2 o1 r1 o1 l2 o1 r1 u1 r2 u1 l1 u1 r1 u1 l1 ',
+				'd1 r1 d1 l1 d1 r1 d1 l1 i1 r1 i1 l1 i1 r1 i1 l1'
+			],
 			marbles: Array.from({ length: 12 }).map(() => ({
 				direction: r() < 0.5 ? 'backward' : 'forward',
 				start: Math.round(r() * 110),

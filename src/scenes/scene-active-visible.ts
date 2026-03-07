@@ -18,11 +18,9 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	rails: [
 		{
-			rail: {
-				id: 'active-setter',
-				offset: [-4, 0, -3],
-				nodes: [[0, 0, 0], 'ib rb ob lb']
-			},
+			id: 'active-setter',
+			offset: [-4, 0, -3],
+			nodes: [[0, 0, 0], 'ib rb ob lb'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [
@@ -39,21 +37,17 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'active-getter',
-				offset: [-2, 0, -3],
-				nodes: [[0, 0, 0], 'ib rb ob lb']
-			},
+			id: 'active-getter',
+			offset: [-2, 0, -3],
+			nodes: [[0, 0, 0], 'ib rb ob lb'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [{ type: 'sun', beat: 2.5, rays: 12, brightness: 0, active: false }]
 		},
 		{
-			rail: {
-				id: 'invisible',
-				offset: [1, 0, -3],
-				nodes: [[0, 0, 0], 'ib rb ob lb']
-			},
+			id: 'invisible',
+			offset: [1, 0, -3],
+			nodes: [[0, 0, 0], 'ib rb ob lb'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [
@@ -68,11 +62,9 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'circle-end-ping',
-				offset: [3, 0, -3],
-				nodes: [[0, 0, 0], 'ib rb ob lb']
-			},
+			id: 'circle-end-ping',
+			offset: [3, 0, -3],
+			nodes: [[0, 0, 0], 'ib rb ob lb'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [
@@ -95,11 +87,9 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'swap',
-				offset: [-0.5, 0, 0],
-				nodes: [[0, 0, 0], 'ib rb ob lb']
-			},
+			id: 'swap',
+			offset: [-0.5, 0, 0],
+			nodes: [[0, 0, 0], 'ib rb ob lb'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [

@@ -1,10 +1,10 @@
 import type { AudioEngine, AudioChain } from './types'
 import type { SceneConfig } from '../core/scene'
 import type { SceneCtx } from '../core/scene-ctx'
-import type { RailData } from '../core/rail-data'
+import type { RailConfig } from '../core/rail-config'
 import { initAudio, buildChain, buildBuses } from './engine'
 
-export function hasAudioConfig(scene: SceneConfig, rails: RailData[]): boolean {
+export function hasAudioConfig(scene: SceneConfig, rails: RailConfig[]): boolean {
 	if (scene.audio?.chains) return true
 	for (const rd of rails) {
 		if (rd.instruments) {
@@ -25,7 +25,7 @@ export function hasAudioConfig(scene: SceneConfig, rails: RailData[]): boolean {
 export async function buildSceneAudio(
 	engine: AudioEngine,
 	scene: SceneConfig,
-	rails: RailData[],
+	rails: RailConfig[],
 	sceneCtx: SceneCtx,
 	defaultAnalyser?: string
 ): Promise<AudioChain[]> {

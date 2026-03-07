@@ -10,7 +10,7 @@ describe('scene ids', () => {
 
 	it('rail ids are unique within each scene', () => {
 		for (const scene of scenes) {
-			const ids = scene.rails.map((r) => r.rail.id)
+			const ids = scene.rails.map((r) => r.id)
 			const dupes = ids.filter((id, i) => ids.indexOf(id) !== i)
 			expect(dupes, `scene '${scene.id}' has duplicate rail ids`).toEqual([])
 		}

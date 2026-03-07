@@ -14,33 +14,25 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	rails: [
 		{
-			rail: {
-				id: 'eight',
-				nodes: [[0, 0, 0], 'ir or ol il il ol or ir']
-			},
+			id: 'eight',
+			nodes: [[0, 0, 0], 'ir or ol il il ol or ir'],
 			color: c()
 		},
 		{
-			rail: {
-				id: 'eight-no-cross',
-				nodes: [[0, 0, -3], 'ir or ol ilu0.01 il ol or ird0.01 ']
-			},
+			id: 'eight-no-cross',
+			nodes: [[0, 0, -3], 'ir or ol ilu0.01 il ol or ird0.01 '],
 			color: c()
 		},
 		{
-			rail: {
-				id: 'rect-beats',
-				offset: [-3, 0, 2],
-				nodes: [railToString(roundedRect()) + ' 8']
-			},
+			id: 'rect-beats',
+			offset: [-3, 0, 2],
+			nodes: [railToString(roundedRect()) + ' 8'],
 			color: c()
 		},
 		{
-			rail: {
-				id: 'rect-curve',
-				offset: [3, 0, 2],
-				nodes: [railToString(roundedRect()) + ' 8c']
-			},
+			id: 'rect-curve',
+			offset: [3, 0, 2],
+			nodes: [railToString(roundedRect()) + ' 8c'],
 			color: c()
 		}
 	]

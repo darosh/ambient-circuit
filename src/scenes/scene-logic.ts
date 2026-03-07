@@ -15,11 +15,9 @@ export const scene: SceneConfig = {
 	rails: [
 		// Example 1: Direction reversal
 		{
-			rail: {
-				id: 'reverse',
-				offset: [-4, 0, 4],
-				nodes: [[0, 0, 0], 'r r r r r r r r']
-			},
+			id: 'reverse',
+			offset: [-4, 0, 4],
+			nodes: [[0, 0, 0], 'r r r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0, easing: 'easeInOutQuad' }],
 			instruments: [
@@ -42,11 +40,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 2: Speed modification
 		{
-			rail: {
-				id: 'speed',
-				offset: [-4, 0, 3],
-				nodes: [[0, 0, 0], 'r r r r r r r r']
-			},
+			id: 'speed',
+			offset: [-4, 0, 3],
+			nodes: [[0, 0, 0], 'r r r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'poly', sides: 4, start: 0 }],
 			instruments: [
@@ -64,11 +60,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 3: Beat jumping
 		{
-			rail: {
-				id: 'jump',
-				offset: [-4, 0, 2],
-				nodes: [[0, 0, 0], 'r r r r r r r r']
-			},
+			id: 'jump',
+			offset: [-4, 0, 2],
+			nodes: [[0, 0, 0], 'r r r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'coil', rounds: 2, start: 0 }],
 			instruments: [
@@ -93,11 +87,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 4: Note modification
 		{
-			rail: {
-				id: 'notes',
-				offset: [-4, 0, 1],
-				nodes: [[0, 0, 0], 'r r r r r r r r']
-			},
+			id: 'notes',
+			offset: [-4, 0, 1],
+			nodes: [[0, 0, 0], 'r r r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0, note: 60 }],
 			instruments: [
@@ -123,11 +115,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 5: Combined effects
 		{
-			rail: {
-				id: 'combined',
-				offset: [-4, 0, 0],
-				nodes: [[0, 0, 0], 'r r r r r r r r']
-			},
+			id: 'combined',
+			offset: [-4, 0, 0],
+			nodes: [[0, 0, 0], 'r r r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0, mode: 'ping-pong' }],
 			instruments: [
@@ -158,11 +148,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 6: Fractional beat positions
 		{
-			rail: {
-				id: 'fractional',
-				offset: [-4, 0, -1],
-				nodes: [[0, 0, 0], 'r r r r r r r r']
-			},
+			id: 'fractional',
+			offset: [-4, 0, -1],
+			nodes: [[0, 0, 0], 'r r r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [
@@ -174,11 +162,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 7: Visual transformations - instrument color
 		{
-			rail: {
-				id: 'inst-color',
-				offset: [-4, 0, -2],
-				nodes: [[0, 0, 0], 'r r r r r r r r']
-			},
+			id: 'inst-color',
+			offset: [-4, 0, -2],
+			nodes: [[0, 0, 0], 'r r r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [
@@ -194,11 +180,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 8: Visual transformations - sun brightness
 		{
-			rail: {
-				id: 'sun-brightness',
-				offset: [-4, 0, -3],
-				nodes: [[0, 0, 0], 'r r r r r r r r']
-			},
+			id: 'sun-brightness',
+			offset: [-4, 0, -3],
+			nodes: [[0, 0, 0], 'r r r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'poly', sides: 3, start: 0 }],
 			instruments: [
@@ -214,11 +198,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 9: Visual transformations - marble shape (there and back)
 		{
-			rail: {
-				id: 'marble-shape',
-				offset: [-4, 0, -4],
-				nodes: [[0, 0, 0], 'r r r r r r r r']
-			},
+			id: 'marble-shape',
+			offset: [-4, 0, -4],
+			nodes: [[0, 0, 0], 'r r r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [
@@ -252,11 +234,9 @@ export const scene: SceneConfig = {
 		},
 		// Example 10: Visual transformations - marble color (there and back)
 		{
-			rail: {
-				id: 'marble-color',
-				offset: [-4, 0, -5],
-				nodes: [[0, 0, 0], 'r r r r r r r r']
-			},
+			id: 'marble-color',
+			offset: [-4, 0, -5],
+			nodes: [[0, 0, 0], 'r r r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'ball', start: 0 }],
 			instruments: [

@@ -82,8 +82,8 @@ describe('Rail Switching API', () => {
 		tempo.isPlaying = true
 
 		const railDataList: RailData[] = [
-			{ rail: { id: rail1.id, nodes: [] }, color: '#ff0000' },
-			{ rail: { id: rail2.id, nodes: [] }, color: '#00ff00' }
+			{ id: rail1.id, nodes: [], color: '#ff0000' },
+			{ id: rail2.id, nodes: [], color: '#00ff00' }
 		]
 		const sceneCtx = createSceneCtx(
 			[marble, dummyMarble],
@@ -131,7 +131,7 @@ describe('Rail Switching API', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
-		const railDataList: RailData[] = [{ rail: { id: rail1.id, nodes: [] }, color: '#ff0000' }]
+		const railDataList: RailData[] = [{ id: rail1.id, nodes: [], color: '#ff0000' }]
 		const sceneCtx = createSceneCtx([marble], railDataList, [0], tempo, {} as SceneConfig)
 
 		// Mock console.warn
@@ -185,8 +185,8 @@ describe('Rail Switching API', () => {
 		tempo.isPlaying = true
 
 		const railDataList: RailData[] = [
-			{ rail: { id: rail1.id, nodes: [] }, color: '#ff0000' },
-			{ rail: { id: rail2.id, nodes: [] }, color: '#00ff00' }
+			{ id: rail1.id, nodes: [], color: '#ff0000' },
+			{ id: rail2.id, nodes: [], color: '#00ff00' }
 		]
 		const sceneCtx = createSceneCtx(
 			[marble, dummyMarble],
@@ -264,12 +264,12 @@ describe('Rail Switching API', () => {
 
 		const railDataList: RailData[] = [
 			{
-				rail: { id: rail1.id, nodes: [] },
+				id: rail1.id, nodes: [],
 				color: '#ff0000',
 				instruments: [{ type: 'sun', beat: 1 }]
 			},
 			{
-				rail: { id: rail2.id, nodes: [] },
+				id: rail2.id, nodes: [],
 				color: '#00ff00',
 				instruments: [{ type: 'heart', beat: 1 }]
 			}
@@ -340,9 +340,9 @@ describe('Rail Switching API', () => {
 		tempo.isPlaying = true
 
 		const railDataList: RailData[] = [
-			{ rail: { id: rail1.id, nodes: [] }, color: '#ff0000' },
-			{ rail: { id: rail2.id, nodes: [] }, color: '#00ff00' },
-			{ rail: { id: rail3.id, nodes: [] }, color: '#0000ff' }
+			{ id: rail1.id, nodes: [], color: '#ff0000' },
+			{ id: rail2.id, nodes: [], color: '#00ff00' },
+			{ id: rail3.id, nodes: [], color: '#0000ff' }
 		]
 		const sceneCtx = createSceneCtx(
 			[marble, dummy2, dummy3],
@@ -393,8 +393,8 @@ describe('Rail Switching API', () => {
 		tempo.isPlaying = true
 
 		const railDataList: RailData[] = [
-			{ rail: { id: rail1.id, nodes: [] }, color: '#ff0000' },
-			{ rail: { id: rail2.id, nodes: [] }, color: '#00ff00' }
+			{ id: rail1.id, nodes: [], color: '#ff0000' },
+			{ id: rail2.id, nodes: [], color: '#00ff00' }
 		]
 		const sceneCtx = createSceneCtx(
 			[marble, dummyMarble],

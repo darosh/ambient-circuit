@@ -71,7 +71,7 @@ export interface MarbleRuntime {
 	running?: boolean // movement on/off override
 }
 
-export interface Marble {
+export interface MarbleInstance {
 	id: number // stable ID (survives array mutations)
 	index: number
 	config: MarbleConfig
@@ -96,7 +96,13 @@ export function resetMarbleIdCounter(): void {
 	_nextId = 0
 }
 
-export function createMarble(config: MarbleConfig, index = 0): Marble {
+/** @deprecated Use createMarbleInstance */
+export const createMarble = createMarbleInstance
+
+/** @deprecated Use MarbleInstance */
+export type Marble = MarbleInstance
+
+export function createMarbleInstance(config: MarbleConfig, index = 0): MarbleInstance {
 	return {
 		id: _nextId++,
 		index,

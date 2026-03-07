@@ -12,19 +12,15 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	rails: [
 		{
-			rail: {
-				id: 'abcdefghijklmnopqrstuvwxyz',
-				offset: [-5, 0, 1],
-				nodes: [[0, 0, 0], { p: [10, 0, 0], beat: 16 }]
-			},
+			id: 'abcdefghijklmnopqrstuvwxyz',
+			offset: [-5, 0, 1],
+			nodes: [[0, 0, 0], { p: [10, 0, 0], beat: 16 }],
 			color: colors[0]
 		},
 		{
-			rail: {
-				id: '#0123456789-+./&@*',
-				offset: [-5, 0, -1],
-				nodes: [[0, 0, 0], { p: [10, 0, 0], beat: 16 }]
-			},
+			id: '#0123456789-+./&@*',
+			offset: [-5, 0, -1],
+			nodes: [[0, 0, 0], { p: [10, 0, 0], beat: 16 }],
 			color: colors[3]
 		}
 	]

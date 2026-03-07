@@ -53,31 +53,25 @@ export const scene: SceneConfig = {
 	},
 	rails: [
 		{
-			rail: {
-				id: 'camera',
-				offset: [0, 8, 0],
-				nodes: [...circle({ radius: 7 }), 'ddddb rrr uuuub lll']
-			},
+			id: 'camera',
+			offset: [0, 8, 0],
+			nodes: [...circle({ radius: 7 }), 'ddddb rrr uuuub lll'],
 			marbles: [{ start: 0, speed: 0.1, mode: 'ping-pong' }],
 			color: '#113344',
 			visible: false
 		},
 		{
-			rail: {
-				id: 'camera2',
-				offset: [0, 7, 0],
-				nodes: circle({ radius: 13 })
-			},
+			id: 'camera2',
+			offset: [0, 7, 0],
+			nodes: circle({ radius: 13 }),
 			marbles: [{ start: 0, speed: 0.1 }],
 			color: '#113344',
 			visible: false
 		},
 		{
-			rail: {
-				id: 'synth',
-				offset: [0, 4.5, 0],
-				nodes: [...spiral({ rounds: 9, height: -4.5 }), 'oo out u2.5 uit iiii ilt l2.5 lot']
-			},
+			id: 'synth',
+			offset: [0, 4.5, 0],
+			nodes: [...spiral({ rounds: 9, height: -4.5 }), 'oo out u2.5 uit iiii ilt l2.5 lot'],
 			color: '#ffb700',
 			marbles: [{ type: 'ball', note: 66 }],
 			instruments: [

@@ -18,11 +18,9 @@ export const scene: SceneConfig = {
 	rails: [
 		// Example 1: Reverse all marbles
 		{
-			rail: {
-				id: 'reverse-trigger',
-				offset: [-3, 0, 1],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'reverse-trigger',
+			offset: [-3, 0, 1],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			color: c(),
 			marbles: [{ speed: 3, type: 'ball', start: 0 }],
 			instruments: [
@@ -47,11 +45,9 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'reverse-target',
-				offset: [-3, 0, -1],
-				nodes: [[0, 0, 0], 'r r r r r r']
-			},
+			id: 'reverse-target',
+			offset: [-3, 0, -1],
+			nodes: [[0, 0, 0], 'r r r r r r'],
 			color: c(),
 			marbles: [{ type: 'poly', sides: 4, start: 0, mode: 'ping-pong' }]
 		}

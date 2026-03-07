@@ -40,16 +40,14 @@ function advanceTempo(tempo: TempoState, beats: number) {
 
 function makeRailData(id = 'test-rail', instruments: Instrument[] = []): RailData {
 	return {
-		rail: {
-			id,
-			nodes: [
-				[0, 0, 0],
-				[1, 0, 0],
-				[2, 0, 0],
-				[3, 0, 0],
-				[4, 0, 0]
-			]
-		},
+		id,
+		nodes: [
+			[0, 0, 0],
+			[1, 0, 0],
+			[2, 0, 0],
+			[3, 0, 0],
+			[4, 0, 0]
+		],
 		color: '#ffffff',
 		instruments
 	} as RailData

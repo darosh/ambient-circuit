@@ -11,14 +11,12 @@ export const scene: SceneConfig = {
 	rails: [
 		// Pattern 1: Ping-pong between 2 rails (rail-a / rail-b)
 		{
-			rail: {
-				id: 'rail-a',
-				offset: [-4, 0, -4],
-				nodes: [
-					[0, 0, 0],
-					[3, 0, 0]
-				]
-			},
+			id: 'rail-a',
+			offset: [-4, 0, -4],
+			nodes: [
+				[0, 0, 0],
+				[3, 0, 0]
+			],
 			color: colors[0],
 			instruments: [
 				{
@@ -34,14 +32,12 @@ export const scene: SceneConfig = {
 			marbles: [{ start: 0 }]
 		},
 		{
-			rail: {
-				id: 'rail-b',
-				offset: [1, 0, -4],
-				nodes: [
-					[0, 0, 0],
-					[3, 0, 0]
-				]
-			},
+			id: 'rail-b',
+			offset: [1, 0, -4],
+			nodes: [
+				[0, 0, 0],
+				[3, 0, 0]
+			],
 			marbles: false,
 			color: colors[1],
 			instruments: [
@@ -59,14 +55,12 @@ export const scene: SceneConfig = {
 
 		// Pattern 2: Circular routing through 3 rails
 		{
-			rail: {
-				id: 'rail-1',
-				offset: [-4, 0, -2],
-				nodes: [
-					[0, 0, 0],
-					[2, 0, 0]
-				]
-			},
+			id: 'rail-1',
+			offset: [-4, 0, -2],
+			nodes: [
+				[0, 0, 0],
+				[2, 0, 0]
+			],
 			color: colors[2],
 			instruments: [
 				{
@@ -86,14 +80,12 @@ export const scene: SceneConfig = {
 			marbles: [{ start: 0.5, type: 'coil', rounds: 4, speed: 0.25 }]
 		},
 		{
-			rail: {
-				id: 'rail-2',
-				offset: [-1, 0, -2],
-				nodes: [
-					[0, 0, 0],
-					[2, 0, 0]
-				]
-			},
+			id: 'rail-2',
+			offset: [-1, 0, -2],
+			nodes: [
+				[0, 0, 0],
+				[2, 0, 0]
+			],
 			color: colors[3],
 			marbles: false,
 			instruments: [
@@ -113,14 +105,12 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'rail-3',
-				offset: [2, 0, -2],
-				nodes: [
-					[0, 0, 0],
-					[2, 0, 0]
-				]
-			},
+			id: 'rail-3',
+			offset: [2, 0, -2],
+			nodes: [
+				[0, 0, 0],
+				[2, 0, 0]
+			],
 			color: colors[4],
 			instruments: [
 				{
@@ -141,11 +131,9 @@ export const scene: SceneConfig = {
 
 		// // Pattern 3: Conditional switching based on speed
 		{
-			rail: {
-				id: 'rail-fast',
-				offset: [-4.5, 0, 0],
-				nodes: [[0, 0, 0], { p: [4, 0, 0], beat: 8 }]
-			},
+			id: 'rail-fast',
+			offset: [-4.5, 0, 0],
+			nodes: [[0, 0, 0], { p: [4, 0, 0], beat: 8 }],
 			color: colors[4],
 			instruments: [
 				{
@@ -163,11 +151,9 @@ export const scene: SceneConfig = {
 			marbles: [{ start: 0, speed: 2 }]
 		},
 		{
-			rail: {
-				id: 'rail-slow',
-				offset: [0.5, 0, 0],
-				nodes: [[0, 0, 0], { p: [4, 0, 0], beat: 8 }]
-			},
+			id: 'rail-slow',
+			offset: [0.5, 0, 0],
+			nodes: [[0, 0, 0], { p: [4, 0, 0], beat: 8 }],
 			color: colors[0],
 			instruments: [
 				{

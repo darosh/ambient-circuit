@@ -9,17 +9,15 @@ export const scene: SceneConfig = {
 	triggerHandler,
 	rails: [
 		{
-			rail: {
-				id: 'circle-snake',
-				offset: [1, 0, -3],
-				nodes: [
-					{ p: [0, 0, 0], round: 'both' },
-					{ p: [2, 0, 2], round: 'both' },
-					{ p: [4, 0, 0], round: 'both' },
-					{ p: [2, 0, -2], round: 'both' },
-					{ p: [0, 0, 0], round: 'both', beat: 16 }
-				]
-			},
+			id: 'circle-snake',
+			offset: [1, 0, -3],
+			nodes: [
+				{ p: [0, 0, 0], round: 'both' },
+				{ p: [2, 0, 2], round: 'both' },
+				{ p: [4, 0, 0], round: 'both' },
+				{ p: [2, 0, -2], round: 'both' },
+				{ p: [0, 0, 0], round: 'both', beat: 16 }
+			],
 			color: colors[0],
 			marbles: [
 				{ type: 'ball', start: 0, snake: true, speed: 1 },
@@ -32,26 +30,22 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			rail: {
-				id: 'straight-eater',
-				nodes: [[5, 0, 5], { p: [-5, 0, -5], beat: 8 }]
-			},
+			id: 'straight-eater',
+			nodes: [[5, 0, 5], { p: [-5, 0, -5], beat: 8 }],
 			color: colors[1],
 			marbles: [{ type: 'eater', start: 0, snake: 0.5, speed: 0.5, angle: 75 }]
 		},
 		{
-			rail: {
-				id: 'tilted-eater',
-				tilt: 0,
-				offset: [-5, 0, 3],
-				nodes: [
-					{ p: [0, 0, 0], round: 'both' },
-					{ p: [2, 0, 2], round: 'both' },
-					{ p: [4, 0, 0], round: 'both' },
-					{ p: [2, 0, -2], round: 'both' },
-					{ p: [0, 0, 0], round: 'both' }
-				]
-			},
+			id: 'tilted-eater',
+			tilt: 0,
+			offset: [-5, 0, 3],
+			nodes: [
+				{ p: [0, 0, 0], round: 'both' },
+				{ p: [2, 0, 2], round: 'both' },
+				{ p: [4, 0, 0], round: 'both' },
+				{ p: [2, 0, -2], round: 'both' },
+				{ p: [0, 0, 0], round: 'both' }
+			],
 			color: colors[2],
 			marbles: [{ type: 'eater', start: 0, speed: 1, snake: 0.5, angle: 90 }]
 		}

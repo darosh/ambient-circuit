@@ -1,9 +1,10 @@
-import type { RailData, EaterMarbleData } from '../core/rail-data'
-import type { Marble } from '../core/marble'
-import { createMarble } from '../core/marble'
+import type { RailConfig, EaterMarbleInput } from '../core/rail-config'
+import { toRailShapeConfig } from '../core/rail-config'
+import type { MarbleInstance } from '../core/marble'
+import { createMarbleInstance } from '../core/marble'
 import { resolveRail } from '../core/rail-resolve'
 
-export function createInstrumentSignals(rails: RailData[]): {
+export function createInstrumentSignals(rails: RailConfig[]): {
 	signals: Array<{ intensity: number }>
 	midiSignals: Array<{ intensity: number }>
 	/* eslint-disable @typescript-eslint/no-explicit-any */
@@ -27,7 +28,7 @@ export function createInstrumentSignals(rails: RailData[]): {
 }
 
 export function assignInstrumentSignals(
-	rails: RailData[],
+	rails: RailConfig[],
 	signals: Array<{ intensity: number }>,
 	midiSignals: Array<{ intensity: number }>,
 	/* eslint-disable @typescript-eslint/no-explicit-any */
@@ -47,19 +48,20 @@ export function assignInstrumentSignals(
 }
 
 export function createMarbleConfigs(
-	rails: RailData[],
+	rails: RailConfig[],
 	easing: string
-): { marbles: Marble[]; railIndices: number[] } {
-	const ms: Marble[] = []
+): { marbles: MarbleInstance[]; railIndices: number[] } {
+	const ms: MarbleInstance[] = []
 	const indices: number[] = []
-	for (const [i, { rail, marbles: mds }] of rails.entries()) {
-		const resolvedRail = resolveRail(rail)
+	for (const [i, rc] of rails.entries()) {
+		const resolvedRail = resolveRail(toRailShapeConfig(rc))
+		const mds = rc.marbles
 
 		const configs = mds && mds.length > 0 ? mds : mds === false ? [] : [{}]
 
 		for (const m of configs) {
 			ms.push(
-				createMarble(
+				createMarbleInstance(
 					{
 						resolvedRail,
 						startBeat: m.start ?? 0,
@@ -72,7 +74,7 @@ export function createMarbleConfigs(
 						velocity: m.velocity,
 						duration: m.duration,
 						type: m.type,
-						angle: (<EaterMarbleData>m)?.angle ?? 60,
+						angle: (<EaterMarbleInput>m)?.angle ?? 60,
 						bouncer: m.bouncer ?? false,
 						snake: m.snake ?? false,
 						active: m.active,

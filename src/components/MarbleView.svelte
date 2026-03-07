@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import { onDestroy } from 'svelte'
-	import type { Marble } from '../lib/core/marble'
+	import type { MarbleInstance } from '../lib/core/marble'
 	import { Color, Vector3, Euler, Matrix4, type Mesh } from 'three/webgpu'
 	import { marbleMaterial } from '../lib/components/config'
 	import { easeOutQuart } from '../lib/helpers/easing'
 	import type { ResolvedRail } from '../lib/core/rail'
-	import type { RailData } from '../lib/core/rail-data'
+	import type { RailConfig } from '../lib/core/rail-config'
 	import {
 		createMarbleGeometry,
 		BALL_RADIUS,
@@ -32,9 +32,9 @@
 	const _POLY_ROT = new Matrix4().makeRotationZ(-Math.PI / 2)
 
 	type Props = {
-		marble: Marble
+		marble: MarbleInstance
 		rail: ResolvedRail
-		railData: RailData
+		railData: RailConfig
 		color: string
 		wireframe?: boolean
 		fxMarbles?: boolean

@@ -1,4 +1,4 @@
-import type { Marble, MarbleDirection } from './marble'
+import type { MarbleInstance, MarbleDirection } from './marble'
 
 /**
  * Safe API for modifying marble state from instrument handlers.
@@ -6,7 +6,7 @@ import type { Marble, MarbleDirection } from './marble'
  */
 export class MarbleState {
 	constructor(
-		private marble: Marble,
+		private marble: MarbleInstance,
 		private marbleBeat?: number,
 		private visibility?: { value: boolean },
 		private activity?: { value: boolean }

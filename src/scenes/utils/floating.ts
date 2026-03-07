@@ -10,7 +10,8 @@ import {
 	easeOutElastic,
 	type EasingFunction
 } from '../../lib/helpers/easing'
-import type { RailData } from '../../lib/core/rail-data'
+import type { RailConfig } from '../../lib/core/rail-config'
+import { toRailShapeConfig } from '../../lib/core/rail-config'
 import type { Vec3 } from '../../lib/core/rail'
 import { resolveRail } from '../../lib/core/rail-resolve'
 
@@ -133,8 +134,8 @@ function isNonZero(v: [number, number, number]) {
 }
 
 /** Compute bounding box center from resolved rail points */
-export function railCenter(railData: RailData): Vec3 {
-	const resolved = resolveRail(railData.rail)
+export function railCenter(railData: RailConfig): Vec3 {
+	const resolved = resolveRail(toRailShapeConfig(railData))
 	const pts = resolved.points
 	if (pts.length === 0) return [0, 0, 0]
 

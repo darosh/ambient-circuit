@@ -49,11 +49,9 @@ export const scene: SceneConfig = {
 	rails: getTextRailNodes('AMBIENT CIRCUIT', 1.8, true).map(
 		(nodes, i): RailData => ({
 			color: c(),
-			rail: {
-				offset: [-4.75, 1.5, 0],
-				id: `t${i + 1}`,
-				nodes
-			},
+			offset: [-4.75, 1.5, 0],
+			id: `t${i + 1}`,
+			nodes,
 			marbles: [[20.91], [11.91]][i].map((start) => ({
 				type: 'ball',
 				mode: 'ping-pong',
@@ -73,7 +71,7 @@ export const scene: SceneConfig = {
 scene.renderFactory = (_, seed) =>
 	createFloating({
 		seed,
-		floatIntensity: _.rail.id[0] === 'y' ? [-0.05, 0.1, 0.1] : _.rail.id[0] === 'z' ? 0 : undefined
+		floatIntensity: _.id[0] === 'y' ? [-0.05, 0.1, 0.1] : _.id[0] === 'z' ? 0 : undefined
 	})
 
 for (const v of [3, 8, 10, 13, 21, 27, 28, 33, 35, 40]) {
@@ -113,11 +111,9 @@ scene.rails!.push(
 		(d, i) =>
 			<RailData>{
 				color: color3[order.indexOf(i + 1) % 2],
-				rail: {
-					offset: i === last ? [0, -0.2, 0] : undefined,
-					id: i === last ? 'z' : `y${i + 1}`,
-					nodes: [d.replace(/(^[^ ]+ )/, '$1u.1') + 'd.1']
-				},
+				offset: i === last ? [0, -0.2, 0] : undefined,
+				id: i === last ? 'z' : `y${i + 1}`,
+				nodes: [d.replace(/(^[^ ]+ )/, '$1u.1') + 'd.1'],
 				marbles: [
 					{
 						type: i === 19 ? 'coil' : undefined,
@@ -141,14 +137,13 @@ scene.rails!.push(
 )
 
 scene.rails[last + first]!.color = color4[1] // '#111111'
-scene.rails[last + first]!.rail.nodes[0] += ' 12c'
+scene.rails[last + first]!.nodes[0] += ' 12c'
 
 // scene.rails.push(<RailData>{
 // 	color: c(),
-// 	rail: {
-// 		id: `o`,
+// // 		id: `o`,
 // 		nodes: ['r0.5 i5.2 r4.7 o10.4 l5.2 i10.4']
-// 	},
+//,
 // 	marbles: [{ start: 5 }],
 // 	instruments: [
 // 		{ type: 'arrow', kind: 'tri', beat: 0, align: 'back' },

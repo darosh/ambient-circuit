@@ -1,7 +1,8 @@
 import type { InstrumentEntity, MarbleEntity } from '../core/scene-ctx'
 import { Vector3, Matrix4, Quaternion } from 'three/webgpu'
 import type { Vector3Tuple } from 'three/webgpu'
-import type { RailData } from '../core/rail-data'
+import type { RailConfig } from '../core/rail-config'
+import { toRailShapeConfig } from '../core/rail-config'
 import type { NodeInfo } from '../components/audio-view/audio-layout'
 import { resolveRail } from '../core/rail-resolve'
 import { getBeatTransform, getPointsForPath } from '../core/rail-curve'
@@ -9,7 +10,7 @@ import { getBeatTransform, getPointsForPath } from '../core/rail-curve'
 export function getMidiSignalLinks(
 	instruments: InstrumentEntity[],
 	nodes: NodeInfo[],
-	rails: RailData[],
+	rails: RailConfig[],
 	AUDIO_OFFSET: Vector3Tuple
 ) {
 	const links: Array<{
@@ -20,7 +21,7 @@ export function getMidiSignalLinks(
 	}> = []
 	let instrIdx = 0
 	for (const railData of rails) {
-		const resolved = resolveRail(railData.rail)
+		const resolved = resolveRail(toRailShapeConfig(railData))
 		for (const instrument of railData.instruments ?? []) {
 			const ie = instruments[instrIdx]
 			if (ie?.audio && instrument.midiSignal) {
@@ -59,7 +60,7 @@ export function getMidiSignalLinks(
 export function getMarbleSignalLinks(
 	marbles: MarbleEntity[],
 	nodes: NodeInfo[],
-	rails: RailData[],
+	rails: RailConfig[],
 	AUDIO_OFFSET: Vector3Tuple
 ) {
 	const links: Array<{
@@ -75,7 +76,7 @@ export function getMarbleSignalLinks(
 		if (!genNode) continue
 
 		const currentRailId: string = me.marble.runtime.railId ?? me.marble.config.resolvedRail.id
-		const railIdx = rails.findIndex((r) => r.rail.id === currentRailId)
+		const railIdx = rails.findIndex((r) => r.id === currentRailId)
 		const railData = rails[railIdx]
 
 		let pos = new Vector3(me.marble.position.x, me.marble.position.y, me.marble.position.z)

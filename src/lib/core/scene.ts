@@ -1,5 +1,5 @@
 import type { InstrumentTriggerContext } from './instrument'
-import type { RailData } from './rail-data'
+import type { RailConfig } from './rail-config'
 import type { AudioChainConfig } from '../audio/types'
 import type { SceneCtx, MarbleEntity, InstrumentEntity, RailEntity } from './scene-ctx'
 import { Vector3Tuple } from 'three/webgpu'
@@ -91,7 +91,7 @@ export type SceneConfig = {
 	id: string
 	description?: string
 	bpm: number
-	rails: RailData[]
+	rails: RailConfig[]
 	/** Arbitrary scene-level state, passed through to all handler contexts as ctx.user */
 	user?: Record<string, unknown>
 	triggerHandler?: TriggerHandler
@@ -122,7 +122,7 @@ export type SceneConfig = {
 		master?: import('../audio/types').MasterConfig
 	}
 	/** Factory to auto-assign render fn to rails without one */
-	renderFactory?: (railData: RailData, index: number) => RailData['render'] | undefined
+	renderFactory?: (railData: RailConfig, index: number) => RailConfig['render'] | undefined
 	/** Fixed world-space direction text labels face (e.g. [0,0,1] = face +Z).
 	 *  When absent, defaults to billboard (tracks main camera). */
 	textOrientation?: Vector3Tuple

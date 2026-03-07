@@ -115,14 +115,12 @@ const scene: SceneConfig = {
 	},
 	rails: [
 		{
-			rail: {
-				id: 'synth',
-				offset: [0, 4.5, 0],
-				nodes: [
-					...spiral({ rounds: 9, height: -4.5, trail: 0, last: true }),
-					'ooo out u2.5 uit iiii ilt l2.5 lot 38'
-				]
-			},
+			id: 'synth',
+			offset: [0, 4.5, 0],
+			nodes: [
+				...spiral({ rounds: 9, height: -4.5, trail: 0, last: true }),
+				'ooo out u2.5 uit iiii ilt l2.5 lot 38'
+			],
 			color: '#ff00cc',
 			marbles: [{ type: 'ball' }],
 			instruments: [

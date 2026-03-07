@@ -5,7 +5,8 @@ import { createTempoState } from '../src/lib/core/tempo'
 import { computeBeatPositions } from '../src/lib/core/rail-curve'
 import { resolveRail } from '../src/lib/core/rail-resolve'
 import type { ResolvedRail } from '../src/lib/core/rail'
-import type { RailData } from '../src/lib/core/rail-data'
+import type { RailConfig } from '../src/lib/core/rail-config'
+import { toRailShapeConfig } from '../src/lib/core/rail-config'
 import type { TriggerHandler, SceneConfig } from '../src/lib/core/scene'
 import { createSceneCtx } from '../src/lib/core/scene-ctx-factory'
 
@@ -202,16 +203,14 @@ describe('marble-system', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
-		const railData: RailData = {
-			rail: {
-				id: 'test',
-				nodes: [
-					[0, 0, 0],
-					[1, 0, 0],
-					[2, 0, 0],
-					[3, 0, 0]
-				]
-			},
+		const railData: RailConfig = {
+			id: 'test',
+			nodes: [
+				[0, 0, 0],
+				[1, 0, 0],
+				[2, 0, 0],
+				[3, 0, 0]
+			],
 			color: '#ff0000',
 			instruments: [
 				{
@@ -222,7 +221,7 @@ describe('marble-system', () => {
 			]
 		}
 
-		const resolvedRail = resolveRail(railData.rail)
+		const resolvedRail = resolveRail(toRailShapeConfig(railData))
 
 		const marble = createMarble({
 			resolvedRail,
@@ -270,16 +269,14 @@ describe('marble-system', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
-		const railData: RailData = {
-			rail: {
-				id: 'test',
-				nodes: [
-					[0, 0, 0],
-					[1, 0, 0],
-					[2, 0, 0],
-					[3, 0, 0]
-				]
-			},
+		const railData: RailConfig = {
+			id: 'test',
+			nodes: [
+				[0, 0, 0],
+				[1, 0, 0],
+				[2, 0, 0],
+				[3, 0, 0]
+			],
 			color: '#ff0000',
 			instruments: [
 				{
@@ -290,7 +287,7 @@ describe('marble-system', () => {
 			]
 		}
 
-		const resolvedRail = resolveRail(railData.rail)
+		const resolvedRail = resolveRail(toRailShapeConfig(railData))
 
 		const marble = createMarble({
 			resolvedRail,
@@ -341,16 +338,14 @@ describe('marble-system', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
-		const railData: RailData = {
-			rail: {
-				id: 'test',
-				nodes: [
-					[0, 0, 0],
-					[1, 0, 0],
-					[2, 0, 0],
-					[3, 0, 0]
-				]
-			},
+		const railData: RailConfig = {
+			id: 'test',
+			nodes: [
+				[0, 0, 0],
+				[1, 0, 0],
+				[2, 0, 0],
+				[3, 0, 0]
+			],
 			color: '#ff0000',
 			instruments: [
 				{
@@ -361,7 +356,7 @@ describe('marble-system', () => {
 			]
 		}
 
-		const resolvedRail = resolveRail(railData.rail)
+		const resolvedRail = resolveRail(toRailShapeConfig(railData))
 
 		const marble = createMarble({
 			resolvedRail,
@@ -412,16 +407,14 @@ describe('marble-system', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
-		const railData: RailData = {
-			rail: {
-				id: 'test',
-				nodes: [
-					[0, 0, 0],
-					[1, 0, 0],
-					[2, 0, 0],
-					[3, 0, 0]
-				]
-			},
+		const railData: RailConfig = {
+			id: 'test',
+			nodes: [
+				[0, 0, 0],
+				[1, 0, 0],
+				[2, 0, 0],
+				[3, 0, 0]
+			],
 			color: '#ff0000',
 			instruments: [
 				{
@@ -437,7 +430,7 @@ describe('marble-system', () => {
 			]
 		}
 
-		const resolvedRail = resolveRail(railData.rail)
+		const resolvedRail = resolveRail(toRailShapeConfig(railData))
 
 		const marble = createMarble({
 			resolvedRail,

@@ -2,7 +2,8 @@
 	import { T, useThrelte, useTask } from '@threlte/core'
 	import { Align } from '@threlte/extras'
 	import type { ResolvedPoint } from '../lib/core/rail'
-	import type { RailData } from '../lib/core/rail-data'
+	import type { RailConfig } from '../lib/core/rail-config'
+	import { toRailShapeConfig } from '../lib/core/rail-config'
 	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import type { TempoState } from '../lib/core/tempo'
 	import { resolveRail } from '../lib/core/rail-resolve'
@@ -29,7 +30,7 @@
 	import { Color, type Mesh, type Material } from 'three/webgpu'
 
 	type Props = {
-		railData: RailData
+		railData: RailConfig
 		width?: number
 		showPoints?: boolean
 		showBeats?: boolean
@@ -76,7 +77,6 @@
 	const RAIL_TEXT_WIDTH = 4
 	const RAIL_TEXT_SIZE = 0.2
 
-	const rail = $derived(railData.rail)
 	const color = $derived(railData.runtime?.color ?? railData.color)
 	const instruments = $derived(railData.instruments ?? [])
 	const render = $derived(railData.render)
@@ -98,7 +98,7 @@
 		return !(v.x < 1.001 && v.x > 0.999 && v.y < 1.001 && v.y > 0.999 && v.z < 1.001 && v.z > 0.999)
 	}
 
-	const resolved = $derived(resolveRail(rail))
+	const resolved = $derived(resolveRail(toRailShapeConfig(railData)))
 	const plainMaterial = $derived(fxRails ? null : makeStandardMaterial(color))
 
 	// Per-rail data written to shared material uniforms in onBeforeRender
@@ -458,7 +458,7 @@
 			<LineText
 				fx={fxText}
 				{id}
-				text={rail.id.toUpperCase()}
+				text={railData.id.toUpperCase()}
 				{color}
 				active={effectiveActive}
 				size={RAIL_TEXT_SIZE}
