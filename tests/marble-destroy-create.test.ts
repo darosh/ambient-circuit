@@ -1,17 +1,17 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { createMarble, resetMarbleIdCounter, type MarbleConfig } from '../src/lib/core/marble'
+import { createMarbleInstance, resetMarbleIdCounter, type MarbleConfig } from '../src/lib/core/marble'
 import { MarbleState } from '../src/lib/core/marble-state'
 import { updateMarbles } from '../src/lib/core/marble-system'
 import { resolveRail } from '../src/lib/core/rail-resolve'
 import { createTempoState, type TempoState } from '../src/lib/core/tempo'
-import type { Instrument } from '../src/lib/core/instrument'
+import type { InstrumentConfig } from '../src/lib/core/instrument'
 import {
 	createSceneCtx,
 	addMarbleEntity,
 	removeMarbleEntity,
 	reindexMarbles
 } from '../src/lib/core/scene-ctx-factory'
-import type { RailData } from '../src/lib/core/rail-data'
+import type { RailConfig } from '../src/lib/core/rail-config'
 import type { SceneConfig } from '../src/lib/core/scene'
 
 function createTestRail(id = 'test-rail') {
@@ -38,7 +38,7 @@ function advanceTempo(tempo: TempoState, beats: number) {
 	}
 }
 
-function makeRailData(id = 'test-rail', instruments: Instrument[] = []): RailData {
+function makeRailData(id = 'test-rail', instruments: InstrumentConfig[] = []): RailConfig {
 	return {
 		id,
 		nodes: [
@@ -50,7 +50,7 @@ function makeRailData(id = 'test-rail', instruments: Instrument[] = []): RailDat
 		],
 		color: '#ffffff',
 		instruments
-	} as RailData
+	} as RailConfig
 }
 
 describe('Marble destroy/create', () => {
@@ -76,7 +76,7 @@ describe('Marble destroy/create', () => {
 	}
 
 	it('destroy() sets runtime.destroyed = true', () => {
-		const marble = createMarble(makeConfig(), 0)
+		const marble = createMarbleInstance(makeConfig(), 0)
 		const state = new MarbleState(marble)
 		expect(state.destroyed).toBe(false)
 		state.destroy()
@@ -85,7 +85,7 @@ describe('Marble destroy/create', () => {
 	})
 
 	it('destroyed marble returned in mutations', () => {
-		const m = createMarble(makeConfig(), 0)
+		const m = createMarbleInstance(makeConfig(), 0)
 		m.runtime.destroyed = true
 
 		const railData = makeRailData()
@@ -111,8 +111,8 @@ describe('Marble destroy/create', () => {
 	})
 
 	it('destroyed marble skips triggers', () => {
-		const inst = { beat: 2, path: [] } as unknown as Instrument
-		const m = createMarble(makeConfig(), 0)
+		const inst = { beat: 2, path: [] } as unknown as InstrumentConfig
+		const m = createMarbleInstance(makeConfig(), 0)
 
 		const railData = makeRailData('test-rail', [inst])
 		const scene = { rails: [railData] } as SceneConfig
@@ -143,7 +143,7 @@ describe('Marble destroy/create', () => {
 	})
 
 	it('create() adds to pending queue', () => {
-		const m = createMarble(makeConfig(), 0)
+		const m = createMarbleInstance(makeConfig(), 0)
 		const railData = makeRailData()
 		const scene = { rails: [railData] } as SceneConfig
 		const ctx = createSceneCtx([m], [railData], [0], tempo, scene)
@@ -156,7 +156,7 @@ describe('Marble destroy/create', () => {
 	})
 
 	it('created marble appears in mutations after updateMarbles', () => {
-		const m = createMarble(makeConfig(), 0)
+		const m = createMarbleInstance(makeConfig(), 0)
 		const railData = makeRailData()
 		const scene = { rails: [railData] } as SceneConfig
 		const ctx = createSceneCtx([m], [railData], [0], tempo, scene)
@@ -188,7 +188,7 @@ describe('Marble destroy/create', () => {
 	})
 
 	it('created marble has correct startBeat', () => {
-		const m = createMarble(makeConfig(), 0)
+		const m = createMarbleInstance(makeConfig(), 0)
 		const railData = makeRailData()
 		const scene = { rails: [railData] } as SceneConfig
 		const ctx = createSceneCtx([m], [railData], [0], tempo, scene)
@@ -215,7 +215,7 @@ describe('Marble destroy/create', () => {
 	})
 
 	it('rewind returns rewind mutation', () => {
-		const m = createMarble(makeConfig(), 0)
+		const m = createMarbleInstance(makeConfig(), 0)
 		const railData = makeRailData()
 		const scene = { rails: [railData] } as SceneConfig
 		const ctx = createSceneCtx([m], [railData], [0], tempo, scene)
@@ -258,8 +258,8 @@ describe('Marble destroy/create', () => {
 	})
 
 	it('destroy + create in same frame both work', () => {
-		const m1 = createMarble(makeConfig(), 0)
-		const m2 = createMarble(makeConfig(), 1)
+		const m1 = createMarbleInstance(makeConfig(), 0)
+		const m2 = createMarbleInstance(makeConfig(), 1)
 		m1.runtime.destroyed = true
 
 		const railData = makeRailData()
@@ -289,7 +289,7 @@ describe('Marble destroy/create', () => {
 	})
 
 	it('sceneCtx.marbles stays in sync via add/remove helpers', () => {
-		const m1 = createMarble(makeConfig(), 0)
+		const m1 = createMarbleInstance(makeConfig(), 0)
 		const railData = makeRailData()
 		const scene = { rails: [railData] } as SceneConfig
 		const ctx = createSceneCtx([m1], [railData], [0], tempo, scene)
@@ -298,7 +298,7 @@ describe('Marble destroy/create', () => {
 		expect(ctx.marbles[0].id).toBe(m1.id)
 
 		// Add
-		const m2 = createMarble(makeConfig(), 1)
+		const m2 = createMarbleInstance(makeConfig(), 1)
 		addMarbleEntity(ctx, m2)
 		expect(ctx.marbles).toHaveLength(2)
 		expect(ctx.marbles[1].id).toBe(m2.id)
@@ -310,9 +310,9 @@ describe('Marble destroy/create', () => {
 	})
 
 	it('reindexMarbles fixes indices after mutations', () => {
-		const m1 = createMarble(makeConfig(), 0)
-		const m2 = createMarble(makeConfig(), 5) // wrong index
-		const m3 = createMarble(makeConfig(), 10) // wrong index
+		const m1 = createMarbleInstance(makeConfig(), 0)
+		const m2 = createMarbleInstance(makeConfig(), 5) // wrong index
+		const m3 = createMarbleInstance(makeConfig(), 10) // wrong index
 		const arr = [m1, m2, m3]
 		reindexMarbles(arr)
 		expect(arr[0].index).toBe(0)
@@ -321,9 +321,9 @@ describe('Marble destroy/create', () => {
 	})
 
 	it('marble.id is stable and unique', () => {
-		const m1 = createMarble(makeConfig(), 0)
-		const m2 = createMarble(makeConfig(), 1)
-		const m3 = createMarble(makeConfig(), 2)
+		const m1 = createMarbleInstance(makeConfig(), 0)
+		const m2 = createMarbleInstance(makeConfig(), 1)
+		const m3 = createMarbleInstance(makeConfig(), 2)
 		expect(m1.id).not.toBe(m2.id)
 		expect(m2.id).not.toBe(m3.id)
 		expect(m1.id).not.toBe(m3.id)

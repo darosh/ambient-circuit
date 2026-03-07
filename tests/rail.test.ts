@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import type { Rail } from '../src/lib/core/rail'
+import type { RailShapeConfig } from '../src/lib/core/rail'
 import { resolveRail, validateNoDuplicateMidPathPositions } from '../src/lib/core/rail-resolve'
 
 describe('resolveRail', () => {
 	it('straight rail: auto-increments beats from 0', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'kick',
 			nodes: [
 				[0, 0, 0],
@@ -23,7 +23,7 @@ describe('resolveRail', () => {
 	})
 
 	it('beatOffset shifts all beats', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'off',
 			beatOffset: 4,
 			nodes: [
@@ -37,7 +37,7 @@ describe('resolveRail', () => {
 	})
 
 	it('reverse flag preserved', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'rev',
 			reverse: true,
 			nodes: [[0, 0, 0]]
@@ -46,7 +46,7 @@ describe('resolveRail', () => {
 	})
 
 	it('rounding preserved', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'mel',
 			nodes: [
 				[0, 0, 0],
@@ -65,7 +65,7 @@ describe('resolveRail', () => {
 	})
 
 	it('explicit beat override', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'jump',
 			nodes: [[0, 0, 0], { p: [1, 0, 0], beat: 4 }, [2, 0, 0]]
 		}
@@ -74,7 +74,7 @@ describe('resolveRail', () => {
 	})
 
 	it('explicit beat on last point interpolates from start', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'circle',
 			nodes: [
 				{ p: [0, 0, 0], round: 'both' },
@@ -89,7 +89,7 @@ describe('resolveRail', () => {
 	})
 
 	it('explicit beat override two points', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'jump',
 			nodes: [[0, 0, 0], { p: [1, 0, 0], beat: 4 }]
 		}
@@ -98,7 +98,7 @@ describe('resolveRail', () => {
 	})
 
 	it('split: resolves branches with correct beats', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'fork',
 			nodes: [
 				[0, 0, 0],
@@ -137,7 +137,7 @@ describe('resolveRail', () => {
 	})
 
 	it('split: can be first element now', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'split-first',
 			nodes: [
 				{
@@ -155,7 +155,7 @@ describe('resolveRail', () => {
 	})
 
 	it('nested splits', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'nested',
 			nodes: [
 				[0, 0, 0],
@@ -195,7 +195,7 @@ describe('resolveRail', () => {
 	})
 
 	it('positions preserved exactly', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'pos',
 			nodes: [[1.5, -2.3, 0.7], { p: [3.14, 0, -1], round: 'both' }]
 		}
@@ -205,14 +205,14 @@ describe('resolveRail', () => {
 	})
 
 	it('empty rail', () => {
-		const rail: Rail = { id: 'empty', nodes: [] }
+		const rail: RailShapeConfig = { id: 'empty', nodes: [] }
 		const r = resolveRail(rail)
 		expect(r.points).toHaveLength(0)
 		expect(r.splits).toHaveLength(0)
 	})
 
 	it('resolves eight (validation detects mid-path duplicate)', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'eight',
 			nodes: [[0, 0, 0], 'ir or ol il il ol or ir']
 		}
@@ -228,7 +228,7 @@ describe('resolveRail', () => {
 	})
 
 	it('resolves eight-no-cross', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'eight-ext',
 			nodes: [[0, 0, -3], 'ir or ol ilu0.01 il ol or ird0.01 ']
 		}
@@ -240,7 +240,7 @@ describe('resolveRail', () => {
 	})
 
 	it('validation detects duplicate mid-path positions', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'duplicate-test',
 			nodes: [
 				[0, 0, 0],
@@ -261,7 +261,7 @@ describe('resolveRail', () => {
 	})
 
 	it('validation allows closed loop with first == last', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'closed-loop',
 			nodes: [
 				[0, 0, 0],
@@ -277,7 +277,7 @@ describe('resolveRail', () => {
 	})
 
 	it('beats positions should be always incremental', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'beats',
 			nodes: [
 				{ p: [0, 0, 0] },
@@ -293,7 +293,7 @@ describe('resolveRail', () => {
 	})
 
 	it('beats positions should be interpolated between anchor nodes', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'beats',
 			nodes: ['l 0 l l l 6 l']
 		}
@@ -302,7 +302,7 @@ describe('resolveRail', () => {
 	})
 
 	it('first node is anchor', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'beats',
 			nodes: ['l l l l 6 l']
 		}

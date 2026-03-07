@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createMarble } from '../src/lib/core/marble'
+import { createMarbleInstance } from '../src/lib/core/marble'
 import { updateMarble } from '../src/lib/core/marble-system'
 import { createTempoState } from '../src/lib/core/tempo'
 import { computeBeatPositions } from '../src/lib/core/rail-curve'
@@ -26,7 +26,7 @@ describe('marble-system', () => {
 	}
 
 	it('marble starts at beat 0', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: testRail,
 			startBeat: 0,
 			direction: 'forward',
@@ -42,7 +42,7 @@ describe('marble-system', () => {
 	})
 
 	it('marble advances with global beat', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: testRail,
 			startBeat: 0,
 			direction: 'forward',
@@ -60,7 +60,7 @@ describe('marble-system', () => {
 	})
 
 	it('marble loops at end of rail', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: testRail,
 			startBeat: 0,
 			direction: 'forward',
@@ -76,7 +76,7 @@ describe('marble-system', () => {
 	})
 
 	it('marble ping-pongs at end of rail', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: testRail,
 			startBeat: 0,
 			direction: 'forward',
@@ -122,7 +122,7 @@ describe('marble-system', () => {
 			splits: []
 		}
 
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: sparseRail,
 			startBeat: 0,
 			direction: 'forward',
@@ -163,7 +163,7 @@ describe('marble-system', () => {
 			splits: []
 		}
 
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: sparseRail,
 			startBeat: 0,
 			direction: 'forward',
@@ -223,7 +223,7 @@ describe('marble-system', () => {
 
 		const resolvedRail = resolveRail(toRailShapeConfig(railData))
 
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail,
 			startBeat: 0,
 			direction: 'forward',
@@ -289,7 +289,7 @@ describe('marble-system', () => {
 
 		const resolvedRail = resolveRail(toRailShapeConfig(railData))
 
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail,
 			startBeat: 0,
 			direction: 'forward',
@@ -358,7 +358,7 @@ describe('marble-system', () => {
 
 		const resolvedRail = resolveRail(toRailShapeConfig(railData))
 
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail,
 			startBeat: 0,
 			direction: 'forward',
@@ -432,7 +432,7 @@ describe('marble-system', () => {
 
 		const resolvedRail = resolveRail(toRailShapeConfig(railData))
 
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail,
 			startBeat: 0,
 			direction: 'forward',

@@ -60,10 +60,6 @@ export type RailShapeConfig = {
 	nodes: RailDef
 }
 
-/** @deprecated Use RailShapeConfig */
-// eslint-disable-next-line sonarjs/redundant-type-aliases
-export type Rail = RailShapeConfig
-
 // ── Resolved types (engine-internal) ────────────────────────
 
 export type ResolvedPoint = {

@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { createMarble } from '../src/lib/core/marble'
+import { createMarbleInstance } from '../src/lib/core/marble'
 import { updateMarbles } from '../src/lib/core/marble-system'
 import { createTempoState, updateTempo } from '../src/lib/core/tempo'
 import { resolveRail } from '../src/lib/core/rail-resolve'
-import type { Rail } from '../src/lib/core/rail'
+import type { RailShapeConfig } from '../src/lib/core/rail'
 
 /**
  * Returns the cyclic order of marbles on the rail as an array of marble IDs,
@@ -13,7 +13,7 @@ import type { Rail } from '../src/lib/core/rail'
  * be stable — billiard-ball collision is equivalent to pass-through, so the order is invariant.
  */
 function cyclicOrder(
-	marbles: ReturnType<typeof createMarble>[],
+	marbles: ReturnType<typeof createMarbleInstance>[],
 	minBeat: number,
 	maxBeat: number
 ): number[] {
@@ -43,7 +43,7 @@ function sameCyclicOrder(a: number[], b: number[]): boolean {
 
 describe('realtime collisions — marble order preservation', () => {
 	it('chaos rail: cyclic marble order preserved after 1 minute at 120fps', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'chaos',
 			nodes: [[-1.5, 0, 1], 'r r r orb ol l l l ilb ir']
 		}
@@ -60,7 +60,7 @@ describe('realtime collisions — marble order preservation', () => {
 		]
 
 		const marbles = marbleConfigs.map((cfg, i) =>
-			createMarble(
+			createMarbleInstance(
 				{
 					resolvedRail,
 					startBeat: cfg.startBeat,

@@ -1,6 +1,6 @@
 import { SceneConfig } from '../lib/core/scene'
 import { getTextRailNodes } from '../lib/video/text-geometry'
-import { RailData } from '../lib/core/rail-data'
+import { RailConfig } from '../lib/core/rail-config'
 import { triggerHandler } from '../lib/core/trigger-handler'
 import { createFloating } from './utils/floating'
 
@@ -10,7 +10,7 @@ export const scene: SceneConfig[] = [
 		bpm: 60,
 		camera: [-4, 7, 12],
 		rails: getTextRailNodes('AMBIENT CIRCUIT', 1.8).map(
-			(nodes, i, arr): RailData => ({
+			(nodes, i, arr): RailConfig => ({
 				color: `hsl(${((i * 360) / arr.length) % 360}, 100%, 60%)`,
 				offset: [-4.9, 1, 0],
 				id: `${i + 1}`,
@@ -33,7 +33,7 @@ export const scene: SceneConfig[] = [
 		},
 		sequencerMode: 'time',
 		rails: getTextRailNodes('AMBIENT CIRCUIT', 1.8, true).map(
-			(nodes, i, arr): RailData => ({
+			(nodes, i, arr): RailConfig => ({
 				color: `hsl(${((i * 360) / (arr.length - 1.39)) % 360}, 100%, 60%)`,
 				offset: [-4.75, 1, 0],
 				id: `text-${i + 1}`,

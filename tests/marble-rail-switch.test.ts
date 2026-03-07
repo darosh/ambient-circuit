@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createMarble } from '../src/lib/core/marble'
+import { createMarbleInstance } from '../src/lib/core/marble'
 import { MarbleState } from '../src/lib/core/marble-state'
 import { updateMarble } from '../src/lib/core/marble-system'
 import { resolveRail } from '../src/lib/core/rail-resolve'
@@ -7,7 +7,7 @@ import type { SceneConfig } from '../src/lib/core/scene'
 import { createTempoState, type TempoState } from '../src/lib/core/tempo'
 import type { TriggerHandler } from '../src/lib/core/scene'
 import { createSceneCtx } from '../src/lib/core/scene-ctx-factory'
-import type { RailData } from '../src/lib/core/rail-data'
+import type { RailConfig } from '../src/lib/core/rail-config'
 
 describe('Rail Switching API', () => {
 	// Helper to create test rails
@@ -58,7 +58,7 @@ describe('Rail Switching API', () => {
 	it('basic switch - verify rail change, beat reset, branch reset', () => {
 		const { rail1, rail2 } = createTestRails()
 
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: rail1,
 			startBeat: 2,
 			direction: 'forward' as const,
@@ -68,7 +68,7 @@ describe('Rail Switching API', () => {
 		})
 
 		// Create dummy marble for rail2 so sceneCtx has resolvedRail
-		const dummyMarble = createMarble({
+		const dummyMarble = createMarbleInstance({
 			resolvedRail: rail2,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -81,7 +81,7 @@ describe('Rail Switching API', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
-		const railDataList: RailData[] = [
+		const railDataList: RailConfig[] = [
 			{ id: rail1.id, nodes: [], color: '#ff0000' },
 			{ id: rail2.id, nodes: [], color: '#00ff00' }
 		]
@@ -119,7 +119,7 @@ describe('Rail Switching API', () => {
 
 	it('invalid rail - warn and stay on current rail', () => {
 		const { rail1 } = createTestRails()
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: rail1,
 			startBeat: 2,
 			direction: 'forward' as const,
@@ -131,7 +131,7 @@ describe('Rail Switching API', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
-		const railDataList: RailData[] = [{ id: rail1.id, nodes: [], color: '#ff0000' }]
+		const railDataList: RailConfig[] = [{ id: rail1.id, nodes: [], color: '#ff0000' }]
 		const sceneCtx = createSceneCtx([marble], railDataList, [0], tempo, {} as SceneConfig)
 
 		// Mock console.warn
@@ -154,7 +154,7 @@ describe('Rail Switching API', () => {
 
 	it('state preservation - speed/note/direction/visual props kept', () => {
 		const { rail1, rail2 } = createTestRails()
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: rail1,
 			startBeat: 2,
 			direction: 'backward' as const,
@@ -172,7 +172,7 @@ describe('Rail Switching API', () => {
 		marble.runtime.color = '#ff00ff'
 		marble.runtime.easing = 'easeOutBounce'
 
-		const dummyMarble = createMarble({
+		const dummyMarble = createMarbleInstance({
 			resolvedRail: rail2,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -184,7 +184,7 @@ describe('Rail Switching API', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
-		const railDataList: RailData[] = [
+		const railDataList: RailConfig[] = [
 			{ id: rail1.id, nodes: [], color: '#ff0000' },
 			{ id: rail2.id, nodes: [], color: '#00ff00' }
 		]
@@ -220,7 +220,7 @@ describe('Rail Switching API', () => {
 
 	it('same rail no-op - early return, no state change', () => {
 		const { rail1 } = createTestRails()
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: rail1,
 			startBeat: 2,
 			direction: 'forward' as const,
@@ -241,7 +241,7 @@ describe('Rail Switching API', () => {
 
 	it('trigger after switch - instruments fire on new rail', () => {
 		const { rail1, rail2 } = createTestRails()
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: rail1,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -250,7 +250,7 @@ describe('Rail Switching API', () => {
 			speed: 1
 		})
 
-		const dummyMarble = createMarble({
+		const dummyMarble = createMarbleInstance({
 			resolvedRail: rail2,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -262,7 +262,7 @@ describe('Rail Switching API', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
-		const railDataList: RailData[] = [
+		const railDataList: RailConfig[] = [
 			{
 				id: rail1.id, nodes: [],
 				color: '#ff0000',
@@ -309,7 +309,7 @@ describe('Rail Switching API', () => {
 
 	it('multiple switches - last write wins', () => {
 		const { rail1, rail2, rail3 } = createTestRails()
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: rail1,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -318,7 +318,7 @@ describe('Rail Switching API', () => {
 			speed: 1
 		})
 
-		const dummy2 = createMarble({
+		const dummy2 = createMarbleInstance({
 			resolvedRail: rail2,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -327,7 +327,7 @@ describe('Rail Switching API', () => {
 			speed: 1
 		})
 
-		const dummy3 = createMarble({
+		const dummy3 = createMarbleInstance({
 			resolvedRail: rail3,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -339,7 +339,7 @@ describe('Rail Switching API', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
-		const railDataList: RailData[] = [
+		const railDataList: RailConfig[] = [
 			{ id: rail1.id, nodes: [], color: '#ff0000' },
 			{ id: rail2.id, nodes: [], color: '#00ff00' },
 			{ id: rail3.id, nodes: [], color: '#0000ff' }
@@ -371,7 +371,7 @@ describe('Rail Switching API', () => {
 
 	it('switch + beat override - beat set on new rail', () => {
 		const { rail1, rail2 } = createTestRails()
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: rail1,
 			startBeat: 2,
 			direction: 'forward' as const,
@@ -380,7 +380,7 @@ describe('Rail Switching API', () => {
 			speed: 1
 		})
 
-		const dummyMarble = createMarble({
+		const dummyMarble = createMarbleInstance({
 			resolvedRail: rail2,
 			startBeat: 0,
 			direction: 'forward' as const,
@@ -392,7 +392,7 @@ describe('Rail Switching API', () => {
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
 
-		const railDataList: RailData[] = [
+		const railDataList: RailConfig[] = [
 			{ id: rail1.id, nodes: [], color: '#ff0000' },
 			{ id: rail2.id, nodes: [], color: '#00ff00' }
 		]

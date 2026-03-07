@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { expandPathString, railToString } from '../src/lib/core/rail-path'
 import { resolveRail } from '../src/lib/core/rail-resolve'
 import { roundedRect } from '../src/lib/core/rail-primitives'
-import { Rail } from '../src/lib/core/rail'
+import { RailShapeConfig } from '../src/lib/core/rail'
 
 describe('expandPathString', () => {
 	it('space-delimited tokens emit points', () => {
@@ -267,13 +267,13 @@ describe('beat interpolation mode', () => {
 
 	it('points mode: uniform beat distribution', () => {
 		// roundedRect has 9 points (indices 0-8); single anchor at index 8 beat 8
-		const rail = <Rail>{ id: 'r', nodes: [railToString(roundedRect()) + ' 8'] }
+		const rail = <RailShapeConfig>{ id: 'r', nodes: [railToString(roundedRect()) + ' 8'] }
 		const res = resolveRail(rail)
 		for (let i = 0; i < res.points.length; i++) expect(res.points[i].beat).toBeCloseTo(i)
 	})
 
 	it('curve mode: arc-length beat distribution', () => {
-		const rail = <Rail>{ id: 'r', nodes: [railToString(roundedRect()) + ' 8c'] }
+		const rail = <RailShapeConfig>{ id: 'r', nodes: [railToString(roundedRect()) + ' 8c'] }
 		const res = resolveRail(rail)
 		// roundedRect corners are shorter than straight sides, so corner points
 		// (odd indices, round:'from') should get beats less than their index
@@ -289,8 +289,8 @@ describe('beat interpolation mode', () => {
 	})
 
 	it('curve mode: beats differ from points mode', () => {
-		const railP = <Rail>{ id: 'p', nodes: [railToString(roundedRect()) + ' 8'] }
-		const railC = <Rail>{ id: 'c', nodes: [railToString(roundedRect()) + ' 8c'] }
+		const railP = <RailShapeConfig>{ id: 'p', nodes: [railToString(roundedRect()) + ' 8'] }
+		const railC = <RailShapeConfig>{ id: 'c', nodes: [railToString(roundedRect()) + ' 8c'] }
 		const resP = resolveRail(railP)
 		const resC = resolveRail(railC)
 		// at least one intermediate point must differ

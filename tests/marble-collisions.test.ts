@@ -1,20 +1,20 @@
 import { describe, it, expect } from 'vitest'
-import { createMarble } from '../src/lib/core/marble'
+import { createMarbleInstance } from '../src/lib/core/marble'
 import { updateMarbles } from '../src/lib/core/marble-system'
 import { createTempoState } from '../src/lib/core/tempo'
 import { resolveRail } from '../src/lib/core/rail-resolve'
-import type { Rail } from '../src/lib/core/rail'
+import type { RailShapeConfig } from '../src/lib/core/rail'
 
 describe('marble collisions', () => {
 	it('reverses bouncer marbles on collision', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'test',
 			nodes: [[0, 0, 0], 'r r r r r r']
 		}
 		const resolvedRail = resolveRail(rail)
 
 		// Create two bouncer marbles moving toward each other
-		const m1 = createMarble({
+		const m1 = createMarbleInstance({
 			resolvedRail,
 			startBeat: 1,
 			direction: 'forward',
@@ -24,7 +24,7 @@ describe('marble collisions', () => {
 			bouncer: true
 		})
 
-		const m2 = createMarble({
+		const m2 = createMarbleInstance({
 			resolvedRail,
 			startBeat: 4,
 			direction: 'backward',
@@ -65,14 +65,14 @@ describe('marble collisions', () => {
 	})
 
 	it('non-bouncer marbles pass through each other', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'test',
 			nodes: [[0, 0, 0], 'r r r r r r']
 		}
 		const resolvedRail = resolveRail(rail)
 
 		// Create two non-bouncer marbles
-		const m1 = createMarble({
+		const m1 = createMarbleInstance({
 			resolvedRail,
 			startBeat: 1,
 			direction: 'forward',
@@ -82,7 +82,7 @@ describe('marble collisions', () => {
 			bouncer: false
 		})
 
-		const m2 = createMarble({
+		const m2 = createMarbleInstance({
 			resolvedRail,
 			startBeat: 4,
 			direction: 'backward',
@@ -115,14 +115,14 @@ describe('marble collisions', () => {
 	})
 
 	it('mixed bouncer and non-bouncer: both reverse if either is bouncer', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'test',
 			nodes: [[0, 0, 0], 'r r r r r r']
 		}
 		const resolvedRail = resolveRail(rail)
 
 		// Bouncer marble
-		const m1 = createMarble({
+		const m1 = createMarbleInstance({
 			resolvedRail,
 			startBeat: 1,
 			direction: 'forward',
@@ -133,7 +133,7 @@ describe('marble collisions', () => {
 		})
 
 		// Non-bouncer marble
-		const m2 = createMarble({
+		const m2 = createMarbleInstance({
 			resolvedRail,
 			startBeat: 4,
 			direction: 'backward',
@@ -173,13 +173,13 @@ describe('marble collisions', () => {
 	})
 
 	it('collision cooldown prevents oscillation', () => {
-		const rail: Rail = {
+		const rail: RailShapeConfig = {
 			id: 'test',
 			nodes: [[0, 0, 0], 'r r r r r r']
 		}
 		const resolvedRail = resolveRail(rail)
 
-		const m1 = createMarble({
+		const m1 = createMarbleInstance({
 			resolvedRail,
 			startBeat: 2,
 			direction: 'forward',
@@ -189,7 +189,7 @@ describe('marble collisions', () => {
 			bouncer: true
 		})
 
-		const m2 = createMarble({
+		const m2 = createMarbleInstance({
 			resolvedRail,
 			startBeat: 3,
 			direction: 'backward',
@@ -230,16 +230,16 @@ describe('marble collisions', () => {
 	})
 
 	it('marbles on different rails do not collide', () => {
-		const rail1: Rail = {
+		const rail1: RailShapeConfig = {
 			id: 'rail1',
 			nodes: [[0, 0, 0], 'r r r r']
 		}
-		const rail2: Rail = {
+		const rail2: RailShapeConfig = {
 			id: 'rail2',
 			nodes: [[0, 0, 0], 'r r r r'] // Same positions, different rail
 		}
 
-		const m1 = createMarble({
+		const m1 = createMarbleInstance({
 			resolvedRail: resolveRail(rail1),
 			startBeat: 1,
 			direction: 'forward',
@@ -249,7 +249,7 @@ describe('marble collisions', () => {
 			bouncer: true
 		})
 
-		const m2 = createMarble({
+		const m2 = createMarbleInstance({
 			resolvedRail: resolveRail(rail2),
 			startBeat: 1,
 			direction: 'forward',

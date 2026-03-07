@@ -1,6 +1,6 @@
 import { SceneConfig } from '../lib/core/scene'
 import { getTextRailNodes } from '../lib/video/text-geometry'
-import { RailData } from '../lib/core/rail-data'
+import { RailConfig } from '../lib/core/rail-config'
 import { triggerHandler } from '../lib/core/trigger-handler'
 import { createFloating } from './utils/floating'
 import { color3, color4, colorFactory } from './utils/colors'
@@ -47,7 +47,7 @@ export const scene: SceneConfig = {
 	},
 	sequencerMode: 'time',
 	rails: getTextRailNodes('AMBIENT CIRCUIT', 1.8, true).map(
-		(nodes, i): RailData => ({
+		(nodes, i): RailConfig => ({
 			color: c(),
 			offset: [-4.75, 1.5, 0],
 			id: `t${i + 1}`,
@@ -109,7 +109,7 @@ const first = scene.rails.length
 scene.rails!.push(
 	...svgs.map(
 		(d, i) =>
-			<RailData>{
+			<RailConfig>{
 				color: color3[order.indexOf(i + 1) % 2],
 				offset: i === last ? [0, -0.2, 0] : undefined,
 				id: i === last ? 'z' : `y${i + 1}`,

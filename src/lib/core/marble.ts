@@ -96,12 +96,6 @@ export function resetMarbleIdCounter(): void {
 	_nextId = 0
 }
 
-/** @deprecated Use createMarbleInstance */
-export const createMarble = createMarbleInstance
-
-/** @deprecated Use MarbleInstance */
-export type Marble = MarbleInstance
-
 export function createMarbleInstance(config: MarbleConfig, index = 0): MarbleInstance {
 	return {
 		id: _nextId++,

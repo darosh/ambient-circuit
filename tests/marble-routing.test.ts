@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest'
-import { createMarble } from '../src/lib/core/marble'
+import { createMarbleInstance } from '../src/lib/core/marble'
 import { updateMarble } from '../src/lib/core/marble-system'
 import { createTempoState } from '../src/lib/core/tempo'
 import { resolveRail } from '../src/lib/core/rail-resolve'
-import type { Rail } from '../src/lib/core/rail'
+import type { RailShapeConfig } from '../src/lib/core/rail'
 
 describe('marble routing through splits', () => {
 	// Fork example from Scene.svelte
-	const forkRail: Rail = {
+	const forkRail: RailShapeConfig = {
 		id: 'fork-demo',
 		nodes: [
 			[-2, 0, 0], // a - beat 0
@@ -25,7 +25,7 @@ describe('marble routing through splits', () => {
 	}
 
 	it('marble starts at beat 0', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: resolveRail(forkRail),
 			startBeat: 0,
 			direction: 'forward',
@@ -42,7 +42,7 @@ describe('marble routing through splits', () => {
 	})
 
 	it('marble at beat 0.5 moves along main rail', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: resolveRail(forkRail),
 			startBeat: 0,
 			direction: 'forward',
@@ -61,7 +61,7 @@ describe('marble routing through splits', () => {
 	})
 
 	it('marble at beat 1.0 assigns to first branch', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: resolveRail(forkRail),
 			startBeat: 0,
 			direction: 'forward',
@@ -80,7 +80,7 @@ describe('marble routing through splits', () => {
 	})
 
 	it('marble at beat 1.5 moves along first branch', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: resolveRail(forkRail),
 			startBeat: 0,
 			direction: 'forward',
@@ -102,7 +102,7 @@ describe('marble routing through splits', () => {
 	})
 
 	it('marble at beat 2.0 reaches end of first branch', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: resolveRail(forkRail),
 			startBeat: 0,
 			direction: 'forward',
@@ -122,7 +122,7 @@ describe('marble routing through splits', () => {
 	})
 
 	it('marble at beat 2.5 loops back to main rail', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: resolveRail(forkRail),
 			startBeat: 0,
 			direction: 'forward',
@@ -150,7 +150,7 @@ describe('marble routing through splits', () => {
 	})
 
 	it('marble on second loop assigns to second branch', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail: resolveRail(forkRail),
 			startBeat: 0,
 			direction: 'forward',

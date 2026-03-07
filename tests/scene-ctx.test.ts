@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { createSceneCtx, updateSceneCtx } from '../src/lib/core/scene-ctx-factory'
-import { createMarble } from '../src/lib/core/marble'
+import { createMarbleInstance } from '../src/lib/core/marble'
 import { createTempoState } from '../src/lib/core/tempo'
 import { resolveRail } from '../src/lib/core/rail-resolve'
 import type { RailConfig } from '../src/lib/core/rail-config'
@@ -39,14 +39,14 @@ describe('scene-ctx', () => {
 		const resolvedRail2 = resolveRail(toRailShapeConfig(rails[1]))
 
 		const marbles = [
-			createMarble({
+			createMarbleInstance({
 				resolvedRail: resolvedRail1,
 				startBeat: 0,
 				direction: 'forward',
 				sequenceMode: 'looping',
 				easing: 'linear'
 			}),
-			createMarble({
+			createMarbleInstance({
 				resolvedRail: resolvedRail2,
 				startBeat: 0,
 				direction: 'forward',
@@ -100,7 +100,7 @@ describe('scene-ctx', () => {
 		const resolvedRail = resolveRail(toRailShapeConfig(rails[0]))
 
 		const marbles = [
-			createMarble({
+			createMarbleInstance({
 				resolvedRail,
 				startBeat: 0,
 				direction: 'forward',
@@ -143,7 +143,7 @@ describe('scene-ctx', () => {
 		const resolvedRail = resolveRail(toRailShapeConfig(rails[0]))
 
 		const marbles = [
-			createMarble({
+			createMarbleInstance({
 				resolvedRail,
 				startBeat: 0,
 				direction: 'forward',
@@ -186,7 +186,7 @@ describe('scene-ctx', () => {
 		const resolvedRail = resolveRail(toRailShapeConfig(rails[0]))
 
 		const marbles = [
-			createMarble({
+			createMarbleInstance({
 				resolvedRail,
 				startBeat: 0,
 				direction: 'forward',

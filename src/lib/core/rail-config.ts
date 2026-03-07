@@ -23,10 +23,6 @@ export type MarbleInputBase = {
 	running?: boolean
 }
 
-/** @deprecated Use MarbleInputBase */
-// eslint-disable-next-line sonarjs/redundant-type-aliases
-export type MarbleDataBase = MarbleInputBase
-
 type BallMarbleInput = MarbleInputBase & {
 	type?: 'ball'
 }
@@ -47,14 +43,6 @@ export type EaterMarbleInput = MarbleInputBase & {
 }
 
 export type MarbleInputConfig = BallMarbleInput | PolyMarbleInput | CoilMarbleInput | EaterMarbleInput
-
-/** @deprecated Use MarbleInputConfig */
-// eslint-disable-next-line sonarjs/redundant-type-aliases
-export type MarbleData = MarbleInputConfig
-
-/** @deprecated Use EaterMarbleInput */
-// eslint-disable-next-line sonarjs/redundant-type-aliases
-export type EaterMarbleData = EaterMarbleInput
 
 export type RailRuntime = {
 	color?: string
@@ -89,10 +77,6 @@ export type RailConfig = {
 	/** Runtime animation function: fills `out` matrix in-place (no allocation) */
 	render?: (out: Matrix4, ctx: SceneCtx, beat: number, tempo: TempoState, delta: number) => void
 }
-
-/** @deprecated Use RailConfig */
-// eslint-disable-next-line sonarjs/redundant-type-aliases
-export type RailData = RailConfig
 
 /** Extract RailShapeConfig from flat RailConfig (for resolveRail compatibility) */
 export function toRailShapeConfig(rc: RailConfig): RailShapeConfig {

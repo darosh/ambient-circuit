@@ -174,10 +174,6 @@ export type InstrumentConfig =
 	| SunInstrument
 	| EaterInstrument
 
-/** @deprecated Use InstrumentConfig */
-// eslint-disable-next-line sonarjs/redundant-type-aliases
-export type Instrument = InstrumentConfig
-
 /** Live instrument object used by the engine at runtime */
 export type InstrumentInstance = {
 	config: InstrumentConfig

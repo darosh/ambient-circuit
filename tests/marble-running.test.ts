@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { createMarble } from '../src/lib/core/marble'
+import { createMarbleInstance } from '../src/lib/core/marble'
 import { updateMarble } from '../src/lib/core/marble-system'
 import { createTempoState } from '../src/lib/core/tempo'
 import { resolveRail } from '../src/lib/core/rail-resolve'
@@ -22,14 +22,14 @@ function makeTempo(beat = 1) {
 	return t
 }
 
-function makeCtx(marbles: ReturnType<typeof createMarble>[], rails: RailConfig[]) {
+function makeCtx(marbles: ReturnType<typeof createMarbleInstance>[], rails: RailConfig[]) {
 	const indices = marbles.map(() => 0)
 	return createSceneCtx(marbles, rails, indices, makeTempo(), sceneConfig)
 }
 
 describe('marble running: false in config', () => {
 	it('marble with running:false stays at startBeat (no sceneCtx)', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail,
 			startBeat: 0,
 			direction: 'forward',
@@ -43,7 +43,7 @@ describe('marble running: false in config', () => {
 	})
 
 	it('marble with running:false stays at startBeat (with sceneCtx)', () => {
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail,
 			startBeat: 0,
 			direction: 'forward',
@@ -61,7 +61,7 @@ describe('marble running: false in config', () => {
 describe('rail running: false', () => {
 	it('marble on rail with running:false stays at startBeat', () => {
 		const rd: RailConfig = { id: 'r', nodes: [[0, 0, 0], 'r r r r r'], color: '#fff', running: false }
-		const marble = createMarble({
+		const marble = createMarbleInstance({
 			resolvedRail,
 			startBeat: 0,
 			direction: 'forward',

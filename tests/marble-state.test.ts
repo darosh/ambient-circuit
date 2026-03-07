@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest'
-import { createMarble, type MarbleConfig } from '../src/lib/core/marble'
+import { createMarbleInstance, type MarbleConfig } from '../src/lib/core/marble'
 import { MarbleState } from '../src/lib/core/marble-state'
 import { updateMarble } from '../src/lib/core/marble-system'
 import { resolveRail } from '../src/lib/core/rail-resolve'
 import { createTempoState, type TempoState } from '../src/lib/core/tempo'
-import type { Instrument } from '../src/lib/core/instrument'
+import type { InstrumentConfig } from '../src/lib/core/instrument'
 import type { TriggerHandler, SceneConfig } from '../src/lib/core/scene'
 import { createSceneCtx } from '../src/lib/core/scene-ctx-factory'
-import type { RailData } from '../src/lib/core/rail-data'
+import type { RailConfig } from '../src/lib/core/rail-config'
 import { MockInstance } from '@vitest/spy'
 
 describe('MarbleState - full roundtrip with triggers', () => {
@@ -50,11 +50,11 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			easing: 'linear',
 			speed: 1
 		}
-		const marble = createMarble(config)
+		const marble = createMarbleInstance(config)
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
-		const instruments: Instrument[] = [{ type: 'sun', beat: 4 }]
-		const railData: RailData[] = [
+		const instruments: InstrumentConfig[] = [{ type: 'sun', beat: 4 }]
+		const railData: RailConfig[] = [
 			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
@@ -97,14 +97,14 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			easing: 'linear',
 			speed: 1
 		}
-		const marble = createMarble(config)
+		const marble = createMarbleInstance(config)
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
-		const instruments: Instrument[] = [
+		const instruments: InstrumentConfig[] = [
 			{ type: 'sun', beat: 2 },
 			{ type: 'sun', beat: 6 }
 		]
-		const railData: RailData[] = [
+		const railData: RailConfig[] = [
 			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
@@ -153,11 +153,11 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			easing: 'linear',
 			speed: 1
 		}
-		const marble = createMarble(config)
+		const marble = createMarbleInstance(config)
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
-		const instruments: Instrument[] = [{ type: 'sun', beat: 2 }]
-		const railData: RailData[] = [
+		const instruments: InstrumentConfig[] = [{ type: 'sun', beat: 2 }]
+		const railData: RailConfig[] = [
 			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
@@ -195,7 +195,7 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			easing: 'linear',
 			note: 60 // C4
 		}
-		const marble = createMarble(config)
+		const marble = createMarbleInstance(config)
 		const state = new MarbleState(marble)
 
 		expect(state.note).toBe(60)
@@ -219,15 +219,15 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			easing: 'linear',
 			speed: 1
 		}
-		const marble = createMarble(config)
+		const marble = createMarbleInstance(config)
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
-		const instruments: Instrument[] = [
+		const instruments: InstrumentConfig[] = [
 			{ type: 'sun', beat: 2 },
 			{ type: 'sun', beat: 4 },
 			{ type: 'sun', beat: 6 }
 		]
-		const railData: RailData[] = [
+		const railData: RailConfig[] = [
 			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
@@ -255,11 +255,11 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			easing: 'linear',
 			speed: 1
 		}
-		const marble = createMarble(config)
+		const marble = createMarbleInstance(config)
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
-		const instruments: Instrument[] = [{ type: 'sun', beat: 4 }]
-		const railData: RailData[] = [
+		const instruments: InstrumentConfig[] = [{ type: 'sun', beat: 4 }]
+		const railData: RailConfig[] = [
 			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
@@ -304,14 +304,14 @@ describe('MarbleState - full roundtrip with triggers', () => {
 			easing: 'linear',
 			speed: 1
 		}
-		const marble = createMarble(config)
+		const marble = createMarbleInstance(config)
 		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
 		tempo.isPlaying = true
-		const instruments: Instrument[] = [
+		const instruments: InstrumentConfig[] = [
 			{ type: 'sun', beat: 2 },
 			{ type: 'sun', beat: 6 }
 		]
-		const railData: RailData[] = [
+		const railData: RailConfig[] = [
 			{ id: 'test-rail', nodes: [], color: '#ffffff', instruments }
 		]
 		const sceneCtx = createSceneCtx([marble], railData, [0], tempo, {} as SceneConfig)
