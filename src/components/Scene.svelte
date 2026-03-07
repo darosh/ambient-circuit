@@ -8,6 +8,7 @@
 	import { createTempoState, updateTempo, type TempoState } from '../lib/core/tempo'
 	import {
 		updateMarbles,
+		initMarblePositions,
 		fireGlobalBeatInit,
 		fireGlobalBeatDestroy,
 		resetMarbleToConfig,
@@ -134,6 +135,7 @@
 	}
 
 	const _init = createMarbleConfigs(rails, easing || 'linear')
+	initMarblePositions(_init.marbles)
 	let marbles = $state(_init.marbles)
 	const marbleRailIndices = _init.railIndices
 
@@ -143,10 +145,6 @@
 	const railIds: string[] = liveRailIndices.map((i) => rails[i].rail.id)
 
 	const noBouncers = $derived(!marbles.some((m) => m.config.bouncer))
-
-	// Deferred scene ready — hide rendering until transforms + positions are computed
-	let sceneReady = $state(false)
-	let warmupFrames = 0
 
 	// Init rail visibility (reset if length mismatch from scene change)
 	if (!railVisibility || railVisibility.length !== rails.length) {
@@ -412,9 +410,6 @@
 			lastTime = now
 		}
 
-		// Show scene after 2 frames (render transforms + marble positions computed)
-		if (!sceneReady && ++warmupFrames >= 2) sceneReady = true
-
 		if (audioInitialized || noAudioScene) {
 			// prevent big jump on play start
 			if (!tempo.currentBeat && !tempo.beatProgress && delta > 5) {
@@ -536,7 +531,6 @@
 			{fxText}
 			{tempo}
 			{sceneCtx}
-			visible={sceneReady}
 			renderPlayOnly={scene.renderPlayOnly}
 			textOrientation={scene.textOrientation ?? (scene.view ? [0, 0, 1] : undefined)}
 			railIdx={railIndex}
@@ -549,25 +543,25 @@
 	{/if}
 {/each}
 
-{#if sceneReady}{#each marbles as _m, idx (_m.id)}
-		{@const currentRailId = marbles[idx].runtime.railId ?? marbles[idx].config.resolvedRail.id}
-		{@const railIdx = rails.findIndex((r) => r.rail.id === currentRailId)}
-		{@const railIndex = railIdx >= 0 ? railIdx : marbleRailIndices[idx]}
-		{#if railVisibility[railIndex]}
-			<MarbleView
-				bind:marble={marbles[idx]}
-				rail={marbles[idx].config.resolvedRail}
-				railData={rails[railIndex]}
-				color={rails[railIndex].color || '#ffffff'}
-				{wireframe}
-				{fxMarbles}
-				selected={selectedEntity?.type === 'marble' &&
-					selectedEntity.railIdx === railIndex &&
-					selectedEntity.idx === idx}
-				onselect={() => onSelectMarble(railIndex, idx)}
-			/>
-		{/if}
-	{/each}{/if}
+{#each marbles as _m, idx (_m.id)}
+	{@const currentRailId = marbles[idx].runtime.railId ?? marbles[idx].config.resolvedRail.id}
+	{@const railIdx = rails.findIndex((r) => r.rail.id === currentRailId)}
+	{@const railIndex = railIdx >= 0 ? railIdx : marbleRailIndices[idx]}
+	{#if railVisibility[railIndex]}
+		<MarbleView
+			bind:marble={marbles[idx]}
+			rail={marbles[idx].config.resolvedRail}
+			railData={rails[railIndex]}
+			color={rails[railIndex].color || '#ffffff'}
+			{wireframe}
+			{fxMarbles}
+			selected={selectedEntity?.type === 'marble' &&
+				selectedEntity.railIdx === railIndex &&
+				selectedEntity.idx === idx}
+			onselect={() => onSelectMarble(railIndex, idx)}
+		/>
+	{/if}
+{/each}
 
 {#if scene.view}
 	<MultiView config={scene.view} {sceneCtx}

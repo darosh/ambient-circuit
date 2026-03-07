@@ -1059,6 +1059,13 @@ export type MarbleMutations = {
 	rewind?: boolean // full reset to snapshot
 } | null
 
+export function initMarblePositions(marbles: Marble[]): void {
+	for (const marble of marbles) {
+		const pts = marble.config.resolvedRail.points
+		calculateMarblePosition(marble, marble.currentBeat, pts, marble.config.easing || 'linear')
+	}
+}
+
 export function updateMarbles(
 	marbles: Marble[],
 	tempo: TempoState,
