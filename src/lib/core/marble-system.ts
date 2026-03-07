@@ -378,10 +378,10 @@ function checkMarbleCollisions(
 
 				// Check if either marble is non-running — bouncer starts it
 				const rail1Running =
-					sceneCtx?.railById.get(m1.runtime.railId ?? m1.resolved.resolvedRail.id)?.railData.runtime
+					sceneCtx?.railById.get(m1.runtime.railId ?? m1.resolved.resolvedRail.id)?.runtime
 						?.running ?? true
 				const rail2Running =
-					sceneCtx?.railById.get(m2.runtime.railId ?? m2.resolved.resolvedRail.id)?.railData.runtime
+					sceneCtx?.railById.get(m2.runtime.railId ?? m2.resolved.resolvedRail.id)?.runtime
 						?.running ?? true
 				const m1Running = (m1.runtime.running ?? m1.resolved.running ?? true) && rail1Running
 				const m2Running = (m2.runtime.running ?? m2.resolved.running ?? true) && rail2Running
@@ -766,7 +766,7 @@ export function updateMarble(
 	const globalBeatDelta = isFirstUpdate ? 0 : globalBeat - marble.lastGlobalBeat
 
 	// Check running state (rail overrides marble)
-	const railRunning = sceneCtx?.railById.get(railId)?.railData.runtime?.running ?? true
+	const railRunning = sceneCtx?.railById.get(railId)?.runtime?.running ?? true
 	const marbleRunning = marble.runtime.running ?? marble.resolved.running ?? true
 	const isRunning = railRunning && marbleRunning
 

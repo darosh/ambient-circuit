@@ -2,7 +2,7 @@
 	import { T, useThrelte, useTask } from '@threlte/core'
 	import { Align } from '@threlte/extras'
 	import type { ResolvedPoint } from '../lib/core/rail'
-	import type { RailConfig } from '../lib/core/rail-config'
+	import type { RailConfig, RailRuntime } from '../lib/core/rail-config'
 	import { toRailShapeConfig } from '../lib/core/rail-config'
 	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import type { TempoState } from '../lib/core/tempo'
@@ -31,6 +31,7 @@
 
 	type Props = {
 		railData: RailConfig
+		railRuntime: RailRuntime
 		width?: number
 		showPoints?: boolean
 		showBeats?: boolean
@@ -53,6 +54,7 @@
 
 	let {
 		railData,
+		railRuntime,
 		width = 0.1,
 		showPoints = false,
 		showBeats = false,
@@ -77,7 +79,7 @@
 	const RAIL_TEXT_WIDTH = 4
 	const RAIL_TEXT_SIZE = 0.2
 
-	const color = $derived(railData.runtime?.color ?? railData.color)
+	const color = $derived(railRuntime.color ?? railData.color)
 	const instruments = $derived(railData.instruments ?? [])
 	const render = $derived(railData.render)
 
@@ -109,7 +111,7 @@
 		if (plainMaterial) plainMaterial.color.set(color)
 	})
 
-	const effectiveActive = $derived(railData.runtime?.active ?? true)
+	const effectiveActive = $derived(railRuntime.active ?? true)
 
 	$effect(() => {
 		ud.active = effectiveActive ? 1 : 0
@@ -402,10 +404,8 @@
 			_renderVersion++
 
 			// Clone for runtime so MarbleView's $derived detects the new reference
-			if (railData.runtime) {
-				railData.runtime.renderMatrix = _renderOut //.clone()
-				railData.runtime.renderVersion = _renderVersion
-			}
+			railRuntime.renderMatrix = _renderOut //.clone()
+			railRuntime.renderVersion = _renderVersion
 		}
 
 		// Billboard text
@@ -502,7 +502,7 @@
 			{color}
 			size={0.5}
 			{instrument}
-			{railData}
+			{railRuntime}
 			rail={displayRail}
 			bind:signal={instrument.signal}
 			{fxInstruments}

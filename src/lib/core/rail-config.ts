@@ -52,6 +52,9 @@ export type RailRuntime = {
 	running?: boolean
 }
 
+export type RailTransform = Matrix4 | ((v: Vector3) => Vector3)
+export type RailRender = (out: Matrix4, ctx: SceneCtx, beat: number, tempo: TempoState, delta: number) => void
+
 /** Flat rail config: shape + presentation + sequencing */
 export type RailConfig = {
 	id: string
@@ -65,17 +68,16 @@ export type RailConfig = {
 	/** Rotation around tangent in degrees. Default: 90 */
 	tilt?: number
 	/** Transform applied during rail resolution (Matrix4 or function) */
-	transform?: Matrix4 | ((v: Vector3) => Vector3)
+	transform?: RailTransform
 	// Presentation + sequencing
 	color: string
 	marbles?: MarbleConfig[] | false
 	instruments?: InstrumentConfig[]
-	runtime?: RailRuntime
 	visible?: false
 	active?: boolean
 	running?: boolean
 	/** Runtime animation function: fills `out` matrix in-place (no allocation) */
-	render?: (out: Matrix4, ctx: SceneCtx, beat: number, tempo: TempoState, delta: number) => void
+	render?: RailRender
 }
 
 /** Extract RailShapeConfig from flat RailConfig (for resolveRail compatibility) */

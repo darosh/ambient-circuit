@@ -1,5 +1,5 @@
 import type { MarbleEntity, SceneCtx } from './scene-ctx'
-import type { RailConfig, MarbleConfig } from './rail-config'
+import type { RailConfig, RailRuntime, MarbleConfig } from './rail-config'
 
 /**
  * Safe API for modifying rail state from handlers.
@@ -11,15 +11,11 @@ export class RailState {
 
 	constructor(
 		private rail: RailConfig,
+		private runtime: RailRuntime,
 		private visibility: { value: boolean },
 		private activity: { value: boolean },
 		private pendingCreations?: { railId: string; data: MarbleConfig }[]
-	) {
-		// Initialize runtime if not present
-		if (!this.rail.runtime) {
-			this.rail.runtime = {}
-		}
-	}
+	) {}
 
 	get visible(): boolean {
 		return this.visibility.value
@@ -33,14 +29,14 @@ export class RailState {
 	}
 	set active(v: boolean) {
 		this.activity.value = v
-		this.rail.runtime!.active = v
+		this.runtime.active = v
 	}
 
 	get running(): boolean {
-		return this.rail.runtime?.running ?? this.rail.running ?? true
+		return this.runtime.running ?? this.rail.running ?? true
 	}
 	set running(v: boolean) {
-		this.rail.runtime!.running = v
+		this.runtime.running = v
 	}
 
 	get id(): string {
@@ -48,10 +44,10 @@ export class RailState {
 	}
 
 	get color(): string {
-		return this.rail.runtime?.color ?? this.rail.color
+		return this.runtime.color ?? this.rail.color
 	}
 	set color(v: string) {
-		this.rail.runtime!.color = v
+		this.runtime.color = v
 	}
 
 	/** Queue a new marble on this rail (processed at end of update) */

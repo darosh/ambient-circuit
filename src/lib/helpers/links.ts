@@ -1,7 +1,6 @@
-import type { InstrumentEntity, MarbleEntity } from '../core/scene-ctx'
+import type { InstrumentEntity, MarbleEntity, RailEntity } from '../core/scene-ctx'
 import { Vector3, Matrix4, Quaternion } from 'three/webgpu'
 import type { Vector3Tuple } from 'three/webgpu'
-import type { RailConfig } from '../core/rail-config'
 import { toRailShapeConfig } from '../core/rail-config'
 import type { NodeInfo } from '../components/audio-view/audio-layout'
 import { resolveRail } from '../core/rail-resolve'
@@ -10,7 +9,7 @@ import { getBeatTransform, getPointsForPath } from '../core/rail-curve'
 export function getMidiSignalLinks(
 	instruments: InstrumentEntity[],
 	nodes: NodeInfo[],
-	rails: RailConfig[],
+	rails: RailEntity[],
 	AUDIO_OFFSET: Vector3Tuple
 ) {
 	const links: Array<{
@@ -20,7 +19,8 @@ export function getMidiSignalLinks(
 		color: string
 	}> = []
 	let instrIdx = 0
-	for (const railData of rails) {
+	for (const re of rails) {
+		const railData = re.railData
 		const resolved = resolveRail(toRailShapeConfig(railData))
 		for (const instrument of railData.instruments ?? []) {
 			const ie = instruments[instrIdx]
@@ -29,7 +29,7 @@ export function getMidiSignalLinks(
 				const xform = getBeatTransform(pts, instrument.beat)
 				if (xform) {
 					let worldPos = xform.position.clone()
-					const rm = (railData.runtime as { renderMatrix?: Matrix4 } | undefined)?.renderMatrix
+					const rm = re.runtime.renderMatrix as Matrix4 | undefined
 					if (rm) {
 						const pos = new Vector3(),
 							q = new Quaternion(),
@@ -60,7 +60,7 @@ export function getMidiSignalLinks(
 export function getMarbleSignalLinks(
 	marbles: MarbleEntity[],
 	nodes: NodeInfo[],
-	rails: RailConfig[],
+	rails: RailEntity[],
 	AUDIO_OFFSET: Vector3Tuple
 ) {
 	const links: Array<{
@@ -77,10 +77,10 @@ export function getMarbleSignalLinks(
 
 		const currentRailId: string = me.marble.runtime.railId ?? me.marble.resolved.resolvedRail.id
 		const railIdx = rails.findIndex((r) => r.id === currentRailId)
-		const railData = rails[railIdx]
+		const re = rails[railIdx]
 
 		let pos = new Vector3(me.marble.position.x, me.marble.position.y, me.marble.position.z)
-		const rm = (railData?.runtime as { renderMatrix?: Matrix4 } | undefined)?.renderMatrix
+		const rm = re?.runtime.renderMatrix as Matrix4 | undefined
 		if (rm) {
 			const rPos = new Vector3(),
 				q = new Quaternion(),
@@ -97,7 +97,10 @@ export function getMarbleSignalLinks(
 			to: [wx, wy, wz],
 			signal: me.marble.midiSignal,
 			color:
-				me.marble.runtime.color ?? me.marble.resolved.color ?? rails[railIdx].color ?? '#ffffff'
+				me.marble.runtime.color ??
+				me.marble.resolved.color ??
+				rails[railIdx]?.railData.color ??
+				'#ffffff'
 		})
 	}
 	return links

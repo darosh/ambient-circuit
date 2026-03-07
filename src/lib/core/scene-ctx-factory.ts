@@ -77,14 +77,10 @@ export function createSceneCtx(
 	const railActRefs = rails.map((rd) => ({ value: rd.active ?? true }))
 
 	const railEntities: RailEntity[] = rails.map((rd, i) => {
-		// Init runtime for running/active from config
-		if (!rd.runtime) rd.runtime = {}
-		if (rd.runtime.running === undefined && rd.running !== undefined) {
-			rd.runtime.running = rd.running
-		}
-		if (rd.runtime.active === undefined && rd.active !== undefined) {
-			rd.runtime.active = rd.active
-		}
+		// Init runtime on entity (not on config)
+		const runtime: import('./rail-config').RailRuntime = {}
+		if (rd.running !== undefined) runtime.running = rd.running
+		if (rd.active !== undefined) runtime.active = rd.active
 
 		// Find resolved rail from marble configs, or resolve it if not found
 		let resolvedRail = marbles.find((m) => m.resolved.resolvedRail.id === rd.id)?.resolved
@@ -100,7 +96,8 @@ export function createSceneCtx(
 			index: i,
 			railData: rd,
 			resolvedRail: resolvedRail!,
-			state: new RailState(rd, railVisRefs[i], railActRefs[i], pendingCreations),
+			runtime,
+			state: new RailState(rd, runtime, railVisRefs[i], railActRefs[i], pendingCreations),
 			visibility: railVisRefs[i],
 			activity: railActRefs[i]
 		}

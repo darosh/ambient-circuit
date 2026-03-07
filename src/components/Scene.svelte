@@ -126,13 +126,7 @@
 	// Assign signals and runtimes to instruments (reactive references)
 	assignInstrumentSignals(rails, signalStates, midiSignalStates, runtimeStates)
 
-	// Create reactive runtime states for rails
-	const railRuntimeStates = $state<Array<{ color?: string }>>(rails.map(() => ({})))
-
-	// Assign runtimes to rails (reactive references)
-	for (const [i, rail] of rails.entries()) {
-		rail.runtime = railRuntimeStates[i]
-	}
+	// Rail runtime states are on RailEntity (created in sceneCtx)
 
 	const _init = createMarbleConfigs(rails, easing || 'linear')
 	initMarblePositions(_init.marbles)
@@ -242,22 +236,22 @@
 		if (!audioInitialized) return []
 		const nodes = audioView?.getNodes()
 		if (!nodes?.length) return []
-		if (rails[0]?.runtime?.renderVersion) {
+		if (sceneCtx.rails[0]?.runtime?.renderVersion) {
 			/* empty */
 		}
 
-		return getMidiSignalLinks(sceneCtx.instruments, nodes, rails, AUDIO_OFFSET)
+		return getMidiSignalLinks(sceneCtx.instruments, nodes, sceneCtx.rails, AUDIO_OFFSET)
 	})
 
 	const marbleSignalLinks = $derived.by(() => {
 		if (!audioInitialized || !audioViewConfig?.marbleLinks) return []
 		const nodes = audioView?.getNodes()
 		if (!nodes?.length) return []
-		if (rails[0]?.runtime?.renderVersion) {
+		if (sceneCtx.rails[0]?.runtime?.renderVersion) {
 			/* empty */
 		}
 
-		return getMarbleSignalLinks(sceneCtx.marbles, nodes, rails, AUDIO_OFFSET)
+		return getMarbleSignalLinks(sceneCtx.marbles, nodes, sceneCtx.rails, AUDIO_OFFSET)
 	})
 
 	// Fire init handler on mount
@@ -279,7 +273,7 @@
 					ins.runtime = undefined
 				}
 			}
-			railData.runtime = undefined
+			// Rail runtime is on entity, cleared with sceneCtx
 		}
 
 		if (scene.globalBeatHandler) {
@@ -523,6 +517,7 @@
 		<RailView
 			id={railIndex.toString()}
 			{railData}
+			railRuntime={sceneCtx.rails[railIndex].runtime}
 			width={0.06}
 			{showPoints}
 			{showBeats}
@@ -553,7 +548,7 @@
 		<MarbleView
 			bind:marble={marbles[idx]}
 			rail={marbles[idx].resolved.resolvedRail}
-			railData={rails[railIndex]}
+			railRuntime={sceneCtx.rails[railIndex].runtime}
 			color={rails[railIndex].color || '#ffffff'}
 			{wireframe}
 			{fxMarbles}

@@ -44,6 +44,8 @@ export type RailNode = Vec3 | RailPointFull | RailSplit | string | Vec3Curve
 /** Sequence of nodes (used for branches too) */
 export type RailDef = RailNode[]
 
+export type RailShapeTransform = Matrix4 | ((v: Vector3) => Vector3)
+
 /** Top-level rail shape (authored config for geometry) */
 export type RailShapeConfig = {
 	id: string
@@ -56,7 +58,7 @@ export type RailShapeConfig = {
 	/** Rotation around tangent in degrees. Default: 90 */
 	tilt?: number
 	/** Transform applied during rail resolution (Matrix4 or function) */
-	transform?: Matrix4 | ((v: Vector3) => Vector3)
+	transform?: RailShapeTransform
 	nodes: RailDef
 }
 

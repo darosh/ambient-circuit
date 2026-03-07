@@ -87,6 +87,8 @@ export type BounceContext = {
 
 export type BounceHandler = (ctx: BounceContext) => void
 
+export type RenderFactory = (railData: RailConfig, index: number) => RailConfig['render']
+
 export type SceneConfig = {
 	id: string
 	description?: string
@@ -122,7 +124,7 @@ export type SceneConfig = {
 		master?: import('../audio/types').MasterConfig
 	}
 	/** Factory to auto-assign render fn to rails without one */
-	renderFactory?: (railData: RailConfig, index: number) => RailConfig['render'] | undefined
+	renderFactory?: RenderFactory | undefined
 	/** Fixed world-space direction text labels face (e.g. [0,0,1] = face +Z).
 	 *  When absent, defaults to billboard (tracks main camera). */
 	textOrientation?: Vector3Tuple

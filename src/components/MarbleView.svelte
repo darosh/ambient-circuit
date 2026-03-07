@@ -6,7 +6,7 @@
 	import { marbleMaterial } from '../lib/components/config'
 	import { easeOutQuart } from '../lib/helpers/easing'
 	import type { ResolvedRail } from '../lib/core/rail'
-	import type { RailConfig } from '../lib/core/rail-config'
+	import type { RailRuntime } from '../lib/core/rail-config'
 	import {
 		createMarbleGeometry,
 		BALL_RADIUS,
@@ -34,7 +34,7 @@
 	type Props = {
 		marble: MarbleInstance
 		rail: ResolvedRail
-		railData: RailConfig
+		railRuntime: RailRuntime
 		color: string
 		wireframe?: boolean
 		fxMarbles?: boolean
@@ -45,7 +45,7 @@
 	let {
 		marble = $bindable(),
 		rail,
-		railData,
+		railRuntime,
 		color,
 		wireframe = false,
 		fxMarbles = true,
@@ -57,15 +57,13 @@
 
 	const effectiveColor = $derived(marble.runtime.color ?? color)
 	const effectiveVisible = $derived(marble.runtime.visible ?? true)
-	const effectiveActive = $derived(
-		(marble.runtime.active ?? true) && (railData.runtime?.active ?? true)
-	)
+	const effectiveActive = $derived((marble.runtime.active ?? true) && (railRuntime.active ?? true))
 
 	// Apply rail render transform to marble position
 	const transformedPosition = $derived.by(() => {
 		const basePos = new Vector3(marble.position.x, marble.position.y, marble.position.z)
-		const matrix = railData.runtime?.renderVersion
-			? (railData.runtime?.renderMatrix as Matrix4 | undefined)
+		const matrix = railRuntime.renderVersion
+			? (railRuntime.renderMatrix as Matrix4 | undefined)
 			: undefined
 		if (matrix) {
 			basePos.applyMatrix4(matrix)

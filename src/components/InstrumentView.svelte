@@ -20,12 +20,12 @@
 	const _ROT_HALF_PI = new Matrix4().makeRotationZ(Math.PI / 2)
 	const _ROT_NEG_PI = new Matrix4().makeRotationZ(-Math.PI)
 
-	import type { RailConfig } from '../lib/core/rail-config'
+	import type { RailRuntime } from '../lib/core/rail-config'
 
 	type Props = {
 		instrument: InstrumentConfig
 		rail: ResolvedRail
-		railData?: RailConfig
+		railRuntime?: RailRuntime
 		color: string
 		signal?: { intensity: number }
 		size?: number
@@ -40,7 +40,7 @@
 	let {
 		instrument,
 		rail,
-		railData,
+		railRuntime,
 		size = 1,
 		color,
 		signal = $bindable(),
@@ -77,7 +77,7 @@
 	const plainMaterial = $derived(fxInstruments ? null : makeStandardMaterial(effectiveColor))
 	const effectiveVisible = $derived(instrument.runtime?.visible ?? true)
 	const effectiveActive = $derived(
-		(instrument.runtime?.active ?? instrument.active ?? true) && (railData?.runtime?.active ?? true)
+		(instrument.runtime?.active ?? instrument.active ?? true) && (railRuntime?.active ?? true)
 	)
 
 	// Per-instance data stored in plain object, written to shared material uniforms in onBeforeRender

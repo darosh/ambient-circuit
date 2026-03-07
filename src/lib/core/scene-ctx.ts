@@ -1,7 +1,7 @@
 import type { MarbleInstance, ResolvedMarble } from './marble'
 import type { Vector3Tuple } from 'three/webgpu'
 import type { InstrumentConfig } from './instrument'
-import type { RailConfig, MarbleConfig } from './rail-config'
+import type { RailConfig, MarbleConfig, RailRuntime } from './rail-config'
 import type { ResolvedRail } from './rail'
 import type { MarbleState } from './marble-state'
 import type { InstrumentState } from './instrument-state'
@@ -42,6 +42,7 @@ export type RailEntity = {
 	index: number // position in scene rails array
 	railData: RailConfig // original rail config
 	resolvedRail: ResolvedRail // resolved geometry
+	runtime: RailRuntime // mutable runtime state
 	state: RailState // pre-built API wrapper
 	visibility: { value: boolean }
 	activity: { value: boolean }
