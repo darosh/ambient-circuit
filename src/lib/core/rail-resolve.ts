@@ -135,9 +135,9 @@ export function resolveNodes(
 				const segLen = curve
 					? curve.getLength()
 					: new Vector3(...points[j].p).distanceTo(new Vector3(...points[j + 1].p))
-				cumLen.push(cumLen.at(-1) + segLen)
+				cumLen.push(cumLen.at(-1)! + segLen)
 			}
-			const totalLen = cumLen.at(-1)
+			const totalLen = cumLen.at(-1)!
 			for (let i = 0; i < firstAnchorIdx; i++) {
 				points[i].beat = startBeat + ((firstAnchorBeat - startBeat) * cumLen[i]) / totalLen
 			}
@@ -160,9 +160,9 @@ export function resolveNodes(
 					const segLen = curve
 						? curve.getLength()
 						: new Vector3(...points[j].p).distanceTo(new Vector3(...points[j + 1].p))
-					cumLen.push(cumLen.at(-1) + segLen)
+					cumLen.push(cumLen.at(-1)! + segLen)
 				}
-				const totalLen = cumLen.at(-1)
+				const totalLen = cumLen.at(-1)!
 				for (let i = si + 1; i < ei; i++) {
 					points[i].beat = sb + ((points[ei].beat - sb) * cumLen[i - si]) / totalLen
 				}
@@ -174,7 +174,7 @@ export function resolveNodes(
 			}
 		}
 		// After last anchor: continue incrementing by 1
-		const last = anchors.at(-1).idx
+		const last = anchors.at(-1)!.idx
 		for (let i = last + 1; i < points.length; i++) {
 			points[i].beat = points[last].beat + (i - last)
 		}
