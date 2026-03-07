@@ -35,6 +35,7 @@
 		marble: MarbleInstance
 		rail: ResolvedRail
 		railRuntime: RailRuntime
+		renderVersion?: number
 		color: string
 		wireframe?: boolean
 		fxMarbles?: boolean
@@ -46,6 +47,7 @@
 		marble = $bindable(),
 		rail,
 		railRuntime,
+		renderVersion = 0,
 		color,
 		wireframe = false,
 		fxMarbles = true,
@@ -62,7 +64,7 @@
 	// Apply rail render transform to marble position
 	const transformedPosition = $derived.by(() => {
 		const basePos = new Vector3(marble.position.x, marble.position.y, marble.position.z)
-		const matrix = railRuntime.renderVersion
+		const matrix = renderVersion
 			? (railRuntime.renderMatrix as Matrix4 | undefined)
 			: undefined
 		if (matrix) {

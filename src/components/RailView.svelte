@@ -45,6 +45,7 @@
 		sceneCtx?: SceneCtx
 		renderPlayOnly?: boolean
 		visible?: boolean
+		renderVersion?: number // bindable
 		id: string
 		railIdx?: number
 		selectedInstrumentIdx?: number | null
@@ -67,6 +68,7 @@
 		sceneCtx,
 		renderPlayOnly = false,
 		visible = true,
+		renderVersion = $bindable(0),
 		id,
 		railIdx = 0,
 		selectedInstrumentIdx = null,
@@ -138,7 +140,17 @@
 
 	// Runtime render transform (pre-allocated, filled in-place by render fn)
 	const _renderOut = new Matrix4()
-	let _renderVersion = $state(0) // incremented each frame to trigger $derived
+	let _renderVersion = $state(0)
+
+	// Pre-fill before first render so group doesn't flash at identity transform
+	$effect.pre(() => {
+		if (_renderVersion > 0 || !render || !tempo || !sceneCtx) return
+		render(_renderOut, sceneCtx, tempo.currentBeat, tempo, 0)
+		railRuntime.renderMatrix = _renderOut
+		railRuntime.renderVersion = 1
+		_renderVersion = 1
+		renderVersion = 1
+	})
 
 	// Extract position/rotation for group, scale for geometry
 	const renderTransform = $derived.by(() => {
@@ -406,6 +418,7 @@
 			// Clone for runtime so MarbleView's $derived detects the new reference
 			railRuntime.renderMatrix = _renderOut //.clone()
 			railRuntime.renderVersion = _renderVersion
+			renderVersion = _renderVersion // sync to $state in Scene.svelte
 		}
 
 		// Billboard text

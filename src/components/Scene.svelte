@@ -147,6 +147,9 @@
 		railVisibility = rails.map((rail) => rail.visible !== false)
 	}
 
+	// Reactive render version counters (one per rail), written by RailView, read by MarbleView
+	const railRenderVersions: number[] = $state(Array.from({ length: rails.length }, () => 0))
+
 	// Create scene context once at mount (non-reactive to avoid loops)
 	const sceneCtx = (() => {
 		const ctx = createSceneCtx(marbles, rails, marbleRailIndices, tempo, scene, scene.user ?? {})
@@ -157,6 +160,7 @@
 
 		return ctx
 	})()
+
 
 	function onSelectInstrument(railIdx: number, idx: number) {
 		selectedEntity = { type: 'instrument', railIdx, idx }
@@ -236,9 +240,8 @@
 		if (!audioInitialized) return []
 		const nodes = audioView?.getNodes()
 		if (!nodes?.length) return []
-		if (sceneCtx.rails[0]?.runtime?.renderVersion) {
-			/* empty */
-		}
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		for (const v of railRenderVersions) v // establish dep on all rail render versions
 
 		return getMidiSignalLinks(sceneCtx.instruments, nodes, sceneCtx.rails, AUDIO_OFFSET)
 	})
@@ -247,9 +250,8 @@
 		if (!audioInitialized || !audioViewConfig?.marbleLinks) return []
 		const nodes = audioView?.getNodes()
 		if (!nodes?.length) return []
-		if (sceneCtx.rails[0]?.runtime?.renderVersion) {
-			/* empty */
-		}
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		for (const v of railRenderVersions) v // establish dep on all rail render versions
 
 		return getMarbleSignalLinks(sceneCtx.marbles, nodes, sceneCtx.rails, AUDIO_OFFSET)
 	})
@@ -536,6 +538,7 @@
 				? selectedEntity.idx
 				: null}
 			{onSelectInstrument}
+			bind:renderVersion={railRenderVersions[railIndex]}
 		/>
 	{/if}
 {/each}
@@ -549,6 +552,7 @@
 			bind:marble={marbles[idx]}
 			rail={marbles[idx].resolved.resolvedRail}
 			railRuntime={sceneCtx.rails[railIndex].runtime}
+			renderVersion={railRenderVersions[railIndex]}
 			color={rails[railIndex].color || '#ffffff'}
 			{wireframe}
 			{fxMarbles}
