@@ -28,6 +28,8 @@
 	import './components/GeoText.svelte'
 	import { font, fontCache } from './lib/video/geo-geometry'
 	import { Font } from 'three/examples/jsm/loaders/FontLoader.js'
+	import { globalState } from './components/global-state.svelte'
+	import GlobalState from './components/GlobalState.svelte'
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
@@ -174,6 +176,8 @@
 		}
 	})
 
+	let sceneIndex = $derived(scenes.findIndex((d) => d.id === sceneId))
+
 	const handleKeydown = createKeydownHandler([
 		{
 			code: 'Space',
@@ -205,15 +209,42 @@
 				(sceneId = scenes[(scenes.findIndex((d) => d.id === sceneId) + 1) % scenes.length].id)
 		},
 		{
+			code: 'ArrowRight',
+			action: () =>
+				(sceneId = scenes[(scenes.findIndex((d) => d.id === sceneId) + 1) % scenes.length].id)
+		},
+		{
 			code: 'KeyA',
 			action: () =>
 				(sceneId =
 					scenes[(scenes.findIndex((d) => d.id === sceneId) - 1 + scenes.length) % scenes.length]
 						.id)
+		},
+		{
+			code: 'ArrowLeft',
+			action: () =>
+				(sceneId =
+					scenes[(scenes.findIndex((d) => d.id === sceneId) - 1 + scenes.length) % scenes.length]
+						.id)
+		},
+		{
+			code: 'ArrowDown',
+			action: () => {
+				tempo.rewind++
+				tempo.currentBeat = 0
+				tempo.beatProgress = 0
+			}
+		},
+		{
+			code: 'ArrowUp',
+			action: () => {
+				globalState.isMuted = !globalState.isMuted
+			}
 		}
 	])
 </script>
 
+<GlobalState engine={audioEngineRef}></GlobalState>
 <svelte:window onkeydown={handleKeydown} />
 
 {#if debugEnabled}
@@ -304,6 +335,7 @@
 >
 	<Wrap
 		{sceneId}
+		{sceneIndex}
 		{activeScene}
 		{showGrid}
 		{showPoints}
@@ -349,6 +381,7 @@
 			}
 		}}
 		onRewind={() => {
+			tempo.rewind++
 			tempo.currentBeat = 0
 			tempo.beatProgress = 0
 		}}

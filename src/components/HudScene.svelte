@@ -1,8 +1,14 @@
+<script module lang="ts">
+	let prevSceneIndex: number
+	let prevIsMuted: boolean = false
+	let prevRewind: number = 0
+</script>
+
 <script lang="ts">
 	import { extend, T, useTask, useThrelte } from '@threlte/core'
 	import { interactivity, Align } from '@threlte/extras'
 	import type { AudioEngine, AudioChain } from '../lib/audio'
-	import { resolveAnalyzerType, getChainLabel, toggleMute } from '../lib/audio/engine'
+	import { resolveAnalyzerType, getChainLabel } from '../lib/audio/engine'
 	import { buildImpactMaterial } from '../lib/video/material-impact'
 	import { createInstrumentGeometry, type ArrowKind } from '../lib/video/instrument-geometry'
 	import AnalyserView from './AnalyserView.svelte'
@@ -18,6 +24,7 @@
 	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
 	import { updateRects, type SplitRect } from '../lib/components/multi-view/multi-view'
 	import { GridHelperCells } from '../lib/three/GridHelperCells'
+	import { globalState } from './global-state.svelte'
 
 	function readLS(key: string, def: boolean): boolean {
 		if (typeof localStorage === 'undefined') return def
@@ -60,6 +67,7 @@
 		description,
 		freeze = false,
 		sceneCtx,
+		sceneIndex,
 		fps = 0,
 		showStats = $bindable(true),
 		wireframe = $bindable(false),
@@ -86,6 +94,7 @@
 		freeze?: boolean
 		description?: string
 		sceneCtx?: SceneCtx
+		sceneIndex: number
 		fps: number
 		showStats?: boolean
 		wireframe?: boolean
@@ -305,15 +314,14 @@
 	]
 
 	onMount(() => {
-		for (const item of MENU_ITEMS) item.set(readLS(item.lsKey, item.def))
-		isMuted = readLS('ac-muted', false)
-		if (isMuted) {
-			const ri = btnDefs.findIndex((b) => b.kind === 'repro')
-			if (ri !== -1) {
-				btnStates[ri].spinFrom = Math.PI
-				btnStates[ri].spinTo = Math.PI
-				btnSpinAngles[ri] = Math.PI
-			}
+		for (const item of MENU_ITEMS) {
+			item.set(readLS(item.lsKey, item.def))
+		}
+		// isMuted = readLS('ac-muted', false)
+		if (globalState.isMuted && prevIsMuted) {
+			btnStates[REPRO_INDEX].spinFrom = Math.PI
+			btnStates[REPRO_INDEX].spinTo = Math.PI
+			btnSpinAngles[REPRO_INDEX] = Math.PI
 		}
 	})
 
@@ -417,9 +425,64 @@
 		}
 	})
 
+	let isPlaying = false
+
+	$effect(() => {
+		if (tempo.rewind > prevRewind) {
+			prevRewind = tempo.rewind
+			btnFlash(FWD_INDEX)
+		}
+	})
+
+	$effect(() => {
+		if (sceneIndex === prevSceneIndex) {
+			return
+		}
+
+		if (prevSceneIndex === undefined) {
+			prevSceneIndex = sceneIndex
+			return
+		}
+
+		btnFlash(sceneIndex > prevSceneIndex ? 1 : 0)
+		prevSceneIndex = sceneIndex
+
+		if (tempo.isPlaying && isPlaying) {
+			btnFlash(PLAY_INDEX)
+		}
+	})
+
+	$effect(() => {
+		if (tempo.isPlaying === isPlaying) {
+			return
+		}
+
+		isPlaying = tempo.isPlaying
+
+		if (isPlaying) {
+			btnFlash(5)
+		} else {
+			btnFlash(4)
+		}
+	})
+
+	$effect(() => {
+		if (globalState.isMuted === undefined || globalState.isMuted === prevIsMuted) {
+			// btnStates[REPRO_INDEX].spinFrom = Math.PI
+			// btnStates[REPRO_INDEX].spinTo = Math.PI
+			// btnSpinAngles[REPRO_INDEX] = Math.PI
+
+			return
+		}
+
+		prevIsMuted = globalState.isMuted
+
+		btnFlash(2)
+	})
+
 	type BtnDef = { kind: ArrowKind; action: (e: unknown) => void; rotY?: number; rotX?: number }
 
-	let isMuted = $state(false)
+	// let isMuted = $state(false)
 	let chord = $derived(sceneCtx?.chord?.current?.chord)
 	let scale = $derived(sceneCtx?.chord?.scale?.name)
 	let scaleNotes = $derived(sceneCtx?.chord?.scale?.notes)
@@ -438,9 +501,9 @@
 			kind: 'repro',
 			// rotX: Math.PI,
 			action: () => {
-				isMuted = !isMuted
-				writeLS('ac-muted', isMuted)
-				toggleMute(engine, isMuted)
+				globalState.isMuted = !globalState.isMuted
+				// writeLS('ac-muted', isMuted)
+				// toggleMute(engine, isMuted)
 			}
 		},
 		{
@@ -457,6 +520,13 @@
 			action: (event) => onPlay((<{ nativeEvent: MouseEvent }>event).nativeEvent)
 		}
 	]
+
+	const PLAY_INDEX = btnDefs.findIndex(({ kind }) => kind === 'play')
+	const STOP_INDEX = btnDefs.findIndex(({ kind }) => kind === 'stop')
+	const FWD_INDEX = btnDefs.findIndex(({ kind }) => kind === 'fwd')
+	const REPRO_INDEX = btnDefs.findIndex(({ kind }) => kind === 'repro')
+	const PREV_INDEX = btnDefs.findIndex(({ kind }) => kind === 'plain')
+	const NEXT_INDEX = btnDefs.findLastIndex(({ kind }) => kind === 'plain')
 
 	type BtnState = {
 		fx: ReturnType<typeof buildImpactMaterial>
@@ -483,8 +553,37 @@
 		onMouseActivity()
 		btnDefs[i].action(event)
 
-		if (i === 5) {
+		if (i === PLAY_INDEX) {
 			onBtnLeave(i)
+			return
+		}
+
+		if ([REPRO_INDEX, FWD_INDEX, STOP_INDEX, PLAY_INDEX].includes(i)) {
+			return
+		}
+
+		btnFlash(i)
+
+		if (i === PREV_INDEX) {
+			ignore0 = true
+		}
+
+		if (i === NEXT_INDEX) {
+			ignore1 = true
+		}
+	}
+
+	let ignore0 = false
+	let ignore1 = false
+
+	function btnFlash(i: number) {
+		if (ignore0) {
+			ignore0 = false
+			return
+		}
+
+		if (ignore1) {
+			ignore1 = false
 			return
 		}
 
@@ -675,7 +774,8 @@
 				const eased = 1 - (1 - t) * (1 - t) // easeOutQuad
 				const angle = b.spinFrom + (b.spinTo - b.spinFrom) * eased
 				// In-place mutation — no array spread
-				btnSpinAngles[i] = angle
+				const rounds = angle / (2 * Math.PI)
+				btnSpinAngles[i] = (rounds - Math.floor(rounds)) * Math.PI * 2
 			}
 		}
 	})
@@ -897,7 +997,7 @@
 			0
 		]}
 	>
-		<GeoText cache material={textMat.mat} text={beatText} size={beatSize} />
+		<GeoText cache material={btnStates[5].fx.mat} text={beatText} size={beatSize} />
 	</T.Group>
 {/if}
 
@@ -985,7 +1085,10 @@
 		{@const btnMargin = sphereR * 0.5}
 		{@const bx = $size.width / HUD_ZOOM / 2 - otherSpacing - sphereR * 0.9}
 		{@const by = -$size.height / HUD_ZOOM / 2 + sphereR * 2}
-		{@const kind = btn.kind === 'repro' && isMuted ? 'muted' : btn.kind}
+		{@const kind =
+			btn.kind === 'repro' && globalState.isMuted && btnSpinAngles[i] > Math.PI * 0.5
+				? 'muted'
+				: btn.kind}
 		{@const geom = createInstrumentGeometry({
 			type: 'arrow',
 			kind,

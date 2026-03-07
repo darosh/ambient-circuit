@@ -8,6 +8,7 @@ export interface TempoState {
 	currentBeat: number
 	isPlaying: boolean
 	beatProgress: number // 0-1 progress to next beat
+	rewind: number
 }
 
 export function createTempoState(config: TempoConfig = { bpm: 120, beatsPerBar: 4 }): TempoState {
@@ -15,7 +16,8 @@ export function createTempoState(config: TempoConfig = { bpm: 120, beatsPerBar: 
 		config,
 		currentBeat: 0,
 		isPlaying: false,
-		beatProgress: 0
+		beatProgress: 0,
+		rewind: 0
 	}
 }
 

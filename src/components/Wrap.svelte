@@ -11,6 +11,7 @@
 
 	let {
 		sceneId,
+		sceneIndex,
 		activeScene,
 		showGrid,
 		showPoints,
@@ -79,6 +80,7 @@
 			{onPrevScene}
 			{freeze}
 			{sceneCtx}
+			{sceneIndex}
 			{fps}
 			bind:showStats
 			bind:wireframe
