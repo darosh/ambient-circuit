@@ -53,7 +53,13 @@ export type RailRuntime = {
 }
 
 export type RailTransform = Matrix4 | ((v: Vector3) => Vector3)
-export type RailRender = (out: Matrix4, ctx: SceneCtx, beat: number, tempo: TempoState, delta: number) => void
+export type RailRender = (
+	out: Matrix4,
+	ctx: SceneCtx,
+	beat: number,
+	tempo: TempoState,
+	delta: number
+) => void
 
 /** Flat rail config: shape + presentation + sequencing */
 export type RailConfig = {

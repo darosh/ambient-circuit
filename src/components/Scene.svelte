@@ -161,7 +161,6 @@
 		return ctx
 	})()
 
-
 	function onSelectInstrument(railIdx: number, idx: number) {
 		selectedEntity = { type: 'instrument', railIdx, idx }
 		// Init audio on first interaction (not just play)

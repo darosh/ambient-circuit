@@ -12,7 +12,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 // Source directories to scan for type definitions
 const SRC_DIRS = ['src/lib/core', 'src/lib/audio']
 
-const GRAPHS: { seed: string; blacklist?: string[], unions?: boolean }[] = [
+const GRAPHS: { seed: string; blacklist?: string[]; unions?: boolean }[] = [
 	{
 		seed: 'SceneConfig',
 		blacklist: [
