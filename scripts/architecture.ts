@@ -12,7 +12,7 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 // Source directories to scan for type definitions
 const SRC_DIRS = ['src/lib/core', 'src/lib/audio']
 
-const GRAPHS: { seed: string; blacklist?: string[] }[] = [
+const GRAPHS: { seed: string; blacklist?: string[], unions?: boolean }[] = [
 	{
 		seed: 'SceneConfig',
 		blacklist: [
@@ -27,10 +27,12 @@ const GRAPHS: { seed: string; blacklist?: string[] }[] = [
 		]
 	},
 	{
-		seed: 'SceneCtx'
+		seed: 'SceneCtx',
+		blacklist: ['SceneConfig']
 	},
 	{
-		seed: 'TriggerContext'
+		seed: 'TriggerContext',
+		blacklist: ['SceneCtx', 'SceneConfig']
 	}
 ]
 
@@ -232,7 +234,8 @@ function scanAllTypes(): TypeDef[] {
 function discoverTypes(
 	seeds: string[],
 	allTypes: TypeDef[],
-	blacklist: string[] = []
+	blacklist: string[] = [],
+	unions = false
 ): Map<string, TypeDef> {
 	const byName = new Map<string, TypeDef>()
 	for (const t of allTypes) {
@@ -253,6 +256,10 @@ function discoverTypes(
 		discovered.set(name, typeDef)
 
 		for (const prop of typeDef.props) {
+			if (!unions && prop.name === '(union)') {
+				continue
+			}
+
 			for (const ref of extractTypeRefs(prop.typeStr)) {
 				if (!discovered.has(ref) && byName.has(ref) && !blocked.has(ref)) {
 					queue.push(ref)
@@ -330,7 +337,7 @@ const allTypes = scanAllTypes()
 const sections: string[] = ['# Architecture\n']
 
 for (const graph of GRAPHS) {
-	const discovered = discoverTypes([graph.seed], allTypes, graph.blacklist)
+	const discovered = discoverTypes([graph.seed], allTypes, graph.blacklist, graph.unions)
 	const mermaid = buildFlowchart(discovered)
 	sections.push(`## ${graph.seed}\n`)
 	sections.push(`\`\`\`mermaid\n${mermaid}\n\`\`\`\n`)
