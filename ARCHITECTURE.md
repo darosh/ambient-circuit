@@ -173,7 +173,6 @@ flowchart LR
   end
 
   subgraph RailRender["RailRender"]
-    RailRender__out(["out: Matrix4, ctx: SceneCtx, beat: number, temp…"])
   end
 
   subgraph MarbleSequenceMode["MarbleSequenceMode"]
@@ -192,13 +191,6 @@ flowchart LR
   end
 
   subgraph AnalyzerType["AnalyzerType"]
-  end
-
-  subgraph TempoState["TempoState"]
-    TempoState__config(["config: TempoConfig"])
-  end
-
-  subgraph TempoConfig["TempoConfig"]
   end
 
   %% Inheritance
@@ -246,9 +238,6 @@ flowchart LR
   AudioChainConfig__generator --> GeneratorConfig
   AudioChainConfig__fx --> FxConfig
   AudioChainConfig__analyzer --> AnalyzerType
-  RailRender__out --> SceneCtx
-  RailRender__out --> TempoState
-  TempoState__config --> TempoConfig
 ```
 
 ## TriggerContext
@@ -355,7 +344,6 @@ flowchart LR
   end
 
   subgraph RailRender["RailRender"]
-    RailRender__out(["out: Matrix4, ctx: SceneCtx, beat: number, temp…"])
   end
 
   subgraph MarbleSequenceMode["MarbleSequenceMode"]
@@ -374,13 +362,6 @@ flowchart LR
   end
 
   subgraph AnalyzerType["AnalyzerType"]
-  end
-
-  subgraph TempoState["TempoState"]
-    TempoState__config(["config: TempoConfig"])
-  end
-
-  subgraph TempoConfig["TempoConfig"]
   end
 
   %% Inheritance
@@ -421,6 +402,4 @@ flowchart LR
   AudioChainConfig__generator --> GeneratorConfig
   AudioChainConfig__fx --> FxConfig
   AudioChainConfig__analyzer --> AnalyzerType
-  RailRender__out --> TempoState
-  TempoState__config --> TempoConfig
 ```
