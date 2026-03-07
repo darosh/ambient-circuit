@@ -159,16 +159,48 @@
 		postProcessing.outputNode = composed
 		postProcessing.needsUpdate = true
 
-		// Compile once — set all splits ready together
 		_splitReady = Array.from({ length: n }, () => false)
 		const r = renderer as unknown as WebGPURenderer
-		_splitReady.fill(false)
 		;(async () => {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			await (r as any).compileAsync(scene, renderCam)
-			// await pause(0)
+			// Render atlas once hidden to compile WebGPU atlas pipelines — fixes first-frame glitch
+			renderAtlasFrame(r, n)
 			_splitReady.fill(true)
 		})()
+	}
+
+	function renderAtlasFrame(r: WebGPURenderer, n: number) {
+		if (!_atlasTarget) return
+		r.setRenderTarget(_atlasTarget)
+		r.setScissorTest(false)
+		r.clear()
+		r.autoClear = false
+		for (let i = 0; i < n; i++) {
+			const rect = _rects[i]
+			const splitCfg = config.splits[i]
+			const newFov = splitCfg.fov ?? 30
+			const newAspect = rect.aspect!
+			if (renderCam.fov !== newFov || renderCam.aspect !== newAspect) {
+				renderCam.fov = newFov
+				renderCam.aspect = newAspect
+				renderCam.updateProjectionMatrix()
+			}
+			renderCam.position.copy(ocCams[i].position)
+			renderCam.lookAt(lerpTargetPos[i])
+			// Set viewport on target BEFORE setRenderTarget so first activation sees correct viewport
+			const rectDpr = _rectsDpr[i]
+			_atlasTarget.viewport.set(rectDpr.x, rectDpr.y, rectDpr.width, rectDpr.height)
+			r.setRenderTarget(_atlasTarget)
+			r.setScissorTest(true)
+			r.setScissor(rect.x, rect.y, rect.width, rect.height)
+			r.setViewport(rect.x, rect.y, rect.width, rect.height)
+			r.render(scene, renderCam)
+		}
+		r.autoClear = true
+		r.setRenderTarget(null)
+		r.setScissorTest(false)
+		r.setViewport(0, 0, _lastSize.w, _lastSize.h)
 	}
 
 	// ── Viewport rects ─────────────────────────────────────────────────────────
@@ -362,42 +394,7 @@
 
 			// ── Render ready splits into atlas via viewport/scissor ─────────
 			if (_atlasTarget && _splitReady.length > 0) {
-				const r = renderer as unknown as WebGPURenderer
-
-				r.setRenderTarget(_atlasTarget)
-				r.setScissorTest(false)
-				r.clear()
-				r.autoClear = false
-
-				for (let i = 0; i < n; i++) {
-					if (!_splitReady[i]) continue
-
-					const rect = _rects[i]
-					const splitCfg = config.splits[i]
-
-					// Apply split state to shared render camera
-					renderCam.fov = splitCfg.fov ?? 30
-					if (renderCam.aspect !== rect.aspect) {
-						renderCam.aspect = rect.aspect!
-						renderCam.updateProjectionMatrix()
-					}
-					renderCam.position.copy(ocCams[i].position)
-					renderCam.lookAt(lerpTargetPos[i])
-
-					r.setRenderTarget(_atlasTarget)
-					r.setScissorTest(true)
-					r.setScissor(rect.x, rect.y, rect.width, rect.height)
-					r.setViewport(rect.x, rect.y, rect.width, rect.height)
-
-					const rectDpr = _rectsDpr[i]
-					_atlasTarget.viewport.set(rectDpr.x, rectDpr.y, rectDpr.width, rectDpr.height)
-
-					r.render(scene, renderCam)
-				}
-
-				r.setRenderTarget(null)
-				r.setScissorTest(false)
-				r.setViewport(0, 0, _lastSize.w, _lastSize.h)
+				renderAtlasFrame(renderer as unknown as WebGPURenderer, n)
 			}
 
 			postProcessing.render()
