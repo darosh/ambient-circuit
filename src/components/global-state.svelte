@@ -8,7 +8,6 @@
 	})
 
 	function readLS(key: string, def: boolean): boolean {
-		console.log(key)
 		if (typeof localStorage === 'undefined') return def
 		const v = localStorage.getItem(key)
 		return v === null ? def : v === 'true'
