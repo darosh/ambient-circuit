@@ -140,5 +140,10 @@ export default <Record<string, Record<string, number>>>(<unknown>{
 	EQ3: { high: 0, highFrequency: 2500, low: 0, lowFrequency: 400, mid: 0 },
 	Limiter: { threshold: -12 },
 	Panner: { pan: 0, channelCount: 1 },
-	Solo: {}
+	Solo: {},
+	Sampler: {
+		volume: 0,
+		attack: 0,
+		release: 0.1
+	}
 })

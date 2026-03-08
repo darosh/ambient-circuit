@@ -329,11 +329,14 @@ export async function buildChain(
 	}
 
 	const genPoly = config.generator && 'poly' in config.generator ? config.generator.poly : undefined
+
 	const maxVoices =
 		genPoly === undefined
 			? config.generator && 'rnbo' in config.generator && !config.generator.rnbo.endsWith('-mono')
 				? DEFAULT_POLY
-				: 1
+				: config.generator && 'sample' in config.generator
+					? DEFAULT_POLY
+					: 1
 			: genPoly
 	const voices: VoiceTracker = { max: maxVoices, endTimes: [] }
 
@@ -363,7 +366,11 @@ export async function buildChain(
 		listParams() {
 			if (!chain.generator) return []
 			const gc = config.generator!
-			return listNodeParams(chain.generator, gc.params, 'tone' in gc ? gc.tone : undefined)
+			return listNodeParams(
+				chain.generator,
+				gc.params,
+				'tone' in gc ? gc.tone : 'sample' in gc ? 'Sampler' : undefined
+			)
 		},
 		listFxParams(index) {
 			if (!chain.fx[index]) return []
@@ -1078,7 +1085,6 @@ async function createSamplerNode(
 		loop: globalLoop.hasLoop,
 		...(globalLoop.hasLoop ? { loopStart: globalLoop.loopStart, loopEnd: globalLoop.loopEnd } : {}),
 		...(noteLoopMap.size > 1 ? { noteLoops: noteLoopMap } : {}),
-		release: 1,
 		onload: () => resolve!(),
 		...(params ? unflattenParams(params) : {})
 	}
