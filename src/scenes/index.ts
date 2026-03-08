@@ -31,6 +31,9 @@ import { scene as sceneMultiTest, sceneMulti32 } from './scene-multi-test'
 import { scene as sceneRailText } from './scene-rail-text'
 import { scene as scene2 } from './scene-2'
 import { scene as sceneSampler } from './scene-sampler'
+import { scene as sceneSamplerPadDeeper } from './scene-sampler-pad-deeper'
+import { scene as sceneSamplerPadAwaits } from './scene-sampler-pad-awaits'
+import { scene as sceneSamplerPadAstrid } from './scene-sampler-pad-astrid'
 // import { scenes as scenesRnbo } from './scene-rnbo'
 
 export const scenes: SceneConfig[] = [
@@ -66,6 +69,9 @@ export const scenes: SceneConfig[] = [
 	sceneAudio,
 	sceneCollisions,
 	sceneToneInstruments,
-	sceneSampler
+	sceneSampler,
+	sceneSamplerPadDeeper,
+	sceneSamplerPadAwaits,
+	sceneSamplerPadAstrid
 	// ...scenesRnbo
 ]

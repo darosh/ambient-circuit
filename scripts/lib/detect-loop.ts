@@ -1,7 +1,7 @@
 /**
  * Zero-crossing loop detection on float32 PCM.
  * Supports mono or interleaved stereo (channels=2: L0,R0,L1,R1,...).
- * Returns { loopStartSample, loopEndSample } in per-frame indices, or null.
+ * Returns { loopStartSample, loopEndSample } in per-frame indices, or throws.
  */
 
 export type DetectOptions = {
@@ -15,7 +15,7 @@ export function detectLoop(
 	sampleRate: number,
 	opts: DetectOptions & { channels?: number } = {}
 ) {
-	const { amplitudeTolerance = 0.03, minCycles = 12, searchFromEnd = 0.35, channels = 1 } = opts
+	const { amplitudeTolerance = 0.03, minCycles = 11, searchFromEnd = 0.5, channels = 1 } = opts
 
 	const totalSamples = pcm.length / channels
 	const searchStart = Math.floor((1 - searchFromEnd) * totalSamples)
@@ -35,13 +35,16 @@ export function detectLoop(
 		}
 		if (allCross) crossings.push(i)
 	}
-	if (crossings.length < minCycles + 1) return null
+	if (crossings.length < minCycles + 1)
+		throw new Error(
+			`too few zero crossings: found ${crossings.length}, need ${minCycles + 1} (amplitudeTolerance=${amplitudeTolerance})`
+		)
 
 	// Estimate fundamental period via autocorrelation on ch0 near end
 	const windowStart = crossings[crossings.length - Math.min(8, crossings.length)]
 	const windowEnd = crossings[crossings.length - 1]
 	const winLen = windowEnd - windowStart
-	if (winLen < 2) return null
+	if (winLen < 2) throw new Error('zero-crossing window too short for autocorrelation')
 
 	let bestLag = 0,
 		bestCorr = -1
@@ -61,7 +64,10 @@ export function detectLoop(
 			bestLag = lag
 		}
 	}
-	if (bestLag < 2 || bestCorr < 0.3) return null
+	if (bestLag < 2 || bestCorr < 0.3)
+		throw new Error(
+			`autocorrelation too weak: bestLag=${bestLag}, bestCorr=${bestCorr.toFixed(3)} (need ≥0.3)`
+		)
 
 	const loopEndSample = crossings[crossings.length - 1]
 	const targetStart = loopEndSample - minCycles * bestLag
@@ -74,7 +80,8 @@ export function detectLoop(
 			loopStartSample = crossings[i]
 		}
 	}
-	if (loopStartSample >= loopEndSample) return null
+	if (loopStartSample >= loopEndSample)
+		throw new Error(`degenerate loop: start=${loopStartSample} >= end=${loopEndSample}`)
 
 	return { loopStartSample, loopEndSample }
 }

@@ -54,46 +54,52 @@ function globalLoopFromSidecar(sidecar: Sidecar): SidecarNote | null {
 	return null
 }
 
-/** Detect loop info for one audio file. Returns null if detection fails. */
+/** Detect loop info for one audio file. Throws if detection fails even after mono fallback. */
 async function detectFileLoop(
 	absPath: string,
 	ext: string
-): Promise<{ loop: SidecarNote; meta: AudioMeta } | null> {
+): Promise<{ loop: SidecarNote; meta: AudioMeta }> {
 	if (ext === '.wav') {
 		const meta = await parseWavMeta(absPath)
+		if (!meta) throw new Error(`Failed to parse WAV header: ${absPath}`)
 
-		if (!meta) {
-			return null
+		try {
+			const loop = await detectWavLoop(absPath, meta)
+			return { loop, meta }
+		} catch (err) {
+			console.warn(`  warn: stereo detection failed (${(err as Error).message}), retrying mono`)
+			const loop = await detectWavLoop(absPath, meta, { mono: true })
+			return { loop, meta }
 		}
-
-		const loop = await detectWavLoop(absPath, meta)
-
-		return loop ? { loop, meta } : null
 	}
 
-	if (!hasFfmpeg) {
-		throw new Error('Missing FFMPEG!')
-	}
+	if (!hasFfmpeg) throw new Error('ffmpeg not available')
 
 	const probe = probeWithFfprobe(absPath)
+	if (!probe) throw new Error(`ffprobe failed: ${absPath}`)
 
-	if (!probe) {
-		return null
-	}
-
-	const loop = detectNonWavLoop(absPath, probe.sampleRate)
-
-	if (!loop) {
-		return null
-	}
-
-	return {
-		loop,
-		meta: {
-			sampleRate: probe.sampleRate,
-			channels: probe.channels,
-			duration: probe.duration,
-			samples: probe.samples
+	try {
+		const loop = detectNonWavLoop(absPath, probe.sampleRate)
+		return {
+			loop,
+			meta: {
+				sampleRate: probe.sampleRate,
+				channels: probe.channels,
+				duration: probe.duration,
+				samples: probe.samples
+			}
+		}
+	} catch (err) {
+		console.warn(`  warn: stereo detection failed (${(err as Error).message}), retrying mono`)
+		const loop = detectNonWavLoop(absPath, probe.sampleRate, { mono: true })
+		return {
+			loop,
+			meta: {
+				sampleRate: probe.sampleRate,
+				channels: probe.channels,
+				duration: probe.duration,
+				samples: probe.samples
+			}
 		}
 	}
 }
@@ -110,7 +116,9 @@ async function processInstrument(full: string, sidecarPath: string): Promise<Sid
 	let sidecar: Sidecar = {}
 	if (existsSync(sidecarPath)) {
 		try {
+			console.log(`loaded ${sidecarPath}`)
 			sidecar = JSON.parse(await readFile(sidecarPath, 'utf8')) as Sidecar
+			return sidecar
 		} catch {
 			console.warn(`  warn: could not parse ${sidecarPath}`)
 		}
@@ -124,6 +132,7 @@ async function processInstrument(full: string, sidecarPath: string): Promise<Sid
 	let representativeMeta: AudioMeta | null = null
 
 	for (const file of audioFiles) {
+		console.log(`sample ${file}`)
 		const ext = extname(file).toLowerCase()
 		const noteName = noteNameFromFile(file)
 		const absPath = join(full, file)
@@ -135,6 +144,9 @@ async function processInstrument(full: string, sidecarPath: string): Promise<Sid
 
 		// Detect
 		const result = await detectFileLoop(absPath, ext)
+
+		console.log(`detected`, result)
+
 		if (!result) continue
 
 		const { loop, meta } = result

@@ -19,7 +19,10 @@ export interface SampleEntry {
 }
 
 export const SAMPLE_META: Record<string, SampleMeta> = {
-	acid: { sampleRate: 44_100, channels: 1, duration: 1.5048299319727891 }
+	acid: { sampleRate: 44_100, channels: 1, duration: 1.5048299319727891 },
+	'pad-astrid': { sampleRate: 44_100, channels: 2, duration: 3.8407256235827663 },
+	'pad-awaits': { sampleRate: 44_100, channels: 2, duration: 11.042743764172336 },
+	'pad-deeper': { sampleRate: 44_100, channels: 2, duration: 5.786507936507936 }
 }
 
 export const SAMPLES: Record<string, Record<string, SampleEntry>> = {
@@ -27,6 +30,21 @@ export const SAMPLES: Record<string, Record<string, SampleEntry>> = {
 		C4: {
 			path: 'acid/C4.ogg',
 			loop: { loopStartSample: 61_759, loopEndSample: 65_805, sampleRate: 44_100 }
+		}
+	},
+	'pad-astrid': {
+		C4: { path: 'pad-astrid/C4.ogg' }
+	},
+	'pad-awaits': {
+		C4: {
+			path: 'pad-awaits/C4.ogg',
+			loop: { loopStartSample: 319_805, loopEndSample: 485_520, sampleRate: 44_100 }
+		}
+	},
+	'pad-deeper': {
+		C4: {
+			path: 'pad-deeper/C4.ogg',
+			loop: { loopStartSample: 240_446, loopEndSample: 254_632, sampleRate: 44_100 }
 		}
 	}
 }

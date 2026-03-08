@@ -86,69 +86,94 @@ export function probeWithFfprobe(filePath: string) {
 	}
 }
 
+/** Downmix interleaved multi-channel float32 to mono by averaging channels. */
+export function downmixToMono(interleaved: Float32Array, channels: number): Float32Array {
+	if (channels === 1) return interleaved
+	const totalSamples = interleaved.length / channels
+	const mono = new Float32Array(totalSamples)
+	for (let i = 0; i < totalSamples; i++) {
+		let sum = 0
+		for (let c = 0; c < channels; c++) sum += interleaved[i * channels + c]
+		mono[i] = sum / channels
+	}
+	return mono
+}
+
 /**
- * Decode WAV to mono float32, then run loop detection.
+ * Decode WAV to float32, then run loop detection.
+ * Throws on decode or detection failure.
+ * Pass mono=true to downmix to mono before detection.
  */
 export async function detectWavLoop(
 	filePath: string,
-	meta: { sampleRate: number; channels: number; bitDepth: number }
+	meta: { sampleRate: number; channels: number; bitDepth: number },
+	{ mono = false }: { mono?: boolean } = {}
 ) {
-	try {
-		const fd = await readFile(filePath)
-		const view = new DataView(fd.buffer, fd.byteOffset, fd.byteLength)
+	const fd = await readFile(filePath)
+	const view = new DataView(fd.buffer, fd.byteOffset, fd.byteLength)
 
-		let offset = 12,
-			dataOffset = -1,
-			dataSize = 0
-		while (offset + 8 <= fd.length) {
-			const chunkId = fd.toString('ascii', offset, offset + 4)
-			const chunkSize = view.getUint32(offset + 4, true)
-			offset += 8
-			if (chunkId === 'data') {
-				dataOffset = offset
-				dataSize = chunkSize
-				break
-			}
-			offset += chunkSize + (chunkSize & 1)
+	let offset = 12,
+		dataOffset = -1,
+		dataSize = 0
+	while (offset + 8 <= fd.length) {
+		const chunkId = fd.toString('ascii', offset, offset + 4)
+		const chunkSize = view.getUint32(offset + 4, true)
+		offset += 8
+		if (chunkId === 'data') {
+			dataOffset = offset
+			dataSize = chunkSize
+			break
 		}
-		if (dataOffset < 0) return null
-
-		const { sampleRate, channels, bitDepth } = meta
-		const totalSamples = Math.floor(dataSize / (channels * (bitDepth / 8)))
-		const interleaved = new Float32Array(totalSamples * channels)
-
-		if (bitDepth === 16) {
-			for (let i = 0; i < totalSamples; i++) {
-				for (let c = 0; c < channels; c++)
-					interleaved[i * channels + c] =
-						view.getInt16(dataOffset + (i * channels + c) * 2, true) / 32768
-			}
-		} else if (bitDepth === 24) {
-			for (let i = 0; i < totalSamples; i++) {
-				for (let c = 0; c < channels; c++) {
-					const base = dataOffset + (i * channels + c) * 3
-					let val = fd[base] | (fd[base + 1] << 8) | (fd[base + 2] << 16)
-					if (val & 0x800000) val |= ~0xff_ffff
-					interleaved[i * channels + c] = val / 8_388_608
-				}
-			}
-		} else return null
-
-		return detectLoop(interleaved, sampleRate, { channels })
-	} catch {
-		return null
+		offset += chunkSize + (chunkSize & 1)
 	}
+	if (dataOffset < 0) throw new Error('WAV data chunk not found')
+
+	const { sampleRate, channels, bitDepth } = meta
+	const totalSamples = Math.floor(dataSize / (channels * (bitDepth / 8)))
+	const interleaved = new Float32Array(totalSamples * channels)
+
+	if (bitDepth === 16) {
+		for (let i = 0; i < totalSamples; i++) {
+			for (let c = 0; c < channels; c++)
+				interleaved[i * channels + c] =
+					view.getInt16(dataOffset + (i * channels + c) * 2, true) / 32768
+		}
+	} else if (bitDepth === 24) {
+		for (let i = 0; i < totalSamples; i++) {
+			for (let c = 0; c < channels; c++) {
+				const base = dataOffset + (i * channels + c) * 3
+				let val = fd[base] | (fd[base + 1] << 8) | (fd[base + 2] << 16)
+				if (val & 0x800000) val |= ~0xff_ffff
+				interleaved[i * channels + c] = val / 8_388_608
+			}
+		}
+	} else {
+		throw new Error(`Unsupported WAV bit depth: ${bitDepth}`)
+	}
+
+	const pcm = mono ? downmixToMono(interleaved, channels) : interleaved
+	const detChannels = mono ? 1 : channels
+	return detectLoop(pcm, sampleRate, { channels: detChannels })
 }
 
 /**
  * Decode OGG/MP3/etc via ffmpeg, then run loop detection.
+ * Throws on decode or detection failure.
+ * Pass mono=true to decode as mono (single channel).
  */
-export function detectNonWavLoop(filePath: string, sampleRate: number) {
-	if (!hasFfmpeg) return null
+export function detectNonWavLoop(
+	filePath: string,
+	sampleRate: number,
+	{ mono = false }: { mono?: boolean } = {}
+) {
+	if (!hasFfmpeg) throw new Error('ffmpeg not available')
+
 	const probe = probeWithFfprobe(filePath)
-	const channels = probe?.channels ?? 1
+	const channels = mono ? 1 : (probe?.channels ?? 1)
 	const decoded = decodeWithFfmpeg(filePath, sampleRate, channels)
-	if (!decoded) return null
+
+	if (!decoded) throw new Error('ffmpeg decoding failed')
+
 	return detectLoop(decoded.samples, sampleRate, { channels })
 }
 
