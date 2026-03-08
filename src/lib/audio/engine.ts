@@ -1056,20 +1056,36 @@ async function createSamplerNode(
 	}
 
 	const urls: Record<string, string> = {}
-	for (const [note, path] of entries) urls[note] = path
+	// Convert sample-unit loop info to seconds; build per-note map when notes differ
+	const noteLoopMap = new Map<string, { loopStart: number; loopEnd: number }>()
+	let globalLoop: { loopStart?: number; loopEnd?: number; hasLoop: boolean } = { hasLoop: false }
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const ToneLib = engine.Tone as any
+	for (const [note, entry] of entries) {
+		urls[note] = entry.path
+		if (entry.loop) {
+			const { loopStartSample, loopEndSample, sampleRate: sr } = entry.loop
+			const loopStart = loopStartSample / sr
+			const loopEnd = loopEndSample / sr
+			noteLoopMap.set(note, { loopStart, loopEnd })
+			globalLoop = { loopStart, loopEnd, hasLoop: true }
+		}
+	}
+
 	let resolve
 	const opts = {
 		urls,
 		baseUrl: './samples/',
-		// release: 1,
+		loop: globalLoop.hasLoop,
+		...(globalLoop.hasLoop ? { loopStart: globalLoop.loopStart, loopEnd: globalLoop.loopEnd } : {}),
+		...(noteLoopMap.size > 1 ? { noteLoops: noteLoopMap } : {}),
+		release: 1,
 		onload: () => resolve!(),
 		...(params ? unflattenParams(params) : {})
 	}
 
-	const node = new ToneLib.Sampler(opts) as ToneAudioNode
+	const { LoopingSampler } = await import('./looping-sampler')
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const node = new LoopingSampler(opts as any) as ToneAudioNode
 	await new Promise((r) => (resolve = r))
 
 	return node
