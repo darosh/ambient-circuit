@@ -19,14 +19,14 @@ export interface SampleEntry {
 }
 
 export const SAMPLE_META: Record<string, SampleMeta> = {
-	acid: { sampleRate: 44_100, channels: 2, duration: 1.4846 }
+	acid: { sampleRate: 44_100, channels: 1, duration: 1.5048299319727891 }
 }
 
 export const SAMPLES: Record<string, Record<string, SampleEntry>> = {
 	acid: {
 		C4: {
 			path: 'acid/C4.ogg',
-			loop: { loopStartSample: 58_225, loopEndSample: 64_967, sampleRate: 44_100 }
+			loop: { loopStartSample: 61_759, loopEndSample: 65_805, sampleRate: 44_100 }
 		}
 	}
 }

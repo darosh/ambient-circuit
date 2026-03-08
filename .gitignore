@@ -29,3 +29,8 @@ vite.config.ts.timestamp-*
 
 # WIP Temp
 .fonts
+
+# Resource
+resources/samples/Ambient Circuit Samples Project/Samples/
+resources/samples/Ambient Circuit Samples Project/Ableton Project Info/
+resources/samples/Ambient Circuit Samples Project/Backup/
