@@ -50,8 +50,8 @@ type InstrumentConfigBase = {
 	visible?: boolean
 	/** MIDI channel (1-16), default 1 */
 	channel?: number
-	/** MIDI note (0-127), default 60 (C4) */
-	note?: number
+	/** MIDI note(s) (0-127), default 60 (C4); array triggers chord */
+	note?: number | number[]
 	/** Note length in ms, default 200 */
 	duration?: number
 	/** MIDI velocity (0-127), default 100 */

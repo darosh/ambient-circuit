@@ -12,7 +12,7 @@ export type MarbleBase = {
 	mode?: MarbleSequenceMode
 	speed?: number
 	start?: number
-	note?: number
+	note?: number | number[]
 	duration?: number
 	velocity?: number
 	easing?: import('./marble').EasingMode

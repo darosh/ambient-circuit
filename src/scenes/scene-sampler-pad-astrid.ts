@@ -16,7 +16,14 @@ export const scene: SceneConfig = {
 			id: 'line',
 			offset: [-3, 0, 0],
 			color: color2[3],
-			marbles: [{ mode: 'ping-pong', speed: 0.125 / 2, duration: 6000, note: 60 - 12 }],
+			marbles: [
+				{
+					mode: 'ping-pong',
+					speed: 0.125,
+					duration: 3000,
+					note: [60 - 12, 60 - 24, 60 + 4, 60 + 7 - 12]
+				}
+			],
 			nodes: [
 				[0, 0, 0],
 				[6, 0, 0]
@@ -26,12 +33,6 @@ export const scene: SceneConfig = {
 					type: 'arrow',
 					kind: 'repro',
 					beat: 0.5,
-					actionHandler: (ctx) => {
-						ctx.marble.state.note!++
-						if (ctx.marble.state.note! > 72) {
-							ctx.marble.state.note = 60 - 12
-						}
-					},
 					audio: {
 						analyzer: 'fft',
 						generator: { sample: 'pad-astrid', params: { release: 10 } },

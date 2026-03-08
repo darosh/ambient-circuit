@@ -58,10 +58,10 @@ export class MarbleState {
 	}
 
 	// Note (runtime override or config default)
-	get note(): number | undefined {
+	get note(): number | number[] | undefined {
 		return this.marble.runtime.note ?? this.marble.resolved.note
 	}
-	set note(value: number | undefined) {
+	set note(value: number | number[] | undefined) {
 		this.marble.runtime.note = value
 	}
 

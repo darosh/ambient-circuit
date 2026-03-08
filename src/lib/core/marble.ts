@@ -26,7 +26,7 @@ export interface ResolvedMarble {
 	easing: EasingMode
 	color?: string
 	speed?: number // Speed multiplier (default 1)
-	note?: number // MIDI note for note mode, undefined for vanilla mode
+	note?: number | number[] // MIDI note(s) for note mode, undefined for vanilla mode
 	velocity?: number // MIDI velocity
 	duration?: number // MIDI
 	type?: MarbleType // Visual type (default 'ball')
@@ -43,7 +43,7 @@ export interface MarbleRuntime {
 	destroyed?: boolean // marked for removal
 	created?: boolean // created at runtime (removed on rewind)
 	speed?: number // overrides config.speed
-	note?: number // overrides config.note
+	note?: number | number[] // overrides config.note
 	velocity?: number // overrides config.velocity
 	duration?: number // overrides config.duration
 	lastTriggeredBeat?: number // beat that was last triggered

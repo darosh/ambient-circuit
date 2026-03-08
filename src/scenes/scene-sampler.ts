@@ -26,8 +26,8 @@ export const scene: SceneConfig = {
 					kind: 'repro',
 					beat: 0.5,
 					actionHandler: (ctx) => {
-						ctx.marble.state.note!++
-						if (ctx.marble.state.note! > 60) {
+						;(ctx.marble.state as unknown as { note: number }).note++
+						if ((ctx.marble.state.note as number) > 60) {
 							ctx.marble.state.note = 60 - 24
 						}
 					},

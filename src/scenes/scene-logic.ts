@@ -99,7 +99,7 @@ export const scene: SceneConfig = {
 					channel: 2,
 					actionHandler(ctx) {
 						// Shift up an octave
-						ctx.marble.state.note = (ctx.marble.state.note ?? 60) + 12
+						ctx.marble.state.note = ((ctx.marble.state.note as number | undefined) ?? 60) + 12
 					}
 				},
 				{

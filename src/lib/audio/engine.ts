@@ -493,27 +493,35 @@ export function getVoice(chain: AudioChain, durationMs: number): boolean {
 	return true
 }
 
+function toNoteArray(note: number | number[]): number[] {
+	return Array.isArray(note) ? note : [note]
+}
+
 /**
- * Trigger a note on a chain. Returns false if no voice was available.
+ * Trigger a note (or chord) on a chain. Returns false if no voice was available.
  */
 export function triggerChain(
 	chain: AudioChain,
-	note: number,
+	note: number | number[],
 	velocity: number,
 	durationMs: number
 ): boolean {
 	if (!chain.generator) return false
 	if (!getVoice(chain, durationMs)) return false
+	const noteArr = toNoteArray(note)
+	const firstNote = noteArr[0]
 	chain.lastTrigger = Date.now()
-	chain.audioSignal.lastNote = note
+	chain.audioSignal.lastNote = firstNote
 	const sig = chain.audioSignal
 	const now = chain.output.context.currentTime
-	// Expire old notes and push new one
+	// Expire old notes and push new ones
 	const alive: { midi: number; end: number }[] = []
 	for (let i = 0; i < sig.activeNotes.length; i++) {
 		if (sig.activeNotes[i].end > now) alive.push(sig.activeNotes[i])
 	}
-	alive.push({ midi: note, end: now + durationMs / 1000 })
+	for (const n of noteArr) {
+		alive.push({ midi: n, end: now + durationMs / 1000 })
+	}
 	sig.activeNotes = alive
 
 	const ci = computeChordInfo(alive, now)
@@ -522,35 +530,44 @@ export function triggerChain(
 	chain.chordHistory.push(ci)
 
 	if (isDevice(chain.generator)) {
-		// RNBO: send MIDI events
+		// RNBO: send one MIDI event per note
 		const device = chain.generator
 		const midiChannel = 0
 		const vel = Math.min(127, Math.max(0, velocity))
-		const noteOn: [MIDIByte, MIDIByte, MIDIByte] = [
-			(144 + midiChannel) as MIDIByte,
-			note as MIDIByte,
-			vel as MIDIByte
-		]
-		const noteOff: [MIDIByte, MIDIByte, MIDIByte] = [
-			(128 + midiChannel) as MIDIByte,
-			note as MIDIByte,
-			0 as MIDIByte
-		]
-		const now = device.context.currentTime * 1000
-		device.scheduleEvent(new MIDIEvent(now, 0, noteOn))
-		device.scheduleEvent(new MIDIEvent(now + durationMs, 0, noteOff))
+		const nowMs = device.context.currentTime * 1000
+		for (const n of noteArr) {
+			const noteOn: [MIDIByte, MIDIByte, MIDIByte] = [
+				(144 + midiChannel) as MIDIByte,
+				n as MIDIByte,
+				vel as MIDIByte
+			]
+			const noteOff: [MIDIByte, MIDIByte, MIDIByte] = [
+				(128 + midiChannel) as MIDIByte,
+				n as MIDIByte,
+				0 as MIDIByte
+			]
+			device.scheduleEvent(new MIDIEvent(nowMs, 0, noteOn))
+			device.scheduleEvent(new MIDIEvent(nowMs + durationMs, 0, noteOff))
+		}
 	} else {
-		// Tone.js: triggerAttackRelease
+		// Tone.js: triggerAttackRelease (accepts freq array for chords)
 		const synth = chain.generator
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const s = synth as any
 		if (typeof s.triggerAttackRelease === 'function') {
-			if (note - Math.floor(note) || !note) {
-				// triggerAttackRelease(duration, time?, velocity?):
-				log('trigger-perc', genName(chain), note || durationMs / 1000, undefined, velocity / 127)
-				s.triggerAttackRelease(note || durationMs / 1000, undefined, velocity / 127)
+			if (isPerc(firstNote)) {
+				// Percussion path: use first note only
+				log(
+					'trigger-perc',
+					genName(chain),
+					firstNote || durationMs / 1000,
+					undefined,
+					velocity / 127
+				)
+				s.triggerAttackRelease(firstNote || durationMs / 1000, undefined, velocity / 127)
 			} else {
-				const freq = midiToFreq(note)
+				const freqs = noteArr.map(midiToFreq)
+				const freq = freqs.length === 1 ? freqs[0] : freqs
 				log('trigger', genName(chain), freq, durationMs / 1000, undefined, velocity / 127)
 				s.triggerAttackRelease(freq, durationMs / 1000, undefined, velocity / 127)
 			}

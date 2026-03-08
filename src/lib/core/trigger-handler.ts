@@ -7,6 +7,11 @@ const VELOCITY = 100
 const DURATION = 200
 const NOTE = notes.C4
 
+function applyPitch(note: number | number[], pitch: number): number | number[] {
+	if (Array.isArray(note)) return note.map((n) => n + pitch)
+	return note + pitch
+}
+
 export function triggerHandler(ctx: TriggerContext) {
 	// console.log('TRIGGER', ctx.railId, ctx.beat)
 
@@ -22,11 +27,13 @@ export function triggerHandler(ctx: TriggerContext) {
 		ctx.instrument.instrument.actionHandler(ctx)
 	}
 
-	const note =
-		(ctx.marble.marble.runtime.note ??
-			ctx.marble.marble.resolved.note ??
-			ctx.instrument.instrument.note ??
-			NOTE) + (ctx.scene.config.pitch ?? 0)
+	const rawNote =
+		ctx.marble.marble.runtime.note ??
+		ctx.marble.marble.resolved.note ??
+		ctx.instrument.instrument.note ??
+		NOTE
+	const pitch = ctx.scene.config.pitch ?? 0
+	const note = applyPitch(rawNote, pitch)
 
 	const velocity =
 		ctx.marble.marble.runtime.velocity ??
@@ -44,8 +51,11 @@ export function triggerHandler(ctx: TriggerContext) {
 
 	if (midiState?.enabled) {
 		const channel = ctx.instrument.instrument.channel ?? 1
-
-		sendMidiNote(midiState, channel, note, velocity, duration)
+		if (Array.isArray(note)) {
+			for (const n of note) sendMidiNote(midiState, channel, n, velocity, duration)
+		} else {
+			sendMidiNote(midiState, channel, note, velocity, duration)
+		}
 	}
 
 	// Audio trigger
@@ -82,12 +92,13 @@ export function bouncerHandler(ctx: BounceContext) {
 	}
 
 	if (chain1?.generator) {
-		const note =
-			(ctx.marble1.marble.runtime.note ??
-				ctx.marble1.marble.resolved.note ??
-				ctx.marble2.marble.runtime.note ??
-				ctx.marble2.marble.resolved.note ??
-				NOTE) + (ctx.scene.config.pitch ?? 0)
+		const rawNote =
+			ctx.marble1.marble.runtime.note ??
+			ctx.marble1.marble.resolved.note ??
+			ctx.marble2.marble.runtime.note ??
+			ctx.marble2.marble.resolved.note ??
+			NOTE
+		const note = applyPitch(rawNote, ctx.scene.config.pitch ?? 0)
 
 		const velocity =
 			ctx.marble1.marble.runtime.velocity ??
@@ -123,12 +134,13 @@ export function bouncerHandler(ctx: BounceContext) {
 	}
 
 	if (chain2?.generator) {
-		const note =
-			(ctx.marble2.marble.runtime.note ??
-				ctx.marble2.marble.resolved.note ??
-				ctx.marble1.marble.runtime.note ??
-				ctx.marble1.marble.resolved.note ??
-				NOTE) + (ctx.scene.config.pitch ?? 0)
+		const rawNote =
+			ctx.marble2.marble.runtime.note ??
+			ctx.marble2.marble.resolved.note ??
+			ctx.marble1.marble.runtime.note ??
+			ctx.marble1.marble.resolved.note ??
+			NOTE
+		const note = applyPitch(rawNote, ctx.scene.config.pitch ?? 0)
 
 		const velocity =
 			ctx.marble2.marble.runtime.velocity ??

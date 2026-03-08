@@ -19,10 +19,10 @@ export interface SampleEntry {
 }
 
 export const SAMPLE_META: Record<string, SampleMeta> = {
-	acid: { sampleRate: 44_100, channels: 1, duration: 1.5048299319727891 },
-	'pad-astrid': { sampleRate: 44_100, channels: 2, duration: 3.8407256235827663 },
-	'pad-awaits': { sampleRate: 44_100, channels: 2, duration: 11.042743764172336 },
-	'pad-deeper': { sampleRate: 44_100, channels: 2, duration: 5.786507936507936 }
+	acid: { sampleRate: 44_100, channels: 1, duration: 1.504_829_931_972_789_1 },
+	'pad-astrid': { sampleRate: 44_100, channels: 2, duration: 3.840_725_623_582_766_3 },
+	'pad-awaits': { sampleRate: 44_100, channels: 2, duration: 11.042_743_764_172_336 },
+	'pad-deeper': { sampleRate: 44_100, channels: 2, duration: 5.786_507_936_507_936 }
 }
 
 export const SAMPLES: Record<string, Record<string, SampleEntry>> = {
