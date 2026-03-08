@@ -1,6 +1,11 @@
 import type { SceneConfig } from '../lib/core/scene'
 import { color2 } from './utils/colors'
 import { globalHandlerFactory, triggerHandler } from '../lib/core/trigger-handler'
+import { pitchQuantizeFactory } from '../lib/midi/pitch'
+import { randomizer } from './utils/randomizer'
+
+const q = pitchQuantizeFactory()
+const r = randomizer()
 
 export const scene: SceneConfig = {
 	id: 'scene-sampler-pad-astrid',
@@ -33,6 +38,9 @@ export const scene: SceneConfig = {
 					type: 'arrow',
 					kind: 'repro',
 					beat: 0.5,
+					actionHandler: (ctx) => {
+						ctx.marble.state.note = q(ctx.marble.state.note!, Math.round((r() - 0.5) * 4))
+					},
 					audio: {
 						analyzer: 'fft',
 						generator: { sample: 'pad-astrid', params: { release: 10 } },
