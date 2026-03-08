@@ -14,8 +14,9 @@ export const scene: SceneConfig = {
 	globalBeatHandler: globalHandlerFactory(),
 	triggerHandler,
 	audioView: {
-		analyzers: true
+		analyzers: true,
 	},
+	sequencerMode: 'time',
 	rails: [
 		{
 			id: 'line',
@@ -43,7 +44,7 @@ export const scene: SceneConfig = {
 					},
 					audio: {
 						analyzer: 'fft',
-						generator: { sample: 'pad-astrid', params: { release: 10 } },
+						generator: { sample: 'pad-astrid', params: { release: 10, volume: -6 } },
 						fx: [{ rnbo: 'gigaverb' }]
 					}
 				}
