@@ -7,7 +7,7 @@ const c = colorFactory()
 export const scene: SceneConfig = {
 	id: 'scene-sampler',
 	bpm: 120,
-	camera: [0, 13, 0],
+	camera: [7, 8, 15],
 	globalBeatHandler: globalHandlerFactory(),
 	triggerHandler,
 	rails: [
@@ -15,7 +15,7 @@ export const scene: SceneConfig = {
 			id: 'line',
 			offset: [-3, 0, 0],
 			color: c(),
-			marbles: [{ mode: 'ping-pong', speed: 0.5, duration: 1200, note: 60 - 24 }],
+			marbles: [{ mode: 'ping-pong', speed: 0.5, duration: 2000, note: 60 - 24 }],
 			nodes: [
 				[0, 0, 0],
 				[6, 0, 0]
