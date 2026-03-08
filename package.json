@@ -60,7 +60,8 @@
 		"heap:play:preview": "node scripts/heap-snapshot.js --url=http://localhost:4173/#scene-rings --no-headless --type=preview --switching --wait=30",
 		"gen:architecture": "npx tsx scripts/architecture.ts",
 		"gen:patchers": "node scripts/patchers.js",
-		"gen:samples": "node scripts/samples.js",
+		"gen:sample-meta": "npx tsx scripts/sample-meta.ts",
+		"gen:samples": "npx tsx scripts/samples.ts",
 		"gen:svg-paths": "npx tsx scripts/svg-paths.ts",
 		"preview": "vite preview",
 		"test": "vitest"
