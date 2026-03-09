@@ -199,7 +199,7 @@ async function buildBus(
 
 	// Side-tap: analyzer branches off last node before output (preserves stereo)
 	if (analyzer) {
-		const tapSource = nodes[nodes.length - 2]
+		const tapSource = nodes.at(-2)!
 		connectNodes(tapSource, analyzer, engine)
 	}
 
@@ -306,7 +306,7 @@ export async function buildChain(
 
 	// Side-tap: analyzer taps before solo (hears signal even when muted), preserves stereo
 	if (analyzer) {
-		connectNodes(nodes[nodes.length - 2], analyzer, engine)
+		connectNodes(nodes.at(-2)!, analyzer, engine)
 	}
 
 	// Build nodePresets map: -1 = generator, 0+ = fx index
@@ -1310,26 +1310,40 @@ import type { ChordInfo } from './types'
 import type { SceneCtx } from '../core/scene-ctx'
 import { pause } from '../helpers/pause'
 
-function computeChordInfo(activeNotes: { midi: number; end: number }[], now: number): ChordInfo {
+/** Chord name from a set of alive notes. Shared by computeChordInfo + getChainLabel. */
+function chordFromAlive(alive: { midi: number; end: number }[]): string {
+	// lowest MIDI per pitch class → sort cluster by actual pitch
+	const lowestMidi = new Map<string, number>()
+	for (const n of alive) {
+		const pc = toneNames[n.midi % 12]
+		const cur = lowestMidi.get(pc)
+		if (cur === undefined || n.midi < cur) lowestMidi.set(pc, n.midi)
+	}
+	if (lowestMidi.size < 2) return ''
+	const detected = detect([...lowestMidi.keys()])
+	if (detected.length > 0) {
+		// Power chords (e.g. "A#5") look like note names — show IND instead
+		const powerMatch = /^([A-G][#b]?)5$/.exec(detected[0])
+		if (powerMatch) return `${powerMatch[1]}IND`
+		return detected[0]
+	}
+	// fallback: sort by lowest midi of each pc, join
+	const sorted = [...lowestMidi.entries()].toSorted((a, b) => a[1] - b[1])
+	return sorted.map(e => e[0]).join('-')
+}
+
+export function computeChordInfo(activeNotes: { midi: number; end: number }[], now: number): ChordInfo {
 	const alive: { midi: number; end: number }[] = []
 	for (const activeNote of activeNotes) {
 		if (activeNote.end > now) alive.push(activeNote)
 	}
 	const notes: number[] = []
-	const pcs = new Set<string>()
 	let lastNote = 0
 	for (const element of alive) {
 		notes.push(element.midi)
-		pcs.add(toneNames[element.midi % 12])
 		lastNote = element.midi
 	}
-	let chord = ''
-	if (pcs.size >= 2) {
-		const chords = detect([...pcs])
-		if (chords.length > 0) chord = chords[0]
-	} else if (lastNote > 0) {
-		chord = tones[lastNote] ?? ''
-	}
+	const chord = chordFromAlive(alive) || (lastNote > 0 ? (tones[lastNote] ?? '') : '')
 	return { notes, chord, time: now }
 }
 
@@ -1410,17 +1424,8 @@ export function getChainLabel(chain: AudioChain): string {
 	}
 	sig.activeNotes = alive
 
-	// Collect unique pitch classes
-	const pcs = new Set<string>()
-	for (const element of alive) {
-		pcs.add(toneNames[element.midi % 12])
-	}
-
-	if (pcs.size >= 2) {
-		const chords = detect([...pcs])
-		if (chords.length > 0) return chords[0]
-	}
-
+	const chord = chordFromAlive(alive)
+	if (chord) return chord
 	if (sig.lastNote > 0) return tones[sig.lastNote] ?? ''
 	return ''
 }

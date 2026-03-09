@@ -4,7 +4,7 @@ import { globalHandlerFactory, triggerHandler } from '../lib/core/trigger-handle
 import { pitchQuantizeFactory } from '../lib/midi/pitch'
 import { randomizer } from './utils/randomizer'
 
-const q = pitchQuantizeFactory()
+const q = pitchQuantizeFactory('B lydian')
 const r = randomizer()
 
 export const scene: SceneConfig = {
@@ -26,7 +26,7 @@ export const scene: SceneConfig = {
 				{
 					mode: 'ping-pong',
 					speed: 0.125,
-					duration: 3000,
+					duration: 10,
 					note: [60 - 12, 60 - 24, 60 + 4, 60 + 7 - 12]
 				}
 			],
@@ -40,7 +40,8 @@ export const scene: SceneConfig = {
 					kind: 'repro',
 					beat: 0.5,
 					actionHandler: (ctx) => {
-						ctx.marble.state.note = q(ctx.marble.state.note!, Math.round((r() - 0.5) * 4))
+						const semi = ctx.marble.state.note as number[][3] > 50 ? Math.round(-r() * 7) : Math.round((r() - 0.5) * 4)
+						ctx.marble.state.note = q(ctx.marble.state.note!, semi)
 					},
 					audio: {
 						analyzer: 'fft',
