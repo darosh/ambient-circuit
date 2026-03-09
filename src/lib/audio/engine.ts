@@ -188,14 +188,19 @@ async function buildBus(
 		analyzer = await buildAnalyzer(engine, config.analyzer, def)
 	}
 
-	// Connect: input → fx[0] → ... → analyzer? → output
+	// Connect: input → fx[0] → ... → output (analyzer as side-tap, not in series)
 	const nodes: Array<ToneAudioNode | Device | GainNode> = [input]
 	for (const f of fx) nodes.push(f)
-	if (analyzer) nodes.push(analyzer)
 	nodes.push(output)
 
 	for (let i = 0; i < nodes.length - 1; i++) {
 		connectNodes(nodes[i], nodes[i + 1], engine)
+	}
+
+	// Side-tap: analyzer branches off last node before output (preserves stereo)
+	if (analyzer) {
+		const tapSource = nodes[nodes.length - 2]
+		connectNodes(tapSource, analyzer, engine)
 	}
 
 	const nodePresets = new Map<number, NodePresetInfo>()
@@ -288,16 +293,20 @@ export async function buildChain(
 		solo = new engine.Tone.Solo()
 	}
 
-	// Connect chain: generator → fx[0] → ... → analyzer? → solo? → output
+	// Connect chain: generator → fx[0] → ... → solo? → output (analyzer as side-tap)
 	const nodes: Array<ToneAudioNode | Device | GainNode> = []
 	if (generator) nodes.push(generator)
 	for (const f of fx) nodes.push(f)
-	if (analyzer) nodes.push(analyzer)
 	if (solo) nodes.push(solo as unknown as ToneAudioNode)
 	nodes.push(output)
 
 	for (let i = 0; i < nodes.length - 1; i++) {
 		connectNodes(nodes[i], nodes[i + 1], engine)
+	}
+
+	// Side-tap: analyzer taps before solo (hears signal even when muted), preserves stereo
+	if (analyzer) {
+		connectNodes(nodes[nodes.length - 2], analyzer, engine)
 	}
 
 	// Build nodePresets map: -1 = generator, 0+ = fx index
