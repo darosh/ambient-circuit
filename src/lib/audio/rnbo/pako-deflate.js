@@ -1,8 +1,8 @@
-import * as n from "./789.js";
-import * as i from "./761.js";
-import * as s from "./944.js";
-import a from "./950.js";
-import o from "./744.js";
+import * as n from "./zlib-deflate.js";
+import * as i from "./zlib-utils.js";
+import * as s from "./zlib-strings.js";
+import a from "./zlib-messages.js";
+import o from "./zlib-zstream.js";
 var u = Object.prototype.toString;
 function h(t) {
   if (!(this instanceof h)) {

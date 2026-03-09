@@ -9,13 +9,13 @@
 - [ ] check `js: "(()=>{var __webpack_modules__={133:(module`
 - [ ] check `wasm: "(()=>{var __webpack_modules__={133:(module`
 
-## 1. Fix runtime SyntaxError (blocking)
+## [COMPLETED] 1. Fix runtime SyntaxError (blocking)
 - `?.` optional chaining on index.js:1132,1136 may break if Vite dep optimizer treats as CJS
 - Remove/update `manualChunks: { rnbo: ['@rnbo/js'] }` in vite.config.ts (now importing from `./rnbo`)
 - May need `optimizeDeps.exclude` for `src/lib/audio/rnbo` or ensure Vite treats as ESM
 - Debug: check browser devtools for exact file/line of SyntaxError
 
-## 2. Rename files per module-map.json
+## [COMPLETED] 2. Rename files per module-map.json
 - 35 files like `163.js` → `tslib-awaiter.js`
 - Update all import paths across all files
 - Keep module-map.json as reference

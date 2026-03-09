@@ -1,9 +1,9 @@
 var n;
-import * as i from "./761.js";
-import * as s from "./564.js";
-import a from "./562.js";
-import o from "./299.js";
-import u from "./950.js";
+import * as i from "./zlib-utils.js";
+import * as s from "./zlib-trees.js";
+import a from "./zlib-adler32.js";
+import o from "./module-299.js";
+import u from "./zlib-messages.js";
 var h = -2;
 var f = 258;
 var c = 262;

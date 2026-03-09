@@ -4,8 +4,8 @@
  * @author   Feross Aboukhadijeh <https://feross.org>
  * @license  MIT
  */
-import * as n from "./766.js";
-import * as i from "./181.js";
+import * as n from "./base64-codec.js";
+import * as i from "./ieee754.js";
 const s = typeof Symbol == "function" && typeof Symbol.for == "function" ? Symbol.for("nodejs.util.inspect.custom") : null;
 export var Buffer = u;
 export var SlowBuffer = function (t) {

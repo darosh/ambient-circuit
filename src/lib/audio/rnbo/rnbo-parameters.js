@@ -1,6 +1,6 @@
-import * as n from "./400.js";
-import * as i from "./389.js";
-import h from "./133.js";
+import * as n from "./rnbo-parameter-types.js";
+import * as i from "./rnbo-platform.js";
+import h from "./rnbo-runtime-helpers.js";
 export let rH = n.r;
 export let EX = n.E;
 export function IR(t) {

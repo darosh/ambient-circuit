@@ -1,10 +1,10 @@
-import * as n from "./20.js";
-import * as i from "./761.js";
-import * as s from "./944.js";
-import a from "./271.js";
-import o from "./950.js";
-import u from "./744.js";
-import h from "./357.js";
+import * as n from "./zlib-inflate.js";
+import * as i from "./zlib-utils.js";
+import * as s from "./zlib-strings.js";
+import a from "./zlib-constants.js";
+import o from "./zlib-messages.js";
+import u from "./zlib-zstream.js";
+import h from "./zlib-gzheader.js";
 var f = Object.prototype.toString;
 function c(t) {
   if (!(this instanceof c)) {

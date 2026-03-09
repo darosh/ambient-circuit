@@ -1,7 +1,7 @@
-import { Float32Buffer, Float64Buffer, Float32MultiBuffer, Float64MultiBuffer, IntBuffer, UInt8Buffer, SampleBuffer } from "./852.js";
-import _126 from "./126.js";
+import { Float32Buffer, Float64Buffer, Float32MultiBuffer, Float64MultiBuffer, IntBuffer, UInt8Buffer, SampleBuffer } from "./rnbo-buffer-types.js";
+import _126 from "./rnbo-external-loader.js";
 var ExternalLoaderFactory = _126.ExternalLoaderFactory;
-import Xoshiro from "./925.js";
+import Xoshiro from "./xoshiro256-prng.js";
 var patcherSerialKey = "XX__PatcherSerialKey__XX";
 var eventTargetKey = "XX__EventTargetKey__XX";
 var ParameterTypeNumber = 0;

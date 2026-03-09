@@ -1,8 +1,8 @@
-import * as n from "./761.js";
-import i from "./562.js";
-import s from "./299.js";
-import a from "./980.js";
-import o from "./881.js";
+import * as n from "./zlib-utils.js";
+import i from "./zlib-adler32.js";
+import s from "./module-299.js";
+import a from "./zlib-inffast.js";
+import o from "./zlib-inftrees.js";
 var u = -2;
 var h = 12;
 var f = 30;

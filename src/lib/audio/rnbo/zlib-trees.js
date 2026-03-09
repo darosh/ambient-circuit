@@ -1,4 +1,4 @@
-import * as n from "./761.js";
+import * as n from "./zlib-utils.js";
 function i(t) {
   for (var e = t.length; --e >= 0;) {
     t[e] = 0;
