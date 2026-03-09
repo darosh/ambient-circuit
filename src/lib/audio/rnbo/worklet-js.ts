@@ -1,3 +1,4 @@
+// @ts-nocheck — RNBO JS ScriptProcessor worklet (runs in worklet context)
 import a from './rnbo-runtime-helpers.js'
 import B from './rnbo-default-patcher.js'
 import { Buffer as U } from 'buffer'

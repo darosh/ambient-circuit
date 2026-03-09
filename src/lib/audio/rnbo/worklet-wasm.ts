@@ -1,3 +1,4 @@
+// @ts-nocheck — RNBO WASM AudioWorklet processor (runs in worklet context)
 import p from './rnbo-runtime-helpers.js'
 
 var t

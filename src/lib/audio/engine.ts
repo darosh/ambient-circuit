@@ -14,7 +14,7 @@ import type {
 } from './types'
 import type { ToneAudioNode } from 'tone'
 import { createDevice, MIDIEvent } from './rnbo'
-import type { Device, MIDIByte, IPatcher } from './rnbo'
+import type { Device, MIDIByte, IPatcher } from './rnbo/types'
 import TONE_DEFAULTS from './tone-defaults'
 import { PATCHERS } from './patchers'
 import { SAMPLES } from './samples'
@@ -1012,12 +1012,12 @@ async function loadRNBO(
 	const ind = (disposedRnbos as unknown as { __patcher: unknown }[]).findIndex(
 		(d) => d.__patcher === patcher
 	)
-	let device
+	let device: Device | undefined
 
 	if (ind === -1) {
-		device = await createDevice(
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		device = await (createDevice as any)(
 			{ context: engine.ctx, patcher: patcher as IPatcher }
-			// disposedRnbos.shift()
 		)
 		;(device as unknown as { __patcher: unknown }).__patcher = patcher
 	} else {
@@ -1040,7 +1040,7 @@ async function loadRNBO(
 		if (entry) {
 			log('preset', entry.name, entry.preset)
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			device.setPreset(entry.preset as any)
+			device!.setPreset(entry.preset as any)
 			await pause(50) // Helps when reusing devices by patch :-(
 			activePreset = entry.name
 		}
@@ -1051,12 +1051,12 @@ async function loadRNBO(
 		log('param')
 		for (const [key, val] of Object.entries(params)) {
 			log('param', key, val)
-			const p = findRnboParam(device, key)
+			const p = findRnboParam(device!, key)
 			if (p) p.value = val as number
 		}
 	}
 
-	return { device, presetNames, activePreset }
+	return { device: device!, presetNames, activePreset }
 }
 
 const NOTE_ORDER = ['C', 'Cs', 'D', 'Ds', 'E', 'F', 'Fs', 'G', 'Gs', 'A', 'As', 'B']

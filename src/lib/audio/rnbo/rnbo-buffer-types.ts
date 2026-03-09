@@ -1,3 +1,4 @@
+// @ts-nocheck — RNBO buffer types (prototype chain patterns)
 function e() {
 	let t = this.dataRef.getSizeInBytes() / this.BASEARRAYVIEW.BYTES_PER_ELEMENT
 	let e = this.getChannels()

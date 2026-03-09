@@ -1,3 +1,4 @@
+// @ts-nocheck — RNBO base engine
 import * as i from './rnbo-enums.js'
 import * as s from './rnbo-platform.js'
 import a from './rnbo-runtime-helpers.js'

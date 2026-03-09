@@ -1,26 +1,51 @@
-export var m5
-export var VH
-export var l0
-export var gA
-const o = { D: 0 }
-;(function (t) {
-	t[(t.BufferTransfer = 0)] = 'BufferTransfer'
-	t[(t.ClockEvent = 1)] = 'ClockEvent'
-	t[(t.DataRefEvent = 2)] = 'DataRefEvent'
-	t[(t.MessageEvent = 3)] = 'MessageEvent'
-	t[(t.MIDIEvent = 4)] = 'MIDIEvent'
-	t[(t.ParameterEvent = 5)] = 'ParameterEvent'
-	t[(t.ParameterBangEvent = 6)] = 'ParameterBangEvent'
-	t[(t.PresetEvent = 7)] = 'PresetEvent'
-	t[(t.StartupEvent = 8)] = 'StartupEvent'
-	t[(t.TransportEvent = 9)] = 'TransportEvent'
-	t[(t.TempoEvent = 10)] = 'TempoEvent'
-	t[(t.BeatTimeEvent = 11)] = 'BeatTimeEvent'
-	t[(t.TimeSignatureEvent = 12)] = 'TimeSignatureEvent'
-})((m5 ||= {}))
+export enum EventType {
+	BufferTransfer = 0,
+	ClockEvent = 1,
+	DataRefEvent = 2,
+	MessageEvent = 3,
+	MIDIEvent = 4,
+	ParameterEvent = 5,
+	ParameterBangEvent = 6,
+	PresetEvent = 7,
+	StartupEvent = 8,
+	TransportEvent = 9,
+	TempoEvent = 10,
+	BeatTimeEvent = 11,
+	TimeSignatureEvent = 12
+}
+// Minified alias
+export { EventType as m5 }
+
+export enum DataRefAction {
+	Update = 1
+}
+export { DataRefAction as VH }
+
+export enum PresetEventAction {
+	Set = 1,
+	Touched = 2
+}
+export { PresetEventAction as l0 }
+
+export enum StartupPhase {
+	BEGIN = 0,
+	END = 1
+}
+export { StartupPhase as gA }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class j4 {
-	constructor(t = o.D, e) {
-		this.invalid = false
+	invalid = false
+	time: number
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	eventTarget: any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	source?: any
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	type?: any
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	constructor(t: number = 0, e?: any) {
 		this.time = t
 		this.eventTarget = e
 	}
@@ -33,14 +58,19 @@ export class j4 {
 		}
 	}
 }
+
 export class J9 extends j4 {
-	constructor(t, e, r, i) {
+	type = EventType.ClockEvent
+	clockIndex: number
+	value: number | undefined
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	constructor(t: number, e: number, r: number | undefined, i?: any) {
 		super(t, i)
-		this.type = m5.ClockEvent
 		this.clockIndex = e
 		this.value = r
 	}
-	get hasValue() {
+	get hasValue(): boolean {
 		return this.value !== undefined
 	}
 	serialize() {
@@ -51,13 +81,15 @@ export class J9 extends j4 {
 		})
 	}
 }
-;(function (t) {
-	t[(t.Update = 1)] = 'Update'
-})((VH ||= {}))
+
 export class Lk extends j4 {
-	constructor(t, e, r, i) {
+	type = EventType.DataRefEvent
+	dataRefIndex: number
+	action: DataRefAction
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	constructor(t: number, e: number, r: DataRefAction, i?: any) {
 		super(t, i)
-		this.type = m5.DataRefEvent
 		this.dataRefIndex = e
 		this.action = r
 	}
@@ -69,10 +101,17 @@ export class Lk extends j4 {
 		})
 	}
 }
+
 export class f3 extends j4 {
-	constructor(t, e, r, i = '', s) {
+	type = EventType.MessageEvent
+	objectId: string
+	tag: string
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	payload: any
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	constructor(t: number, e: string, r: any, i: string = '', s?: any) {
 		super(t, s)
-		this.type = m5.MessageEvent
 		this.objectId = i
 		this.tag = e
 		this.payload = r
@@ -86,10 +125,18 @@ export class f3 extends j4 {
 		})
 	}
 }
+
 export class Ym extends j4 {
-	constructor(t, e, r, i) {
+	type = EventType.MIDIEvent
+	data: number[]
+	length: number
+	status: number
+	channel: number
+	port: number
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	constructor(t: number, e: number, r: any[], i?: any) {
 		super(t, i)
-		this.type = m5.MIDIEvent
 		if (r.length > 3) {
 			throw new Error(`MIDIData can only contain a maximum of 3 bytes. Received ${r.length}`)
 		}
@@ -97,7 +144,7 @@ export class Ym extends j4 {
 		if (this.data.length < 3) {
 			const t = r.length
 			this.data.length = 3
-			this.data = this.data.fill(undefined, t, 3)
+			this.data = this.data.fill(undefined as unknown as number, t, 3)
 		}
 		let s = 0
 		for (let t = 0; t < 3; t++) {
@@ -122,10 +169,17 @@ export class Ym extends j4 {
 		})
 	}
 }
+
 export class DB extends j4 {
-	constructor(t, e, r, i, s) {
+	type = EventType.ParameterEvent
+	target: number
+	value: number
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	override source: any
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	constructor(t: number, e: number, r: number, i?: any, s?: any) {
 		super(t, s)
-		this.type = m5.ParameterEvent
 		this.target = e
 		this.value = r
 		this.source = i
@@ -138,10 +192,14 @@ export class DB extends j4 {
 		})
 	}
 }
+
 export class zz extends j4 {
-	constructor(t, e, r) {
+	type = EventType.ParameterBangEvent
+	target: number
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	constructor(t: number, e: number, r?: any) {
 		super(t, r)
-		this.type = m5.ParameterBangEvent
 		this.target = e
 	}
 	serialize() {
@@ -151,14 +209,16 @@ export class zz extends j4 {
 		})
 	}
 }
-;(function (t) {
-	t[(t.Set = 1)] = 'Set'
-	t[(t.Touched = 2)] = 'Touched'
-})((l0 ||= {}))
+
 export class bt extends j4 {
-	constructor(t, e, r) {
+	type = EventType.PresetEvent
+	action: PresetEventAction
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	preset: any
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	constructor(t: number, e: PresetEventAction, r?: any) {
 		super(t, undefined)
-		this.type = m5.PresetEvent
 		this.action = e
 		this.preset = r
 	}
@@ -170,10 +230,13 @@ export class bt extends j4 {
 		})
 	}
 }
+
 export class cr extends j4 {
-	constructor(t, e) {
+	type = EventType.TransportEvent
+	state: number
+
+	constructor(t: number, e: number) {
 		super(t, undefined)
-		this.type = m5.TransportEvent
 		this.state = e
 	}
 	serialize() {
@@ -183,10 +246,13 @@ export class cr extends j4 {
 		})
 	}
 }
+
 export class gs extends j4 {
-	constructor(t, e) {
+	type = EventType.TempoEvent
+	tempo: number
+
+	constructor(t: number, e: number) {
 		super(t, undefined)
-		this.type = m5.TempoEvent
 		this.tempo = e
 	}
 	serialize() {
@@ -196,10 +262,13 @@ export class gs extends j4 {
 		})
 	}
 }
+
 export class J0 extends j4 {
-	constructor(t, e) {
+	type = EventType.BeatTimeEvent
+	beattime: number
+
+	constructor(t: number, e: number) {
 		super(t, undefined)
-		this.type = m5.BeatTimeEvent
 		this.beattime = e
 	}
 	serialize() {
@@ -209,10 +278,14 @@ export class J0 extends j4 {
 		})
 	}
 }
+
 export class QU extends j4 {
-	constructor(t, e, r) {
+	type = EventType.TimeSignatureEvent
+	numerator: number
+	denominator: number
+
+	constructor(t: number, e: number, r: number) {
 		super(t, undefined)
-		this.type = m5.TimeSignatureEvent
 		this.numerator = e
 		this.denominator = r
 	}
@@ -224,14 +297,13 @@ export class QU extends j4 {
 		})
 	}
 }
-;(function (t) {
-	t[(t.BEGIN = 0)] = 'BEGIN'
-	t[(t.END = 1)] = 'END'
-})((gA ||= {}))
+
 export class j6 extends j4 {
-	constructor(t, e) {
+	type = EventType.StartupEvent
+	phase: StartupPhase
+
+	constructor(t: number, e: StartupPhase) {
 		super(t, undefined)
-		this.type = m5.StartupEvent
 		this.phase = e
 	}
 	serialize() {
@@ -241,31 +313,33 @@ export class j6 extends j4 {
 		})
 	}
 }
-export const f4 = (t) => {
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const f4 = (t: any): j4 => {
 	switch (t.type) {
-		case m5.ClockEvent:
+		case EventType.ClockEvent:
 			return new J9(t.time, t.clockIndex, t.value, t.eventTarget)
-		case m5.DataRefEvent:
+		case EventType.DataRefEvent:
 			return new Lk(t.time, t.dataRefIndex, t.action, t.eventTarget)
-		case m5.MessageEvent:
+		case EventType.MessageEvent:
 			return new f3(t.time, t.tag, t.payload, t.objectId, t.eventTarget)
-		case m5.MIDIEvent:
+		case EventType.MIDIEvent:
 			return new Ym(t.time, t.port, t.data, t.eventTarget)
-		case m5.ParameterEvent:
+		case EventType.ParameterEvent:
 			return new DB(t.time, t.target, t.value, t.source, t.eventTarget)
-		case m5.ParameterBangEvent:
+		case EventType.ParameterBangEvent:
 			return new zz(t.time, t.target, t.eventTarget)
-		case m5.PresetEvent:
+		case EventType.PresetEvent:
 			return new bt(t.time, t.action, t.preset)
-		case m5.TransportEvent:
+		case EventType.TransportEvent:
 			return new cr(t.time, t.state)
-		case m5.TempoEvent:
+		case EventType.TempoEvent:
 			return new gs(t.time, t.tempo)
-		case m5.BeatTimeEvent:
+		case EventType.BeatTimeEvent:
 			return new J0(t.time, t.beattime)
-		case m5.TimeSignatureEvent:
+		case EventType.TimeSignatureEvent:
 			return new QU(t.time, t.numerator, t.denominator)
-		case m5.StartupEvent:
+		case EventType.StartupEvent:
 			return new j6(t.time, t.phase)
 		default:
 			throw new Error(`Unable to deserialize RNBOEvent of type ${t.type}`)

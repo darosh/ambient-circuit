@@ -1,5 +1,5 @@
 import type { ToneAudioNode, Solo } from 'tone'
-import type { Device } from './rnbo'
+import type { Device } from './rnbo/types'
 
 // --- Authored config (JSON-serializable, no closures) ---
 

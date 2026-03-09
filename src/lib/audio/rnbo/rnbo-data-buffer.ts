@@ -1,30 +1,30 @@
-var n
-;(function (t) {
-	t[(t.Float32Audio = 0)] = 'Float32Audio'
-	t[(t.TypedArray = 1)] = 'TypedArray'
-})((n ||= {}))
+enum DataDescType {
+	Float32Audio = 0,
+	TypedArray = 1
+}
+
 export class nc {
-	constructor() {
-		this.type = n.TypedArray
-	}
+	type = DataDescType.TypedArray
 	serialize() {
 		return {
 			type: this.type
 		}
 	}
 }
+
 export class Le {
-	constructor(t, e) {
-		this.channels = 0
-		this.sampleRate = 0
-		this.type = n.Float32Audio
+	channels = 0
+	sampleRate = 0
+	type = DataDescType.Float32Audio
+
+	constructor(t: number, e: number) {
 		this.channels = t
 		this.sampleRate = e
 	}
-	static fromAudioBuffer(t) {
+	static fromAudioBuffer(t: AudioBuffer): Le {
 		return new Le(t.numberOfChannels, t.sampleRate)
 	}
-	get isInterleaved() {
+	get isInterleaved(): boolean {
 		return true
 	}
 	serialize() {
@@ -35,12 +35,16 @@ export class Le {
 		}
 	}
 }
+
 export class OM {
-	constructor(t, e) {
+	buffer: ArrayBuffer
+	_: Le | nc
+
+	constructor(t: ArrayBuffer, e: Le | nc) {
 		this.buffer = t
 		this._ = e
 	}
-	getAsAudioBuffer(t) {
+	getAsAudioBuffer(t: BaseAudioContext): AudioBuffer {
 		if (this._ instanceof Le && this._.channels > 0) {
 			const e = new Float32Array(this.buffer)
 			const r = e.length / this._.channels
@@ -59,11 +63,12 @@ export class OM {
 		return r
 	}
 }
-export const n_ = (t) => {
+
+export const n_ = (t: { type: number; channels?: number; sampleRate?: number }): Le | nc => {
 	switch (t.type) {
-		case n.Float32Audio:
-			return new Le(t.channels, t.sampleRate)
-		case n.TypedArray:
+		case DataDescType.Float32Audio:
+			return new Le(t.channels!, t.sampleRate!)
+		case DataDescType.TypedArray:
 			return new nc()
 		default:
 			throw new Error(`Unable to deserialize RNBODataDesc of type ${t.type}`)

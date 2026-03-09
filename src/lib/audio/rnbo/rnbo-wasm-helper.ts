@@ -1,3 +1,4 @@
+// @ts-nocheck — RNBO WASM helper
 import * as n from './rnbo-data-buffer.js'
 import * as i from './rnbo-events.js'
 import * as s from './rnbo-parameters.js'

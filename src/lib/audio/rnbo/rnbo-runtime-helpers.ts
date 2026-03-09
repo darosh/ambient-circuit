@@ -1,3 +1,4 @@
+// @ts-nocheck — RNBO runtime helpers (math aliases, MIDI constants, data ref utilities)
 import {
 	Float32Buffer,
 	Float64Buffer,

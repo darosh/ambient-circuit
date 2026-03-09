@@ -1,4 +1,5 @@
-function e() {}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function e(this: any) {}
 ;(e.prototype = Object.create(null)).constructor = e
 e.prototype.setEngineAndPatcher = function () {}
 e.prototype.initialize = function () {}
@@ -11,6 +12,6 @@ e.prototype.process = function () {}
 export default {
 	ExternalLoaderFactory: function () {
 		console.log('WARNING: Externals are not yet supported in Javascript')
-		return new e()
+		return new (e as unknown as new () => unknown)()
 	}
 }

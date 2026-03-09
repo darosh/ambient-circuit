@@ -1,3 +1,4 @@
+// @ts-nocheck — RNBO parameters
 import * as n from './rnbo-parameter-types.js'
 import * as i from './rnbo-platform.js'
 import h from './rnbo-runtime-helpers.js'
