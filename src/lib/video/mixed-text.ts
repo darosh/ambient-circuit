@@ -65,7 +65,19 @@ export function parseScaleText(text: string): TextSeg[] {
 const NOTE_RE = /^[A-G][#b]?\d?$/
 const CHORD_RE = /^[A-G][#b]?.+/
 
-export function parseMixedText(text: string): TextSeg[] {
+const mixedCache = new Map<string, { segs: TextSeg[]; width: number }>()
+
+export function parseMixedTextCached(text: string): { segs: TextSeg[]; width: number } {
+	if (!mixedCache.has(text)) {
+		const segs = parseMixedText(text)
+		const width = mixedTextCharWidth(segs)
+		mixedCache.set(text, { segs, width })
+	}
+
+	return mixedCache.get(text)!
+}
+
+function parseMixedText(text: string): TextSeg[] {
 	if (NOTE_RE.test(text)) return parseNoteLabel(text)
 	if (CHORD_RE.test(text) && !text.includes(' ')) return parseChordLabel(text)
 	return parseScaleText(text)
@@ -73,8 +85,7 @@ export function parseMixedText(text: string): TextSeg[] {
 
 // ─── Width ────────────────────────────────────────────────────────────────────
 
-export function mixedTextCharWidth(text: string): number {
-	const segs = parseMixedText(text)
+function mixedTextCharWidth(segs: TextSeg[]): number {
 	let w = 0
 	for (const seg of segs) w += seg.text.length * seg.sizeScale
 	return w
@@ -89,25 +100,25 @@ function makeTextGeo(text: string, size: number, font: Font): TextGeometry {
 }
 
 export function buildMixedGeometry(segs: TextSeg[], baseSize: number, font: Font): BufferGeometry {
+	let xCursor = 0
+
 	if (segs.length === 1 && segs[0].sizeScale === 1 && segs[0].yShift === 0) {
 		return makeTextGeo(segs[0].text, baseSize, font)
 	}
 
-	let xCursor = 0
 	const parts: TextGeometry[] = []
 
 	for (const seg of segs) {
 		const size = baseSize * seg.sizeScale
 		const g = makeTextGeo(seg.text, size, font)
-		const w = CHAR_WIDTH * size * seg.text.length
-		// const bb = g.boundingBox!
-		// const w = bb.max.x - bb.min.x
+		const rawW = seg.text.length * seg.sizeScale
+		const scaledW = rawW * CHAR_WIDTH * baseSize
 		g.translate(xCursor, baseSize * seg.yShift, 0)
 		parts.push(g)
-		xCursor += w
+		xCursor += scaledW
 	}
 
-	const merged = mergeGeometries(parts, false)
+	const geom = mergeGeometries(parts, false) as BufferGeometry
 	for (const p of parts) p.dispose()
-	return merged as BufferGeometry
+	return geom
 }

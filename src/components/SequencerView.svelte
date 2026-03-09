@@ -3,7 +3,7 @@
 	import { SphereGeometry, Mesh, Group } from 'three/webgpu'
 	import { buildImpactMaterial } from '../lib/video/material-impact'
 	import { getCachedMixedGeometry } from '../lib/video/geo-geometry'
-	import { mixedTextCharWidth } from '../lib/video/mixed-text'
+	import { parseMixedTextCached } from '../lib/video/mixed-text'
 	import { onDestroy } from 'svelte'
 
 	export type NoteEvent = {
@@ -43,7 +43,7 @@
 	} = $props()
 
 	function labelWidth(label: string, isTime: boolean) {
-		const charCount = mixedTextCharWidth(label.toUpperCase())
+		const charCount = parseMixedTextCached(label.toUpperCase()).width
 		return (
 			Math.max(charCount, isTime ? 1 : 6) * height * charWidth +
 			(isTime ? charWidth * WORD_SPACE : charWidth) * height

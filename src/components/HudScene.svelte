@@ -17,7 +17,7 @@
 	import HelpPanel from './HelpPanel.svelte'
 	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
 	import GeoText from './GeoText.svelte'
-	import { mixedTextCharWidth } from '../lib/video/mixed-text'
+	import { parseMixedTextCached } from '../lib/video/mixed-text'
 	import { easeInCubic, easeOutCubic } from '../lib/helpers/easing'
 	import { onDestroy, onMount, untrack } from 'svelte'
 	import type { TempoState } from '../lib/core/tempo'
@@ -702,8 +702,9 @@
 		const baseX = -vpWidth / 2 + sphereR * 2
 		for (let i = 0; i < rowStates.length; i++) {
 			const label = labels[i] ?? ''
-			const labelW = mixedTextCharWidth(label.toUpperCase())
-			const targetX = baseX + sphereR * 4 + Math.max(labelW - 2, 0) * sphereR * CHAR_WIDTH
+			const labelUp = label.toUpperCase()
+			const labelW = parseMixedTextCached(labelUp).width
+			const targetX = baseX + sphereR * 4 + Math.max(labelW - 2.5, 0) * sphereR * CHAR_WIDTH
 			if (_aTargetX[i] !== targetX) {
 				_aStartX[i] = analyserAnimX[i] ?? targetX
 				_aTargetX[i] = targetX
@@ -829,7 +830,7 @@
 
 	const widthFps = 8
 	const widthChords = $derived(
-		chord ? Math.max(mixedTextCharWidth(chord.toUpperCase()) * CHAR_WIDTH + 1, 6) : 6
+		chord ? Math.max(parseMixedTextCached(chord.toUpperCase()).width + 1, 6) : 6
 	)
 
 	const posChord = $derived(showStats ? widthFps : 0)
@@ -945,7 +946,7 @@
 				(showNotes ? analyserAnimX[i] : x + sphereR * 1.5) ??
 					x +
 						sphereR * 4 +
-						Math.max(mixedTextCharWidth(label.toUpperCase()), 2) * sphereR * CHAR_WIDTH,
+						sphereR * CHAR_WIDTH * Math.max(2, parseMixedTextCached(label.toUpperCase()).width),
 				y - sphereR / 2,
 				0
 			]}
