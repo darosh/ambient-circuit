@@ -124,3 +124,7 @@ Replace the `__webpack_modules__` / `__webpack_require__` runtime inside `workle
 - Pattern: `(0, X.mG)(this, undefined, undefined, function* () { ... yield ... })`
 - Convert to: `async function() { ... await ... }`
 - Then delete tslib-awaiter.js
+
+## 8. Fix subscribe not working after reuse
+
+## 9. Fix missing dispose
