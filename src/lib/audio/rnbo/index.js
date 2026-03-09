@@ -3,8 +3,6 @@
 
 import workletJsUrl from './worklet-js.js?worker&url'
 import workletWasmUrl from './worklet-wasm.js?worker&url'
-import * as _845 from 'pako'
-var r = () => _845
 import * as n from './rnbo-enums.js'
 import * as i from './rnbo-data-buffer.js'
 import * as s from './rnbo-platform.js'
@@ -203,7 +201,7 @@ class m {
 	Et(t) {
 		const e = g.from(t.code, t.encoding)
 		if (t.compression === 'zlib') {
-			return r().inflate(e, {
+			return inflate(e, {
 				to: 'string'
 			})
 		} else {
@@ -721,6 +719,7 @@ class w extends _.v {
 var E
 var M
 import * as A from './rnbo-wasm-engine.js'
+import { inflate } from 'pako'
 class T extends m {
 	constructor({ bufferSize: t = 1024, context: e, parameterNotificationSetting: r }, n) {
 		super({
