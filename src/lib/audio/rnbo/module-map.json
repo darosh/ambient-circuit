@@ -1,0 +1,142 @@
+{
+	"20": {
+		"file": "20.js",
+		"name": "zlib-inflate"
+	},
+	"126": {
+		"file": "126.js",
+		"name": "rnbo-external-loader"
+	},
+	"133": {
+		"file": "133.js",
+		"name": "rnbo-runtime-helpers"
+	},
+	"158": {
+		"file": "158.js",
+		"name": "rnbo-wasm-helper"
+	},
+	"163": {
+		"file": "163.js",
+		"name": "tslib-awaiter"
+	},
+	"181": {
+		"file": "181.js",
+		"name": "ieee754"
+	},
+	"191": {
+		"file": "191.js",
+		"name": "rnbo-base-engine"
+	},
+	"264": {
+		"file": "264.js",
+		"name": "rnbo-default-patcher"
+	},
+	"271": {
+		"file": "271.js",
+		"name": "zlib-constants"
+	},
+	"299": {
+		"file": "299.js",
+		"name": "module-299"
+	},
+	"347": {
+		"file": "347.js",
+		"name": "rnbo-enums"
+	},
+	"357": {
+		"file": "357.js",
+		"name": "zlib-gzheader"
+	},
+	"380": {
+		"file": "380.js",
+		"name": "pako-inflate"
+	},
+	"389": {
+		"file": "389.js",
+		"name": "rnbo-platform"
+	},
+	"400": {
+		"file": "400.js",
+		"name": "rnbo-parameter-types"
+	},
+	"555": {
+		"file": "555.js",
+		"name": "rnbo-events"
+	},
+	"562": {
+		"file": "562.js",
+		"name": "zlib-adler32"
+	},
+	"564": {
+		"file": "564.js",
+		"name": "zlib-trees"
+	},
+	"641": {
+		"file": "641.js",
+		"name": "rnbo-data-buffer"
+	},
+	"676": {
+		"file": "676.js",
+		"name": "module-676"
+	},
+	"744": {
+		"file": "744.js",
+		"name": "zlib-zstream"
+	},
+	"761": {
+		"file": "761.js",
+		"name": "zlib-utils"
+	},
+	"766": {
+		"file": "766.js",
+		"name": "base64-codec"
+	},
+	"789": {
+		"file": "789.js",
+		"name": "zlib-deflate"
+	},
+	"834": {
+		"file": "834.js",
+		"name": "buffer-polyfill"
+	},
+	"845": {
+		"file": "845.js",
+		"name": "pako-index"
+	},
+	"852": {
+		"file": "852.js",
+		"name": "rnbo-buffer-types"
+	},
+	"856": {
+		"file": "856.js",
+		"name": "rnbo-parameters"
+	},
+	"880": {
+		"file": "880.js",
+		"name": "pako-deflate"
+	},
+	"881": {
+		"file": "881.js",
+		"name": "zlib-inftrees"
+	},
+	"916": {
+		"file": "916.js",
+		"name": "rnbo-wasm-engine"
+	},
+	"925": {
+		"file": "925.js",
+		"name": "xoshiro256-prng"
+	},
+	"944": {
+		"file": "944.js",
+		"name": "zlib-strings"
+	},
+	"950": {
+		"file": "950.js",
+		"name": "zlib-messages"
+	},
+	"980": {
+		"file": "980.js",
+		"name": "zlib-inffast"
+	}
+}

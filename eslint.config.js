@@ -68,7 +68,8 @@ export default tseslint.config(
 			'.build-check/',
 			'resources/',
 			'.heap-snapshots/',
-			'.fonts/'
+			'.fonts/',
+			'src/lib/audio/rnbo/'
 		]
 	}
 )

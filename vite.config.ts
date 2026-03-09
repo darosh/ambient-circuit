@@ -19,7 +19,7 @@ export default defineConfig({
 			},
 			output: {
 				manualChunks: {
-					rnbo: ['@rnbo/js'],
+					rnbo: ['src/lib/audio/rnbo'],
 					tone: ['tone'],
 					three: ['three'],
 					'three-webgpu': ['three/webgpu', 'three/tsl']

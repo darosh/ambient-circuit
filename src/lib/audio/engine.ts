@@ -13,8 +13,8 @@ import type {
 	VoiceTracker
 } from './types'
 import type { ToneAudioNode } from 'tone'
-import { createDevice, type IPatcher, MIDIEvent } from '@rnbo/js'
-import type { Device, MIDIByte } from '@rnbo/js'
+import { createDevice, MIDIEvent } from './rnbo'
+import type { Device, MIDIByte, IPatcher } from './rnbo'
 import TONE_DEFAULTS from './tone-defaults'
 import { PATCHERS } from './patchers'
 import { SAMPLES } from './samples'

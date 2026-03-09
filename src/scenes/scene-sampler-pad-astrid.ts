@@ -14,7 +14,7 @@ export const scene: SceneConfig = {
 	globalBeatHandler: globalHandlerFactory(),
 	triggerHandler,
 	audioView: {
-		analyzers: true,
+		analyzers: true
 	},
 	sequencerMode: 'time',
 	rails: [
@@ -25,8 +25,8 @@ export const scene: SceneConfig = {
 			marbles: [
 				{
 					mode: 'ping-pong',
-					speed: 0.125,
-					duration: 10,
+					speed: 0.25,
+					duration: 3000,
 					note: [60 - 12, 60 - 24, 60 + 4, 60 + 7 - 12]
 				}
 			],
@@ -40,12 +40,18 @@ export const scene: SceneConfig = {
 					kind: 'repro',
 					beat: 0.5,
 					actionHandler: (ctx) => {
-						const semi = ctx.marble.state.note as number[][3] > 50 ? Math.round(-r() * 7) : Math.round((r() - 0.5) * 4)
+						const semi = (ctx.marble.state.note as number[]).some((n: number) => n > 60)
+							? Math.round(-r() * 7)
+							: Math.round((r() - 0.5) * 4)
+						if (r() < 0.2) {
+							;(ctx.marble.state.note as number[])[2] -= 2
+						}
+
 						ctx.marble.state.note = q(ctx.marble.state.note!, semi)
 					},
 					audio: {
 						analyzer: 'fft',
-						generator: { sample: 'pad-astrid', params: { release: 10, volume: -6 } },
+						generator: { sample: 'pad-astrid', params: { release: 10, volume: -12 } },
 						fx: [{ rnbo: 'gigaverb' }]
 					}
 				}
