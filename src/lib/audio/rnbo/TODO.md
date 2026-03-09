@@ -40,7 +40,7 @@ What was done:
 - Total: 36 → 18 outer JS files, RNBO chunk 288KB → 132KB (gzip 68KB → 38KB)
 - Kept: tslib-awaiter.js (native async/await conversion is bigger refactor), xoshiro256-prng.js (custom)
 
-## 5. Decompose worklet __webpack_modules__ into ESM imports
+## [COMPLETED] 5. Decompose worklet __webpack_modules__ into ESM imports
 
 ### Goal
 Replace the `__webpack_modules__` / `__webpack_require__` runtime inside `worklet-js.js` and `worklet-wasm.js` with normal ESM imports. Vite (`?worker&url`) already bundles them as worker entries — adding imports means Vite resolves + bundles deps automatically.

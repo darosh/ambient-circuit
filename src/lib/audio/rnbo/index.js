@@ -12,7 +12,6 @@
       import * as a from "./rnbo-parameters.js";
       import * as o from "./rnbo-parameter-types.js";
       import * as u from "./rnbo-events.js";
-			console.log(workletJsUrl)
       const h = {
         notificationSetting: o.E.All
       };

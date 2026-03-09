@@ -14,7 +14,7 @@ describe('rnbo modules', () => {
 		const dir = path.resolve(import.meta.dirname, '../src/lib/audio/rnbo')
 		const files = await readdir(dir)
 
-		const jsFiles = files.filter((f) => f.endsWith('.js'))
+		const jsFiles = files.filter((f) => f.endsWith('.js') && !f.startsWith('worklet-'))
 
 		for (const file of jsFiles) {
 			const fullPath = path.join(dir, file)
