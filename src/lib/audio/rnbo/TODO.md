@@ -117,7 +117,7 @@ Replace the `__webpack_modules__` / `__webpack_require__` runtime inside `workle
 - Remove separate `index.d.ts`
 - Add proper types to deobfuscated code
 
-## 7. Replace tslib \_\_awaiter with native async/await
+## [COMPLETED] 7. Replace tslib \_\_awaiter with native async/await
 
 - `tslib-awaiter.js` exports `mG()` — wraps `function*` + `yield` as async
 - Used in: index.js (~10 sites), rnbo-base-engine.js (1 site), rnbo-wasm-engine.js (4 sites)

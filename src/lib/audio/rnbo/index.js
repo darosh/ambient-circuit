@@ -3,7 +3,6 @@
 
 import workletJsUrl from './worklet-js.js?worker&url'
 import workletWasmUrl from './worklet-wasm.js?worker&url'
-import * as t from './tslib-awaiter.js'
 import * as _845 from 'pako'
 var r = () => _845
 import * as n from './rnbo-enums.js'
@@ -301,99 +300,89 @@ class m {
 	get dataBufferDescriptions() {
 		return this.it.getExternalDataRefInfos()
 	}
-	setDataBuffer(e, r, n, s) {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			if (!this.dataBufferDescriptions.find((t) => t.id === e)) {
-				throw new Error(
-					`Unknown DataBuffer id. A DataBuffer with the id "${e}" does not exist within the device.`
-				)
+	async setDataBuffer(e, r, n, s) {
+		if (!this.dataBufferDescriptions.find((t) => t.id === e)) {
+			throw new Error(
+				`Unknown DataBuffer id. A DataBuffer with the id "${e}" does not exist within the device.`
+			)
+		}
+		let t
+		let a
+		if (r instanceof AudioBuffer) {
+			a = i.Le.fromAudioBuffer(r)
+			const e = r.numberOfChannels
+			const n = new Float32Array(r.length * r.numberOfChannels)
+			const s = []
+			for (let t = 0; t < e; t++) {
+				const e = new Float32Array(r.length)
+				r.copyFromChannel(e, t, 0)
+				s.push(e)
 			}
-			let t
-			let a
-			if (r instanceof AudioBuffer) {
-				a = i.Le.fromAudioBuffer(r)
-				const e = r.numberOfChannels
-				const n = new Float32Array(r.length * r.numberOfChannels)
-				const s = []
-				for (let t = 0; t < e; t++) {
-					const e = new Float32Array(r.length)
-					r.copyFromChannel(e, t, 0)
-					s.push(e)
+			for (let t = 0; t < e; t++) {
+				for (let i = 0, a = r.length; i < a; i++) {
+					n[i * e + t] = s[t][i]
 				}
-				for (let t = 0; t < e; t++) {
-					for (let i = 0, a = r.length; i < a; i++) {
-						n[i * e + t] = s[t][i]
-					}
-				}
-				t = n.buffer
-			} else {
-				if (!n || n < 0 || isNaN(n)) {
-					throw new Error('Invalid channel count. Expecting a numeric value >= 1')
-				}
-				if (!s || s < 0 || isNaN(s)) {
-					throw new Error('Invalid sample rate. Expecting a numeric value >= 1')
-				}
-				t = ArrayBuffer.isView(r) ? r.buffer.slice(0) : r.slice(0)
-				a = new i.Le(n, s)
 			}
-			yield this.it.setExternalData(e, t, a)
-		})
+			t = n.buffer
+		} else {
+			if (!n || n < 0 || isNaN(n)) {
+				throw new Error('Invalid channel count. Expecting a numeric value >= 1')
+			}
+			if (!s || s < 0 || isNaN(s)) {
+				throw new Error('Invalid sample rate. Expecting a numeric value >= 1')
+			}
+			t = ArrayBuffer.isView(r) ? r.buffer.slice(0) : r.slice(0)
+			a = new i.Le(n, s)
+		}
+		await this.it.setExternalData(e, t, a)
 	}
-	releaseDataBuffer(e) {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			if (!this.dataBufferDescriptions.find((t) => t.id === e)) {
-				throw new Error(
-					`Unknown DataBuffer id. A DataBuffer with the id "${e}" does not exist within the device.`
-				)
-			}
-			const { data: t, typeDesc: r } = yield this.it.releaseExternalData(e)
-			return new i.OM(t, r)
-		})
+	async releaseDataBuffer(e) {
+		if (!this.dataBufferDescriptions.find((t) => t.id === e)) {
+			throw new Error(
+				`Unknown DataBuffer id. A DataBuffer with the id "${e}" does not exist within the device.`
+			)
+		}
+		const { data: t, typeDesc: r } = await this.it.releaseExternalData(e)
+		return new i.OM(t, r)
 	}
-	static fetchAudioData(e, r) {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			let t = yield fetch(e)
-			let n = yield t.arrayBuffer()
-			return new Promise((t, e) => {
-				r.decodeAudioData(n, t, e)
-			})
+	static async fetchAudioData(e, r) {
+		let t = await fetch(e)
+		let n = await t.arrayBuffer()
+		return new Promise((t, e) => {
+			r.decodeAudioData(n, t, e)
 		})
 	}
 	static bufferDescriptionHasRemoteURL(t) {
 		return !!p(t) || (!!l(t) && (!!t.file.startsWith('http:') || !!t.file.startsWith('https:')))
 	}
-	loadDataBufferDependencies(e) {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			return Promise.all(
-				e.map((e) =>
-					(0, t.mG)(this, undefined, undefined, function* () {
-						try {
-							let t
-							if (p(e)) {
-								t = e.url
-							} else if (l(e)) {
-								t = e.file
-							}
-							if (t) {
-								const r = yield m.fetchAudioData(t, this.context)
-								this.setDataBuffer(e.id, r)
-								return {
-									type: 'success',
-									id: e.id
-								}
-							}
-							throw new Error(`Skipping invalid buffer info id: ${e.id}, type: ${e.type}`)
-						} catch (t) {
-							return {
-								type: 'fail',
-								error: t,
-								id: e.id
-							}
+	async loadDataBufferDependencies(e) {
+		return Promise.all(
+			e.map(async (e) => {
+				try {
+					let t
+					if (p(e)) {
+						t = e.url
+					} else if (l(e)) {
+						t = e.file
+					}
+					if (t) {
+						const r = await m.fetchAudioData(t, this.context)
+						this.setDataBuffer(e.id, r)
+						return {
+							type: 'success',
+							id: e.id
 						}
-					})
-				)
-			)
-		})
+					}
+					throw new Error(`Skipping invalid buffer info id: ${e.id}, type: ${e.type}`)
+				} catch (t) {
+					return {
+						type: 'fail',
+						error: t,
+						id: e.id
+					}
+				}
+			})
+		)
 	}
 	scheduleEvent(t) {
 		this.wt()
@@ -423,10 +412,8 @@ class m {
 		this.midiEvent.removeAllSubscriptions()
 		this.parameterChangeEvent.removeAllSubscriptions()
 	}
-	getPreset() {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			return this.it.getPreset()
-		})
+	async getPreset() {
+		return this.it.getPreset()
 	}
 	setPreset(t) {
 		return this.it.setPreset(t)
@@ -652,83 +639,75 @@ class w extends _.v {
 			this.At = true
 		}
 	}
-	setPatcherCode(e) {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			const t = {}
-			if (this.Dt) {
-				this.Dt.extractState(t)
+	async setPatcherCode(e) {
+		const t = {}
+		if (this.Dt) {
+			this.Dt.extractState(t)
+		}
+		this.Dt = y.deserializeSrc(e)
+		for (let t = 0; t < this.Pt.length; t++) {
+			if (this.Pt[t].eventTarget) {
+				this.Pt[t].invalid = true
 			}
-			this.Dt = y.deserializeSrc(e)
-			for (let t = 0; t < this.Pt.length; t++) {
-				if (this.Pt[t].eventTarget) {
-					this.Pt[t].invalid = true
-				}
+		}
+		this.Dt.setEngineAndPatcher(this, null)
+		this.scheduleEvent(new u.j6(this.I, u.gA.BEGIN))
+		this.Dt.initialize(t)
+		this.scheduleEvent(new u.j6(this.I, u.gA.END))
+		this.Dt.prepareToProcess(this.M, this.A, true)
+		for (let t = this.Pt.length - 1; t >= 0; t--) {
+			if (this.Pt[t].invalid) {
+				this.Pt.splice(t, 1)
 			}
-			this.Dt.setEngineAndPatcher(this, null)
-			this.scheduleEvent(new u.j6(this.I, u.gA.BEGIN))
-			this.Dt.initialize(t)
-			this.scheduleEvent(new u.j6(this.I, u.gA.END))
-			this.Dt.prepareToProcess(this.M, this.A, true)
-			for (let t = this.Pt.length - 1; t >= 0; t--) {
-				if (this.Pt[t].invalid) {
-					this.Pt.splice(t, 1)
-				}
-			}
-		})
+		}
 	}
-	setExternalData(e, r, n) {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			const t = this.Dt.getNumDataRefs()
-			for (let s = 0; s < t; s++) {
-				const t = this.Dt.getDataRef(s)
-				if (t.name == e) {
-					t.arrayBuffer = r
-					if (n instanceof i.Le) {
-						t.channels = n.channels
-						t.sampleRate = n.sampleRate
-					}
-					this.sendDataRefUpdated(s)
-					break
+	async setExternalData(e, r, n) {
+		const t = this.Dt.getNumDataRefs()
+		for (let s = 0; s < t; s++) {
+			const t = this.Dt.getDataRef(s)
+			if (t.name == e) {
+				t.arrayBuffer = r
+				if (n instanceof i.Le) {
+					t.channels = n.channels
+					t.sampleRate = n.sampleRate
 				}
+				this.sendDataRefUpdated(s)
+				break
 			}
-		})
+		}
 	}
-	releaseExternalData(e) {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			const t = this.Dt.getNumDataRefs()
-			let r
-			let n
-			for (let s = 0; s < t; s++) {
-				const t = this.Dt.getDataRef(s)
-				if (t.name == e) {
-					r = t.arrayBuffer
-					t.arrayBuffer = new ArrayBuffer(0)
-					if (t.channels) {
-						n = new i.Le(t.channels, t.sampleRate)
-						t.channels = 0
-						t.sampleRate = 0
-					} else {
-						n = new i.nc()
-					}
-					this.sendDataRefUpdated(s)
-					break
+	async releaseExternalData(e) {
+		const t = this.Dt.getNumDataRefs()
+		let r
+		let n
+		for (let s = 0; s < t; s++) {
+			const t = this.Dt.getDataRef(s)
+			if (t.name == e) {
+				r = t.arrayBuffer
+				t.arrayBuffer = new ArrayBuffer(0)
+				if (t.channels) {
+					n = new i.Le(t.channels, t.sampleRate)
+					t.channels = 0
+					t.sampleRate = 0
+				} else {
+					n = new i.nc()
 				}
+				this.sendDataRefUpdated(s)
+				break
 			}
-			if (!r) {
-				throw new Error(`Invalid DataBuffer. No DataBuffer with id ${e} found.`)
-			}
-			return {
-				data: r,
-				typeDesc: n
-			}
-		})
+		}
+		if (!r) {
+			throw new Error(`Invalid DataBuffer. No DataBuffer with id ${e} found.`)
+		}
+		return {
+			data: r,
+			typeDesc: n
+		}
 	}
-	getPreset() {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			let t = {}
-			this.Dt.getPreset(t)
-			return t
-		})
+	async getPreset() {
+		let t = {}
+		this.Dt.getPreset(t)
+		return t
 	}
 	setPreset(t) {
 		this.scheduleEvent(new u.bt(this.I, u.l0.Set, t))
@@ -785,23 +764,21 @@ class T extends m {
 		this.wt()
 		return this.Mt
 	}
-	setPatcher(e, r) {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			this.vt()
-			this.it ||= r.type === 'wasm' ? new A.s() : new w()
-			this.ft = r.type
-			yield this.it.setPatcherDesc(e)
-			yield this.it.setPatcherCode(this.Et(r))
-			this.F.setEngine(this.it)
-			this.F.parameterChangeEvent.subscribe(this.gt)
-			this.it.outgoingEvent.subscribe(this.dt)
-			this.Mt = this.context.createScriptProcessor(
-				this.bufferSize,
-				this.numInputChannels,
-				Math.max(this.numOutputChannels, 1)
-			)
-			this.node.onaudioprocess = this.Ot.bind(this)
-		})
+	async setPatcher(e, r) {
+		this.vt()
+		this.it ||= r.type === 'wasm' ? new A.s() : new w()
+		this.ft = r.type
+		await this.it.setPatcherDesc(e)
+		await this.it.setPatcherCode(this.Et(r))
+		this.F.setEngine(this.it)
+		this.F.parameterChangeEvent.subscribe(this.gt)
+		this.it.outgoingEvent.subscribe(this.dt)
+		this.Mt = this.context.createScriptProcessor(
+			this.bufferSize,
+			this.numInputChannels,
+			Math.max(this.numOutputChannels, 1)
+		)
+		this.node.onaudioprocess = this.Ot.bind(this)
 	}
 }
 ;(function (t) {
@@ -904,18 +881,16 @@ class S extends _.v {
 			})
 		})
 	}
-	getPreset() {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			return new Promise((t, e) => {
-				const r = this.kt.subscribe((e) => {
-					if (e.id === M.GetPresetResponse) {
-						r.unsubscribe()
-						t(e.payload.preset)
-					}
-				})
-				this.xt.emit({
-					id: E.GetPreset
-				})
+	async getPreset() {
+		return new Promise((t, e) => {
+			const r = this.kt.subscribe((e) => {
+				if (e.id === M.GetPresetResponse) {
+					r.unsubscribe()
+					t(e.payload.preset)
+				}
+			})
+			this.xt.emit({
+				id: E.GetPreset
 			})
 		})
 	}
@@ -927,9 +902,7 @@ class S extends _.v {
 			}
 		})
 	}
-	setPatcherCode(e) {
-		return (0, t.mG)(this, undefined, undefined, function* () {})
-	}
+	async setPatcherCode(e) {}
 	removeAllSubscriptions() {
 		super.removeAllSubscriptions()
 		this.xt.removeAllSubscriptions()
@@ -1036,17 +1009,15 @@ const B = () => {
 			this.port.onmessage = this.zt
 			this.port.start()
 		}
-		loadPatcher() {
-			return (0, t.mG)(this, undefined, undefined, function* () {
-				return new Promise((t) => {
-					const e = this.jt.fromProcessorEvent.subscribe((r) => {
-						if (r.id === M.LoadPatcherFinished) {
-							e.unsubscribe()
-							t()
-						}
-					})
-					this.port.postMessage([E.LoadPatcher])
+		async loadPatcher() {
+			return new Promise((t) => {
+				const e = this.jt.fromProcessorEvent.subscribe((r) => {
+					if (r.id === M.LoadPatcherFinished) {
+						e.unsubscribe()
+						t()
+					}
 				})
+				this.port.postMessage([E.LoadPatcher])
 			})
 		}
 	}
@@ -1109,55 +1080,53 @@ class O extends m {
 		this.wt()
 		return this.Mt
 	}
-	setPatcher(e, r) {
-		return (0, t.mG)(this, undefined, undefined, function* () {
-			if (!this.it) {
-				throw new Error('Attempt to set patcher on a WorkletDevice without assigning engine first.')
-			}
-			this.vt()
-			yield this.it.setPatcherDesc(e)
-			this.F.setEngine(this.it)
-			this.it.outgoingEvent.subscribe(this.dt)
-			this.it.prepareToProcess(this.context.sampleRate, 128, false)
-			this.ft = r.type
-			const t = yield fetch(D[r.type].replace(/\?.*$/, '')).then((res) => res.text())
-			let n = this.numInputChannels
-			let i = this.numOutputChannels
-			if (n < 1) {
-				n = 1
-			}
-			if (i < 1) {
-				i = 1
-			}
-			const a = `RNBOProcessor-${(0, s.EL)()}`
-			const preamble = [
-				`var RNBO_PROCESSOR_NAME = ${JSON.stringify(a)};`,
-				`var RNBO_PARAM_DESCRIPTORS = ${this.Lt()};`
-			]
-			if (r.type === 'js') {
-				preamble.push(
-					`var RNBO_PATCHER_DESC = ${JSON.stringify(P.from(JSON.stringify(e), 'utf-8').toString('base64'))};`,
-					`var RNBO_PATCHER_SRC = ${JSON.stringify(P.from(this.Et(r), 'utf-8').toString('base64'))};`
-				)
-			}
-			let o = preamble.join('\n') + '\n' + t
-			if (r.type === 'wasm') {
-				o = this.Et(r) + '\n\n' + o
-			}
-			const u = URL.createObjectURL(
-				new Blob([o], {
-					type: 'text/javascript'
-				})
+	async setPatcher(e, r) {
+		if (!this.it) {
+			throw new Error('Attempt to set patcher on a WorkletDevice without assigning engine first.')
+		}
+		this.vt()
+		await this.it.setPatcherDesc(e)
+		this.F.setEngine(this.it)
+		this.it.outgoingEvent.subscribe(this.dt)
+		this.it.prepareToProcess(this.context.sampleRate, 128, false)
+		this.ft = r.type
+		const t = await fetch(D[r.type].replace(/\?.*$/, '')).then((res) => res.text())
+		let n = this.numInputChannels
+		let i = this.numOutputChannels
+		if (n < 1) {
+			n = 1
+		}
+		if (i < 1) {
+			i = 1
+		}
+		const a = `RNBOProcessor-${(0, s.EL)()}`
+		const preamble = [
+			`var RNBO_PROCESSOR_NAME = ${JSON.stringify(a)};`,
+			`var RNBO_PARAM_DESCRIPTORS = ${this.Lt()};`
+		]
+		if (r.type === 'js') {
+			preamble.push(
+				`var RNBO_PATCHER_DESC = ${JSON.stringify(P.from(JSON.stringify(e), 'utf-8').toString('base64'))};`,
+				`var RNBO_PATCHER_SRC = ${JSON.stringify(P.from(this.Et(r), 'utf-8').toString('base64'))};`
 			)
-			yield this.context.audioWorklet.addModule(u)
-			this.Mt = new (B())(this.context, a, this.it.eventSubjects, {
-				numberOfInputs: n,
-				numberOfOutputs: 1,
-				outputChannelCount: [i]
+		}
+		let o = preamble.join('\n') + '\n' + t
+		if (r.type === 'wasm') {
+			o = this.Et(r) + '\n\n' + o
+		}
+		const u = URL.createObjectURL(
+			new Blob([o], {
+				type: 'text/javascript'
 			})
-			yield this.Mt.loadPatcher()
-			this.F.parameterChangeEvent.subscribe(this.gt)
+		)
+		await this.context.audioWorklet.addModule(u)
+		this.Mt = new (B())(this.context, a, this.it.eventSubjects, {
+			numberOfInputs: n,
+			numberOfOutputs: 1,
+			outputChannelCount: [i]
 		})
+		await this.Mt.loadPatcher()
+		this.F.parameterChangeEvent.subscribe(this.gt)
 	}
 }
 const N = { D: 0 }
@@ -1166,9 +1135,9 @@ const k = {
 	bufferSize: 1024,
 	parameterNotificationSetting: a.EX.All
 }
-function x(e, r) {
+async function x(e, r) {
 	var o
-	return (0, t.mG)(this, undefined, undefined, function* () {
+	{
 		const { context: t, patcher: u, type: h = 'auto' } = e
 		const f = u.desc?.meta?.rnboversion || u.desc.rnboVersion
 		if (f !== C) {
@@ -1240,9 +1209,9 @@ function x(e, r) {
 			r.destroy()
 		}
 		g = g
-		yield g.setPatcher(u.desc, c)
+		await g.setPatcher(u.desc, c)
 		return g
-	})
+	}
 }
 
 export const BangParameter = a.jN

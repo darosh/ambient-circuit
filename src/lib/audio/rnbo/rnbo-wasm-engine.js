@@ -1,4 +1,3 @@
-import * as tslib__WEBPACK_IMPORTED_MODULE_3__ from './tslib-awaiter.js'
 import * as _baseEngine__WEBPACK_IMPORTED_MODULE_0__ from './rnbo-base-engine.js'
 import * as _wasmHelper__WEBPACK_IMPORTED_MODULE_1__ from './rnbo-wasm-helper.js'
 import * as _event__WEBPACK_IMPORTED_MODULE_2__ from './rnbo-events.js'
@@ -59,38 +58,30 @@ export class s extends _baseEngine__WEBPACK_IMPORTED_MODULE_0__.v {
 	scheduleEvent(t) {
 		this.R.scheduleEvent(t)
 	}
-	setPatcherCode(code) {
-		return (0, tslib__WEBPACK_IMPORTED_MODULE_3__.mG)(this, undefined, undefined, function* () {
-			return new Promise((resolve, reject) => {
-				let restoredRnboModule
-				const restoredWASM = code + 'restoredRnboModule = rnbo_module;'
-				eval(restoredWASM)
-				restoredRnboModule().then((t) => {
-					delete t.then
-					this.R = new _wasmHelper__WEBPACK_IMPORTED_MODULE_1__.z(this, t)
-					return resolve()
-				})
+	async setPatcherCode(code) {
+		return new Promise((resolve, reject) => {
+			let restoredRnboModule
+			const restoredWASM = code + 'restoredRnboModule = rnbo_module;'
+			eval(restoredWASM)
+			restoredRnboModule().then((t) => {
+				delete t.then
+				this.R = new _wasmHelper__WEBPACK_IMPORTED_MODULE_1__.z(this, t)
+				return resolve()
 			})
 		})
 	}
-	setExternalData(t, e, r) {
-		return (0, tslib__WEBPACK_IMPORTED_MODULE_3__.mG)(this, undefined, undefined, function* () {
-			this.R.setExternalData(t, e, r)
-		})
+	async setExternalData(t, e, r) {
+		this.R.setExternalData(t, e, r)
 	}
-	releaseExternalData(t) {
-		return (0, tslib__WEBPACK_IMPORTED_MODULE_3__.mG)(this, undefined, undefined, function* () {
-			const [e, r] = this.R.releaseExternalData(t)
-			return {
-				data: e,
-				typeDesc: r
-			}
-		})
+	async releaseExternalData(t) {
+		const [e, r] = this.R.releaseExternalData(t)
+		return {
+			data: e,
+			typeDesc: r
+		}
 	}
-	getPreset() {
-		return (0, tslib__WEBPACK_IMPORTED_MODULE_3__.mG)(this, undefined, undefined, function* () {
-			return JSON.parse(this.R.getPreset())
-		})
+	async getPreset() {
+		return JSON.parse(this.R.getPreset())
 	}
 	setPreset(t) {
 		this.R.setPreset(JSON.stringify(t))

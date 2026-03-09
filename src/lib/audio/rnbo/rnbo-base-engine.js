@@ -1,4 +1,3 @@
-import * as n from './tslib-awaiter.js'
 import * as i from './rnbo-enums.js'
 import * as s from './rnbo-platform.js'
 import a from './rnbo-runtime-helpers.js'
@@ -266,10 +265,8 @@ export class v {
 		this.parameterChangeEvent.removeAllSubscriptions()
 	}
 	invalidateProcessor() {}
-	setPatcherDesc(t) {
-		return (0, n.mG)(this, undefined, undefined, function* () {
-			this.B = t
-			this.P = v.deserializeConversion(this.B.paramConversion)
-		})
+	async setPatcherDesc(t) {
+		this.B = t
+		this.P = v.deserializeConversion(this.B.paramConversion)
 	}
 }
