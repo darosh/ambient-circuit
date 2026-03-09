@@ -59,6 +59,18 @@ export default tseslint.config(
 		}
 	},
 	{
+		// RNBO: deobfuscated library code — prettier only, disable all lint rules
+		files: ['src/lib/audio/rnbo/**/*.{js,ts,d.ts}'],
+		rules: Object.fromEntries([
+			...Object.keys(eslint.configs.recommended.rules ?? {}).map(r => [r, 'off']),
+			...Object.keys(sonarjs.configs.recommended.rules ?? {}).map(r => [r, 'off']),
+			...Object.keys(unicorn.configs.recommended.rules ?? {}).map(r => [r, 'off']),
+			...tseslint.configs.recommended.flatMap(c =>
+				Object.keys(c.rules ?? {}).map(r => [r, 'off'])
+			)
+		])
+	},
+	{
 		ignores: [
 			'scripts/',
 			'build/',
@@ -68,8 +80,7 @@ export default tseslint.config(
 			'.build-check/',
 			'resources/',
 			'.heap-snapshots/',
-			'.fonts/',
-			'src/lib/audio/rnbo/'
+			'.fonts/'
 		]
 	}
 )
