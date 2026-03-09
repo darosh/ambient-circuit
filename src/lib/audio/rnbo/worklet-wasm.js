@@ -1330,7 +1330,7 @@
         this.port.start();
       }
       static get parameterDescriptors() {
-        return XXXX___RNBOPARAMDESCRIPTORS_REPLACE___XXXX;
+        return RNBO_PARAM_DESCRIPTORS;
       }
       handleParameterEvent(t) {
         this.port.postMessage([v.OutgoingEvent, new c(t.time, t.index, t.value, t.source, undefined).serialize()]);
@@ -1388,10 +1388,6 @@
         return true;
       }
     }
-    let D = "XXXX---RNBOPROCESSORNAME_REPLACE---XXXX";
-    if (D.startsWith("XXXX---RNBOPROCESSORNAME_REPLACE---")) {
-      D = "RNBOProcessor";
-    }
-    registerProcessor(D, S);
+    registerProcessor(RNBO_PROCESSOR_NAME || "RNBOProcessor", S);
   })();
 })();

@@ -3746,8 +3746,8 @@
       t[t.GetPresetResponse = 1005] = "GetPresetResponse";
     })(k ||= {});
     var U = __webpack_require__(834).Buffer;
-    const z = JSON.parse(U.from("XXXX___RNBOPATCHERDESC_REPLACE___XXXX", "base64").toString("utf-8"));
-    const j = U.from("XXXX___RNBOPATCHERSRC_REPLACE___XXXX", "base64").toString("utf-8");
+    const z = JSON.parse(U.from(RNBO_PATCHER_DESC, "base64").toString("utf-8"));
+    const j = U.from(RNBO_PATCHER_SRC, "base64").toString("utf-8");
     class X extends AudioWorkletProcessor {
       constructor(i) {
         super(i);
@@ -3860,7 +3860,7 @@
         this.port.start();
       }
       static get parameterDescriptors() {
-        return XXXX___RNBOPARAMDESCRIPTORS_REPLACE___XXXX;
+        return RNBO_PARAM_DESCRIPTORS;
       }
       process(t, e, r) {
         let n;
@@ -3905,10 +3905,6 @@
         return true;
       }
     }
-    let F = "XXXX---RNBOPROCESSORNAME_REPLACE---XXXX";
-    if (F.startsWith("XXXX---RNBOPROCESSORNAME_REPLACE---")) {
-      F = "RNBOProcessor";
-    }
-    registerProcessor(F, X);
+    registerProcessor(RNBO_PROCESSOR_NAME || "RNBOProcessor", X);
   })();
 })();
