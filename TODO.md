@@ -1,5 +1,6 @@
 # TODO (no AI)
 
+- [ ] heap check
 - [ ] Dust?
 - [ ] https://threlte.xyz/docs/reference/extras/fake-glow-material
 - [ ] https://threlte.xyz/docs/reference/extras/transitions
