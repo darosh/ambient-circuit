@@ -129,7 +129,7 @@ Replace the `__webpack_modules__` / `__webpack_require__` runtime inside `workle
 
 ## 9. Fix missing dispose
 
-## 10. EVAL = EVIL
+## 10. [COMPLETED] EVAL = EVIL
 
 ```
 ▲ [WARNING] Using direct eval with a bundler is not recommended and may cause problems [direct-eval]

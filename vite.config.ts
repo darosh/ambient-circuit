@@ -74,8 +74,6 @@ export default defineConfig({
 		include: ['src/**/*.{test,spec}.{js,ts}', 'tests/**/*.{test,spec}.{js,ts}']
 	},
 	optimizeDeps: {
-		// throws error in dev mode
-		// exclude: ['@rnbo/js'],
 		include: ['three'],
 		esbuildOptions: {
 			target: 'esnext'

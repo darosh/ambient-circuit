@@ -61,9 +61,7 @@ export class s extends _baseEngine__WEBPACK_IMPORTED_MODULE_0__.v {
 	}
 	async setPatcherCode(code) {
 		return new Promise((resolve, reject) => {
-			let restoredRnboModule
-			const restoredWASM = code + 'restoredRnboModule = rnbo_module;'
-			eval(restoredWASM)
+			const restoredRnboModule = new Function(code + 'return rnbo_module;')()
 			restoredRnboModule().then((t) => {
 				delete t.then
 				this.R = new _wasmHelper__WEBPACK_IMPORTED_MODULE_1__.z(this, t)

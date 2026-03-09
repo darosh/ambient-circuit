@@ -410,9 +410,7 @@ function deserializeBuffer(t, e, r) {
 }
 function RNBO_ASSERT() {}
 function _evalSrc(src) {
-	var rnboObj
-	eval(src)
-	return rnboObj
+	return new Function('var rnboObj; ' + src + '; return rnboObj;')()
 }
 function getSubState(t, e) {
 	if (t[e] === undefined) {
@@ -471,10 +469,7 @@ export default {
 		}
 	},
 	evalFunction(functionAsString) {
-		var tmpFunction
-		var functionAsString = 'tmpFunction = ' + functionAsString
-		eval(functionAsString)
-		return tmpFunction
+		return new Function('return ' + functionAsString)()
 	},
 	nextpoweroftwo,
 	ParameterTypeNumber,
