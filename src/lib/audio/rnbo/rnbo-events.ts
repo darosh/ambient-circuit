@@ -33,18 +33,13 @@ export enum StartupPhase {
 }
 export { StartupPhase as gA }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class j4 {
 	invalid = false
 	time: number
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	eventTarget: any
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	source?: any
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	type?: any
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	constructor(t: number = 0, e?: any) {
 		this.time = t
 		this.eventTarget = e
@@ -64,7 +59,6 @@ export class J9 extends j4 {
 	clockIndex: number
 	value: number | undefined
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	constructor(t: number, e: number, r: number | undefined, i?: any) {
 		super(t, i)
 		this.clockIndex = e
@@ -87,7 +81,6 @@ export class Lk extends j4 {
 	dataRefIndex: number
 	action: DataRefAction
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	constructor(t: number, e: number, r: DataRefAction, i?: any) {
 		super(t, i)
 		this.dataRefIndex = e
@@ -106,10 +99,9 @@ export class f3 extends j4 {
 	type = EventType.MessageEvent
 	objectId: string
 	tag: string
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	payload: any
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	constructor(t: number, e: string, r: any, i: string = '', s?: any) {
 		super(t, s)
 		this.objectId = i
@@ -134,7 +126,6 @@ export class Ym extends j4 {
 	channel: number
 	port: number
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	constructor(t: number, e: number, r: any[], i?: any) {
 		super(t, i)
 		if (r.length > 3) {
@@ -174,10 +165,9 @@ export class DB extends j4 {
 	type = EventType.ParameterEvent
 	target: number
 	value: number
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	override source: any
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	constructor(t: number, e: number, r: number, i?: any, s?: any) {
 		super(t, s)
 		this.target = e
@@ -197,7 +187,6 @@ export class zz extends j4 {
 	type = EventType.ParameterBangEvent
 	target: number
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	constructor(t: number, e: number, r?: any) {
 		super(t, r)
 		this.target = e
@@ -213,10 +202,9 @@ export class zz extends j4 {
 export class bt extends j4 {
 	type = EventType.PresetEvent
 	action: PresetEventAction
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	preset: any
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	constructor(t: number, e: PresetEventAction, r?: any) {
 		super(t, undefined)
 		this.action = e
@@ -314,7 +302,6 @@ export class j6 extends j4 {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const f4 = (t: any): j4 => {
 	switch (t.type) {
 		case EventType.ClockEvent:

@@ -58,7 +58,6 @@ export interface IPort {
 	meta?: Record<string, string>
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface Parameter {
 	name: string
 	id: string
@@ -68,28 +67,28 @@ export interface Parameter {
 	max: number
 	steps: number
 	index: number
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	changeEvent: BM<any>
 }
 
 export interface Device {
 	context: AudioContext
 	node: AudioNode
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	parameters: Parameter[]
 	parametersById: Map<string, Parameter>
 	numParameters: number
 	parameterChangeEvent: BM<Parameter>
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	messageEvent: BM<any>
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	midiEvent: BM<any>
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	presetTouchedEvent: BM<any>
 	scheduleEvent(event: unknown, time?: number): void
 	getPreset(): Promise<IPreset>
 	setPreset(preset: IPreset): void
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 	setDataBuffer(id: string, buffer: any): void
 	releaseDataBuffer(id: string): Promise<{ data: Float32Array; typeDesc: string }>
 	loadDataBufferDependencies(deps: ExternalDataInfo[]): Promise<void>

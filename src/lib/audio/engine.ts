@@ -1016,9 +1016,7 @@ async function loadRNBO(
 
 	if (ind === -1) {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		device = await (createDevice as any)(
-			{ context: engine.ctx, patcher: patcher as IPatcher }
-		)
+		device = await (createDevice as any)({ context: engine.ctx, patcher: patcher as IPatcher })
 		;(device as unknown as { __patcher: unknown }).__patcher = patcher
 	} else {
 		device = disposedRnbos[ind]

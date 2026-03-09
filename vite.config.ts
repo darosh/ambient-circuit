@@ -22,9 +22,7 @@ function bundleWorklets(): Plugin {
 			const qIdx = source.indexOf('?')
 			const clean = qIdx === -1 ? source : source.slice(0, qIdx)
 			if (!workletFiles.has(path.basename(clean))) return
-			const resolved = importer
-				? path.resolve(path.dirname(importer), clean)
-				: clean
+			const resolved = importer ? path.resolve(path.dirname(importer), clean) : clean
 			return PREFIX + resolved
 		},
 		async load(id) {
@@ -36,7 +34,7 @@ function bundleWorklets(): Plugin {
 				write: false,
 				format: 'esm',
 				platform: 'browser',
-				target: 'esnext',
+				target: 'esnext'
 			})
 			const code = result.outputFiles[0].text
 			return `const blob = new Blob(${JSON.stringify([code])}, { type: "text/javascript" });

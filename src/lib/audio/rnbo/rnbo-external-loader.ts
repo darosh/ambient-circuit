@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function e(this: any) {}
 ;(e.prototype = Object.create(null)).constructor = e
 e.prototype.setEngineAndPatcher = function () {}
