@@ -17,6 +17,7 @@
 	import HelpPanel from './HelpPanel.svelte'
 	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
 	import GeoText from './GeoText.svelte'
+	import { mixedTextCharWidth } from '../lib/video/mixed-text'
 	import { easeInCubic, easeOutCubic } from '../lib/helpers/easing'
 	import { onDestroy, onMount, untrack } from 'svelte'
 	import type { TempoState } from '../lib/core/tempo'
@@ -701,7 +702,8 @@
 		const baseX = -vpWidth / 2 + sphereR * 2
 		for (let i = 0; i < rowStates.length; i++) {
 			const label = labels[i] ?? ''
-			const targetX = baseX + sphereR * 4 + Math.max(label.length - 2, 0) * sphereR * CHAR_WIDTH
+			const labelW = mixedTextCharWidth(label.toUpperCase())
+			const targetX = baseX + sphereR * 4 + Math.max(labelW - 2, 0) * sphereR * CHAR_WIDTH
 			if (_aTargetX[i] !== targetX) {
 				_aStartX[i] = analyserAnimX[i] ?? targetX
 				_aTargetX[i] = targetX
@@ -826,7 +828,9 @@
 	)
 
 	const widthFps = 8
-	const widthChords = 6
+	const widthChords = $derived(
+		chord ? Math.max(mixedTextCharWidth(chord.toUpperCase()) * CHAR_WIDTH + 1, 6) : 6
+	)
 
 	const posChord = $derived(showStats ? widthFps : 0)
 	const posScale = $derived(showHarmony ? posChord + widthChords : showStats ? widthFps : 0)
@@ -926,7 +930,7 @@
 	<!-- Note/chord label -->
 	{#if showNotes}
 		<T.Group position={[x, y - sphereR / 2 + sphereR * 0.075, 0]}>
-			<GeoText cache material={row.fx.mat} text={label.toUpperCase()} size={sphereR} />
+			<GeoText cache mixed material={row.fx.mat} text={label.toUpperCase()} size={sphereR} />
 		</T.Group>
 	{/if}
 
@@ -939,7 +943,9 @@
 			width={sphereR * 2}
 			position={[
 				(showNotes ? analyserAnimX[i] : x + sphereR * 1.5) ??
-					x + sphereR * 4 + Math.max(label.length - 2, 0) * sphereR * CHAR_WIDTH,
+					x +
+						sphereR * 4 +
+						Math.max(mixedTextCharWidth(label.toUpperCase()), 2) * sphereR * CHAR_WIDTH,
 				y - sphereR / 2,
 				0
 			]}
@@ -1025,7 +1031,7 @@
 			0
 		]}
 	>
-		<GeoText cache material={textMat.mat} text={beatText} size={beatSize} />
+		<GeoText cache mixed material={textMat.mat} text={beatText} size={beatSize} />
 	</T.Group>
 {/if}
 
@@ -1040,7 +1046,7 @@
 			0
 		]}
 	>
-		<GeoText cache material={textMat.mat} text={beatText} size={beatSize} />
+		<GeoText cache mixed material={textMat.mat} text={beatText} size={beatSize} />
 	</T.Group>
 {/if}
 

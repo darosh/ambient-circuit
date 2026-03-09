@@ -1,10 +1,16 @@
 <script lang="ts">
 	import { T } from '@threlte/core'
-	import { fontCache, getCachedTextGeometry } from '../lib/video/geo-geometry'
+	import {
+		fontCache,
+		getCachedTextGeometry,
+		getCachedMixedGeometry
+	} from '../lib/video/geo-geometry'
 	import { Text3DGeometry, Suspense } from '@threlte/extras'
 
-	let { text, size, material, cache = false } = $props()
-	let cachedGeom = $derived(getCachedTextGeometry(text, size))
+	let { text, size, material, cache = false, mixed = false } = $props()
+	let cachedGeom = $derived(
+		mixed ? getCachedMixedGeometry(text, size) : getCachedTextGeometry(text, size)
+	)
 </script>
 
 {#if cache && cachedGeom}

@@ -1329,10 +1329,13 @@ function chordFromAlive(alive: { midi: number; end: number }[]): string {
 	}
 	// fallback: sort by lowest midi of each pc, join
 	const sorted = [...lowestMidi.entries()].toSorted((a, b) => a[1] - b[1])
-	return sorted.map(e => e[0]).join('-')
+	return sorted.map((e) => e[0]).join('-')
 }
 
-export function computeChordInfo(activeNotes: { midi: number; end: number }[], now: number): ChordInfo {
+export function computeChordInfo(
+	activeNotes: { midi: number; end: number }[],
+	now: number
+): ChordInfo {
 	const alive: { midi: number; end: number }[] = []
 	for (const activeNote of activeNotes) {
 		if (activeNote.end > now) alive.push(activeNote)

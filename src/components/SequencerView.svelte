@@ -2,7 +2,8 @@
 	import { T, useTask } from '@threlte/core'
 	import { SphereGeometry, Mesh, Group } from 'three/webgpu'
 	import { buildImpactMaterial } from '../lib/video/material-impact'
-	import { getCachedTextGeometry } from '../lib/video/geo-geometry'
+	import { getCachedMixedGeometry } from '../lib/video/geo-geometry'
+	import { mixedTextCharWidth } from '../lib/video/mixed-text'
 	import { onDestroy } from 'svelte'
 
 	export type NoteEvent = {
@@ -42,8 +43,9 @@
 	} = $props()
 
 	function labelWidth(label: string, isTime: boolean) {
+		const charCount = mixedTextCharWidth(label.toUpperCase())
 		return (
-			Math.max(label.length, isTime ? 1 : 6) * height * charWidth +
+			Math.max(charCount, isTime ? 1 : 6) * height * charWidth +
 			(isTime ? charWidth * WORD_SPACE : charWidth) * height
 		)
 	}
@@ -165,7 +167,7 @@
 					mesh.geometry = dotGeom!
 					mesh.position.set(x + dotRadius, -dotRadius * 2.5, 0)
 				} else {
-					const geom = getCachedTextGeometry(ring[idx].text.toUpperCase(), textSize)
+					const geom = getCachedMixedGeometry(ring[idx].text.toUpperCase(), textSize)
 					if (geom) {
 						mesh.geometry = geom
 						mesh.position.set(x, 0, 0)
@@ -218,7 +220,7 @@
 					mesh.geometry = dotGeom!
 					mesh.position.set(x + slide + dotRadius, -dotRadius * 2.5, 0)
 				} else {
-					const geom = getCachedTextGeometry(ring[idx].text.toUpperCase(), textSize)
+					const geom = getCachedMixedGeometry(ring[idx].text.toUpperCase(), textSize)
 					if (geom) {
 						mesh.geometry = geom
 						mesh.position.set(x + slide, 0, 0)

@@ -5,7 +5,7 @@ const future = 9999
 const now = 0
 
 function notes(midis: number[]) {
-	return midis.map(midi => ({ midi, end: future }))
+	return midis.map((midi) => ({ midi, end: future }))
 }
 
 describe('chord detection', () => {
