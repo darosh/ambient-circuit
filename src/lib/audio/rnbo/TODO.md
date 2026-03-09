@@ -128,3 +128,13 @@ Replace the `__webpack_modules__` / `__webpack_require__` runtime inside `workle
 ## 8. Fix subscribe not working after reuse
 
 ## 9. Fix missing dispose
+
+## 10. EVAL = EVIL
+
+```
+▲ [WARNING] Using direct eval with a bundler is not recommended and may cause problems [direct-eval]
+
+    src/lib/audio/rnbo/rnbo-runtime-helpers.js:475:2:
+      475 │     eval(functionAsString)
+          ╵     ~~~~
+```
