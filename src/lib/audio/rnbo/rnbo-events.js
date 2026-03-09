@@ -2,7 +2,7 @@ export var m5;
 export var VH;
 export var l0;
 export var gA;
-import * as o from "./module-676.js";
+const o = { D: 0 };
 (function (t) {
   t[t.BufferTransfer = 0] = "BufferTransfer";
   t[t.ClockEvent = 1] = "ClockEvent";
