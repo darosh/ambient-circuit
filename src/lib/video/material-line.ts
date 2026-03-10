@@ -6,7 +6,7 @@ import type { UniformNode, Color } from 'three/webgpu'
 // Material cache: key = color hex string
 const materialCache = new Map<
 	string,
-	{ mat: Line2NodeMaterial; emissiveColor: UniformNode<Color> }
+	{ mat: Line2NodeMaterial; emissiveColor: UniformNode<'color', Color> }
 >()
 
 /**

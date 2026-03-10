@@ -2,7 +2,7 @@ import { Line2NodeMaterial } from 'three/webgpu'
 import { luminance, uniform, color as colorShader, Fn, vec4, min, max, uv } from 'three/tsl'
 import type { UniformNode, Color } from 'three/webgpu'
 
-const colorCache = new Map<string, { mat: Line2NodeMaterial; emissiveColor: UniformNode<Color> }>()
+const colorCache = new Map<string, { mat: Line2NodeMaterial; emissiveColor: UniformNode<'color', Color> }>()
 
 export function getTextMaterialCached(id: string, color: string, width: number) {
 	const materialKey = `${id}-${width}`
@@ -19,7 +19,7 @@ export function getTextMaterialCached(id: string, color: string, width: number) 
 
 export type LineMat = {
 	mat: Line2NodeMaterial
-	emissiveColor: UniformNode<Color>
+	emissiveColor: UniformNode<'color', Color>
 }
 
 export function getTextMaterial(color: string, width: number): LineMat {

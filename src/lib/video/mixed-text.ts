@@ -2,7 +2,6 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 import type { BufferGeometry } from 'three/webgpu'
-import { geoCache } from './geo-geometry'
 
 export type TextSeg = { text: string; sizeScale: number; yShift: number }
 

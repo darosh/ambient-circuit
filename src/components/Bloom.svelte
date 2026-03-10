@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { useThrelte, useTask } from '@threlte/core'
 	import { onMount, untrack } from 'svelte'
-	import { PostProcessing, type WebGPURenderer } from 'three/webgpu'
+	import { RenderPipeline, type WebGPURenderer } from 'three/webgpu'
 	import { pass, uniform, vec3 } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 	import { defaultBloom } from '../lib/components/config'
@@ -22,7 +22,7 @@
 
 	const { renderer, scene, camera, renderStage, autoRender } = useThrelte()
 
-	const postProcessing = new PostProcessing(renderer as unknown as WebGPURenderer)
+	const postProcessing = new RenderPipeline(renderer as unknown as WebGPURenderer)
 	const tintUniform = uniform(vec3(...untrack(() => tint)))
 
 	$effect(() => {

@@ -1,6 +1,7 @@
 // based on https://github.com/mrdoob/three.js/blob/master/examples/webgpu_tsl_vfx_tornado.html
 
 import { MeshBasicNodeMaterial, DoubleSide } from 'three/webgpu'
+import type { Node } from 'three/webgpu'
 import {
 	luminance,
 	min,
@@ -58,8 +59,8 @@ export function sharedInstrumentMaterial() {
 			.mul(TWO_PI)
 		const noisePos2 = vec3(r2.mul(cos(angleX2)), r2.mul(sin(angleX2)), R2.mul(sinY))
 
-		const noise1 = perlinNoise({ position: noisePos1, scale: 3 }).r.remap(0.2, 0.95)
-		const noise2 = perlinNoise({ position: noisePos2, scale: 2 }).g.remap(0.2, 0.95)
+		const noise1 = (perlinNoise({ position: noisePos1, scale: 3 }) as Node<'vec3'>).r.remap(0.2, 0.95)
+		const noise2 = (perlinNoise({ position: noisePos2, scale: 2 }) as Node<'vec3'>).g.remap(0.2, 0.95)
 
 		const outerFade = min(uv().y.smoothstep(0, 0.1), uv().y.oneMinus().smoothstep(0, 0.4))
 		const fadeFactor = outerFade.mul(useFadeUniform).add(useFadeUniform.oneMinus())

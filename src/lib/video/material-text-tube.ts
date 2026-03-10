@@ -6,15 +6,15 @@ const tubeCache = new Map<
 	string,
 	{
 		mat: MeshBasicNodeMaterial
-		emissiveColor: UniformNode<Color>
-		activeUniform: UniformNode<number>
+		emissiveColor: UniformNode<'color', Color>
+		activeUniform: UniformNode<'float', number>
 	}
 >()
 
 export type TubeMat = {
 	mat: MeshBasicNodeMaterial
-	emissiveColor: UniformNode<Color>
-	activeUniform: UniformNode<number>
+	emissiveColor: UniformNode<'color', Color>
+	activeUniform: UniformNode<'float', number>
 }
 
 export function createTubeMaterialCached(id: string, color: string): TubeMat {

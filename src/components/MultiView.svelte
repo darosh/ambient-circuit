@@ -7,7 +7,7 @@
 		Vector2,
 		Vector3,
 		PerspectiveCamera as ThreePerspectiveCamera,
-		PostProcessing,
+		RenderPipeline,
 		RenderTarget
 	} from 'three/webgpu'
 	import type { WebGPURenderer, Scene } from 'three/webgpu'
@@ -53,7 +53,7 @@
 	const { scene: hudScene } = createSceneContext()
 	const { camera: hudCamera } = createCameraContext()
 
-	const postProcessing = new PostProcessing(renderer as unknown as WebGPURenderer)
+	const postProcessing = new RenderPipeline(renderer as unknown as WebGPURenderer)
 
 	const lerpTargetPos = untrack(() => initLerpTargets(config.splits))
 	const camStates = untrack(() => initCamStates(config.splits))

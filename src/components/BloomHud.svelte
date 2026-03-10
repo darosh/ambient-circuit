@@ -2,12 +2,12 @@
 	import { T, useThrelte, useTask, createSceneContext, createCameraContext } from '@threlte/core'
 	import { onMount, untrack } from 'svelte'
 	import type { Snippet } from 'svelte'
-	import { PostProcessing, type WebGPURenderer, type Scene, type Node } from 'three/webgpu'
+	import { RenderPipeline, type WebGPURenderer, type Scene, type Node } from 'three/webgpu'
 	import { pass, mix, max, vec3, uniform } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 	import { defaultBloom } from '../lib/components/config'
 
-	type TslNode = Node
+	type TslNode = Node<'vec4'>
 
 	type Props = {
 		enabled?: boolean
@@ -40,7 +40,7 @@
 	const { camera: hudCamera } = createCameraContext()
 	const tintUniform = uniform(vec3(...untrack(() => tint)))
 
-	const postProcessing = new PostProcessing(renderer as unknown as WebGPURenderer)
+	const postProcessing = new RenderPipeline(renderer as unknown as WebGPURenderer)
 
 	// Store bloom node ref for uniform updates
 	let bloomNode: ReturnType<typeof bloom> | null = null

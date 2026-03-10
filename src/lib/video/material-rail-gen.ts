@@ -1,6 +1,7 @@
 // based on https://github.com/mrdoob/three.js/blob/master/examples/webgpu_tsl_vfx_tornado.html
 
 import { MeshBasicNodeMaterial, DoubleSide } from 'three/webgpu'
+import type { Node } from 'three/webgpu'
 import {
 	luminance,
 	min,
@@ -43,7 +44,7 @@ export function sharedRailMaterial() {
 		const cy = sin(angle).mul(0.5)
 
 		const u1 = uv().x.mul(uvFreqUniform).add(scaledTime).add(positionWorld.x.mul(10.3))
-		const noise1 = perlinNoise({ position: vec3(cx.add(u1.mul(0.3)), cy, u1), scale: 2 }).r.remap(
+		const noise1 = (perlinNoise({ position: vec3(cx.add(u1.mul(0.3)), cy, u1), scale: 2 }) as Node<'vec3'>).r.remap(
 			0.2,
 			0.95
 		)
@@ -52,7 +53,7 @@ export function sharedRailMaterial() {
 			.x.mul(uvFreqUniform.mul(2.5))
 			.add(scaledTime.mul(0.5))
 			.add(positionWorld.z.mul(0.3))
-		const noise2 = perlinNoise({ position: vec3(cx.add(u2.mul(0.15)), cy, u2), scale: 2 }).g.remap(
+		const noise2 = (perlinNoise({ position: vec3(cx.add(u2.mul(0.15)), cy, u2), scale: 2 }) as Node<'vec3'>).g.remap(
 			0.2,
 			0.95
 		)
