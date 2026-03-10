@@ -112,6 +112,13 @@ export async function initAudio(engine: AudioEngine): Promise<void> {
 
 const MUTE_RAMP = 0.05
 
+function setGain(masterGain: GainNode, value: number = 0) {
+	const ctx = masterGain.context
+	masterGain.gain.cancelScheduledValues(ctx.currentTime)
+	masterGain.gain.setValueAtTime(masterGain.gain.value, ctx.currentTime)
+	masterGain.gain.linearRampToValueAtTime(value, ctx.currentTime + MUTE_RAMP)
+}
+
 /**
  * Toggle mute state. Works before/after audio init.
  */
@@ -123,13 +130,7 @@ export function toggleMute(engine: AudioEngine | null, value?: boolean): boolean
 	engine.muted = engineCache.muted
 
 	if (engine.masterGain) {
-		const ctx = engine.masterGain.context
-		engine.masterGain.gain.cancelScheduledValues(ctx.currentTime)
-		engine.masterGain.gain.setValueAtTime(engine.masterGain.gain.value, ctx.currentTime)
-		engine.masterGain.gain.linearRampToValueAtTime(
-			engine.muted ? 0 : 1,
-			ctx.currentTime + MUTE_RAMP
-		)
+		setGain(engine.masterGain, engine.muted ? 0 : 1)
 	}
 	return engine.muted
 }
@@ -634,6 +635,11 @@ function disposeBus(bus: AudioBus): void {
  */
 export async function disposeScene(engine: AudioEngine) {
 	engine.disposed = true
+
+	if (engine.masterGain && !engine.muted) {
+		setGain(engine.masterGain, 0)
+		await pause(MUTE_RAMP * 1000 + 4)
+	}
 
 	if (engine.pending) {
 		await engine.pending
