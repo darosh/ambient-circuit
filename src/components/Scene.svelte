@@ -224,10 +224,7 @@
 		)
 		allAudioChains = await audioEngine.pending
 
-		if (audioEngine.disposed) {
-			disposeScene(audioEngine)
-			return
-		}
+		if (audioEngine.disposed) return
 
 		audioEngine.pending = undefined
 		audioEngineRef = audioEngine
@@ -272,7 +269,6 @@
 
 	// Fire destroy handler on unmount
 	onDestroy(() => {
-		console.log('onDestroy', scene.id, audioEngine.chains.size)
 		// audioEngineRef = null
 		// Release $state proxy refs from module-level scene config
 		for (const railData of rails) {
