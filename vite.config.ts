@@ -72,7 +72,7 @@ export default defineConfig({
 		include: ['src/**/*.{test,spec}.{js,ts}', 'tests/**/*.{test,spec}.{js,ts}']
 	},
 	optimizeDeps: {
-		include: ['three'],
+		include: ['three', 'tone'],
 		esbuildOptions: {
 			target: 'esnext'
 		}

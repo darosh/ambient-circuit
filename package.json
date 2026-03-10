@@ -1,11 +1,11 @@
 {
 	"name": "ambient-circuit",
-	"version": "0.0.13",
+	"version": "0.0.14",
 	"dependencies": {
 		"@dimforge/rapier3d-compat": "^0.19.3",
 		"@rnbo/js": "^1.4.2",
 		"@theatre/core": "^0.7.2",
-		"@threlte/core": "^8.3.1",
+		"@threlte/core": "^8.4.1",
 		"@threlte/extras": "^9.7.1",
 		"@threlte/rapier": "^3.2.0",
 		"@threlte/theatre": "^3.1.2",
