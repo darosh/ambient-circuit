@@ -3,7 +3,7 @@
   "channels": 2,
   "duration": 3.8407256235827663,
   "samples": 169376,
-  "crossfade": 1,
+  "crossfade": 0.5,
   "detect": {
     "amplitudeTolerance": 0.4,
     "start": 0.2,
