@@ -483,21 +483,25 @@
 
 		return formatHex(backRgb)
 	})
+
+	/**
+	function clearSelection() {
+		selectedEntity = null
+		selectedAudioChain = undefined
+	}
+ */
 </script>
 
 <!-- Invisible plane for deselect on miss -->
-<T.Mesh
-	position={[0, 0, 0]}
-	rotation.x={-Math.PI / 2}
-	onclick={() => {
-		// selectedEntity = null
-		// selectedAudioChain = undefined
-	}}
-	visible={false}
->
-	<T.PlaneGeometry args={[1000, 1000]} />
-	<T.MeshBasicMaterial />
-</T.Mesh>
+<!--<T.Mesh-->
+<!--	position={[0, 0, 0]}-->
+<!--	rotation.x={-Math.PI / 2}-->
+<!--	onclick={clearSelection}-->
+<!--	visible={false}-->
+<!--&gt;-->
+<!--	<T.PlaneGeometry args={[1000, 1000]} />-->
+<!--	<T.MeshBasicMaterial />-->
+<!--</T.Mesh>-->
 
 {#if scene.stars}
 	<Stars />
@@ -548,9 +552,7 @@
 {/each}
 
 {#each marbles as _m, idx (_m.id)}
-	{@const currentRailId = marbles[idx].runtime.railId ?? marbles[idx].resolved.resolvedRail.id}
-	{@const railIdx = rails.findIndex((r) => r.id === currentRailId)}
-	{@const railIndex = railIdx >= 0 ? railIdx : marbleRailIndices[idx]}
+	{@const railIndex = liveRailIndices[idx] ?? marbleRailIndices[idx]}
 	{#if railVisibility[railIndex]}
 		<MarbleView
 			bind:marble={marbles[idx]}

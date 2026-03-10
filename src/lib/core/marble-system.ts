@@ -324,13 +324,11 @@ function checkMarbleCollisions(
 	cooldownBeats: number = 0.5,
 	wrapThreshold: number = 5 // Skip collision if beat delta > threshold (indicates wrap)
 ): void {
-	if (bouncerOnlyMode) {
-		marbles = marbles.filter((m) => m.resolved.bouncer)
-	}
-
 	// Check all pairs of marbles
 	for (let i = 0; i < marbles.length; i++) {
 		const m1 = marbles[i]
+		if (m1.runtime.destroyed) continue
+		if (bouncerOnlyMode && !m1.resolved.bouncer) continue
 
 		// Skip if recently collided (cooldown to prevent oscillation)
 		if (
@@ -346,6 +344,7 @@ function checkMarbleCollisions(
 
 		for (let j = i + 1; j < marbles.length; j++) {
 			const m2 = marbles[j]
+			if (m2.runtime.destroyed) continue
 			// Check if on same rail
 			const rail1 = m1.runtime.railId ?? m1.resolved.resolvedRail.id
 			const rail2 = m2.runtime.railId ?? m2.resolved.resolvedRail.id
@@ -1106,17 +1105,15 @@ export function updateMarbles(
 
 	// Check for marble collisions (after all positions updated, skip destroyed)
 	if (!noBouncers) {
-		const activeMarbles = marbles.filter((m) => !m.runtime.destroyed)
-		const activeRailIds = railIds.filter((_, i) => !marbles[i]?.runtime.destroyed)
 		checkMarbleCollisions(
-			activeMarbles,
-			activeRailIds,
+			marbles,
+			railIds,
 			globalBeat,
 			sceneCtx,
 			bounceHandler,
 			bouncerOnlyMode ?? true
 		)
-		preventBouncerCrossovers(activeMarbles)
+		preventBouncerCrossovers(marbles)
 	}
 
 	// Collect mutations

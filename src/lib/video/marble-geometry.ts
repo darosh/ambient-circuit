@@ -3,6 +3,7 @@ import {
 	CurvePath,
 	LineCurve3,
 	QuadraticBezierCurve3,
+	SphereGeometry,
 	Vector3,
 	type BufferGeometry
 } from 'three/webgpu'
@@ -39,19 +40,13 @@ function getCacheKey(params: MarbleGeometryParams): string {
 /**
  * Create memoized marble geometry
  */
-export function createMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | null {
-	if (params.type === 'ball') {
-		return null // use declarative SphereGeometry in template
-	}
-
+export function createMarbleGeometry(params: MarbleGeometryParams): BufferGeometry {
 	const key = getCacheKey(params)
 	const cached = geometryCache.get(key)
 	if (cached) return cached
 
-	const geometry = buildMarbleGeometry(params)
-	if (geometry) {
-		geometryCache.set(key, geometry)
-	}
+	const geometry = buildMarbleGeometry(params)!
+	geometryCache.set(key, geometry)
 	return geometry
 }
 
@@ -76,6 +71,9 @@ function buildMarbleGeometry(params: MarbleGeometryParams): BufferGeometry | nul
 	const cr = MARBLE_CORNER_RADIUS
 
 	switch (type) {
+		case 'ball': {
+			return new SphereGeometry(BALL_RADIUS, BALL_WIDTH_SEGMENTS, BALL_HEIGHT_SEGMENTS)
+		}
 		case 'eater': {
 			return buildEaterMarbleGeometry(size, width, cr, angle)
 		}

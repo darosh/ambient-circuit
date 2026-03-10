@@ -7,13 +7,7 @@
 	import { easeOutQuart } from '../lib/helpers/easing'
 	import type { ResolvedRail } from '../lib/core/rail'
 	import type { RailRuntime } from '../lib/core/rail-config'
-	import {
-		createMarbleGeometry,
-		BALL_RADIUS,
-		BALL_WIDTH_SEGMENTS,
-		BALL_HEIGHT_SEGMENTS,
-		type MarbleType
-	} from '../lib/video/marble-geometry'
+	import { createMarbleGeometry, type MarbleType } from '../lib/video/marble-geometry'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
 	import type { Material } from 'three/webgpu'
 
@@ -187,48 +181,28 @@
 	})
 
 	onDestroy(() => {
-		geometry?.dispose()
+		// no dispose, it is cached
+		// geometry?.dispose()
 		plainMaterial?.dispose()
 	})
 </script>
 
-{#if effectiveVisible}
-	{#if type === 'ball'}
-		<T.Mesh
-			bind:ref={meshRef}
-			position={transformedPosition}
-			{rotation}
-			material={<Material>(fxMarbles ? marbleMaterial.mat : plainMaterial)}
-			onclick={(e: Event) => {
-				e.stopPropagation()
-				onselect?.()
-			}}
-			onpointerenter={() => {
-				hovered = true
-			}}
-			onpointerleave={() => {
-				hovered = false
-			}}
-		>
-			<T.SphereGeometry args={[BALL_RADIUS, BALL_WIDTH_SEGMENTS, BALL_HEIGHT_SEGMENTS]} />
-		</T.Mesh>
-	{:else if geometry}
-		<T.Mesh
-			bind:ref={meshRef}
-			position={transformedPosition}
-			{rotation}
-			{geometry}
-			material={<Material>(fxMarbles ? marbleMaterial.mat : plainMaterial)}
-			onclick={(e: Event) => {
-				e.stopPropagation()
-				onselect?.()
-			}}
-			onpointerenter={() => {
-				hovered = true
-			}}
-			onpointerleave={() => {
-				hovered = false
-			}}
-		/>
-	{/if}
+{#if effectiveVisible && geometry}
+	<T.Mesh
+		bind:ref={meshRef}
+		position={transformedPosition}
+		{rotation}
+		{geometry}
+		material={<Material>(fxMarbles ? marbleMaterial.mat : plainMaterial)}
+		onclick={(e: Event) => {
+			e.stopPropagation()
+			onselect?.()
+		}}
+		onpointerenter={() => {
+			hovered = true
+		}}
+		onpointerleave={() => {
+			hovered = false
+		}}
+	/>
 {/if}
