@@ -122,7 +122,7 @@
 		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
 	})
 
-	let meshRefs = $state.raw<(Mesh | undefined)[]>([])
+	let meshRefs = $state<(Mesh | undefined)[]>([])
 
 	function setupRailMesh(mesh: Mesh) {
 		mesh.onBeforeRender = () => {
