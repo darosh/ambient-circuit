@@ -9,9 +9,9 @@ export interface SampleLoopInfo {
 
 interface CrossfadeLoopOptions {
 	loop?: boolean
-	loopStart?: number       // seconds
-	loopEnd?: number         // seconds
-	crossfade?: number       // 0–1 (portion of loop length), default 0.18–0.25
+	loopStart?: number // seconds
+	loopEnd?: number // seconds
+	crossfade?: number // 0–1 (portion of loop length), default 0.18–0.25
 	/** Per-note overrides */
 	noteLoops?: Map<string, { loopStart: number; loopEnd: number; crossfade?: number }>
 }
@@ -46,10 +46,10 @@ function bakeCrossfadeLoop(
 	loopStartSample: number,
 	loopEndSample: number,
 	crossSamples: number,
-	ctx: AudioContext,
+	ctx: AudioContext
 ): BakedLoop {
 	const L = loopEndSample - loopStartSample
-	const C = Math.min(crossSamples, Math.floor(L / 2) - 1)  // guard against C >= L/2
+	const C = Math.min(crossSamples, Math.floor(L / 2) - 1) // guard against C >= L/2
 	const ch = src.numberOfChannels
 	const baked = ctx.createBuffer(ch, L, src.sampleRate)
 
@@ -66,7 +66,7 @@ function bakeCrossfadeLoop(
 		// At i=C-1 (last sample): fully at src[loopStart + C - 1]
 		// After wrap to baked[C]: src[loopStart + C] → adjacent sample → seamless
 		for (let i = 0; i < C; i++) {
-			const t = i / C  // 0 → 1
+			const t = i / C // 0 → 1
 			dst[L - C + i] = s[loopEndSample - C + i] * (1 - t) + s[loopStartSample + i] * t
 		}
 	}
@@ -80,21 +80,27 @@ function getOrBakeCrossfadeLoop(
 	loopStartSample: number,
 	loopEndSample: number,
 	crossSamples: number,
-	ctx: AudioContext,
+	ctx: AudioContext
 ): BakedLoop {
 	const src = toneBuffer.get()!
 	const key = `${loopStartSample}_${loopEndSample}_${crossSamples}`
 	let inner = bakedCache.get(src)
-	if (!inner) { inner = new Map(); bakedCache.set(src, inner) }
+	if (!inner) {
+		inner = new Map()
+		bakedCache.set(src, inner)
+	}
 	let baked = inner.get(key)
-	if (!baked) { baked = bakeCrossfadeLoop(src, loopStartSample, loopEndSample, crossSamples, ctx); inner.set(key, baked) }
+	if (!baked) {
+		baked = bakeCrossfadeLoop(src, loopStartSample, loopEndSample, crossSamples, ctx)
+		inner.set(key, baked)
+	}
 	return baked
 }
 
 export class CrossfadeLoopingSampler extends Sampler {
 	private crossfadeOptions: CrossfadeLoopOptions = {
 		loop: false,
-		crossfade: 0.2,
+		crossfade: 0.2
 	}
 
 	constructor(options: SamplerOptions & CrossfadeLoopOptions) {
@@ -149,21 +155,27 @@ export class CrossfadeLoopingSampler extends Sampler {
 			const noteLoop = this.crossfadeOptions.noteLoops?.get(noteKey)
 
 			const loopStart = noteLoop?.loopStart ?? this.crossfadeOptions.loopStart ?? 0
-			const loopEnd   = noteLoop?.loopEnd   ?? this.crossfadeOptions.loopEnd   ?? buffer.duration
+			const loopEnd = noteLoop?.loopEnd ?? this.crossfadeOptions.loopEnd ?? buffer.duration
 			const crossPortion = noteLoop?.crossfade ?? this.crossfadeOptions.crossfade ?? 0.2
 
 			const loopLength = loopEnd - loopStart
-			const crossDuration = loopLength * crossPortion   // buffer seconds
-			const crossStartOffset = loopEnd - crossDuration  // buffer pos where fade-out begins
+			const crossDuration = loopLength * crossPortion // buffer seconds
+			const crossStartOffset = loopEnd - crossDuration // buffer pos where fade-out begins
 
 			// ─── Bake seamless loop buffer ───────────────────────────────────────────
 			// Pre-blend the loop tail into its head so native Web Audio looping never clicks.
 			const rawCtx = this.context.rawContext as AudioContext
 			const sr = rawCtx.sampleRate
 			const loopStartSample = Math.round(loopStart * sr)
-			const loopEndSample   = Math.round(loopEnd   * sr)
-			const crossSamples    = Math.round(crossDuration * sr)
-			const bakedLoop = getOrBakeCrossfadeLoop(buffer, loopStartSample, loopEndSample, crossSamples, rawCtx)
+			const loopEndSample = Math.round(loopEnd * sr)
+			const crossSamples = Math.round(crossDuration * sr)
+			const bakedLoop = getOrBakeCrossfadeLoop(
+				buffer,
+				loopStartSample,
+				loopEndSample,
+				crossSamples,
+				rawCtx
+			)
 
 			// ─── Two sources ────────────────────────────────────────────────────────
 			// A. Intro: plays from buffer start through loopEnd, then hands off to loop source
@@ -172,7 +184,7 @@ export class CrossfadeLoopingSampler extends Sampler {
 				context: this.context,
 				playbackRate,
 				fadeOut: crossDuration / playbackRate,
-				curve: this.curve,
+				curve: this.curve
 			}).connect(this.output)
 
 			// B. Loop: plays baked buffer. loopStart=C/sr skips the intro region on each wrap,
@@ -186,7 +198,7 @@ export class CrossfadeLoopingSampler extends Sampler {
 				loopEnd: bakedLoop.loopEnd,
 				fadeIn: crossDuration / playbackRate,
 				fadeOut: this.release,
-				curve: this.curve,
+				curve: this.curve
 			}).connect(this.output)
 
 			// ─── Scheduling ─────────────────────────────────────────────────────────
@@ -206,9 +218,12 @@ export class CrossfadeLoopingSampler extends Sampler {
 			loopSource.stop(stopTime)
 
 			// Cleanup
-			this.context.transport.scheduleOnce(() => {
-				introSource.dispose()
-			}, introStopTime + crossDuration / playbackRate + 0.02)
+			this.context.transport.scheduleOnce(
+				() => {
+					introSource.dispose()
+				},
+				introStopTime + crossDuration / playbackRate + 0.02
+			)
 		}
 
 		return this
