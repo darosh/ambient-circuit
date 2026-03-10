@@ -17,7 +17,7 @@ import { createDevice, MIDIEvent } from './rnbo'
 import type { Device, MIDIByte, IPatcher } from './rnbo/types'
 import TONE_DEFAULTS from './tone-defaults'
 import { PATCHERS } from './patchers'
-import { SAMPLES } from './samples'
+import { SAMPLE_META, SAMPLES } from './samples'
 import { debug } from 'debug'
 
 const log = debug('audio')
@@ -1118,9 +1118,22 @@ async function createSamplerNode(
 		...(params ? unflattenParams(params) : {})
 	}
 
-	const { LoopingSampler } = await import('./looping-sampler')
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const node = new LoopingSampler(opts as any) as ToneAudioNode
+	const meta = SAMPLE_META[name]
+	const crossfade = meta?.crossfade
+
+	let node: ToneAudioNode
+	if (globalLoop.hasLoop && crossfade !== undefined) {
+		const { CrossfadeLoopingSampler } = await import('./crossfade-looping-sampler')
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		node = new CrossfadeLoopingSampler({ ...opts, crossfade } as any) as ToneAudioNode
+	} else if (globalLoop.hasLoop) {
+		const { LoopingSampler } = await import('./looping-sampler')
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		node = new LoopingSampler(opts as any) as ToneAudioNode
+	} else {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		node = new engine.Tone.Sampler(opts as any) as ToneAudioNode
+	}
 	await new Promise((r) => (resolve = r))
 
 	return node
