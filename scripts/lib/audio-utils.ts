@@ -107,7 +107,7 @@ export function downmixToMono(interleaved: Float32Array, channels: number): Floa
 export async function detectWavLoop(
 	filePath: string,
 	meta: { sampleRate: number; channels: number; bitDepth: number },
-	{ mono = false }: { mono?: boolean } = {}
+	{ mono = false, ...detectOpts }: { mono?: boolean } & import('./detect-loop').DetectOptions = {}
 ) {
 	const fd = await readFile(filePath)
 	const view = new DataView(fd.buffer, fd.byteOffset, fd.byteLength)
@@ -153,7 +153,7 @@ export async function detectWavLoop(
 
 	const pcm = mono ? downmixToMono(interleaved, channels) : interleaved
 	const detChannels = mono ? 1 : channels
-	return detectLoop(pcm, sampleRate, { channels: detChannels })
+	return detectLoop(pcm, sampleRate, { channels: detChannels, ...detectOpts })
 }
 
 /**
@@ -164,7 +164,7 @@ export async function detectWavLoop(
 export function detectNonWavLoop(
 	filePath: string,
 	sampleRate: number,
-	{ mono = false }: { mono?: boolean } = {}
+	{ mono = false, ...detectOpts }: { mono?: boolean } & import('./detect-loop').DetectOptions = {}
 ) {
 	if (!hasFfmpeg) throw new Error('ffmpeg not available')
 
@@ -174,7 +174,7 @@ export function detectNonWavLoop(
 
 	if (!decoded) throw new Error('ffmpeg decoding failed')
 
-	return detectLoop(decoded.samples, sampleRate, { channels })
+	return detectLoop(decoded.samples, sampleRate, { channels, ...detectOpts })
 }
 
 /**

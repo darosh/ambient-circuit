@@ -8,6 +8,7 @@ import {
 	parseWavMeta,
 	probeWithFfprobe
 } from './audio-utils'
+import { DetectOptions } from './detect-loop'
 
 // ---- Types ------------------------------------------------------------------
 
@@ -28,6 +29,9 @@ export type Sidecar = {
 	loopEndSample?: number
 	/** Per-note overrides */
 	notes?: Record<string, SidecarNote>
+	/** Crossfade amount 0–1 for CrossfadeLoopingSampler */
+	crossfade?: number
+	detect?: false | DetectOptions
 }
 
 export type AudioMeta = {
@@ -57,18 +61,19 @@ function globalLoopFromSidecar(sidecar: Sidecar): SidecarNote | null {
 /** Detect loop info for one audio file. Throws if detection fails even after mono fallback. */
 async function detectFileLoop(
 	absPath: string,
-	ext: string
+	ext: string,
+	detectOpts: DetectOptions = {}
 ): Promise<{ loop: SidecarNote; meta: AudioMeta }> {
 	if (ext === '.wav') {
 		const meta = await parseWavMeta(absPath)
 		if (!meta) throw new Error(`Failed to parse WAV header: ${absPath}`)
 
 		try {
-			const loop = await detectWavLoop(absPath, meta)
+			const loop = await detectWavLoop(absPath, meta, detectOpts)
 			return { loop, meta }
 		} catch (err) {
 			console.warn(`  warn: stereo detection failed (${(err as Error).message}), retrying mono`)
-			const loop = await detectWavLoop(absPath, meta, { mono: true })
+			const loop = await detectWavLoop(absPath, meta, { ...detectOpts, mono: true })
 			return { loop, meta }
 		}
 	}
@@ -79,7 +84,7 @@ async function detectFileLoop(
 	if (!probe) throw new Error(`ffprobe failed: ${absPath}`)
 
 	try {
-		const loop = detectNonWavLoop(absPath, probe.sampleRate)
+		const loop = detectNonWavLoop(absPath, probe.sampleRate, detectOpts)
 		return {
 			loop,
 			meta: {
@@ -91,7 +96,7 @@ async function detectFileLoop(
 		}
 	} catch (err) {
 		console.warn(`  warn: stereo detection failed (${(err as Error).message}), retrying mono`)
-		const loop = detectNonWavLoop(absPath, probe.sampleRate, { mono: true })
+		const loop = detectNonWavLoop(absPath, probe.sampleRate, { ...detectOpts, mono: true })
 		return {
 			loop,
 			meta: {
@@ -118,7 +123,6 @@ async function processInstrument(full: string, sidecarPath: string): Promise<Sid
 		try {
 			console.log(`loaded ${sidecarPath}`)
 			sidecar = JSON.parse(await readFile(sidecarPath, 'utf8')) as Sidecar
-			return sidecar
 		} catch {
 			console.warn(`  warn: could not parse ${sidecarPath}`)
 		}
@@ -137,13 +141,19 @@ async function processInstrument(full: string, sidecarPath: string): Promise<Sid
 		const noteName = noteNameFromFile(file)
 		const absPath = join(full, file)
 
+		if (sidecar.detect === false) continue // detection disabled for this instrument
+
 		// Note already has loop info — skip detection
 		const perNote = sidecar.notes?.[noteName]
 		if (perNote?.loopStartSample !== undefined && perNote?.loopEndSample !== undefined) continue
 		if (globalLoop) continue // global default covers this note
 
 		// Detect
-		const result = await detectFileLoop(absPath, ext)
+		const result = await detectFileLoop(
+			absPath,
+			ext,
+			typeof sidecar.detect === 'object' ? sidecar.detect : {}
+		)
 
 		console.log(`detected`, result)
 

@@ -7,7 +7,8 @@
 export type DetectOptions = {
 	amplitudeTolerance?: number
 	minCycles?: number
-	searchFromEnd?: number
+	start?: number
+	end?: number
 }
 
 export function detectLoop(
@@ -15,11 +16,12 @@ export function detectLoop(
 	sampleRate: number,
 	opts: DetectOptions & { channels?: number } = {}
 ) {
-	const { amplitudeTolerance = 0.03, minCycles = 11, searchFromEnd = 0.5, channels = 1 } = opts
+	const { amplitudeTolerance = 0.03, minCycles = 11, start = 0.25, end = 0.5, channels = 1 } = opts
 
+	console.log({ start, end })
 	const totalSamples = pcm.length / channels
-	const searchStart = Math.floor((1 - searchFromEnd) * totalSamples)
-	const searchEnd = totalSamples - Math.floor(sampleRate * 0.01) // avoid last 10ms
+	const searchStart = Math.floor(start * totalSamples)
+	const searchEnd = Math.floor(end * totalSamples)
 
 	// Find rising zero crossings where ALL channels cross simultaneously (±1 sample tolerance)
 	const crossings = []
