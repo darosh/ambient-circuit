@@ -22,6 +22,8 @@
 	import { WebGPURenderer } from 'three/webgpu'
 	import { clearMarbleGeometryCache } from './lib/video/marble-geometry'
 	import { clearInstrumentGeometryCache } from './lib/video/instrument-geometry'
+	import { clearGeoTextCache } from './lib/video/geo-geometry'
+	import { clearMixedTextParsedCache } from './lib/video/mixed-text'
 	import Wrap from './components/Wrap.svelte'
 	import { createKeydownHandler } from './lib/helpers/keyboard'
 	import { onMount } from 'svelte'
@@ -82,6 +84,7 @@
 	let selectedAudioChain = $state.raw<AudioChain | undefined>()
 	let allAudioChains = $state.raw<AudioChain[]>([])
 	let audioEngineRef = $state.raw<AudioEngine | null>(null)
+	let rendererRef: WebGPURenderer | null = null
 
 	onMount(async () => {
 		fontCache.font = <Font>await font
@@ -142,6 +145,11 @@
 		globalThis.location.hash = sceneId
 		clearMarbleGeometryCache()
 		clearInstrumentGeometryCache()
+		clearGeoTextCache()
+		clearMixedTextParsedCache()
+		// Clear WebGPU renderer's internal RenderObject cache to release disposed geometry buffers
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		if (rendererRef) (rendererRef as any)._objects?.dispose()
 		selectedEntity = null
 	})
 
@@ -329,6 +337,7 @@
 
 		// renderer.inspector = new Inspector()
 		renderer.dispose = () => {}
+		rendererRef = renderer
 
 		return renderer
 	}}

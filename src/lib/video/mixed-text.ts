@@ -2,6 +2,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 import type { BufferGeometry } from 'three/webgpu'
+import { geoCache } from './geo-geometry'
 
 export type TextSeg = { text: string; sizeScale: number; yShift: number }
 
@@ -66,6 +67,10 @@ const NOTE_RE = /^[A-G][#b]?\d?$/
 const CHORD_RE = /^[A-G][#b]?.+/
 
 const mixedCache = new Map<string, { segs: TextSeg[]; width: number }>()
+
+export function clearMixedTextParsedCache() {
+	mixedCache.clear()
+}
 
 export function parseMixedTextCached(text: string): { segs: TextSeg[]; width: number } {
 	if (!mixedCache.has(text)) {

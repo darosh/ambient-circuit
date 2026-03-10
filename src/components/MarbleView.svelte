@@ -30,6 +30,7 @@
 		_mTmpMat = new Matrix4()
 	const _mEuler = new Euler()
 	const _POLY_ROT = new Matrix4().makeRotationZ(-Math.PI / 2)
+	const _mBasePos = new Vector3()
 
 	type Props = {
 		marble: MarbleInstance
@@ -62,13 +63,13 @@
 	const effectiveActive = $derived((marble.runtime.active ?? true) && (railRuntime.active ?? true))
 
 	// Apply rail render transform to marble position
-	const transformedPosition = $derived.by(() => {
-		const basePos = new Vector3(marble.position.x, marble.position.y, marble.position.z)
+	const transformedPosition = $derived.by((): [number, number, number] => {
+		_mBasePos.set(marble.position.x, marble.position.y, marble.position.z)
 		const matrix = renderVersion ? (railRuntime.renderMatrix as Matrix4 | undefined) : undefined
 		if (matrix) {
-			basePos.applyMatrix4(matrix)
+			_mBasePos.applyMatrix4(matrix)
 		}
-		return basePos
+		return [_mBasePos.x, _mBasePos.y, _mBasePos.z]
 	})
 
 	const plainMaterial = $derived(fxMarbles ? null : makeStandardMaterial(effectiveColor))
@@ -195,7 +196,7 @@
 	{#if type === 'ball'}
 		<T.Mesh
 			bind:ref={meshRef}
-			position={[transformedPosition.x, transformedPosition.y, transformedPosition.z]}
+			position={transformedPosition}
 			{rotation}
 			material={<Material>(fxMarbles ? marbleMaterial.mat : plainMaterial)}
 			onclick={(e: Event) => {
@@ -214,7 +215,7 @@
 	{:else if geometry}
 		<T.Mesh
 			bind:ref={meshRef}
-			position={[transformedPosition.x, transformedPosition.y, transformedPosition.z]}
+			position={transformedPosition}
 			{rotation}
 			{geometry}
 			material={<Material>(fxMarbles ? marbleMaterial.mat : plainMaterial)}

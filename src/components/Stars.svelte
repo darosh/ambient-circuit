@@ -4,7 +4,7 @@
 	import { BufferGeometry, BufferAttribute, Vector3, Spherical } from 'three/webgpu'
 	import { T } from '@threlte/core'
 	import type { Props } from '@threlte/core'
-	import { untrack } from 'svelte'
+	import { untrack, onDestroy } from 'svelte'
 
 	export type StarsProps = Props<Points> & {
 		radius?: number
@@ -64,6 +64,11 @@
 		blending: AdditiveBlending,
 		depthWrite: false,
 		vertexColors: false
+	})
+
+	onDestroy(() => {
+		geometry.dispose()
+		tslMaterial.dispose()
 	})
 </script>
 

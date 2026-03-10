@@ -159,23 +159,16 @@
 		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		_renderVersion // establish reactivity dependency
 
-		const position = new Vector3()
-		const rotation = new Euler()
-		let scale: Vector3 | null = new Vector3()
+		_renderOut.decompose(_rtPos, _rtQuat, _rtScale)
+		_rtRot.setFromQuaternion(_rtQuat)
 
-		const quaternion = new Quaternion()
-		_renderOut.decompose(position, quaternion, scale)
-		rotation.setFromQuaternion(quaternion)
-
-		if (!isScaled(scale)) {
-			scale = null
-		}
+		const scale = isScaled(_rtScale) ? _rtScale : null
 
 		return {
-			position: position.toArray() as [number, number, number],
-			rotation: [rotation.x, rotation.y, rotation.z] as [number, number, number],
+			position: _rtPos.toArray() as [number, number, number],
+			rotation: [_rtRot.x, _rtRot.y, _rtRot.z] as [number, number, number],
 			scale,
-			quaternion
+			quaternion: _rtQuat
 		}
 	})
 
@@ -278,6 +271,10 @@
 	const allMeshes = $derived([...mainMeshes, ...branchMeshes])
 
 	// Unified group transform (identity when no renderTransform)
+	const _rtPos = new Vector3()
+	const _rtRot = new Euler()
+	const _rtScale = new Vector3()
+	const _rtQuat = new Quaternion()
 	const _identityQuat = new Quaternion()
 	const _zeroTuple: [number, number, number] = [0, 0, 0]
 	const _scratchVec = new Vector3()

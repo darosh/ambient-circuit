@@ -4,6 +4,7 @@
 
 	import { MeshPhongNodeMaterial, DoubleSide } from 'three/webgpu'
 	import { reflector } from 'three/tsl'
+	import { onDestroy } from 'svelte'
 
 	const { scene: sa } = useScene()
 	const reflection = reflector({ resolutionScale: 1 })
@@ -16,6 +17,11 @@
 	})
 	floorMaterial.colorNode = reflection.mul(0.1)
 	// floorMaterial.emissiveNode = reflection.mul(0.1)
+
+	onDestroy(() => {
+		sa.remove(reflection.target)
+		floorMaterial.dispose()
+	})
 </script>
 
 <T.Mesh material={floorMaterial} position={[0, 0, 0]} receiveShadow={true}>
