@@ -85,7 +85,7 @@
 
 	// ─── Imperative mesh pool ────────────────────────────────────────────────────
 	// Plain Three.js meshes — zero Svelte context overhead
-	let groupRef = $state<Group | undefined>()
+	let groupRef = $state.raw<Group | undefined>()
 	let slotMeshes: Mesh[] = []
 
 	$effect(() => {

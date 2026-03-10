@@ -23,7 +23,7 @@
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 	// import LineText from './LineText.svelte'
 	import LineText from './TubeText.svelte'
-	import { onDestroy } from 'svelte'
+	import { onDestroy, untrack } from 'svelte'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
 	import { railMaterial } from '../lib/components/config'
 	import { computeRailNamePosition, scalePoints, scaleSplits } from '../lib/helpers/rail-geometry'
@@ -103,7 +103,9 @@
 	}
 
 	const resolved = $derived(resolveRail(toRailShapeConfig(railData)))
-	const plainMaterial = $derived(fxRails ? null : makeStandardMaterial(color))
+	let plainMaterial: ReturnType<typeof makeStandardMaterial> | null = untrack(() =>
+		fxRails ? null : makeStandardMaterial(color)
+	)
 
 	// Per-rail data written to shared material uniforms in onBeforeRender
 	const ud = { color: new Color(), initialIntensity: 0.7, intensity: 0, active: 1 }
@@ -120,7 +122,7 @@
 		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
 	})
 
-	let meshRefs = $state<(Mesh | undefined)[]>([])
+	let meshRefs = $state.raw<(Mesh | undefined)[]>([])
 
 	function setupRailMesh(mesh: Mesh) {
 		mesh.onBeforeRender = () => {
@@ -324,7 +326,7 @@
 	})
 
 	const { camera } = useThrelte()
-	let nameGroup = $state<Group | undefined>()
+	let nameGroup = $state.raw<Group | undefined>()
 	const beatGroups = $state<(Group | undefined)[]>([])
 
 	const _lookMat = new Matrix4()

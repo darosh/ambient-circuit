@@ -279,7 +279,12 @@
 					ins.runtime = undefined
 				}
 			}
-			// Rail runtime is on entity, cleared with sceneCtx
+			// Rail runtime is on entity, cleared below
+		}
+		// Clear rail runtime refs (renderMatrix etc. hold $state proxies)
+		for (const re of sceneCtx.rails) {
+			re.runtime.renderMatrix = undefined
+			re.runtime.renderVersion = 0
 		}
 
 		if (scene.globalBeatHandler) {

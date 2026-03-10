@@ -24,7 +24,7 @@
 	const BAR_COUNT = 16
 	const barGap = 0.05
 
-	let groupRef = $state<Group | undefined>()
+	let groupRef = $state.raw<Group | undefined>()
 	let barMeshes: Mesh[] = []
 
 	// Create bar meshes imperatively — zero Svelte context overhead

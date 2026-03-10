@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	import { onDestroy } from 'svelte'
+	import { onDestroy, untrack } from 'svelte'
 	import type { MarbleInstance } from '../lib/core/marble'
 	import { Color, Vector3, Euler, Matrix4, type Mesh } from 'three/webgpu'
 	import { marbleMaterial } from '../lib/components/config'
@@ -66,7 +66,9 @@
 		return [_mBasePos.x, _mBasePos.y, _mBasePos.z]
 	})
 
-	const plainMaterial = $derived(fxMarbles ? null : makeStandardMaterial(effectiveColor))
+	let plainMaterial: ReturnType<typeof makeStandardMaterial> | null = untrack(() =>
+		fxMarbles ? null : makeStandardMaterial(effectiveColor)
+	)
 
 	// Per-instance data written to shared material uniforms in onBeforeRender
 	const ud = { color: new Color(), initialIntensity: 0.51, intensity: 0, active: 1 }
@@ -86,7 +88,7 @@
 		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
 	})
 
-	let meshRef = $state<Mesh | undefined>()
+	let meshRef = $state.raw<Mesh | undefined>()
 
 	$effect(() => {
 		if (!meshRef) return

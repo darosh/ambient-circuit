@@ -11,7 +11,7 @@
 		createInstrumentFillGeometry,
 		type InstrumentType
 	} from '../lib/video/instrument-geometry'
-	import { onDestroy } from 'svelte'
+	import { onDestroy, untrack } from 'svelte'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
 	import { type Mesh, type Material } from 'three/webgpu'
 
@@ -74,7 +74,9 @@
 	const effectiveRays = $derived(instrument.runtime?.rays ?? (instrument as any).rays)
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
-	const plainMaterial = $derived(fxInstruments ? null : makeStandardMaterial(effectiveColor))
+	let plainMaterial: ReturnType<typeof makeStandardMaterial> | null = untrack(() =>
+		fxInstruments ? null : makeStandardMaterial(effectiveColor)
+	)
 	const effectiveVisible = $derived(instrument.runtime?.visible ?? true)
 	const effectiveActive = $derived(
 		(instrument.runtime?.active ?? instrument.active ?? true) && (railRuntime?.active ?? true)
@@ -103,8 +105,8 @@
 		ud.uvFreq = instrumentMaterial.getUvMax(0.1, uvMax)
 	})
 
-	let meshRef = $state<Mesh | undefined>()
-	let innerMeshRef = $state<Mesh | undefined>()
+	let meshRef = $state.raw<Mesh | undefined>()
+	let innerMeshRef = $state.raw<Mesh | undefined>()
 
 	function setupOnBeforeRender(mesh: Mesh) {
 		mesh.onBeforeRender = () => {

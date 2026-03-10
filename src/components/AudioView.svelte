@@ -53,9 +53,9 @@
 
 	const FLASH_DURATION = 0.5
 
-	let fxArr: ReturnType<typeof buildImpactMaterial>[] = $state([])
+	let fxArr: ReturnType<typeof buildImpactMaterial>[] = $state.raw([])
 	const animTimes: number[] = []
-	let analyzerMaterial = $state<MeshStandardMaterial | undefined>()
+	let analyzerMaterial = $state.raw<MeshStandardMaterial | undefined>()
 
 	$effect(() => {
 		if (analyzerMaterial) {
