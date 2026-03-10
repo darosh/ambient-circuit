@@ -1,0 +1,9 @@
+{
+  "sampleRate": 44100,
+  "channels": 1,
+  "duration": 2,
+  "samples": 88200,
+  "loopStartSample": 39590,
+  "loopEndSample": 44000,
+	"crossfade": 0.5
+}
