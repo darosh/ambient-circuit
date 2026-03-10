@@ -25,8 +25,8 @@ export const scene: SceneConfig = {
 			marbles: [
 				{
 					mode: 'ping-pong',
-					speed: 0.25,
-					duration: 3000,
+					speed: 0.125 / 2,
+					duration: 2000,
 					note: [60 - 12, 60 - 24, 60 + 4, 60 + 7 - 12]
 				}
 			],
@@ -52,7 +52,31 @@ export const scene: SceneConfig = {
 					audio: {
 						analyzer: 'fft',
 						generator: { sample: 'pad-astrid', params: { release: 10, volume: -12 } },
-						fx: [{ rnbo: 'gigaverb' }]
+						fx: [
+							{
+								rnbo: 'shimmerev',
+								params: {
+									octdamp: 46.578_125,
+									octvol: 100,
+									mix: 25,
+									damp: 17.734_375,
+									decay: 66.488_281_25,
+									pitchvol: 41.310_546_875,
+									revvol: 52.972_656_25,
+									jitter: 51.820_312_5,
+									size: 92.779_296_875,
+									diff: 83.087_890_625,
+									pitch: 12,
+									chorus: 10.419_921_875,
+									feedback: 86.345_703_125,
+									window: 250,
+									delay: 272.8125
+								},
+								preset: 'Organ'
+							},
+							{ tone: 'Volume', params: { volume: 12 } },
+							{ tone: 'Limiter', params: { threshold: -1 } }
+						]
 					}
 				}
 			]

@@ -121,6 +121,7 @@ export class CrossfadeLoopingSampler extends Sampler {
 		time?: Unit.Time,
 		velocity: number = 1
 	): this {
+		console.log(notes)
 		this.curve = 'linear'
 		const nowSec = now()
 		const startTime = time === undefined ? nowSec : this.toSeconds(time)
@@ -137,6 +138,10 @@ export class CrossfadeLoopingSampler extends Sampler {
 
 			// ─── Find buffer & playback rate ────────────────────────────────────────
 			const midiFloat = Frequency(note).toMidi()
+			if (!Number.isFinite(midiFloat)) {
+				console.warn('Infinite MIDI')
+				continue
+			}
 			const midi = Math.round(midiFloat)
 			const remainder = midiFloat - midi
 
@@ -209,7 +214,6 @@ export class CrossfadeLoopingSampler extends Sampler {
 
 			// Loop source starts from baked[0] (intro region) when intro begins fading,
 			// so they overlap for exactly crossDuration of audio time
-			// const loopSourceStart = startTime + crossStartOffset / playbackRate
 			const loopSourceStart = startTime + crossStartOffset / playbackRate
 			loopSource.start(loopSourceStart, 0)
 
