@@ -121,7 +121,6 @@ export class CrossfadeLoopingSampler extends Sampler {
 		time?: Unit.Time,
 		velocity: number = 1
 	): this {
-		console.log(notes)
 		this.curve = 'linear'
 		const nowSec = now()
 		const startTime = time === undefined ? nowSec : this.toSeconds(time)
