@@ -864,6 +864,12 @@ function listNodeParams(
 
 					break
 				}
+				case 'attack':
+				case 'release': {
+					max = 10
+
+					break
+				}
 				case 'envelope.attack':
 				case 'filterEnvelope.attack':
 				case 'envelope.decay':
