@@ -215,13 +215,21 @@
 		if (audioInitGuard) return
 		audioInitGuard = true
 
-		allAudioChains = await buildSceneAudio(
+		audioEngine.pending = buildSceneAudio(
 			audioEngine,
 			scene,
 			rails,
 			sceneCtx,
 			audioViewConfig?.defaultAnalyser
 		)
+		allAudioChains = await audioEngine.pending
+
+		if (audioEngine.disposed) {
+			disposeScene(audioEngine)
+			return
+		}
+
+		audioEngine.pending = undefined
 		audioEngineRef = audioEngine
 		audioInitialized = true
 	}
@@ -264,7 +272,8 @@
 
 	// Fire destroy handler on unmount
 	onDestroy(() => {
-		audioEngineRef = null
+		console.log('onDestroy', scene.id, audioEngine.chains.size)
+		// audioEngineRef = null
 		// Release $state proxy refs from module-level scene config
 		for (const railData of rails) {
 			if (railData.instruments) {

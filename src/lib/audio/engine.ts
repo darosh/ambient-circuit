@@ -48,7 +48,8 @@ export function createAudioEngine(): AudioEngine {
 		buses: new Map(),
 		masterChain: null,
 		sharedAnalyzer: null,
-		muted: engineCache.muted ?? false
+		muted: engineCache.muted ?? false,
+		disposed: false
 	}
 }
 
@@ -606,6 +607,8 @@ export function disposeChain(chain: AudioChain): void {
 	chain.generator = null
 	chain.fx = []
 	chain.analyzer = null
+	chain.nodePresets.clear()
+	chain.onParamChange = null
 }
 
 /**
@@ -622,12 +625,20 @@ function disposeBus(bus: AudioBus): void {
 	bus.output.disconnect()
 	bus.fx = []
 	bus.analyzer = null
+	bus.nodePresets.clear()
+	bus.onParamChange = null
 }
 
 /**
  * Dispose all chains, buses, master for scene change (keep ctx + masterGain alive)
  */
-export function disposeScene(engine: AudioEngine): void {
+export async function disposeScene(engine: AudioEngine) {
+	engine.disposed = true
+
+	if (engine.pending) {
+		await engine.pending
+	}
+
 	// Disconnect shared analyzer
 	if (engine.sharedAnalyzer) {
 		const webNode = getWebAudioNode(engine.sharedAnalyzer, engine)
@@ -1000,28 +1011,16 @@ async function loadRNBO(
 		const resp = await fetch(`./patchers/${resolvedPath}.json`)
 		patcher = await resp.json()
 		engine.rnboCache.set(path, patcher)
-
-		// Empty attempt to dispose RNBO device, reusing disposedRnbos instead
-		// if (!engine.rnboCache.get('empty')) {
-		// 	const resp = await fetch(`./patchers/empty.json`)
-		// 	const patcher = await resp.json()
-		// 	engine.rnboCache.set('empty', patcher)
-		// }
 	}
 
-	const ind = (disposedRnbos as unknown as { __patcher: unknown }[]).findIndex(
-		(d) => d.__patcher === patcher
-	)
-	let device: Device | undefined
-
-	if (ind === -1) {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		device = await (createDevice as any)({ context: engine.ctx, patcher: patcher as IPatcher })
-		;(device as unknown as { __patcher: unknown }).__patcher = patcher
-	} else {
-		device = disposedRnbos[ind]
-		disposedRnbos.splice(ind, 1)
-	}
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const device: Device = await (createDevice as any)({
+		context: engine.ctx,
+		patcher: patcher as IPatcher
+	})
+	// console.log(device)
+	// rnboDeviceCount++
+	// console.log(`[rnbo] create → ${rnboDeviceCount} devices`)
 
 	// Extract and apply presets
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1270,23 +1269,14 @@ function getWebAudioNode(node: AudioNodeLike, engine: AudioEngine): AudioNode | 
 	return getOutputNode(node, engine)
 }
 
-const disposedRnbos: Device[] = []
+// let rnboDeviceCount = 0
 
 function disposeNode(node: ToneAudioNode | Device): void {
 	if (isDevice(node)) {
 		node.node.disconnect()
-		node.parameterChangeEvent.removeAllSubscriptions()
-
-		/** Does not work when reusing device by patch
-		for (const { id } of node.dataBufferDescriptions) {
-			node.releaseDataBuffer(id).then()
-		}
-		**/
-
-		// empty attempt using disposedRnbos instead
-		// createDevice({context: node.context, patcher: <IPatcher>engineCache.rnboCache?.get('empty')}, node).then()
-		// TODO: parameterChangeEvent subscription stops working after device reuse, investigate / report bug
-		disposedRnbos.push(node)
+		node.destroy()
+		// rnboDeviceCount--
+		// console.log(`[rnbo] destroy → ${rnboDeviceCount} devices`)
 	} else {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const n = node as any

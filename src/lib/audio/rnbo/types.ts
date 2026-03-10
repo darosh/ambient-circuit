@@ -92,4 +92,5 @@ export interface Device {
 	setDataBuffer(id: string, buffer: any): void
 	releaseDataBuffer(id: string): Promise<{ data: Float32Array; typeDesc: string }>
 	loadDataBufferDependencies(deps: ExternalDataInfo[]): Promise<void>
+	destroy(): void
 }

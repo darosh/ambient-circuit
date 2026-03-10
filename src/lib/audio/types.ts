@@ -123,4 +123,6 @@ export type AudioEngine = {
 	masterChain: AudioBus | null
 	sharedAnalyzer: ToneAudioNode | null
 	muted: boolean
+	disposed: boolean
+	pending?: Promise<AudioChain[]>
 }
