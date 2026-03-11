@@ -65,9 +65,9 @@
 		"gen:patchers": "node scripts/patchers.js",
 		"gen:sample": "npx tsx scripts/sample-meta.ts && npx tsx scripts/samples.ts && prettier --write ./src/lib/audio/samples.ts",
 		"gen:svg-paths": "npx tsx scripts/svg-paths.ts",
+		"postinstall": "node -e \"const fs=require('fs'),f='node_modules/@types/three/src/cameras/Camera.d.ts',c=fs.readFileSync(f,'utf8');fs.writeFileSync(f,c.replace('readonly isCamera: boolean','readonly isCamera: true'))\"",
 		"preview": "vite preview",
-		"test": "vitest",
-		"postinstall": "node -e \"const fs=require('fs'),f='node_modules/@types/three/src/cameras/Camera.d.ts',c=fs.readFileSync(f,'utf8');fs.writeFileSync(f,c.replace('readonly isCamera: boolean','readonly isCamera: true'))\""
+		"test": "vitest"
 	},
 	"sideEffects": false,
 	"type": "module"
