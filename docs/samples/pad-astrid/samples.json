@@ -2,5 +2,13 @@
   "sampleRate": 44100,
   "channels": 2,
   "duration": 3.8407256235827663,
-  "samples": 169376
+  "samples": 169376,
+  "crossfade": 0.5,
+  "detect": {
+    "amplitudeTolerance": 0.4,
+    "start": 0.2,
+    "end": 0.5
+  },
+  "loopStartSample": 35686,
+  "loopEndSample": 79011
 }

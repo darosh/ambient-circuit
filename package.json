@@ -1,6 +1,6 @@
 {
 	"name": "ambient-circuit",
-	"version": "0.0.15",
+	"version": "0.0.16",
 	"dependencies": {
 		"@dimforge/rapier3d-compat": "^0.19.3",
 		"@rnbo/js": "^1.4.2",
