@@ -1,7 +1,8 @@
 # TODO (no AI)
 
-- [ ] heap check
 - [ ] Dust?
+- [ ] CRT?
+- [ ] global peak meter, stereo?
 - [ ] https://threlte.xyz/docs/reference/extras/fake-glow-material
 - [ ] https://threlte.xyz/docs/reference/extras/transitions
 - [ ] https://threlte.xyz/docs/reference/extras/uv-material
@@ -27,6 +28,8 @@
   - [x] scroll presets
   - [x] scroll chains
   - [ ] remove limit, use available space
+- [x] wireframe
+- [x] heap check
 - [x] RNBO scene
 - [x] RNBO mono export
 - [x] RNBO giga dry type
