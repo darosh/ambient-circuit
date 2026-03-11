@@ -9,7 +9,7 @@
 	import { interactivity, Align } from '@threlte/extras'
 	import type { AudioEngine, AudioChain } from '../lib/audio'
 	import { resolveAnalyzerType, getChainLabel } from '../lib/audio/engine'
-	import { buildImpactMaterial } from '../lib/video/material-impact'
+	import { buildImpactMaterial, createImpactMaterialCached } from '../lib/video/material-impact'
 	import { createInstrumentGeometry, type ArrowKind } from '../lib/video/instrument-geometry'
 	import AnalyserView from './AnalyserView.svelte'
 	import SequencerView, { type NoteEvent } from './SequencerView.svelte'
@@ -341,7 +341,16 @@
 	}
 	const menuItemStates: MenuItemState[] = MENU_ITEMS.map(({ label }) => ({
 		label,
-		fx: buildImpactMaterial(baseColor, baseColor, 1, true, 0.9, 0.5, 1.3),
+		fx: createImpactMaterialCached(
+			`hud-menu-${label}`,
+			baseColor,
+			baseColor,
+			1,
+			true,
+			0.9,
+			0.5,
+			1.3
+		),
 		hovered: false,
 		animTime: 0
 	}))
@@ -396,8 +405,26 @@
 
 	const menuItems = $derived(MENU_ITEMS.filter((item) => !item.condition || item.condition()))
 
-	const textMat = $derived(buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.2, 2))
-	const textMatLarge = $derived(buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.2, 2))
+	const textMat = createImpactMaterialCached(
+		'hud-text',
+		untrack(() => baseColor),
+		untrack(() => baseColor),
+		0.5,
+		true,
+		0.9,
+		0.2,
+		2
+	)
+	const textMatLarge = createImpactMaterialCached(
+		'hud-text-large',
+		untrack(() => baseColor),
+		untrack(() => baseColor),
+		0.5,
+		true,
+		0.9,
+		0.2,
+		2
+	)
 
 	function onMouseActivity() {
 		idleTimer = 0
@@ -544,8 +571,8 @@
 		hovered: boolean
 	}
 
-	const btnStates: BtnState[] = btnDefs.map(() => ({
-		fx: buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.3, 2),
+	const btnStates: BtnState[] = btnDefs.map((_, i) => ({
+		fx: createImpactMaterialCached(`hud-btn-${i}`, baseColor, baseColor, 0.5, true, 0.9, 0.3, 2),
 		animTime: 0,
 		spinFrom: 0,
 		spinTo: 0,
@@ -635,14 +662,21 @@
 			}
 		}
 		if (changed) {
-			// Dispose old row materials
-			for (const s of rowStates) s.fx.mat.dispose()
 			prevChainRefs = chains
 			const nextStates: RowState[] = []
 			const nextRows: typeof rows = []
 			const nextLabels: string[] = []
-			for (const chain of chains) {
-				const fx = buildImpactMaterial(baseColor, baseColor, 0.5, true, 0.9, 0.5, 2)
+			for (const [ci, chain] of chains.entries()) {
+				const fx = createImpactMaterialCached(
+					`hud-seq-row-${chain.config.id ?? ci}`,
+					baseColor,
+					baseColor,
+					0.5,
+					true,
+					0.9,
+					0.5,
+					2
+				)
 				nextStates.push({ chain: chain, fx, animTime: 0, lastSeen: 0 })
 				nextRows.push({ chain: chain, fx })
 				nextLabels.push('.')
@@ -807,11 +841,11 @@
 	onDestroy(() => {
 		log('destroyed')
 
-		for (const s of rowStates) s.fx.mat.dispose()
-		for (const b of btnStates) b.fx.mat.dispose()
-		for (const ms of menuItemStates) ms.fx.mat.dispose()
-		textMat?.mat?.dispose()
-		textMatLarge?.mat?.dispose()
+		for (const s of rowStates) s.fx.mat.userData.refCount--
+		for (const b of btnStates) b.fx.mat.userData.refCount--
+		for (const ms of menuItemStates) ms.fx.mat.userData.refCount--
+		textMat.mat.userData.refCount--
+		textMatLarge.mat.userData.refCount--
 	})
 
 	const anal = $derived(rows?.[0]?.chain?.analyzer)
@@ -963,6 +997,7 @@
 	{#if sequencerMode && showTracker && seqEvents[i] && seqWidth > 0}
 		<T.Group position={[seqX, y - sphereR / 2 + sphereR * 0.075, 0]}>
 			<SequencerView
+				id={row.chain.config.id ?? String(i)}
 				events={seqEvents[i]}
 				mode={sequencerMode}
 				width={seqWidth - reduceWidth}

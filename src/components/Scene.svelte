@@ -42,6 +42,7 @@
 	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
 	import { GridHelperIO } from '../lib/three/GridHelperIO'
 	import { debug } from 'debug'
+	import { disposeSharedMaterials } from '../lib/components/config'
 
 	const log = debug('<Scene>')
 
@@ -319,6 +320,7 @@
 		// Dispose audio chains
 		allAudioChains = []
 		disposeScene(audioEngine)
+		disposeSharedMaterials()
 	})
 
 	function applyMutations(mutations: MarbleMutations) {
@@ -521,6 +523,14 @@
 		selectedAudioChain = undefined
 	}
  */
+
+	// Derived selection state — avoids direct selectedEntity reads inside {#each} loops
+	// (cross-scope reactive subscriptions from {#each} to parent App.svelte state leak
+	//  geometry references when scene unmounts; $derived in Scene.svelte scope cleans up cleanly)
+	const _selType = $derived(selectedEntity?.type ?? null)
+	const _selRailIdx = $derived(selectedEntity?.railIdx ?? -1)
+	const _selInstIdx = $derived(_selType === 'instrument' ? (selectedEntity?.idx ?? null) : null)
+	const _selMarbleIdx = $derived(_selType === 'marble' ? (selectedEntity?.idx ?? -1) : -1)
 </script>
 
 <!-- Invisible plane for deselect on miss -->
@@ -574,9 +584,8 @@
 				renderPlayOnly={scene.renderPlayOnly}
 				textOrientation={scene.textOrientation ?? (scene.view ? [0, 0, 1] : undefined)}
 				railIdx={railIndex}
-				selectedInstrumentIdx={selectedEntity?.type === 'instrument' &&
-				selectedEntity.railIdx === railIndex
-					? selectedEntity.idx
+				selectedInstrumentIdx={_selType === 'instrument' && _selRailIdx === railIndex
+					? _selInstIdx
 					: null}
 				{onSelectInstrument}
 				bind:renderVersion={railRenderVersions[railIndex]}
@@ -596,9 +605,7 @@
 				color={rails[railIndex].color || '#ffffff'}
 				{wireframe}
 				{fxMarbles}
-				selected={selectedEntity?.type === 'marble' &&
-					selectedEntity.railIdx === railIndex &&
-					selectedEntity.idx === idx}
+				selected={_selType === 'marble' && _selRailIdx === railIndex && _selMarbleIdx === idx}
 				onselect={() => onSelectMarble(railIndex, idx)}
 			/>
 		{/if}

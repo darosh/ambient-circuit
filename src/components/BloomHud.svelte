@@ -89,6 +89,7 @@
 		return () => {
 			scenePass.dispose()
 			hudPass?.dispose()
+			postProcessing.dispose()
 		}
 	})
 

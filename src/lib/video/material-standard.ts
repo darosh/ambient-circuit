@@ -1,4 +1,7 @@
 import { MeshStandardMaterial } from 'three/webgpu'
+import { debug } from 'debug'
+
+const log = debug('mat:std')
 
 // Material cache: key = color hex string
 const materialCache = new Map<string, MeshStandardMaterial>()
@@ -8,23 +11,39 @@ const materialCache = new Map<string, MeshStandardMaterial>()
  */
 export function createStandardMaterialCached(id: string, color: string): MeshStandardMaterial {
 	const cached = materialCache.get(id)
-	if (cached) return cached
+	if (cached) {
+		log('reusing', id)
+		cached.userData.refCount++
+		return cached
+	}
 
-	const material = makeStandardMaterial(color)
+	const material = makeStandardMaterial(color, true)
+	material.name = id
+	material.userData.refCount = 1
+	log('creating', id)
 	materialCache.set(id, material)
 	return material
 }
 
 /**
- * Clear material cache (call on cleanup)
+ * Sweep material cache — dispose only entries with refCount === 0
  */
-export function clearStandardMaterialCache(): void {
-	for (const material of materialCache.values()) {
-		material.dispose()
+export function clearStandardMaterialCache(all = false): void {
+	for (const [key, material] of materialCache.entries()) {
+		if (!material.userData.refCount || all) {
+			log('disposing', key)
+			material.dispose()
+			materialCache.delete(key)
+		}
 	}
-	materialCache.clear()
+
+	log('cached materials', materialCache.size)
 }
 
-export function makeStandardMaterial(color: string) {
+export function makeStandardMaterial(color: string, cached = false) {
+	if (!cached) {
+		log('building')
+	}
+
 	return new MeshStandardMaterial({ color })
 }

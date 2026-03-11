@@ -6,6 +6,7 @@ localStorage.debug = '0'
 // localStorage.debug = 'geo:*,<*'
 // localStorage.debug = '<*'
 // localStorage.debug = 'geo:*'
+// localStorage.debug = 'mat:*'
 
 const app = mount(App, {
 	target: <Element>document.querySelector('#app')

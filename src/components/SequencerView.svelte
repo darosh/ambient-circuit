@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
 	import { SphereGeometry, Mesh, Group, BufferGeometry } from 'three/webgpu'
-	import { buildImpactMaterial } from '../lib/video/material-impact'
+	import { createImpactMaterialCached } from '../lib/video/material-impact'
 	import { getCachedMixedGeometry } from '../lib/video/geo-geometry'
 	import { parseMixedTextCached } from '../lib/video/mixed-text'
 	import { onDestroy } from 'svelte'
@@ -17,6 +17,7 @@
 	const WORD_SPACE = 0.33
 
 	let {
+		id = '',
 		events,
 		mode = 'time',
 		width,
@@ -29,6 +30,7 @@
 		colors = false,
 		freeze = false
 	}: {
+		id?: string
 		events: NoteEvent[]
 		mode?: 'time' | 'compact'
 		width: number
@@ -89,8 +91,17 @@
 	let fillCount = 0
 
 	// Pre-allocate material pool — stable indices, never reallocated
-	const pool = Array.from({ length: MAX_SLOTS }, () =>
-		buildImpactMaterial(baseColor, baseColor, 0, true, 0.9, 0.5, 0.5)
+	const pool = Array.from({ length: MAX_SLOTS }, (_, i) =>
+		createImpactMaterialCached(
+			`hud-seq-pool-${id}-${i}`,
+			baseColor,
+			baseColor,
+			0,
+			true,
+			0.9,
+			0.5,
+			0.5
+		)
 	)
 
 	// ─── Imperative mesh pool ────────────────────────────────────────────────────
@@ -327,7 +338,7 @@
 	})
 
 	onDestroy(() => {
-		for (const p of pool) p.mat.dispose()
+		for (const p of pool) p.mat.userData.refCount--
 		for (let i = 0; i < MAX_SLOTS; i++) setSlotGeom(i, undefined)
 	})
 </script>

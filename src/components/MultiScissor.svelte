@@ -307,10 +307,13 @@
 			for (const oc of orbitControls) oc.dispose()
 			orbitControls.length = 0
 			sceneCtx.view = undefined
+			renderCam.removeFromParent()
+			renderCam.clear()
 			resetViewport()
 			_atlasTarget?.dispose()
 			_atlasTarget = null
 			_atlasTexNode = null
+			postProcessing.dispose()
 		}
 	})
 

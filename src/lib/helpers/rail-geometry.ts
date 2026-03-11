@@ -8,7 +8,10 @@ const log = debug('geo:rail')
 
 export type RailMesh = { geometry: BufferGeometry; opacity: number }
 
-export function buildRailCurvePath(points: ResolvedPoint[], skipFirst = 0): CurvePath<Vector3> | null {
+export function buildRailCurvePath(
+	points: ResolvedPoint[],
+	skipFirst = 0
+): CurvePath<Vector3> | null {
 	const path = new CurvePath<Vector3>()
 	for (let i = skipFirst; i < points.length - 1; i++) {
 		const p0 = toV3(points[i].p)
@@ -40,7 +43,7 @@ function makeTube(
 	}
 }
 
-export function disposeRailGeometry(allMeshes : RailMesh[]) {
+export function disposeRailGeometry(allMeshes: RailMesh[]) {
 	for (const mesh of allMeshes) {
 		log('disposing', mesh.geometry.name)
 		mesh.geometry.dispose()

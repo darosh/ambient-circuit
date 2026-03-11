@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useThrelte } from '@threlte/core'
-	import { buildImpactMaterial } from '../lib/video/material-impact'
+	import { createImpactMaterialCached } from '../lib/video/material-impact'
 	import { panelState } from '../lib/components/hud/panel-state.svelte'
 	import GeoText from './GeoText.svelte'
 	import { onDestroy } from 'svelte'
@@ -165,16 +165,18 @@
 
 	// --- Materials ---
 	const _c = '#ffffff'
-	const headerFx = buildImpactMaterial(_c, _c, 0.9, true, 0.9, 0.6, 2.5)
-	const textFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
-	const closeFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
-	const linkFx = buildImpactMaterial(_c, _c, 0.7, true, 0.9, 0.5, 2.5)
+	const headerFx = createImpactMaterialCached('hud-help-header', _c, _c, 0.9, true, 0.9, 0.6, 2.5)
+	const textFx = createImpactMaterialCached('hud-help-text', _c, _c, 0.5, true, 0.9, 0.3, 2)
+	const closeFx = createImpactMaterialCached('hud-help-close', _c, _c, 0.5, true, 0.9, 0.3, 2)
+	const linkFx = createImpactMaterialCached('hud-help-link', _c, _c, 0.7, true, 0.9, 0.5, 2.5)
 
 	// Per-link materials to isolate hover state
 	const MAX_LINKS = 8
-	const linkFxPool: ReturnType<typeof buildImpactMaterial>[] = []
+	const linkFxPool: ReturnType<typeof createImpactMaterialCached>[] = []
 	for (let i = 0; i < MAX_LINKS; i++) {
-		linkFxPool.push(buildImpactMaterial(_c, _c, 0.7, true, 0.9, 0.5, 2.5))
+		linkFxPool.push(
+			createImpactMaterialCached(`hud-help-link-${i}`, _c, _c, 0.7, true, 0.9, 0.5, 2.5)
+		)
 	}
 
 	$effect(() => {
@@ -223,11 +225,11 @@
 
 	onDestroy(() => {
 		panelState.pointerLock = false
-		headerFx.mat.dispose()
-		textFx.mat.dispose()
-		closeFx.mat.dispose()
-		linkFx.mat.dispose()
-		for (const fx of linkFxPool) fx.mat.dispose()
+		headerFx.mat.userData.refCount--
+		textFx.mat.userData.refCount--
+		closeFx.mat.userData.refCount--
+		linkFx.mat.userData.refCount--
+		for (const fx of linkFxPool) fx.mat.userData.refCount--
 	})
 
 	const UP = '▵'

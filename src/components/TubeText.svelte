@@ -34,8 +34,18 @@
 		untrack(() => id),
 		untrack(() => color)
 	)
-	const plainMaterial = $derived(fx ? null : createStandardMaterialCached(id, color))
+
+	// plainMaterial: tracked via $effect for proper refCount acquire/release
+	let plainMaterial = $state.raw<ReturnType<typeof createStandardMaterialCached> | null>(null)
+	$effect(() => {
+		const mat = fx ? null : createStandardMaterialCached(id, color)
+		plainMaterial = mat
+		return () => {
+			if (mat) mat.userData.refCount--
+		}
+	})
 	const useMaterial = $derived(fx ? material?.mat : plainMaterial)
+
 	const colorValue = new Color()
 
 	$effect(() => {

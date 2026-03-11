@@ -15,7 +15,7 @@
 	import { cfgName, genName, setBusFxParam, soloChain, triggerChain } from '../lib/audio/engine'
 	import type { ParamInfo } from '../lib/audio/engine'
 	import { readChainParams, readBusParams } from '../lib/helpers/audio-params'
-	import { buildImpactMaterial } from '../lib/video/material-impact'
+	import { createImpactMaterialCached } from '../lib/video/material-impact'
 	import { panelState } from '../lib/components/hud/panel-state.svelte'
 	import GeoText from './GeoText.svelte'
 	import { onDestroy } from 'svelte'
@@ -190,43 +190,69 @@
 
 	// --- Materials (init with placeholder color, $effect syncs baseColor) ---
 	const _c = '#ffffff'
-	const textFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
-	const sliderFillFx = buildImpactMaterial(_c, _c, 0.6, true, 0.9, 0.3, 1.5)
-	const thumbFx = buildImpactMaterial(_c, _c, 0.8, true, 0.9, 0.5, 2)
-	const activeFx = buildImpactMaterial(_c, _c, 0.9, true, 0.9, 0.6, 2.5)
-	const analyzerFx = buildImpactMaterial(_c, _c, 0.9, true, 0.9, 0.6, 2.5)
-	const closeFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
-	const copyFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
-	const pasteFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
-	const trigFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
-	const soloFx = buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2)
+	const textFx = createImpactMaterialCached('hud-param-text', _c, _c, 0.5, true, 0.9, 0.3, 2)
+	const sliderFillFx = createImpactMaterialCached(
+		'hud-param-slider-fill',
+		_c,
+		_c,
+		0.6,
+		true,
+		0.9,
+		0.3,
+		1.5
+	)
+	const thumbFx = createImpactMaterialCached('hud-param-thumb', _c, _c, 0.8, true, 0.9, 0.5, 2)
+	const activeFx = createImpactMaterialCached('hud-param-active', _c, _c, 0.9, true, 0.9, 0.6, 2.5)
+	const analyzerFx = createImpactMaterialCached(
+		'hud-param-analyzer',
+		_c,
+		_c,
+		0.9,
+		true,
+		0.9,
+		0.6,
+		2.5
+	)
+	const closeFx = createImpactMaterialCached('hud-param-close', _c, _c, 0.5, true, 0.9, 0.3, 2)
+	const copyFx = createImpactMaterialCached('hud-param-copy', _c, _c, 0.5, true, 0.9, 0.3, 2)
+	const pasteFx = createImpactMaterialCached('hud-param-paste', _c, _c, 0.5, true, 0.9, 0.3, 2)
+	const trigFx = createImpactMaterialCached('hud-param-trig', _c, _c, 0.5, true, 0.9, 0.3, 2)
+	const soloFx = createImpactMaterialCached('hud-param-solo', _c, _c, 0.5, true, 0.9, 0.3, 2)
 
 	// Per-tab materials (avoid shared hover highlight)
 	const MAX_TABS = 8
-	const tabFxPool: ReturnType<typeof buildImpactMaterial>[] = []
+	const tabFxPool: ReturnType<typeof createImpactMaterialCached>[] = []
 	for (let i = 0; i < MAX_TABS; i++) {
-		tabFxPool.push(buildImpactMaterial(_c, _c, 0.7, true, 0.9, 0.4, 2))
+		tabFxPool.push(createImpactMaterialCached(`hud-param-tab-${i}`, _c, _c, 0.7, true, 0.9, 0.4, 2))
 	}
 
 	// Per-sidebar-item materials (avoid shared hover highlight)
 	const MAX_SIDEBAR = 20
-	const sidebarFxPool: ReturnType<typeof buildImpactMaterial>[] = []
+	const sidebarFxPool: ReturnType<typeof createImpactMaterialCached>[] = []
 	for (let i = 0; i < MAX_SIDEBAR; i++) {
-		sidebarFxPool.push(buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2))
+		sidebarFxPool.push(
+			createImpactMaterialCached(`hud-param-sidebar-${i}`, _c, _c, 0.5, true, 0.9, 0.3, 2)
+		)
 	}
 
 	// Per +/- button and preset materials
 	const MAX_PARAM_ROWS = 16
-	const plusFxPool: ReturnType<typeof buildImpactMaterial>[] = []
-	const minusFxPool: ReturnType<typeof buildImpactMaterial>[] = []
+	const plusFxPool: ReturnType<typeof createImpactMaterialCached>[] = []
+	const minusFxPool: ReturnType<typeof createImpactMaterialCached>[] = []
 	for (let i = 0; i < MAX_PARAM_ROWS; i++) {
-		plusFxPool.push(buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2))
-		minusFxPool.push(buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2))
+		plusFxPool.push(
+			createImpactMaterialCached(`hud-param-plus-${i}`, _c, _c, 0.5, true, 0.9, 0.3, 2)
+		)
+		minusFxPool.push(
+			createImpactMaterialCached(`hud-param-minus-${i}`, _c, _c, 0.5, true, 0.9, 0.3, 2)
+		)
 	}
 	const MAX_PRESETS = 16
-	const presetFxPool: ReturnType<typeof buildImpactMaterial>[] = []
+	const presetFxPool: ReturnType<typeof createImpactMaterialCached>[] = []
 	for (let i = 0; i < MAX_PRESETS; i++) {
-		presetFxPool.push(buildImpactMaterial(_c, _c, 0.5, true, 0.9, 0.3, 2))
+		presetFxPool.push(
+			createImpactMaterialCached(`hud-param-preset-${i}`, _c, _c, 0.5, true, 0.9, 0.3, 2)
+		)
 	}
 
 	let copyFlash = 0
@@ -873,19 +899,21 @@
 
 	onDestroy(() => {
 		panelState.pointerLock = false
-		textFx.mat.dispose()
-		for (const fx of tabFxPool) fx.mat.dispose()
-		sliderFillFx.mat.dispose()
-		thumbFx.mat.dispose()
-		activeFx.mat.dispose()
-		copyFx.mat.dispose()
-		pasteFx.mat.dispose()
-		trigFx.mat.dispose()
-		soloFx.mat.dispose()
-		for (const fx of sidebarFxPool) fx.mat.dispose()
-		for (const fx of plusFxPool) fx.mat.dispose()
-		for (const fx of minusFxPool) fx.mat.dispose()
-		for (const fx of presetFxPool) fx.mat.dispose()
+		textFx.mat.userData.refCount--
+		sliderFillFx.mat.userData.refCount--
+		thumbFx.mat.userData.refCount--
+		activeFx.mat.userData.refCount--
+		copyFx.mat.userData.refCount--
+		pasteFx.mat.userData.refCount--
+		trigFx.mat.userData.refCount--
+		soloFx.mat.userData.refCount--
+		analyzerFx.mat.userData.refCount--
+		closeFx.mat.userData.refCount--
+		for (const fx of tabFxPool) fx.mat.userData.refCount--
+		for (const fx of sidebarFxPool) fx.mat.userData.refCount--
+		for (const fx of plusFxPool) fx.mat.userData.refCount--
+		for (const fx of minusFxPool) fx.mat.userData.refCount--
+		for (const fx of presetFxPool) fx.mat.userData.refCount--
 	})
 </script>
 

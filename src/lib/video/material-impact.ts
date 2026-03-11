@@ -2,47 +2,66 @@
 
 import { MeshBasicNodeMaterial, DoubleSide } from 'three/webgpu'
 import { luminance, uniform, color, Fn, vec4, float } from 'three/tsl'
+import { debug } from 'debug'
+
+const log = debug('mat:impact')
 
 const BASE_INTENSITY = 0.8
 const PEAK_INTENSITY = 2
 
 const materialCache = new Map<string, ReturnType<typeof buildImpactMaterial>>()
 
-function getMaterialCacheKey(
-	baseHexColor: string,
-	impactHexColor: string,
-	alpha: number,
-	transparent: boolean
-): string {
-	return `${baseHexColor}_${impactHexColor}_${alpha}_${transparent}`
-}
-
 /**
  * Create a glowing impact material (WebGPU/TSL) with memoization.
+ * `id` is the semantic cache key — e.g. 'hud-help-header', 'hud-param-tab-0'.
+ * Color/alpha params only apply on first call; subsequent calls return cached instance.
  */
 export function createImpactMaterialCached(
+	id: string,
 	baseHexColor: string,
 	impactHexColor?: string,
 	alpha = 1,
-	transparent = true
+	transparent = true,
+	colorPart?: number,
+	baseIntensity?: number,
+	peakIntensity?: number
 ) {
-	const key = getMaterialCacheKey(baseHexColor, impactHexColor ?? baseHexColor, alpha, transparent)
-	const cached = materialCache.get(key)
-	if (cached) return cached
+	const cached = materialCache.get(id)
+	if (cached) {
+		log('reusing', id)
+		cached.mat.userData.refCount++
+		return cached
+	}
 
-	const material = buildImpactMaterial(baseHexColor, impactHexColor, alpha, transparent)
-	materialCache.set(key, material)
+	const material = buildImpactMaterial(
+		baseHexColor,
+		impactHexColor,
+		alpha,
+		transparent,
+		colorPart,
+		baseIntensity,
+		peakIntensity,
+		true
+	)
+	material.mat.name = id
+	material.mat.userData.refCount = 1
+	log('creating', id)
+	materialCache.set(id, material)
 	return material
 }
 
 /**
- * Clear material cache (call on cleanup)
+ * Sweep material cache — dispose only entries with refCount === 0
  */
-export function clearImpactMaterialCache(): void {
-	for (const { mat } of materialCache.values()) {
-		mat.dispose()
+export function clearImpactMaterialCache(all = false): void {
+	for (const [key, { mat }] of materialCache.entries()) {
+		if (!mat.userData.refCount || all) {
+			log('disposing', key)
+			mat.dispose()
+			materialCache.delete(key)
+		}
 	}
-	materialCache.clear()
+	log('cached materials', materialCache.size)
 }
 
 /**
@@ -58,8 +77,12 @@ export function buildImpactMaterial(
 	transparent = true,
 	colorPart = 0.75,
 	baseIntensity = BASE_INTENSITY,
-	peakIntensity = PEAK_INTENSITY
+	peakIntensity = PEAK_INTENSITY,
+	cached = false
 ) {
+	if (!cached) {
+		log('building')
+	}
 	const emissiveColor = uniform(color(baseHexColor))
 	const impactColor = uniform(color(impactHexColor ?? baseHexColor))
 	/* eslint-disable @typescript-eslint/no-explicit-any */

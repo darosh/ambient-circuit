@@ -25,6 +25,8 @@
 	import { clearGeoTextCache } from './lib/video/geo-geometry'
 	import { clearTubeTextCache } from './lib/video/text-geometry'
 	import { clearMixedTextParsedCache } from './lib/video/mixed-text'
+	import { clearImpactMaterialCache } from './lib/video/material-impact'
+	import { clearStandardMaterialCache } from './lib/video/material-standard'
 	import Wrap from './components/Wrap.svelte'
 	import { createKeydownHandler } from './lib/helpers/keyboard'
 	import { onMount, tick, untrack } from 'svelte'
@@ -85,7 +87,6 @@
 	let selectedAudioChain = $state.raw<AudioChain | undefined>()
 	let allAudioChains = $state.raw<AudioChain[]>([])
 	let audioEngineRef = $state.raw<AudioEngine | null>(null)
-	let rendererRef: WebGPURenderer | null = null
 
 	onMount(async () => {
 		fontCache.font = <Font>await font
@@ -149,6 +150,8 @@
 		clearGeoTextCache()
 		clearTubeTextCache()
 		clearMixedTextParsedCache()
+		clearImpactMaterialCache()
+		clearStandardMaterialCache()
 	}
 
 	// eslint-disable-next-line svelte/prefer-writable-derived
@@ -166,9 +169,6 @@
 		}
 
 		globalThis.location.hash = sceneId
-		// Clear WebGPU renderer's internal RenderObject cache to release disposed geometry buffers
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		if (rendererRef) (rendererRef as any)._objects?.dispose()
 		selectedEntity = null
 	})
 
@@ -356,7 +356,6 @@
 
 		// renderer.inspector = new Inspector()
 		renderer.dispose = () => {}
-		rendererRef = renderer
 
 		return renderer
 	}}
