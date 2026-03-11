@@ -1,5 +1,95 @@
 import type { ResolvedPoint, ResolvedSplit } from '../core/rail'
-import { Vector3 } from 'three/webgpu'
+import { type BufferGeometry, CurvePath, LineCurve3, Vector3 } from 'three/webgpu'
+import { buildSegmentCurve, toV3 } from '../core/rail-curve'
+import { buildTubeGeometry } from '../video/tube-geometry'
+import { debug } from 'debug'
+
+const log = debug('geo:rail')
+
+export type RailMesh = { geometry: BufferGeometry; opacity: number }
+
+export function buildRailCurvePath(points: ResolvedPoint[], skipFirst = 0): CurvePath<Vector3> | null {
+	const path = new CurvePath<Vector3>()
+	for (let i = skipFirst; i < points.length - 1; i++) {
+		const p0 = toV3(points[i].p)
+		const p1 = toV3(points[i + 1].p)
+		if (p0.distanceTo(p1) < 1e-6) continue
+		const bezier = buildSegmentCurve(points, i)
+		path.add(bezier ?? new LineCurve3(p0, p1))
+	}
+	return path.curves.length > 0 ? path : null
+}
+
+function makeTube(
+	curvePath: CurvePath<Vector3> | null,
+	width: number,
+	opacity: number,
+	closed = false
+): RailMesh | null {
+	if (!curvePath) return null
+	try {
+		const radius = Math.max(width / 2, 0.001)
+		const uvScale = 0.15 / radius
+		return {
+			geometry: buildTubeGeometry(curvePath.curves, radius, 8, 12, closed, true, uvScale),
+			opacity
+		}
+	} catch (error) {
+		console.warn('Failed to create tube:', error)
+		return null
+	}
+}
+
+export function disposeRailGeometry(allMeshes : RailMesh[]) {
+	for (const mesh of allMeshes) {
+		log('disposing', mesh.geometry.name)
+		mesh.geometry.dispose()
+	}
+}
+
+export function buildRailGeometry(
+	points: ResolvedPoint[],
+	splits: ResolvedSplit[],
+	width: number,
+	name: string
+): RailMesh[] {
+	const meshes: RailMesh[] = []
+
+	// Main rail
+	const first = points[0]?.p
+	const last = points.at(-1)?.p ?? null
+	const closed =
+		!!first &&
+		!!last &&
+		Math.abs(first[0] - last[0]) < 1e-6 &&
+		Math.abs(first[1] - last[1]) < 1e-6 &&
+		Math.abs(first[2] - last[2]) < 1e-6
+	const mainMesh = makeTube(buildRailCurvePath(points), width, 0.9, closed)
+	if (mainMesh) {
+		mainMesh.geometry.name = name
+		log('creating', name)
+		meshes.push(mainMesh)
+	}
+
+	// Branch rails
+	for (const [si, s] of splits.entries()) {
+		const splitIdx = points.findIndex((p) => p.beat === s.beat)
+		const prev = splitIdx > 0 ? points[splitIdx - 1] : null
+		for (const [bi, b] of s.branches.entries()) {
+			const pts: ResolvedPoint[] = prev
+				? [prev, { p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
+				: [{ p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
+			const branchMesh = makeTube(buildRailCurvePath(pts, prev ? 1 : 0), width, 0.7)
+			if (branchMesh) {
+				branchMesh.geometry.name = `${name}-branch-${si}-${bi}`
+				log('creating', branchMesh.geometry.name)
+				meshes.push(branchMesh)
+			}
+		}
+	}
+
+	return meshes
+}
 
 export function computeRailNamePosition(
 	points: ResolvedPoint[],

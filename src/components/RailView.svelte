@@ -1,31 +1,26 @@
 <script lang="ts">
 	import { T, useThrelte, useTask } from '@threlte/core'
 	import { Align } from '@threlte/extras'
-	import type { ResolvedPoint } from '../lib/core/rail'
 	import type { RailConfig, RailRuntime } from '../lib/core/rail-config'
 	import { toRailShapeConfig } from '../lib/core/rail-config'
 	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import type { TempoState } from '../lib/core/tempo'
 	import { resolveRail } from '../lib/core/rail-resolve'
-	import { buildSegmentCurve, computeBeatPositions, toV3 } from '../lib/core/rail-curve'
-	import {
-		type BufferGeometry,
-		CurvePath,
-		Euler,
-		Group,
-		LineCurve3,
-		Matrix4,
-		Quaternion,
-		Vector3
-	} from 'three/webgpu'
+	import { computeBeatPositions } from '../lib/core/rail-curve'
+	import { Euler, Group, Matrix4, Quaternion, Vector3 } from 'three/webgpu'
 	import InstrumentView from './InstrumentView.svelte'
-	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 	import TubeText from './TubeText.svelte'
 	import { onDestroy, untrack } from 'svelte'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
 	import { railMaterial } from '../lib/components/config'
-	import { computeRailNamePosition, scalePoints, scaleSplits } from '../lib/helpers/rail-geometry'
+	import {
+		buildRailGeometry,
+		computeRailNamePosition,
+		disposeRailGeometry,
+		scalePoints,
+		scaleSplits
+	} from '../lib/helpers/rail-geometry'
 	import { Color, type Mesh, type Material } from 'three/webgpu'
 
 	type Props = {
@@ -85,18 +80,6 @@
 	const color = $derived(railRuntime.color ?? railData.color)
 	const instruments = $derived(railData.instruments ?? [])
 	const render = $derived(railData.render)
-
-	function buildCurvePath(points: ResolvedPoint[], skipFirst = 0): CurvePath<Vector3> | null {
-		const path = new CurvePath<Vector3>()
-		for (let i = skipFirst; i < points.length - 1; i++) {
-			const p0 = toV3(points[i].p)
-			const p1 = toV3(points[i + 1].p)
-			if (p0.distanceTo(p1) < 1e-6) continue
-			const bezier = buildSegmentCurve(points, i)
-			path.add(bezier ?? new LineCurve3(p0, p1))
-		}
-		return path.curves.length > 0 ? path : null
-	}
 
 	function isScaled(v: Vector3) {
 		// Return true if scale is meaningful (NOT near identity)
@@ -211,67 +194,17 @@
 		return result
 	})
 
-	function makeTube(
-		curvePath: CurvePath<Vector3> | null,
-		opacity: number,
-		closed = false
-	): { geometry: BufferGeometry; opacity: number } | null {
-		if (!curvePath) return null
-		try {
-			const radius = Math.max(width / 2, 0.001)
-			// uvScale: lower than default (1/2πr) → sparser UV → faster noise animation on long rails
-			const uvScale = 0.15 / radius
-			return {
-				geometry: buildTubeGeometry(curvePath.curves, radius, 8, 12, closed, true, uvScale),
-				opacity
-			}
-		} catch (error) {
-			console.warn('Failed to create tube:', error)
-			return null
-		}
-	}
-
-	const mainMeshes = $derived.by(() => {
-		const pts = displayPoints
-		const first = pts[0]?.p
-		const last = pts.at(-1)?.p
-		const closed =
-			!!first &&
-			!!last &&
-			Math.abs(first[0] - last[0]) < 1e-6 &&
-			Math.abs(first[1] - last[1]) < 1e-6 &&
-			Math.abs(first[2] - last[2]) < 1e-6
-		const m = makeTube(buildCurvePath(pts), 0.9, closed)
-		return m ? [m] : []
-	})
-
-	const branchMeshes = $derived.by(() => {
-		const meshes: Array<{ geometry: BufferGeometry; opacity: number }> = []
-		for (const s of displaySplits) {
-			const splitIdx = displayPoints.findIndex((p) => p.beat === s.beat)
-			const prev = splitIdx > 0 ? displayPoints[splitIdx - 1] : null
-			for (const b of s.branches) {
-				const pts: ResolvedPoint[] = prev
-					? [prev, { p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
-					: [{ p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
-				const m = makeTube(buildCurvePath(pts, prev ? 1 : 0), 0.7)
-				if (m) meshes.push(m)
-			}
-		}
-		return meshes
-	})
+	const allMeshes = $derived(buildRailGeometry(displayPoints, displaySplits, width, name))
 
 	// Dispose geometries when meshes change
 	$effect(() => {
-		const current = [...mainMeshes, ...branchMeshes]
+		const current = allMeshes
 		return () => {
 			for (const mesh of current) {
 				mesh.geometry.dispose()
 			}
 		}
 	})
-
-	const allMeshes = $derived([...mainMeshes, ...branchMeshes])
 
 	// Unified group transform (identity when no renderTransform)
 	const _rtPos = new Vector3()
@@ -439,9 +372,7 @@
 	})
 
 	onDestroy(() => {
-		for (const mesh of [...mainMeshes, ...branchMeshes]) {
-			mesh.geometry.dispose()
-		}
+		disposeRailGeometry(allMeshes)
 		plainMaterial?.dispose()
 	})
 </script>
