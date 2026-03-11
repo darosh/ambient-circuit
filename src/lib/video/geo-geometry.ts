@@ -35,6 +35,21 @@ export function clearGeoTextCache() {
 	logMix('cached', mixedCache.size)
 }
 
+export function disposeGeoTextCache() {
+	for (const geometry of geoCache.values()) {
+		log('disposing only', geometry.name)
+		geometry.dispose()
+	}
+
+	for (const geometry of mixedCache.values()) {
+		logMix('disposing only', geometry.name)
+		geometry.dispose()
+	}
+
+	log('cached, but disposed', geoCache.size)
+	logMix('cached, but disposed', mixedCache.size)
+}
+
 export function getCachedTextGeometry(text: string, size: number): TextGeometry | undefined {
 	if (!fontCache.font) return undefined
 

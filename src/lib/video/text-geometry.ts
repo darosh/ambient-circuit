@@ -139,6 +139,15 @@ export function clearTubeTextCache(): void {
 	log('cached', tubeCache.size)
 }
 
+export function disposeTubeTextCache(): void {
+	for (const geometry of tubeCache.values()) {
+		log('disposing only', geometry.name)
+		geometry.dispose()
+	}
+
+	log('cached, but disposed', tubeCache.size)
+}
+
 export function getCachedTubeGeometry(
 	text: string,
 	spacing: number,

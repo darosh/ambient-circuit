@@ -143,6 +143,15 @@ export function clearInstrumentGeometryCache(): void {
 	log('cached instruments', geometryCache.size)
 }
 
+export function disposeInstrumentGeometryCache(): void {
+	for (const geometry of geometryCache.values()) {
+		log('disposing only', geometry.name)
+		geometry.dispose()
+	}
+
+	log('cached, but disposed instruments', geometryCache.size)
+}
+
 /**
  * Build instrument geometry (internal, not cached)
  */

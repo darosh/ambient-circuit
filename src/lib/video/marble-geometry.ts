@@ -80,6 +80,15 @@ export function clearMarbleGeometryCache(): void {
 	log('cached marbles', geometryCache.size)
 }
 
+export function disposeMarbleGeometryCache(): void {
+	for (const geometry of geometryCache.values()) {
+		log('disposing only', geometry.name)
+		geometry.dispose()
+	}
+
+	log('cached, but disposed marbles', geometryCache.size)
+}
+
 /**
  * Build marble geometry (internal, not cached)
  */

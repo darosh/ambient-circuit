@@ -43,6 +43,10 @@
 	import { GridHelperIO } from '../lib/three/GridHelperIO'
 	import { debug } from 'debug'
 	import { disposeSharedMaterials } from '../lib/components/config'
+	import { disposeMarbleGeometryCache } from '../lib/video/marble-geometry'
+	import { disposeInstrumentGeometryCache } from '../lib/video/instrument-geometry'
+	import { disposeGeoTextCache } from '../lib/video/geo-geometry'
+	import { disposeTubeTextCache } from '../lib/video/text-geometry'
 
 	const log = debug('<Scene>')
 
@@ -321,6 +325,10 @@
 		allAudioChains = []
 		disposeScene(audioEngine)
 		disposeSharedMaterials()
+		disposeMarbleGeometryCache()
+		disposeInstrumentGeometryCache()
+		disposeGeoTextCache()
+		disposeTubeTextCache()
 	})
 
 	function applyMutations(mutations: MarbleMutations) {
