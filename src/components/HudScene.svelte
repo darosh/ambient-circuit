@@ -484,6 +484,8 @@
 		if (tempo.isPlaying && isPlaying) {
 			btnFlash(PLAY_INDEX)
 		}
+
+		seqEvents = []
 	})
 
 	$effect(() => {
@@ -727,8 +729,11 @@
 					beat: currentBeat
 				}
 				const arr = seqEvents[i]
-				arr.push(ev)
-				if (arr.length > SEQ_MAX) arr.splice(0, arr.length - SEQ_MAX)
+
+				if (arr) {
+					arr.push(ev)
+					if (arr.length > SEQ_MAX) arr.splice(0, arr.length - SEQ_MAX)
+				}
 			}
 
 			if (s.animTime > 0) {
