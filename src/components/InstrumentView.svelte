@@ -5,15 +5,14 @@
 	import { getBeatTransform, getPointsForPath } from '../lib/core/rail-curve'
 	import { Vector3, Euler, Matrix4, Color } from 'three/webgpu'
 	import { easeOutQuart, easeInBounce, easeOutBack } from '../lib/helpers/easing'
-	import { instrumentMaterial } from '../lib/components/config'
+	import { instrumentMaterial, wireframeMaterial } from '../lib/components/config'
 	import {
 		createInstrumentGeometry,
 		createInstrumentFillGeometry,
 		type InstrumentType
 	} from '../lib/video/instrument-geometry'
 	import { onDestroy, untrack } from 'svelte'
-	import { makeStandardMaterial } from '../lib/video/material-standard'
-	import { type Mesh, type Material } from 'three/webgpu'
+	import { type Mesh } from 'three/webgpu'
 
 	// Constant rotation matrices for type-based offsets (computed once at module load)
 	const _ROT_NEG_HALF_PI = new Matrix4().makeRotationZ(-Math.PI / 2)
@@ -32,7 +31,6 @@
 		width?: number
 		cornerRadius?: number
 		wireframe?: boolean
-		fxInstruments?: boolean
 		selected?: boolean
 		onselect?: () => void
 		name: string
@@ -48,7 +46,6 @@
 		width = 0.06,
 		cornerRadius = 0.075,
 		wireframe = false,
-		fxInstruments = true,
 		selected = false,
 		onselect,
 		name = 'instrument'
@@ -76,9 +73,6 @@
 	const effectiveRays = $derived(instrument.runtime?.rays ?? (instrument as any).rays)
 	/* eslint-enable @typescript-eslint/no-explicit-any */
 
-	let plainMaterial: ReturnType<typeof makeStandardMaterial> | null = untrack(() =>
-		fxInstruments ? null : makeStandardMaterial(effectiveColor)
-	)
 	const effectiveVisible = $derived(instrument.runtime?.visible ?? true)
 	const effectiveActive = $derived(
 		(instrument.runtime?.active ?? instrument.active ?? true) && (railRuntime?.active ?? true)
@@ -89,17 +83,10 @@
 
 	$effect(() => {
 		ud.color.set(effectiveColor)
-		if (plainMaterial) plainMaterial.color.set(effectiveColor)
-	})
-
-	$effect(() => {
-		instrumentMaterial.mat.wireframe = wireframe
-		if (plainMaterial) plainMaterial.wireframe = wireframe
 	})
 
 	$effect(() => {
 		ud.active = effectiveActive ? 1 : 0
-		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
 	})
 
 	$effect(() => {
@@ -358,8 +345,6 @@
 		if (innerGeometry) {
 			innerGeometry.userData.refCount--
 		}
-
-		plainMaterial?.dispose()
 	})
 </script>
 
@@ -369,7 +354,7 @@
 		{position}
 		{rotation}
 		{geometry}
-		material={<Material>(fxInstruments ? instrumentMaterial.mat : plainMaterial)}
+		material={wireframe ? wireframeMaterial : instrumentMaterial.mat}
 		onclick={(e: Event) => {
 			e.stopPropagation()
 			onselect?.()
@@ -387,7 +372,7 @@
 			{position}
 			{rotation}
 			geometry={innerGeometry}
-			material={<Material>(fxInstruments ? instrumentMaterial.mat : plainMaterial)}
+			material={wireframe ? wireframeMaterial : instrumentMaterial.mat}
 		/>
 	{/if}
 {/if}

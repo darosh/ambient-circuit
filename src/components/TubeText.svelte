@@ -5,7 +5,7 @@
 	import { createTubeMaterialCached } from '../lib/video/material-text-tube'
 	import { getCachedTubeGeometry } from '../lib/video/text-geometry'
 	import { untrack } from 'svelte'
-	import { createStandardMaterialCached } from '../lib/video/material-standard'
+	import { wireframeMaterial } from '../lib/components/config'
 
 	let {
 		text,
@@ -35,17 +35,6 @@
 		untrack(() => color)
 	)
 
-	// plainMaterial: tracked via $effect for proper refCount acquire/release
-	let plainMaterial = $state.raw<ReturnType<typeof createStandardMaterialCached> | null>(null)
-	$effect(() => {
-		const mat = fx ? null : createStandardMaterialCached(id, color)
-		plainMaterial = mat
-		return () => {
-			if (mat) mat.userData.refCount--
-		}
-	})
-	const useMaterial = $derived(fx ? material?.mat : plainMaterial)
-
 	const colorValue = new Color()
 
 	$effect(() => {
@@ -56,14 +45,10 @@
 		if (material && !material.emissiveColor.value.equals(colorValue)) {
 			material.emissiveColor.value = colorValue
 		}
-		if (plainMaterial && !plainMaterial.color.equals(colorValue)) {
-			plainMaterial.color = colorValue
-		}
 	})
 
 	$effect(() => {
 		if (material) material.activeUniform.value = active ? 1 : 0
-		if (plainMaterial) plainMaterial.opacity = active ? 1 : 0.3
 	})
 
 	const geometry = $derived(getCachedTubeGeometry(text, spacing, width))
@@ -81,7 +66,7 @@
 <T.Group {...props}>
 	<T.Group scale={size}>
 		{#if geometry}
-			<T.Mesh {geometry} material={propMaterial ?? <Material>useMaterial} />
+			<T.Mesh {geometry} material={propMaterial ?? (fx ? material?.mat : wireframeMaterial)} />
 		{/if}
 	</T.Group>
 </T.Group>

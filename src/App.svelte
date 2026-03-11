@@ -66,10 +66,6 @@
 	let useFreeze = $state(false)
 	let fxPost = $state(true)
 	let fxHud = $state(true)
-	let fxRails = $state(true)
-	let fxMarbles = $state(true)
-	let fxInstruments = $state(true)
-	let fxText = $state(true)
 	let autoRotate = $state(false)
 	let showAudio = $state(true)
 	let fps = $state(0)
@@ -290,10 +286,6 @@
 			<List label="Easing" bind:value={easing} options={easingNames} />
 			<Checkbox label="Post" bind:value={fxPost} />
 			<Checkbox label="Hud" bind:value={fxHud} />
-			<Checkbox label="Rails" bind:value={fxRails} />
-			<Checkbox label="Marbles" bind:value={fxMarbles} />
-			<Checkbox label="Instruments" bind:value={fxInstruments} />
-			<Checkbox label="Text" bind:value={fxText} />
 			<Checkbox label="Auto Rotate" bind:value={autoRotate} />
 		</Folder>
 		<Folder title="Debug" expanded={false}>
@@ -375,10 +367,6 @@
 		{showHud}
 		freeze={useFreeze && !tempo.isPlaying}
 		fxPost={fxPost && !wireframe}
-		fxRails={fxRails && !wireframe}
-		fxMarbles={fxMarbles && !wireframe}
-		fxText={fxText && !wireframe}
-		fxInstruments={fxInstruments && !wireframe}
 		{fxHud}
 		{showAudio}
 		bind:tempo

@@ -3,13 +3,11 @@
 	import { onDestroy, untrack } from 'svelte'
 	import type { MarbleInstance } from '../lib/core/marble'
 	import { Color, Vector3, Euler, Matrix4, type Mesh } from 'three/webgpu'
-	import { marbleMaterial } from '../lib/components/config'
+	import { marbleMaterial, wireframeMaterial } from '../lib/components/config'
 	import { easeOutQuart } from '../lib/helpers/easing'
 	import type { ResolvedRail } from '../lib/core/rail'
 	import type { RailRuntime } from '../lib/core/rail-config'
 	import { createMarbleGeometry, type MarbleType } from '../lib/video/marble-geometry'
-	import { makeStandardMaterial } from '../lib/video/material-standard'
-	import type { Material } from 'three/webgpu'
 
 	// Animation constants
 	const TANGENT_VERTICAL_THRESHOLD = 0.9
@@ -34,7 +32,6 @@
 		color: string
 		name: string
 		wireframe?: boolean
-		fxMarbles?: boolean
 		selected?: boolean
 		onselect?: () => void
 	}
@@ -47,7 +44,6 @@
 		color,
 		name = 'unknown',
 		wireframe = false,
-		fxMarbles = true,
 		selected = false,
 		onselect
 	}: Props = $props()
@@ -68,26 +64,15 @@
 		return [_mBasePos.x, _mBasePos.y, _mBasePos.z]
 	})
 
-	let plainMaterial: ReturnType<typeof makeStandardMaterial> | null = untrack(() =>
-		fxMarbles ? null : makeStandardMaterial(effectiveColor)
-	)
-
 	// Per-instance data written to shared material uniforms in onBeforeRender
 	const ud = { color: new Color(), initialIntensity: 0.51, intensity: 0, active: 1 }
 
 	$effect(() => {
 		ud.color.set(effectiveColor)
-		if (plainMaterial) plainMaterial.color.set(effectiveColor)
-	})
-
-	$effect(() => {
-		marbleMaterial.mat.wireframe = wireframe
-		if (plainMaterial) plainMaterial.wireframe = wireframe
 	})
 
 	$effect(() => {
 		ud.active = effectiveActive ? 1 : 0
-		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
 	})
 
 	let meshRef = $state.raw<Mesh | undefined>()
@@ -190,7 +175,6 @@
 	onDestroy(() => {
 		// disposed by cache when refCount reaches zero
 		if (geometry) geometry.userData.refCount--
-		plainMaterial?.dispose()
 	})
 </script>
 
@@ -200,7 +184,7 @@
 		position={transformedPosition}
 		{rotation}
 		{geometry}
-		material={<Material>(fxMarbles ? marbleMaterial.mat : plainMaterial)}
+		material={wireframe ? wireframeMaterial : marbleMaterial.mat}
 		onclick={(e: Event) => {
 			e.stopPropagation()
 			onselect?.()

@@ -4,6 +4,7 @@
 	import { CubicBezierCurve3, type Vector3Tuple } from 'three/webgpu'
 	import { untrack } from 'svelte'
 	import { buildImpactMaterial } from '../lib/video/material-impact'
+	import { wireframeMaterial } from '../lib/components/config'
 
 	const TUBE_SEGMENTS_STRAIGHT = 1
 	const TUBE_SEGMENTS_CURVED = 12
@@ -22,8 +23,9 @@
 	let {
 		links,
 		curved = true,
-		alpha = 0.5
-	}: { links: SignalLink[]; curved?: boolean; alpha?: number } = $props()
+		alpha = 0.5,
+		wireframe = false
+	}: { links: SignalLink[]; curved?: boolean; alpha?: number; wireframe?: boolean } = $props()
 
 	const FLASH_DURATION = 0.5
 	const TUBE_R = 0.02
@@ -160,7 +162,7 @@
 </script>
 
 {#each { length: linkCount } as _, i (i)}
-	<T.Mesh material={materials[i].mat}>
+	<T.Mesh material={wireframe ? wireframeMaterial : materials[i]?.mat}>
 		<T.TubeGeometry
 			args={[curveEntries[i].curve, curveEntries[i].segments, TUBE_R, 4, false]}
 			bind:ref={geoRefs[i]}

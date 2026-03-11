@@ -25,10 +25,6 @@
 		showHud,
 		fxHud,
 		fxPost,
-		fxRails,
-		fxMarbles,
-		fxText,
-		fxInstruments,
 		tempo = $bindable(),
 		easing,
 		railVisibility = $bindable(),
@@ -106,10 +102,6 @@
 		{showStats}
 		{showAnalyzers}
 		fxPost={fxPost && !wireframe}
-		fxRails={fxRails && !wireframe}
-		fxMarbles={fxMarbles && !wireframe}
-		fxText={fxText && !wireframe}
-		fxInstruments={fxInstruments && !wireframe}
 		{showAudio}
 		bind:tempo
 		bind:easing

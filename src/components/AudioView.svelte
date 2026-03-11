@@ -9,6 +9,7 @@
 	import TubeText from './TubeText.svelte'
 	import { resolveAnalyzerType } from '../lib/audio/engine'
 	import { buildImpactMaterial } from '../lib/video/material-impact'
+	import { wireframeMaterial } from '../lib/components/config'
 
 	const NODE_RADIUS = 0.1
 
@@ -22,7 +23,8 @@
 		showAnalysers = false,
 		showAllNodes = false,
 		module = NODE_RADIUS,
-		defaultAnalyser
+		defaultAnalyser,
+		wireframe = false
 	}: {
 		engine: AudioEngine
 		offset?: Vector3Tuple
@@ -34,6 +36,7 @@
 		showAllNodes?: boolean
 		module?: number
 		defaultAnalyser?: string
+		wireframe?: boolean
 	} = $props()
 
 	const LAYER_GAP = 0.5 // spacing row between layers
@@ -181,7 +184,9 @@
 		{#each layout.nodes as node, ni (ni)}
 			<T.Mesh position.x={node.x} position.y={node.y} position.z={node.z} rotation.x={-DEG_90}>
 				<T.SphereGeometry args={[module, Math.round(module * 160), Math.round(module * 80)]} />
-				{#if fxArr[ni]}
+				{#if wireframe}
+					<T is={wireframeMaterial} />
+				{:else if fxArr[ni]}
 					<T is={fxArr[ni].mat} />
 				{/if}
 				{#if showText}
@@ -222,12 +227,16 @@
 						false
 					]}
 				/>
-				<T.MeshStandardMaterial
-					opacity={0.5}
-					transparent
-					emissive={baseColor}
-					emissiveIntensity={1.6}
-				/>
+				{#if wireframe}
+					<T is={wireframeMaterial} />
+				{:else}
+					<T.MeshStandardMaterial
+						opacity={0.5}
+						transparent
+						emissive={baseColor}
+						emissiveIntensity={1.6}
+					/>
+				{/if}
 			</T.Mesh>
 		{/each}
 

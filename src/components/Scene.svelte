@@ -42,7 +42,7 @@
 	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
 	import { GridHelperIO } from '../lib/three/GridHelperIO'
 	import { debug } from 'debug'
-	import { disposeSharedMaterials } from '../lib/components/config'
+	import { disposeSharedMaterials, wireframeMaterial } from '../lib/components/config'
 	import { disposeMarbleGeometryCache } from '../lib/video/marble-geometry'
 	import { disposeInstrumentGeometryCache } from '../lib/video/instrument-geometry'
 	import { disposeGeoTextCache } from '../lib/video/geo-geometry'
@@ -67,10 +67,6 @@
 		showAudio = false,
 		showAnalyzers = true,
 		wireframe = false,
-		fxRails = true,
-		fxMarbles = true,
-		fxInstruments = true,
-		fxText = true,
 		tempo = $bindable(),
 		easing = $bindable(),
 		railVisibility = $bindable(),
@@ -92,10 +88,6 @@
 		showAnalyzers?: boolean
 		wireframe?: boolean
 		fxPost?: boolean
-		fxRails?: boolean
-		fxMarbles?: boolean
-		fxInstruments?: boolean
-		fxText?: boolean
 		showStats?: boolean
 		tempo?: TempoState
 		easing?: string
@@ -525,6 +517,10 @@
 		return formatHex(backRgb)
 	})
 
+	$effect(() => {
+		wireframeMaterial.color.set(scene?.audioView && scene.audioView?.color ? gridColor : 0x99_99_99)
+	})
+
 	/**
 	function clearSelection() {
 		selectedEntity = null
@@ -584,9 +580,6 @@
 				{showBeats}
 				{showNames}
 				{wireframe}
-				{fxRails}
-				{fxInstruments}
-				{fxText}
 				{tempo}
 				{sceneCtx}
 				renderPlayOnly={scene.renderPlayOnly}
@@ -612,7 +605,6 @@
 				renderVersion={railRenderVersions[railIndex]}
 				color={rails[railIndex].color || '#ffffff'}
 				{wireframe}
-				{fxMarbles}
 				selected={_selType === 'marble' && _selRailIdx === railIndex && _selMarbleIdx === idx}
 				onselect={() => onSelectMarble(railIndex, idx)}
 			/>
@@ -637,11 +629,12 @@
 			engine={audioEngine}
 			offset={AUDIO_OFFSET}
 			visible={showAudio}
+			{wireframe}
 		/>
 		{#if showAudio}
-			<MidiSignalView alpha={scene?.audioView?.midiAlpha} links={midiSignalLinks} />
+			<MidiSignalView alpha={scene?.audioView?.midiAlpha} links={midiSignalLinks} {wireframe} />
 			{#if scene?.audioView?.marbleLinks}
-				<MidiSignalView alpha={scene?.audioView?.midiAlpha} links={marbleSignalLinks} />
+				<MidiSignalView alpha={scene?.audioView?.midiAlpha} links={marbleSignalLinks} {wireframe} />
 			{/if}
 		{/if}
 	{/if}

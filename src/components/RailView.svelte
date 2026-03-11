@@ -11,9 +11,8 @@
 	import InstrumentView from './InstrumentView.svelte'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 	import TubeText from './TubeText.svelte'
-	import { onDestroy, untrack } from 'svelte'
-	import { makeStandardMaterial } from '../lib/video/material-standard'
-	import { railMaterial } from '../lib/components/config'
+	import { onDestroy } from 'svelte'
+	import { railMaterial, wireframeMaterial } from '../lib/components/config'
 	import {
 		buildRailGeometry,
 		computeRailNamePosition,
@@ -21,7 +20,7 @@
 		scalePoints,
 		scaleSplits
 	} from '../lib/helpers/rail-geometry'
-	import { Color, type Mesh, type Material } from 'three/webgpu'
+	import { Color, type Mesh } from 'three/webgpu'
 
 	type Props = {
 		railData: RailConfig
@@ -31,9 +30,6 @@
 		showBeats?: boolean
 		showNames?: boolean
 		wireframe?: boolean
-		fxRails?: boolean
-		fxInstruments?: boolean
-		fxText?: boolean
 		font?: Font
 		tempo?: TempoState
 		sceneCtx?: SceneCtx
@@ -56,9 +52,6 @@
 		showBeats = false,
 		showNames = false,
 		wireframe = false,
-		fxRails = true,
-		fxInstruments = true,
-		fxText = true,
 		tempo,
 		sceneCtx,
 		renderPlayOnly = false,
@@ -87,23 +80,18 @@
 	}
 
 	const resolved = $derived(resolveRail(toRailShapeConfig(railData)))
-	let plainMaterial: ReturnType<typeof makeStandardMaterial> | null = untrack(() =>
-		fxRails ? null : makeStandardMaterial(color)
-	)
 
 	// Per-rail data written to shared material uniforms in onBeforeRender
 	const ud = { color: new Color(), initialIntensity: 0.7, intensity: 0, active: 1 }
 
 	$effect(() => {
 		ud.color.set(color)
-		if (plainMaterial) plainMaterial.color.set(color)
 	})
 
 	const effectiveActive = $derived(railRuntime.active ?? true)
 
 	$effect(() => {
 		ud.active = effectiveActive ? 1 : 0
-		if (plainMaterial) plainMaterial.opacity = effectiveActive ? 1 : 0.3
 	})
 
 	let meshRefs = $state<(Mesh | undefined)[]>([])
@@ -178,10 +166,6 @@
 		}
 	})
 
-	$effect(() => {
-		railMaterial.mat.wireframe = wireframe
-		if (plainMaterial) plainMaterial.wireframe = wireframe
-	})
 	const beatPositions = $derived.by(() => {
 		if (!showBeats) return []
 		const result = computeBeatPositions(displayPoints)
@@ -373,7 +357,6 @@
 
 	onDestroy(() => {
 		disposeRailGeometry(allMeshes)
-		plainMaterial?.dispose()
 	})
 </script>
 
@@ -382,7 +365,7 @@
 		<T.Group bind:ref={beatGroups[bpIndex]} position={beatLabelPositions[bpIndex]}>
 			<Align>
 				<TubeText
-					fx={fxText}
+					fx={!wireframe}
 					{id}
 					text={bp.beat.toString()}
 					{color}
@@ -400,7 +383,7 @@
 	<T.Group bind:ref={nameGroup} position={nameLabelPosition}>
 		<Align>
 			<TubeText
-				fx={fxText}
+				fx={!wireframe}
 				{id}
 				text={railData.id.toUpperCase()}
 				{color}
@@ -418,7 +401,7 @@
 		<T.Mesh
 			bind:ref={meshRefs[idx]}
 			{geometry}
-			material={<Material>(fxRails ? railMaterial.mat : plainMaterial)}
+			material={wireframe ? wireframeMaterial : railMaterial.mat}
 		/>
 	{/each}
 
@@ -450,7 +433,6 @@
 			{railRuntime}
 			rail={displayRail}
 			bind:signal={instrument.signal}
-			{fxInstruments}
 			{wireframe}
 			selected={selectedInstrumentIdx === idx}
 			onselect={() => onSelectInstrument?.(railIdx, idx)}
