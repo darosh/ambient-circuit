@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	import { SphereGeometry, Mesh, Group } from 'three/webgpu'
+	import { SphereGeometry, Mesh, Group, BufferGeometry } from 'three/webgpu'
 	import { buildImpactMaterial } from '../lib/video/material-impact'
 	import { getCachedMixedGeometry } from '../lib/video/geo-geometry'
 	import { parseMixedTextCached } from '../lib/video/mixed-text'
@@ -66,6 +66,16 @@
 		return () => g.dispose()
 	})
 
+	// Per-slot geometry cache (tracks refCounts for clearGeoTextCache compatibility)
+	const slotGeoms: (BufferGeometry | undefined)[] = Array.from({ length: MAX_SLOTS })
+
+	function setSlotGeom(idx: number, geom: BufferGeometry | undefined) {
+		const prev = slotGeoms[idx]
+		if (prev === geom) return
+		if (prev) prev.userData.refCount--
+		slotGeoms[idx] = geom
+	}
+
 	// ─── Ring buffer ─────────────────────────────────────────────────────────────
 	type RingSlot = { text: string; color: string; beat: number; time: number }
 	const ring: RingSlot[] = Array.from({ length: MAX_SLOTS }, () => ({
@@ -121,8 +131,6 @@
 	let _fadingIn = false
 
 	function updateVisuals() {
-		const textSize = height / 2
-
 		if (mode === 'time') {
 			const msPerBeat = 60_000 / bpm
 			const now = Date.now()
@@ -167,7 +175,7 @@
 					mesh.geometry = dotGeom!
 					mesh.position.set(x + dotRadius, -dotRadius * 2.5, 0)
 				} else {
-					const geom = getCachedMixedGeometry(ring[idx].text.toUpperCase(), textSize)
+					const geom = slotGeoms[idx]
 					if (geom) {
 						mesh.geometry = geom
 						mesh.position.set(x, 0, 0)
@@ -220,7 +228,7 @@
 					mesh.geometry = dotGeom!
 					mesh.position.set(x + slide + dotRadius, -dotRadius * 2.5, 0)
 				} else {
-					const geom = getCachedMixedGeometry(ring[idx].text.toUpperCase(), textSize)
+					const geom = slotGeoms[idx]
 					if (geom) {
 						mesh.geometry = geom
 						mesh.position.set(x + slide, 0, 0)
@@ -306,13 +314,21 @@
 			ringFadeIns[headIdx] = 0
 			_fadingIn = true
 			fillCount = Math.min(fillCount + 1, MAX_SLOTS)
+			setSlotGeom(headIdx, getCachedMixedGeometry(ev.label.toUpperCase(), height / 2) || undefined)
 		}
 		lastSeenTime = newest.time
 		updateVisuals()
 	})
 
+	// Clear slot geoms when height changes (textSize changes → stale cached geoms)
+	$effect(() => {
+		void height
+		for (let i = 0; i < MAX_SLOTS; i++) setSlotGeom(i, undefined)
+	})
+
 	onDestroy(() => {
 		for (const p of pool) p.mat.dispose()
+		for (let i = 0; i < MAX_SLOTS; i++) setSlotGeom(i, undefined)
 	})
 </script>
 

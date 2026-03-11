@@ -23,10 +23,11 @@
 	import { clearMarbleGeometryCache } from './lib/video/marble-geometry'
 	import { clearInstrumentGeometryCache } from './lib/video/instrument-geometry'
 	import { clearGeoTextCache } from './lib/video/geo-geometry'
+	import { clearTubeTextCache } from './lib/video/text-geometry'
 	import { clearMixedTextParsedCache } from './lib/video/mixed-text'
 	import Wrap from './components/Wrap.svelte'
 	import { createKeydownHandler } from './lib/helpers/keyboard'
-	import { onMount } from 'svelte'
+	import { onMount, tick, untrack } from 'svelte'
 	import './components/GeoText.svelte'
 	import { font, fontCache } from './lib/video/geo-geometry'
 	import { Font } from 'three/examples/jsm/loaders/FontLoader.js'
@@ -128,6 +129,28 @@
 		if (initialHash.params.has('play')) tempo.isPlaying = true
 	})
 	let activeScene = $derived(scenes.find((s) => s.id === sceneId) ?? scenes[0])
+	let mountedScene = $state<typeof activeScene | null>(untrack(() => activeScene))
+
+	// Sequence scene switches: unmount old (onDestroy fires) before mounting new
+	$effect(() => {
+		const scene = activeScene
+		if (untrack(() => mountedScene)?.id === scene.id) return
+		mountedScene = null
+		tick().then(() => {
+			mountedScene = scene
+		})
+	})
+
+	// Called by Scene.svelte onMount — geometries created during Threlte's first RAF,
+	// so sweep after two RAFs to ensure all refCounts are incremented
+	function onSceneReady() {
+		clearMarbleGeometryCache()
+		clearInstrumentGeometryCache()
+		clearGeoTextCache()
+		clearTubeTextCache()
+		clearMixedTextParsedCache()
+	}
+
 	// eslint-disable-next-line svelte/prefer-writable-derived
 	let railVisibility = $state<boolean[]>([])
 	$effect(() => {
@@ -143,10 +166,6 @@
 		}
 
 		globalThis.location.hash = sceneId
-		clearMarbleGeometryCache()
-		clearInstrumentGeometryCache()
-		clearGeoTextCache()
-		clearMixedTextParsedCache()
 		// Clear WebGPU renderer's internal RenderObject cache to release disposed geometry buffers
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		if (rendererRef) (rendererRef as any)._objects?.dispose()
@@ -346,6 +365,7 @@
 		{sceneId}
 		{sceneIndex}
 		{activeScene}
+		{mountedScene}
 		{showGrid}
 		{showPoints}
 		{showBeats}
@@ -399,6 +419,7 @@
 		onPrevScene={() =>
 			(sceneId =
 				scenes[(scenes.findIndex((d) => d.id === sceneId) - 1 + scenes.length) % scenes.length].id)}
+		onReady={onSceneReady}
 	></Wrap>
 </Canvas>
 

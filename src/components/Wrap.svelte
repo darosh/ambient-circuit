@@ -13,6 +13,7 @@
 		sceneId,
 		sceneIndex,
 		activeScene,
+		mountedScene,
 		showGrid,
 		showPoints,
 		showBeats,
@@ -42,6 +43,7 @@
 		onRewind,
 		onNextScene,
 		onPrevScene,
+		onReady,
 		freeze = false
 	} = $props()
 
@@ -92,14 +94,14 @@
 	{/if}
 {/snippet}
 
-{#key sceneId}
+{#if mountedScene}
 	<Scene
 		onSceneCtx={(ctx) => (sceneCtx = ctx)}
-		scene={activeScene}
+		scene={mountedScene}
 		{showGrid}
 		{showPoints}
 		{showBeats}
-		showNames={activeScene.names ?? showNames}
+		showNames={mountedScene.names ?? showNames}
 		{wireframe}
 		{showStats}
 		{showAnalyzers}
@@ -117,9 +119,10 @@
 		bind:selectedAudioChain
 		bind:allAudioChains
 		bind:audioEngineRef
-		hudContent={activeScene.view ? hudContent : undefined}
+		hudContent={mountedScene.view ? hudContent : undefined}
+		{onReady}
 	/>
-{/key}
+{/if}
 
 {#if !activeScene.view}
 	<T.PerspectiveCamera makeDefault position={activeScene.camera ?? [5, 7, 9]} fov={30}>

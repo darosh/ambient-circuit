@@ -8,6 +8,9 @@ import {
 	type BufferGeometry
 } from 'three/webgpu'
 import { buildTubeGeometry } from './tube-geometry'
+import { debug } from 'debug'
+
+const log = debug('geo:mar')
 
 // Geometry constants
 export const MARBLE_WIDTH = 0.06
@@ -40,24 +43,41 @@ function getCacheKey(params: MarbleGeometryParams): string {
 /**
  * Create memoized marble geometry
  */
-export function createMarbleGeometry(params: MarbleGeometryParams): BufferGeometry {
+export function createMarbleGeometry(
+	params: MarbleGeometryParams,
+	name = 'marble'
+): BufferGeometry {
 	const key = getCacheKey(params)
 	const cached = geometryCache.get(key)
-	if (cached) return cached
+
+	if (cached) {
+		log('reusing', cached.name, 'as', name)
+		cached.name = name
+		cached.userData.refCount++
+		return cached
+	}
 
 	const geometry = buildMarbleGeometry(params)!
+	log('creating', name)
+	geometry.name = name
+	geometry.userData.refCount = 1
 	geometryCache.set(key, geometry)
 	return geometry
 }
 
 /**
- * Clear geometry cache (call on cleanup)
+ * Sweep geometry cache — dispose only entries with refCount === 0
  */
 export function clearMarbleGeometryCache(): void {
-	for (const geometry of geometryCache.values()) {
-		geometry.dispose()
+	for (const [key, geometry] of geometryCache.entries()) {
+		if (!geometry.userData.refCount) {
+			log('disposing', geometry.name)
+			geometry.dispose()
+			geometryCache.delete(key)
+		}
 	}
-	geometryCache.clear()
+
+	log('cached marbles', geometryCache.size)
 }
 
 /**

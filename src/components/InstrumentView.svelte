@@ -35,6 +35,7 @@
 		fxInstruments?: boolean
 		selected?: boolean
 		onselect?: () => void
+		name: string
 	}
 
 	let {
@@ -49,7 +50,8 @@
 		wireframe = false,
 		fxInstruments = true,
 		selected = false,
-		onselect
+		onselect,
+		name = 'instrument'
 	}: Props = $props()
 
 	let hovered = $state(false)
@@ -133,31 +135,38 @@
 
 	// Create memoized geometry based on instrument type
 	const geometry = $derived.by(() => {
-		return createInstrumentGeometry({
-			type: effectiveType as InstrumentType,
-			size,
-			width,
-			cornerRadius,
-			sides: effectiveSides,
-			rounds: effectiveRounds,
-			counterCW: effectiveCounterCW,
-			point: effectivePoint,
-			align: effectiveAlign,
-			kind: effectiveKind,
-			angle: effectiveAngle,
-			rays: effectiveRays,
-			brightness: effectiveBrightness,
-			fill: false
-		})
+		return createInstrumentGeometry(
+			{
+				type: effectiveType as InstrumentType,
+				size,
+				width,
+				cornerRadius,
+				sides: effectiveSides,
+				rounds: effectiveRounds,
+				counterCW: effectiveCounterCW,
+				point: effectivePoint,
+				align: effectiveAlign,
+				kind: effectiveKind,
+				angle: effectiveAngle,
+				rays: effectiveRays,
+				brightness: effectiveBrightness,
+				fill: false
+			},
+			untrack(() => name)
+		)
 	})
 
 	// Inner geometry for fill mode (poly only)
 	const innerGeometry = $derived.by(() => {
 		if (!effectiveFill || effectiveType !== 'poly') return null
-		return createInstrumentFillGeometry(effectiveSides ?? 3, size, width, cornerRadius)
+		return createInstrumentFillGeometry(
+			effectiveSides ?? 3,
+			size,
+			width,
+			cornerRadius,
+			untrack(() => `${name}-fill`)
+		)
 	})
-
-	// OLD GEOMETRY CODE - DELETE THIS BLOCK
 
 	const IMPACT_DURATION = 0.4 // seconds
 	const ACTIVE_ROTATION_SPEED = 1 // rotations per second
@@ -343,8 +352,13 @@
 	})
 
 	onDestroy(() => {
-		geometry?.dispose()
-		innerGeometry?.dispose()
+		// disposed by cache when refCount is zero
+		geometry.userData.refCount--
+
+		if (innerGeometry) {
+			innerGeometry.userData.refCount--
+		}
+
 		plainMaterial?.dispose()
 	})
 </script>

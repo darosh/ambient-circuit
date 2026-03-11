@@ -26,6 +26,9 @@
 	import { updateRects, type SplitRect } from '../lib/components/multi-view/multi-view'
 	import { GridHelperCells } from '../lib/three/GridHelperCells'
 	import { globalState } from './global-state.svelte'
+	import { debug } from 'debug'
+
+	const log = debug('<HudScene>')
 
 	function readLS(key: string, def: boolean): boolean {
 		if (typeof localStorage === 'undefined') return def
@@ -316,6 +319,8 @@
 	]
 
 	onMount(() => {
+		log('mounted')
+
 		for (const item of MENU_ITEMS) {
 			item.set(readLS(item.lsKey, item.def))
 		}
@@ -800,6 +805,8 @@
 	})
 
 	onDestroy(() => {
+		log('destroyed')
+
 		for (const s of rowStates) s.fx.mat.dispose()
 		for (const b of btnStates) b.fx.mat.dispose()
 		for (const ms of menuItemStates) ms.fx.mat.dispose()
@@ -1110,15 +1117,19 @@
 			btn.kind === 'repro' && globalState.isMuted && btnSpinAngles[i] > Math.PI * 0.5
 				? 'muted'
 				: btn.kind}
-		{@const geom = createInstrumentGeometry({
-			type: 'arrow',
-			kind,
-			size: btnSize / 2,
-			width: btnSize * 0.06,
-			cornerRadius: btnSize * 0.075
-		})}
+		{@const geom = createInstrumentGeometry(
+			{
+				type: 'arrow',
+				kind,
+				size: btnSize / 2,
+				width: btnSize * 0.06,
+				cornerRadius: btnSize * 0.075
+			},
+			`hud-${i}`
+		)}
 		<T.Group position={[bx - (btnDefs.length - 1 - i) * (btnSize + btnMargin), by, 0]}>
 			<T.Mesh
+				oncreate={() => () => geom.userData.refCount--}
 				geometry={geom}
 				material={btnStates[i].fx.mat}
 				rotation.x={(btn.rotX ?? 0) + btnSpinAngles[i]}

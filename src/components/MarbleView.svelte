@@ -32,6 +32,7 @@
 		railRuntime: RailRuntime
 		renderVersion?: number
 		color: string
+		name: string
 		wireframe?: boolean
 		fxMarbles?: boolean
 		selected?: boolean
@@ -44,6 +45,7 @@
 		railRuntime,
 		renderVersion = 0,
 		color,
+		name = 'unknown',
 		wireframe = false,
 		fxMarbles = true,
 		selected = false,
@@ -108,12 +110,15 @@
 
 	// Create memoized geometry based on type
 	const geometry = $derived.by(() => {
-		return createMarbleGeometry({
-			type: type as MarbleType,
-			sides,
-			rounds,
-			angle
-		})
+		return createMarbleGeometry(
+			{
+				type: type as MarbleType,
+				sides,
+				rounds,
+				angle
+			},
+			untrack(() => name)
+		)
 	})
 
 	const IMPACT_DURATION = 0.3
@@ -183,8 +188,8 @@
 	})
 
 	onDestroy(() => {
-		// no dispose, it is cached
-		// geometry?.dispose()
+		// disposed by cache when refCount reaches zero
+		if (geometry) geometry.userData.refCount--
 		plainMaterial?.dispose()
 	})
 </script>

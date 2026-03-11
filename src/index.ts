@@ -3,7 +3,9 @@ import './app.css'
 import App from './App.svelte'
 
 localStorage.debug = '0'
-// localStorage.debug = '*'
+// localStorage.debug = 'geo:*,<*'
+// localStorage.debug = '<*'
+// localStorage.debug = 'geo:*'
 
 const app = mount(App, {
 	target: <Element>document.querySelector('#app')

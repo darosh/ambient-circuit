@@ -11,6 +11,13 @@
 	let cachedGeom = $derived(
 		mixed ? getCachedMixedGeometry(text, size) : getCachedTextGeometry(text, size)
 	)
+
+	$effect(() => {
+		const geom = cachedGeom
+		return () => {
+			if (geom) geom.userData.refCount--
+		}
+	})
 </script>
 
 {#if cache && cachedGeom}

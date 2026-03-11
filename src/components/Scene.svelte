@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useTask } from '@threlte/core'
-	import { untrack, onMount, onDestroy, type Snippet } from 'svelte'
+	import { untrack, onMount, onDestroy, type Snippet, tick } from 'svelte'
 	import type { Scene as ThreeScene } from 'three/webgpu'
 	import { interactivity } from '@threlte/extras'
 	import RailView from './RailView.svelte'
@@ -14,7 +14,7 @@
 		resetMarbleToConfig,
 		type MarbleMutations
 	} from '../lib/core/marble-system'
-	import type { SceneConfig } from '../lib/core/scene'
+	import type { SceneConfig, ViewConfig } from '../lib/core/scene'
 	import {
 		createSceneCtx,
 		updateSceneCtx,
@@ -41,6 +41,9 @@
 	import { toggleMute } from '../lib/audio/engine'
 	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
 	import { GridHelperIO } from '../lib/three/GridHelperIO'
+	import { debug } from 'debug'
+
+	const log = debug('<Scene>')
 
 	export type SelectedEntity = {
 		type: 'instrument' | 'marble'
@@ -72,7 +75,8 @@
 		selectedAudioChain = $bindable<AudioChain | undefined>(),
 		allAudioChains = $bindable<AudioChain[]>([]),
 		audioEngineRef = $bindable<AudioEngine | null>(null),
-		hudContent
+		hudContent,
+		onReady
 	}: {
 		scene: SceneConfig
 		showGrid?: boolean
@@ -99,10 +103,17 @@
 		audioEngineRef?: AudioEngine | null
 		/** HUD content snippet forwarded to MultiView (multi-view mode only) */
 		hudContent?: Snippet<[{ ref: ThreeScene }]>
+		/** Called after mount; App uses this to sweep geometry caches after first render */
+		onReady?: () => void
 	} = $props()
 
 	// Init tempo state
 	if (!tempo) tempo = createTempoState()
+
+	// Capture scene at mount — prop may become null before onDestroy fires
+	const sceneRef = untrack(() => scene)
+	// sceneRef.view is guaranteed non-null when {#if scene.view} is entered
+	const sceneView = sceneRef.view as ViewConfig
 
 	// Create marbles once at mount (component remounts per scene via {#key})
 	const rails = untrack(() => {
@@ -262,6 +273,19 @@
 
 	// Fire init handler on mount
 	onMount(() => {
+		log('mounted', scene.id)
+
+		if (onReady) {
+			tick().then(() => {
+				setTimeout(() => {
+					requestAnimationFrame(() => {
+						log('ready', scene.id)
+						onReady()
+					})
+				})
+			})
+		}
+
 		if (scene.globalBeatHandler) {
 			fireGlobalBeatInit(tempo, sceneCtx, scene.globalBeatHandler)
 		}
@@ -269,6 +293,8 @@
 
 	// Fire destroy handler on unmount
 	onDestroy(() => {
+		log('destroyed', sceneRef?.id)
+
 		// audioEngineRef = null
 		// Release $state proxy refs from module-level scene config
 		for (const railData of rails) {
@@ -287,8 +313,8 @@
 			re.runtime.renderVersion = 0
 		}
 
-		if (scene.globalBeatHandler) {
-			fireGlobalBeatDestroy(tempo, sceneCtx, scene.globalBeatHandler)
+		if (sceneRef?.globalBeatHandler) {
+			fireGlobalBeatDestroy(tempo, sceneCtx, sceneRef.globalBeatHandler)
 		}
 		// Dispose audio chains
 		allAudioChains = []
@@ -508,96 +534,100 @@
 <!--	<T.MeshBasicMaterial />-->
 <!--</T.Mesh>-->
 
-{#if scene.stars}
-	<Stars />
-{/if}
-
-{#if wireframe}
-	<T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />
-	<T.AmbientLight intensity={0.4} />
-{/if}
-
-{#if showGrid}
-	{#if !scene.polar}
-		<T.GridHelper position.y={-0.01} args={[10, 10, gridColor, gridColor]} />
+{#if scene}
+	{#if scene.stars}
+		<Stars />
 	{/if}
-	{#if scene.polar}
-		<!--		<T.PolarGridHelper position.y={-0.01} args={[5, 24, 10, 64, gridColor, gridColor]} />-->
-		<T is={GridHelperIO} position.y={-0.01} args={[5, 0.5, 24, 10, 64, gridColor]} />
-	{/if}
-{/if}
 
-{#each rails as railData, railIndex (railIndex)}
-	{#if railVisibility[railIndex]}
-		<RailView
-			id={railIndex.toString()}
-			{railData}
-			railRuntime={sceneCtx.rails[railIndex].runtime}
-			width={0.06}
-			{showPoints}
-			{showBeats}
-			{showNames}
-			{wireframe}
-			{fxRails}
-			{fxInstruments}
-			{fxText}
-			{tempo}
-			{sceneCtx}
-			renderPlayOnly={scene.renderPlayOnly}
-			textOrientation={scene.textOrientation ?? (scene.view ? [0, 0, 1] : undefined)}
-			railIdx={railIndex}
-			selectedInstrumentIdx={selectedEntity?.type === 'instrument' &&
-			selectedEntity.railIdx === railIndex
-				? selectedEntity.idx
-				: null}
-			{onSelectInstrument}
-			bind:renderVersion={railRenderVersions[railIndex]}
+	{#if wireframe}
+		<T.DirectionalLight intensity={0.8} position.x={5} position.y={10} />
+		<T.AmbientLight intensity={0.4} />
+	{/if}
+
+	{#if showGrid}
+		{#if !scene.polar}
+			<T.GridHelper position.y={-0.01} args={[10, 10, gridColor, gridColor]} />
+		{/if}
+		{#if scene.polar}
+			<!--		<T.PolarGridHelper position.y={-0.01} args={[5, 24, 10, 64, gridColor, gridColor]} />-->
+			<T is={GridHelperIO} position.y={-0.01} args={[5, 0.5, 24, 10, 64, gridColor]} />
+		{/if}
+	{/if}
+
+	{#each rails as railData, railIndex (railIndex)}
+		{#if railVisibility[railIndex]}
+			<RailView
+				name={`${scene.id}-rail-${railIndex}`}
+				id={railIndex.toString()}
+				{railData}
+				railRuntime={sceneCtx.rails[railIndex].runtime}
+				width={0.06}
+				{showPoints}
+				{showBeats}
+				{showNames}
+				{wireframe}
+				{fxRails}
+				{fxInstruments}
+				{fxText}
+				{tempo}
+				{sceneCtx}
+				renderPlayOnly={scene.renderPlayOnly}
+				textOrientation={scene.textOrientation ?? (scene.view ? [0, 0, 1] : undefined)}
+				railIdx={railIndex}
+				selectedInstrumentIdx={selectedEntity?.type === 'instrument' &&
+				selectedEntity.railIdx === railIndex
+					? selectedEntity.idx
+					: null}
+				{onSelectInstrument}
+				bind:renderVersion={railRenderVersions[railIndex]}
+			/>
+		{/if}
+	{/each}
+
+	{#each marbles as _m, idx (_m.id)}
+		{@const railIndex = liveRailIndices[idx] ?? marbleRailIndices[idx]}
+		{#if railVisibility[railIndex]}
+			<MarbleView
+				name={`${scene.id}-marble-${_m.id}`}
+				bind:marble={marbles[idx]}
+				rail={marbles[idx].resolved.resolvedRail}
+				railRuntime={sceneCtx.rails[railIndex].runtime}
+				renderVersion={railRenderVersions[railIndex]}
+				color={rails[railIndex].color || '#ffffff'}
+				{wireframe}
+				{fxMarbles}
+				selected={selectedEntity?.type === 'marble' &&
+					selectedEntity.railIdx === railIndex &&
+					selectedEntity.idx === idx}
+				onselect={() => onSelectMarble(railIndex, idx)}
+			/>
+		{/if}
+	{/each}
+
+	{#if scene.view}
+		<MultiView config={sceneView} {sceneCtx}
+			>{#snippet children(arg)}{@render hudContent?.(arg)}{/snippet}</MultiView
+		>
+	{/if}
+
+	{#if audioInitialized && scene?.audioView !== false}
+		<AudioView
+			showAllNodes={scene?.audioView?.all}
+			showAnalysers={showAnalyzers && (scene?.audioView?.analyzers ?? true)}
+			showText={scene?.audioView?.text}
+			defaultAnalyser={scene?.audioView?.defaultAnalyser}
+			baseColor={scene?.audioView?.color}
+			module={scene?.audioView?.module}
+			bind:this={audioView}
+			engine={audioEngine}
+			offset={AUDIO_OFFSET}
+			visible={showAudio}
 		/>
-	{/if}
-{/each}
-
-{#each marbles as _m, idx (_m.id)}
-	{@const railIndex = liveRailIndices[idx] ?? marbleRailIndices[idx]}
-	{#if railVisibility[railIndex]}
-		<MarbleView
-			bind:marble={marbles[idx]}
-			rail={marbles[idx].resolved.resolvedRail}
-			railRuntime={sceneCtx.rails[railIndex].runtime}
-			renderVersion={railRenderVersions[railIndex]}
-			color={rails[railIndex].color || '#ffffff'}
-			{wireframe}
-			{fxMarbles}
-			selected={selectedEntity?.type === 'marble' &&
-				selectedEntity.railIdx === railIndex &&
-				selectedEntity.idx === idx}
-			onselect={() => onSelectMarble(railIndex, idx)}
-		/>
-	{/if}
-{/each}
-
-{#if scene.view}
-	<MultiView config={scene.view} {sceneCtx}
-		>{#snippet children(arg)}{@render hudContent?.(arg)}{/snippet}</MultiView
-	>
-{/if}
-
-{#if audioInitialized && scene?.audioView !== false}
-	<AudioView
-		showAllNodes={scene?.audioView?.all}
-		showAnalysers={showAnalyzers && (scene?.audioView?.analyzers ?? true)}
-		showText={scene?.audioView?.text}
-		defaultAnalyser={scene?.audioView?.defaultAnalyser}
-		baseColor={scene?.audioView?.color}
-		module={scene?.audioView?.module}
-		bind:this={audioView}
-		engine={audioEngine}
-		offset={AUDIO_OFFSET}
-		visible={showAudio}
-	/>
-	{#if showAudio}
-		<MidiSignalView alpha={scene?.audioView?.midiAlpha} links={midiSignalLinks} />
-		{#if scene?.audioView?.marbleLinks}
-			<MidiSignalView alpha={scene?.audioView?.midiAlpha} links={marbleSignalLinks} />
+		{#if showAudio}
+			<MidiSignalView alpha={scene?.audioView?.midiAlpha} links={midiSignalLinks} />
+			{#if scene?.audioView?.marbleLinks}
+				<MidiSignalView alpha={scene?.audioView?.midiAlpha} links={marbleSignalLinks} />
+			{/if}
 		{/if}
 	{/if}
 {/if}

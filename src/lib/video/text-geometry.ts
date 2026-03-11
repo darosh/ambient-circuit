@@ -1,10 +1,14 @@
 // I call this font "Eo-Okyo"
 
-import { Vector3, type BufferGeometry } from 'three/webgpu'
+import { LineCurve3, Vector3, type BufferGeometry } from 'three/webgpu'
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
-
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { expandPathString } from '../core/rail-path'
 import { Vec3 } from '../core/rail'
+import { buildTubeGeometry } from './tube-geometry'
+import debug from 'debug'
+
+const log = debug('geo:tube')
 
 const NUMBERS = [
 	'uu ur dr dd ld lu',
@@ -104,14 +108,14 @@ const MISC: Record<string, string> = {
 }
 
 const geometryCache = new Map<string, BufferGeometry[]>()
-const pathCache = new Map<string, Vector3[][]>()
+const tubeCache = new Map<string, BufferGeometry>()
 
 export function getTextGeometryCached(text: string, spacing: number) {
 	if (!text) {
 		return null
 	}
 
-	const key = `${text}_${spacing}`
+	const key = `${text} (${spacing})`
 	const cached = geometryCache.get(key)
 
 	if (cached) return cached
@@ -123,31 +127,63 @@ export function getTextGeometryCached(text: string, spacing: number) {
 	return geometry
 }
 
-export function getTextPathsCached(text: string, spacing: number, connected = false): Vector3[][] {
-	if (!text) {
-		return []
-	}
-
-	const key = `paths_${text}_${spacing}_${connected}`
-	const cached = pathCache.get(key)
-
-	if (cached) return cached
-
-	const paths = getTextPaths(text, spacing, connected)
-
-	pathCache.set(key, paths)
-
-	return paths
-}
-
-export function clearTextGeometryCache(): void {
-	for (const geometries of geometryCache.values()) {
-		for (const geometry of geometries) {
+export function clearTubeTextCache(): void {
+	for (const [key, geometry] of tubeCache.entries()) {
+		if (geometry && !geometry?.userData?.refCount) {
+			log('disposing', geometry.name)
 			geometry.dispose()
+			tubeCache.delete(key)
 		}
 	}
-	geometryCache.clear()
-	pathCache.clear()
+
+	log('cached', tubeCache.size)
+}
+
+export function getCachedTubeGeometry(
+	text: string,
+	spacing: number,
+	width: number
+): BufferGeometry {
+	if (!text) {
+		text = '<UNDEFINED>'
+	}
+
+	const key = `${text} (${spacing}/${width})`
+
+	if (tubeCache.has(key)) {
+		const cached = tubeCache.get(key)!
+
+		cached.name = key
+		cached.userData.refCount++
+		log('reusing', cached.name)
+
+		return cached
+	} else {
+		const geometry = getTubeGeometry(text, spacing, width)
+
+		geometry.userData.refCount = 1
+		geometry.name = key
+		log('creating', key)
+
+		tubeCache.set(key, geometry)
+
+		return geometry
+	}
+}
+
+export function getTubeGeometry(text: string, spacing: number, width: number): BufferGeometry {
+	const paths = getTextPaths(text, spacing)
+	const parts = paths
+		.filter((path) => path.length > 1)
+		.map((path) => {
+			const curves: LineCurve3[] = Array.from({ length: path.length - 1 })
+			for (let i = 0; i < path.length - 1; i++) {
+				curves[i] = new LineCurve3(path[i], path[i + 1])
+			}
+			return buildTubeGeometry(curves, width / 50, 3, 1, false)
+		})
+
+	return parts.length > 1 ? (mergeGeometries(parts) ?? parts[0]) : parts[0]
 }
 
 type BoundingBox = {
@@ -281,13 +317,13 @@ export function getTextRailNodes(
 	connected = false
 ): [number, number, number][][] {
 	if (!connected) {
-		return getTextPathsCached(text, spacing, false)
+		return getTextPaths(text, spacing, false)
 			.filter((pts) => pts.length > 0)
 			.map((pts) => pts.map((p) => [p.x, p.y, p.z] as [number, number, number]))
 	}
 
 	// Split into words, merge letters within each word into one path
-	const paths = getTextPathsCached(text, spacing, true)
+	const paths = getTextPaths(text, spacing, true)
 	const chars = [...text]
 	const wordPaths: [number, number, number][][][] = []
 	let current: [number, number, number][][] = []

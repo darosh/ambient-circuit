@@ -9,6 +9,9 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { buildTubeGeometry } from './tube-geometry'
 import { lerp } from 'three/src/math/MathUtils.js'
 import type { ArrowInstrument } from '../core/instrument'
+import { debug } from 'debug'
+
+const log = debug('geo:ins')
 
 // Geometry segment multipliers
 const SPIRAL_SEGMENTS_PER_ROUND = 32
@@ -65,13 +68,28 @@ function getCacheKey(params: InstrumentGeometryParams): string {
 /**
  * Create instrument main geometry with memoization
  */
-export function createInstrumentGeometry(params: InstrumentGeometryParams): BufferGeometry {
+export function createInstrumentGeometry(
+	params: InstrumentGeometryParams,
+	name: string = 'instrument'
+): BufferGeometry {
 	const key = getCacheKey(params)
 	const cached = geometryCache.get(key)
-	if (cached) return cached
+
+	if (cached) {
+		log('reusing', cached.name, 'as', name)
+		cached.name = name
+		cached.userData.refCount++
+
+		return cached
+	}
 
 	const geometry = buildInstrumentGeometry(params)
 	geometryCache.set(key, geometry)
+
+	log('creating', name)
+	geometry.name = name
+	geometry.userData.refCount = 1
+
 	return geometry
 }
 
@@ -82,16 +100,29 @@ export function createInstrumentFillGeometry(
 	sides: number,
 	size: number,
 	width: number,
-	cornerRadius: number
+	cornerRadius: number,
+	name = 'instrument-fill'
 ): BufferGeometry | null {
 	if (sides < 3) return null
 
 	const key = JSON.stringify({ fill: true, sides, size, width, cornerRadius })
 	const cached = geometryCache.get(key)
-	if (cached) return cached
+
+	if (cached) {
+		log('reusing', cached.name, 'as', name)
+		cached.name = name
+		cached.userData.refCount++
+
+		return cached
+	}
 
 	const geometry = buildPolyFillGeometry(sides, size, width, cornerRadius)
+
 	if (!geometry) return null
+
+	log('creating', name)
+	geometry.name = name
+	geometry.userData.refCount = 1
 
 	geometryCache.set(key, geometry)
 	return geometry
@@ -101,10 +132,15 @@ export function createInstrumentFillGeometry(
  * Clear geometry cache (call on cleanup)
  */
 export function clearInstrumentGeometryCache(): void {
-	for (const geometry of geometryCache.values()) {
-		geometry.dispose()
+	for (const [key, geometry] of geometryCache.entries()) {
+		if (!geometry.userData.refCount) {
+			log('disposing', geometry.name)
+			geometry.dispose()
+			geometryCache.delete(key)
+		}
 	}
-	geometryCache.clear()
+
+	log('cached instruments', geometryCache.size)
 }
 
 /**

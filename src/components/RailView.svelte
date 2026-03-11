@@ -21,8 +21,7 @@
 	import InstrumentView from './InstrumentView.svelte'
 	import { buildTubeGeometry } from '../lib/video/tube-geometry'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
-	// import LineText from './LineText.svelte'
-	import LineText from './TubeText.svelte'
+	import TubeText from './TubeText.svelte'
 	import { onDestroy, untrack } from 'svelte'
 	import { makeStandardMaterial } from '../lib/video/material-standard'
 	import { railMaterial } from '../lib/components/config'
@@ -51,6 +50,7 @@
 		selectedInstrumentIdx?: number | null
 		onSelectInstrument?: (railIdx: number, idx: number) => void
 		textOrientation?: [number, number, number]
+		name: string
 	}
 
 	let {
@@ -73,7 +73,8 @@
 		railIdx = 0,
 		selectedInstrumentIdx = null,
 		onSelectInstrument,
-		textOrientation
+		textOrientation,
+		name = 'rail'
 	}: Props = $props()
 
 	const BEAT_TEXT_WIDTH = 2
@@ -449,7 +450,7 @@
 	{#each visibleBeats as bp, bpIndex (bpIndex)}
 		<T.Group bind:ref={beatGroups[bpIndex]} position={beatLabelPositions[bpIndex]}>
 			<Align>
-				<LineText
+				<TubeText
 					fx={fxText}
 					{id}
 					text={bp.beat.toString()}
@@ -467,7 +468,7 @@
 {#if visible && showNameDeferred && nameLabelPosition}
 	<T.Group bind:ref={nameGroup} position={nameLabelPosition}>
 		<Align>
-			<LineText
+			<TubeText
 				fx={fxText}
 				{id}
 				text={railData.id.toUpperCase()}
@@ -511,6 +512,7 @@
 
 	{#each visibleInstruments as instrument, idx (idx)}
 		<InstrumentView
+			name={`${name}-instrument-${idx}`}
 			{color}
 			size={0.5}
 			{instrument}

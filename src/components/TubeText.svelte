@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { T } from '@threlte/core'
-	import { Color, LineCurve3 } from 'three/webgpu'
+	import { Color } from 'three/webgpu'
 	import type { Material } from 'three/webgpu'
 	import { createTubeMaterialCached } from '../lib/video/material-text-tube'
-	import { getTextPathsCached } from '../lib/video/text-geometry'
-	import { buildTubeGeometry } from '../lib/video/tube-geometry'
+	import { getCachedTubeGeometry } from '../lib/video/text-geometry'
 	import { untrack } from 'svelte'
 	import { createStandardMaterialCached } from '../lib/video/material-standard'
 
@@ -31,7 +30,6 @@
 		active?: boolean
 	} = $props()
 
-	const paths = $derived.by(() => getTextPathsCached(text, spacing))
 	const material = createTubeMaterialCached(
 		untrack(() => id),
 		untrack(() => color)
@@ -44,12 +42,10 @@
 		colorValue.set(color)
 	})
 
-	// Update uniform instead of recreating material
 	$effect(() => {
 		if (material && !material.emissiveColor.value.equals(colorValue)) {
 			material.emissiveColor.value = colorValue
 		}
-
 		if (plainMaterial && !plainMaterial.color.equals(colorValue)) {
 			plainMaterial.color = colorValue
 		}
@@ -60,30 +56,22 @@
 		if (plainMaterial) plainMaterial.opacity = active ? 1 : 0.3
 	})
 
-	// Build tube geometries from character paths
-	const geometries = $derived.by(() =>
-		paths.map((path) => {
-			// Convert points to LineCurve3 array
-			const curves: LineCurve3[] = Array.from({ length: path.length - 1 })
-			for (let i = 0; i < path.length - 1; i++) {
-				curves[i] = new LineCurve3(path[i], path[i + 1])
-			}
+	const geometry = $derived(getCachedTubeGeometry(text, spacing, width))
 
-			return buildTubeGeometry(
-				curves,
-				width / 50, // radius matches Line2 semantics
-				3, // radialSegments
-				1, // density
-				false // open path
-			)
-		})
-	)
+	$effect(() => {
+		const geom = geometry
+		return () => {
+			if (geom) {
+				geom.userData.refCount--
+			}
+		}
+	})
 </script>
 
 <T.Group {...props}>
 	<T.Group scale={size}>
-		{#each geometries as geometry, idx (idx)}
+		{#if geometry}
 			<T.Mesh {geometry} material={propMaterial ?? <Material>useMaterial} />
-		{/each}
+		{/if}
 	</T.Group>
 </T.Group>
