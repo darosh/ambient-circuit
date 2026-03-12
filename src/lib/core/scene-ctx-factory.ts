@@ -18,7 +18,8 @@ export function createSceneCtx(
 	marbleRailIndices: number[],
 	tempo: TempoState,
 	scene: SceneConfig,
-	user: Record<string, unknown> = {}
+	user: Record<string, unknown> = {},
+	railRuntimes?: import('./rail-config').RailRuntime[]
 ): SceneCtx {
 	// Snapshot initial marble configs for rewind
 	const initialSnapshot = {
@@ -77,10 +78,10 @@ export function createSceneCtx(
 	const railActRefs = rails.map((rd) => ({ value: rd.active ?? true }))
 
 	const railEntities: RailEntity[] = rails.map((rd, i) => {
-		// Init runtime on entity (not on config)
-		const runtime: import('./rail-config').RailRuntime = {}
-		if (rd.running !== undefined) runtime.running = rd.running
-		if (rd.active !== undefined) runtime.active = rd.active
+		// Use provided reactive runtime if available, otherwise create plain object
+		const runtime: import('./rail-config').RailRuntime = railRuntimes?.[i] ?? {}
+		if (rd.running !== undefined && runtime.running === undefined) runtime.running = rd.running
+		if (rd.active !== undefined && runtime.active === undefined) runtime.active = rd.active
 
 		// Find resolved rail from marble configs, or resolve it if not found
 		let resolvedRail = marbles.find((m) => m.resolved.resolvedRail.id === rd.id)?.resolved

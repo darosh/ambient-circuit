@@ -46,7 +46,7 @@
 
 	let {
 		railData,
-		railRuntime,
+		railRuntime = $bindable(),
 		width = 0.1,
 		showPoints = false,
 		showBeats = false,
@@ -81,7 +81,6 @@
 
 	const resolved = $derived(resolveRail(toRailShapeConfig(railData)))
 
-	// Per-rail data written to shared material uniforms in onBeforeRender
 	const ud = { color: new Color(), initialIntensity: 0.7, intensity: 0, active: 1 }
 
 	$effect(() => {
@@ -96,19 +95,9 @@
 
 	let meshRefs = $state<(Mesh | undefined)[]>([])
 
-	function setupRailMesh(mesh: Mesh) {
-		mesh.onBeforeRender = () => {
-			railMaterial.emissiveColor.value.copy(ud.color)
-			railMaterial.initialIntensity.value = ud.initialIntensity
-			railMaterial.impactIntensity.value = ud.intensity
-			railMaterial.activeUniform.value = ud.active
-			railMaterial.uvFreqUniform.value = 0.04
-		}
-	}
-
 	$effect(() => {
 		for (const mesh of meshRefs) {
-			if (mesh) setupRailMesh(mesh)
+			if (mesh) mesh.userData.railData = ud
 		}
 	})
 

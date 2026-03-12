@@ -31,6 +31,25 @@ export function sharedRailMaterial() {
 	const uvFreqUniform = uniform(0.75)
 	const useFadeUniform = float(0.5)
 
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	emissiveColor.onObjectUpdate((frame: any) => {
+		const d = frame.object?.userData?.railData
+		if (d) emissiveColor.value.copy(d.color)
+	})
+	initialIntensity.onObjectUpdate((frame: any) => {
+		const d = frame.object?.userData?.railData
+		if (d) initialIntensity.value = d.initialIntensity
+	})
+	impactIntensity.onObjectUpdate((frame: any) => {
+		const d = frame.object?.userData?.railData
+		if (d) impactIntensity.value = d.intensity
+	})
+	activeUniform.onObjectUpdate((frame: any) => {
+		const d = frame.object?.userData?.railData
+		if (d) activeUniform.value = d.active
+	})
+	/* eslint-enable @typescript-eslint/no-explicit-any */
+
 	const mat = new MeshBasicNodeMaterial({
 		transparent: true,
 		side: DoubleSide

@@ -134,7 +134,17 @@
 	// Assign signals and runtimes to instruments (reactive references)
 	assignInstrumentSignals(rails, signalStates, midiSignalStates, runtimeStates)
 
-	// Rail runtime states are on RailEntity (created in sceneCtx)
+	// Rail runtime states — $state-proxied so RailView $derived tracks mutations
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	const railRuntimeStates = $state<Array<Record<string, any>>>(
+		rails.map((rd) => {
+			const rt: Record<string, any> = {}
+			if (rd.running !== undefined) rt.running = rd.running
+			if (rd.active !== undefined) rt.active = rd.active
+			return rt
+		})
+	)
+	/* eslint-enable @typescript-eslint/no-explicit-any */
 
 	const _init = createMarbleConfigs(rails, easing || 'linear')
 	initMarblePositions(_init.marbles)
@@ -160,7 +170,15 @@
 
 	// Create scene context once at mount (non-reactive to avoid loops)
 	const sceneCtx = (() => {
-		const ctx = createSceneCtx(marbles, rails, marbleRailIndices, tempo, scene, scene.user ?? {})
+		const ctx = createSceneCtx(
+			marbles,
+			rails,
+			marbleRailIndices,
+			tempo,
+			scene,
+			scene.user ?? {},
+			railRuntimeStates
+		)
 
 		if (onSceneCtx) {
 			onSceneCtx(ctx)
@@ -574,7 +592,7 @@
 				name={`${scene.id}-rail-${railIndex}`}
 				id={railIndex.toString()}
 				{railData}
-				railRuntime={sceneCtx.rails[railIndex].runtime}
+				bind:railRuntime={railRuntimeStates[railIndex]}
 				width={0.06}
 				{showPoints}
 				{showBeats}
@@ -601,7 +619,7 @@
 				name={`${scene.id}-marble-${_m.id}`}
 				bind:marble={marbles[idx]}
 				rail={marbles[idx].resolved.resolvedRail}
-				railRuntime={sceneCtx.rails[railIndex].runtime}
+				railRuntime={railRuntimeStates[railIndex]}
 				renderVersion={railRenderVersions[railIndex]}
 				color={rails[railIndex].color || '#ffffff'}
 				{wireframe}

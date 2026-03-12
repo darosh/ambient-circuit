@@ -24,12 +24,35 @@ const timeScale = uniform(0.2)
 
 export function sharedInstrumentMaterial() {
 	// Uniforms that can vary per instrument (or stay fixed)
-	const emissiveColor = uniform(color('#ffffff')) // neutral default; overridden per mesh
+	const emissiveColor = uniform(color('#ffffff'))
 	const impactIntensity = uniform(0)
 	const initialIntensity = uniform(0.7)
 	const activeUniform = uniform(1)
-	const uvFreqEffective = uniform(0.1) // we'll update this dynamically too if using setUvMax
+	const uvFreqEffective = uniform(0.1)
 	const useFadeUniform = float(0.5)
+
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	emissiveColor.onObjectUpdate((frame: any) => {
+		const d = frame.object?.userData?.instrumentData
+		if (d) emissiveColor.value.copy(d.color)
+	})
+	impactIntensity.onObjectUpdate((frame: any) => {
+		const d = frame.object?.userData?.instrumentData
+		if (d) impactIntensity.value = d.intensity
+	})
+	initialIntensity.onObjectUpdate((frame: any) => {
+		const d = frame.object?.userData?.instrumentData
+		if (d) initialIntensity.value = d.initialIntensity
+	})
+	activeUniform.onObjectUpdate((frame: any) => {
+		const d = frame.object?.userData?.instrumentData
+		if (d) activeUniform.value = d.active
+	})
+	uvFreqEffective.onObjectUpdate((frame: any) => {
+		const d = frame.object?.userData?.instrumentData
+		if (d) uvFreqEffective.value = d.uvFreq
+	})
+	/* eslint-enable @typescript-eslint/no-explicit-any */
 
 	const mat = new MeshBasicNodeMaterial({
 		transparent: true,

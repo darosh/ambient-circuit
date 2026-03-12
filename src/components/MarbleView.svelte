@@ -64,8 +64,8 @@
 		return [_mBasePos.x, _mBasePos.y, _mBasePos.z]
 	})
 
-	// Per-instance data written to shared material uniforms in onBeforeRender
-	const ud = { color: new Color(), initialIntensity: 0.51, intensity: 0, active: 1 }
+	// Per-instance data written to shared material uniforms via onObjectUpdate
+	const ud = { color: new Color(), initialIntensity: 0.51, intensity: 0, active: 1, uvFreq: 0.1 }
 
 	$effect(() => {
 		ud.color.set(effectiveColor)
@@ -78,14 +78,7 @@
 	let meshRef = $state.raw<Mesh | undefined>()
 
 	$effect(() => {
-		if (!meshRef) return
-		meshRef.onBeforeRender = () => {
-			marbleMaterial.emissiveColor.value.copy(ud.color)
-			marbleMaterial.initialIntensity.value = ud.initialIntensity
-			marbleMaterial.impactIntensity.value = ud.intensity
-			marbleMaterial.activeUniform.value = ud.active
-			marbleMaterial.uvFreqEffective.value = 0.1
-		}
+		if (meshRef) meshRef.userData.instrumentData = ud
 	})
 
 	const type = $derived(marble.runtime.type ?? marble.resolved.type ?? 'ball')

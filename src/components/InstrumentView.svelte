@@ -97,21 +97,11 @@
 	let meshRef = $state.raw<Mesh | undefined>()
 	let innerMeshRef = $state.raw<Mesh | undefined>()
 
-	function setupOnBeforeRender(mesh: Mesh) {
-		mesh.onBeforeRender = () => {
-			instrumentMaterial.emissiveColor.value.copy(ud.color)
-			instrumentMaterial.initialIntensity.value = ud.initialIntensity
-			instrumentMaterial.impactIntensity.value = ud.intensity
-			instrumentMaterial.activeUniform.value = ud.active
-			instrumentMaterial.uvFreqEffective.value = ud.uvFreq
-		}
-	}
-
 	$effect(() => {
-		if (meshRef) setupOnBeforeRender(meshRef)
+		if (meshRef) meshRef.userData.instrumentData = ud
 	})
 	$effect(() => {
-		if (innerMeshRef) setupOnBeforeRender(innerMeshRef)
+		if (innerMeshRef) innerMeshRef.userData.instrumentData = ud
 	})
 
 	// Get points for the instrument's path

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { T } from '@threlte/core'
-	import { Color } from 'three/webgpu'
 	import type { Material } from 'three/webgpu'
 	import { createTubeMaterialCached } from '../lib/video/material-text-tube'
 	import { getCachedTubeGeometry } from '../lib/video/text-geometry'
@@ -35,15 +34,9 @@
 		untrack(() => color)
 	)
 
-	const colorValue = new Color()
-
 	$effect(() => {
-		colorValue.set(color)
-	})
-
-	$effect(() => {
-		if (material && !material.emissiveColor.value.equals(colorValue)) {
-			material.emissiveColor.value = colorValue
+		if (material) {
+			material.emissiveColor.value.set(color)
 		}
 	})
 

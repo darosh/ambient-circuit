@@ -134,6 +134,7 @@ export const scene: SceneConfig = {
 					rays: 12,
 					actionHandler(ctx) {
 						ctx.rail.state.color = c()
+						ctx.instrument.state.color = ctx.rail.state.color
 						ctx.marble.state.color = ctx.rail.state.color
 					}
 				},
@@ -143,6 +144,7 @@ export const scene: SceneConfig = {
 					rays: 12,
 					actionHandler(ctx) {
 						ctx.rail.state.color = c()
+						ctx.instrument.state.color = ctx.rail.state.color
 						ctx.marble.state.color = ctx.rail.state.color
 					}
 				}
