@@ -379,14 +379,7 @@ function buildSpiralGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		path.add(new LineCurve3(new Vector3(x, y, 0), new Vector3(nextX, nextY, 0)))
 	}
 
-	return buildTubeGeometry(
-		path.curves,
-		width / 2,
-		RADIAL_SEGMENTS,
-		1,
-		false,
-		true
-	)
+	return buildTubeGeometry(path.curves, width / 2, RADIAL_SEGMENTS, 1, false, true)
 }
 
 function buildConeGeometry(params: InstrumentGeometryParams): BufferGeometry {
@@ -430,14 +423,7 @@ function buildConeGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		path.add(new LineCurve3(new Vector3(x, y, z), new Vector3(nextX, nextY, nextZ)))
 	}
 
-	return buildTubeGeometry(
-		path.curves,
-		width / 2,
-		RADIAL_SEGMENTS,
-		1,
-		false,
-		true
-	)
+	return buildTubeGeometry(path.curves, width / 2, RADIAL_SEGMENTS, 1, false, true)
 }
 
 function recPath(
