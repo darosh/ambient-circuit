@@ -198,7 +198,8 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 	const { pos = { x: -5, y: 0, z: -5 }, scale = 10 } = opts
 
 	function toWorld(x: number, y: number): Vec3 {
-		return offset([x / scale, 0, y / scale], pos)
+		const r = (n: number) => Math.round(n * 1e6) / 1e6
+		return offset([r(x / scale), 0, r(y / scale)], pos)
 	}
 
 	function d2(ax: number, ay: number, bx: number, by: number): number {
@@ -250,7 +251,7 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 	let i = 0
 
 	while (i < tokens.length) {
-		if (/[A-Za-z]/.test(tokens[i])) curCmd = tokens[i++]
+		if (/^[A-Za-z]$/.test(tokens[i])) curCmd = tokens[i++]
 
 		const letter = curCmd.toUpperCase()
 		const abs = curCmd === letter
@@ -277,6 +278,7 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 				result.push(toWorld(startX, startY))
 				cx = startX
 				cy = startY
+				curCmd = 'L' // reset — prevents infinite loop if stray tokens follow Z
 				continue
 			}
 			case 'L': {
