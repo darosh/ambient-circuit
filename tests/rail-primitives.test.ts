@@ -203,6 +203,25 @@ describe('svgRail', () => {
 		expect(toPt.tangent).toBeCloseTo(0.65)
 	})
 
+	it('scientific notation coords parsed correctly (no infinite loop)', () => {
+		// m 57.500001,42.5 -10e-7,15 4.999999,5 v -20 z
+		// -10e-7 dx is ~0 — should produce 5 points without hanging
+		const nodes = svgRail('m 57.500001,42.5 -10e-7,15 4.999999,5 v -20 z', {
+			pos: { x: 0, y: 0, z: 0 }
+		})
+		expect(nodes).toHaveLength(5)
+		const pos = getPositions(nodes)
+		// first point: m 57.5,42.5 → world (5.75, 0, 4.25)
+		expect(pos[0][0]).toBeCloseTo(5.75)
+		expect(pos[0][2]).toBeCloseTo(4.25)
+		// second point: -10e-7 dx ≈ 0, dy=15 → x unchanged, z+1.5
+		expect(pos[1][0]).toBeCloseTo(5.75)
+		expect(pos[1][2]).toBeCloseTo(5.75)
+		// last point (Z close) same as first
+		expect(pos[4][0]).toBeCloseTo(pos[0][0])
+		expect(pos[4][2]).toBeCloseTo(pos[0][2])
+	})
+
 	it('coordinates match (XZ plane, scale 10)', () => {
 		const nodes = svgRail('M 25,70 V 20 H 67 C 80,20 80,40 67,40 H 35 v 30', {
 			pos: { x: 0, y: 0, z: 0 }
