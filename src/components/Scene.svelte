@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { T, useTask } from '@threlte/core'
+	import { T, useTask, useThrelte } from '@threlte/core'
 	import { untrack, onMount, onDestroy, type Snippet, tick } from 'svelte'
 	import type { Scene as ThreeScene } from 'three/webgpu'
 	import { interactivity } from '@threlte/extras'
@@ -65,6 +65,7 @@
 		showBeats = false,
 		showNames = false,
 		showAudio = false,
+		limitFps = false,
 		showAnalyzers = true,
 		wireframe = false,
 		tempo = $bindable(),
@@ -85,6 +86,7 @@
 		showBeats?: boolean
 		showNames?: boolean
 		showAudio?: boolean
+		limitFps?: boolean
 		showAnalyzers?: boolean
 		wireframe?: boolean
 		fxPost?: boolean
@@ -450,17 +452,33 @@
 	if (fps === undefined) fps = 0
 	let frames = 0
 	let lastTime = performance.now()
+	let lastTimeFps = lastTime
 	const fpsInterval = 1000 / 6
+	const targetFPS = 60
+	const interval = 1000 / targetFPS
+	const { advance, renderStage } = useThrelte()
+
+	useTask(
+		() => {
+			const now = performance.now()
+			frames++
+
+			if (now >= lastTimeFps + fpsInterval) {
+				fps = Math.round((frames * 1000) / (now - lastTimeFps))
+				frames = 0
+				lastTimeFps = now
+			}
+		},
+		{ stage: renderStage }
+	)
 
 	// Update loop
 	useTask((delta) => {
-		// Calculate FPS
-		frames++
 		const now = performance.now()
-		if (now >= lastTime + fpsInterval) {
-			fps = Math.round((frames * 1000) / (now - lastTime))
-			frames = 0
-			lastTime = now
+
+		if (limitFps && now - lastTime >= interval) {
+			lastTime = now - ((now - lastTime) % interval) // drift correction
+			advance()
 		}
 
 		if (audioInitialized || noAudioScene) {

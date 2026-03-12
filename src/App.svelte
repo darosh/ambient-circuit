@@ -66,6 +66,7 @@
 	let useFreeze = $state(false)
 	let fxPost = $state(true)
 	let fxHud = $state(true)
+	let limitFps = $state(import.meta.env.DEV)
 	let autoRotate = $state(false)
 	let showAudio = $state(true)
 	let fps = $state(0)
@@ -263,6 +264,12 @@
 			action: () => {
 				globalState.isMuted = !globalState.isMuted
 			}
+		},
+		{
+			code: 'KeyL',
+			action: () => {
+				limitFps = !limitFps
+			}
 		}
 	])
 </script>
@@ -333,6 +340,7 @@
 {/if}
 
 <Canvas
+	renderMode={limitFps ? 'manual' : 'on-demand'}
 	createRenderer={(canvas) => {
 		const renderer = new WebGPURenderer({
 			canvas,
@@ -357,6 +365,7 @@
 		{sceneIndex}
 		{activeScene}
 		{mountedScene}
+		{limitFps}
 		{showGrid}
 		{showPoints}
 		{showBeats}

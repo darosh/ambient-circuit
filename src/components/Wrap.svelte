@@ -14,6 +14,7 @@
 		sceneIndex,
 		activeScene,
 		mountedScene,
+		limitFps,
 		showGrid,
 		showPoints,
 		showBeats,
@@ -94,6 +95,7 @@
 	<Scene
 		onSceneCtx={(ctx) => (sceneCtx = ctx)}
 		scene={mountedScene}
+		{limitFps}
 		{showGrid}
 		{showPoints}
 		{showBeats}
