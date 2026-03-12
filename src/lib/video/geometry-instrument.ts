@@ -383,7 +383,7 @@ function buildSpiralGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		path.curves,
 		width / 2,
 		RADIAL_SEGMENTS,
-		TUBULAR_SEGMENTS_SPIRAL,
+		1,
 		false,
 		true
 	)
@@ -434,7 +434,7 @@ function buildConeGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		path.curves,
 		width / 2,
 		RADIAL_SEGMENTS,
-		TUBULAR_SEGMENTS_SPIRAL,
+		1,
 		false,
 		true
 	)
