@@ -59,6 +59,7 @@
 	let fxArr: ReturnType<typeof buildImpactMaterial>[] = $state.raw([])
 	const animTimes: number[] = []
 	let analyzerMaterial = $state.raw<MeshStandardMaterial | undefined>()
+	let tubeMat = $state.raw<MeshStandardMaterial | undefined>()
 
 	$effect(() => {
 		if (analyzerMaterial) {
@@ -75,6 +76,24 @@
 		return () => {
 			analyzerMaterial?.dispose()
 		}
+	})
+
+	$effect(() => {
+		const m = new MeshStandardMaterial({
+			opacity: 0.5,
+			transparent: true,
+			emissive: baseColor,
+			emissiveIntensity: 1.6
+		})
+		tubeMat = m
+		return () => {
+			m.dispose()
+			tubeMat = undefined
+		}
+	})
+
+	$effect(() => {
+		if (tubeMat) tubeMat.emissive.set(baseColor)
 	})
 
 	// Derive layout from engine state
@@ -182,13 +201,14 @@
 	>
 		<!-- Nodes -->
 		{#each layout.nodes as node, ni (ni)}
-			<T.Mesh position.x={node.x} position.y={node.y} position.z={node.z} rotation.x={-DEG_90}>
+			<T.Mesh
+				position.x={node.x}
+				position.y={node.y}
+				position.z={node.z}
+				rotation.x={-DEG_90}
+				material={wireframe ? wireframeMaterial : (fxArr[ni]?.mat ?? wireframeMaterial)}
+			>
 				<T.SphereGeometry args={[module, Math.round(module * 160), Math.round(module * 80)]} />
-				{#if wireframe}
-					<T is={wireframeMaterial} />
-				{:else if fxArr[ni]}
-					<T is={fxArr[ni].mat} />
-				{/if}
 				{#if showText}
 					<T.Group rotation.y={DEG_90} rotation.z={Math.PI} position.z=".2" position.y=".06">
 						<TubeText
@@ -217,7 +237,7 @@
 						tube.to
 					)
 				: new LineCurve3(tube.from, tube.to)}
-			<T.Mesh>
+			<T.Mesh material={wireframe ? wireframeMaterial : (tubeMat ?? wireframeMaterial)}>
 				<T.TubeGeometry
 					args={[
 						curve,
@@ -227,16 +247,6 @@
 						false
 					]}
 				/>
-				{#if wireframe}
-					<T is={wireframeMaterial} />
-				{:else}
-					<T.MeshStandardMaterial
-						opacity={0.5}
-						transparent
-						emissive={baseColor}
-						emissiveIntensity={1.6}
-					/>
-				{/if}
 			</T.Mesh>
 		{/each}
 
