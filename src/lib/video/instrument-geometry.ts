@@ -18,7 +18,7 @@ const SPIRAL_SEGMENTS_PER_ROUND = 32
 const CONE_SEGMENTS_PER_ROUND = 32
 const ARROW_CIRCLE_SEGMENTS = 36
 const TUBULAR_SEGMENTS_SPIRAL = 64
-const TUBULAR_SEGMENTS_ARROW_CIRCLE = 72
+const TUBULAR_SEGMENTS_ARROW_CIRCLE = 12
 const TUBULAR_SEGMENTS_POLY = 21
 const TUBULAR_SEGMENTS_POLY_FILL = 11
 const TUBULAR_SEGMENTS_ARROW_OTHER = 17
@@ -440,8 +440,12 @@ function buildConeGeometry(params: InstrumentGeometryParams): BufferGeometry {
 	)
 }
 
-function recPath(radius: number, path: CurvePath<Vector3>, zOffset = 0) {
-	const segments = ARROW_CIRCLE_SEGMENTS
+function recPath(
+	radius: number,
+	path: CurvePath<Vector3>,
+	zOffset = 0,
+	segments = ARROW_CIRCLE_SEGMENTS
+) {
 	for (let i = 0; i < segments; i++) {
 		const angle1 = (i / segments) * Math.PI * 2
 		const angle2 = ((i + 1) / segments) * Math.PI * 2
@@ -556,18 +560,18 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		}
 		case 'dot': {
 			const radius = width / 2
-			recPath(radius, path, zOffset)
+			recPath(radius, path, zOffset, 12)
 
 			break
 		}
 		case 'point': {
-			recPath(width, path, zOffset)
+			recPath(width, path, zOffset, 16)
 
 			break
 		}
 		case 'ring': {
 			const radius = width * 2
-			recPath(radius, path, zOffset)
+			recPath(radius, path, zOffset, 24)
 
 			break
 		}
@@ -701,15 +705,21 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 
 	const closed = !['plain', 'step', 'pause'].includes(kind)
 	const tubularSegments =
-		kind === 'rec' || kind === 'dot'
+		kind === 'rec'
 			? TUBULAR_SEGMENTS_ARROW_CIRCLE
-			: kind === 'play' || kind === 'fwd'
-				? 3 * TUBULAR_SEGMENTS_POLY
-				: kind === 'stop'
-					? 4 * TUBULAR_SEGMENTS_POLY
-					: kind === 'repro' || kind === 'muted'
-						? 6 * TUBULAR_SEGMENTS_POLY
-						: TUBULAR_SEGMENTS_ARROW_OTHER
+			: kind === 'dot'
+				? 1
+				: kind === 'point'
+					? 1
+					: kind === 'ring'
+						? 1
+						: kind === 'play' || kind === 'fwd'
+							? 3 * TUBULAR_SEGMENTS_POLY
+							: kind === 'stop'
+								? 4 * TUBULAR_SEGMENTS_POLY
+								: kind === 'repro' || kind === 'muted'
+									? 6 * TUBULAR_SEGMENTS_POLY
+									: TUBULAR_SEGMENTS_ARROW_OTHER
 
 	const straightSecondary = kind === 'repro' || kind === 'muted' || 'fwd'
 
@@ -809,14 +819,7 @@ function buildSunGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		}
 	}
 
-	const sunSegs = 12 * TUBULAR_SEGMENTS_POLY
-	const mainGeometry = buildTubeGeometry(
-		path.curves,
-		width / 2,
-		RADIAL_SEGMENTS,
-		sunSegs / path.getLength(),
-		true
-	)
+	const mainGeometry = buildTubeGeometry(path.curves, width / 2, RADIAL_SEGMENTS, 1, true)
 
 	if (sunRayPaths.length > 0) {
 		const geometries: BufferGeometry[] = [mainGeometry]
