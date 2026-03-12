@@ -1,8 +1,8 @@
 import { sharedInstrumentMaterial } from '../video/material-instrument'
 import { sharedRailMaterial } from '../video/material-rail'
 import { clearImpactMaterialCache } from '../video/material-impact'
-import { clearStandardMaterialCache } from '../video/material-standard'
 import { MeshStandardMaterial } from 'three/webgpu'
+import { clearTubeMaterialCache } from '../video/material-text-tube'
 
 // Singleton material instances — needs to be disposed to complete RenderObjects teardown
 export const railMaterial = sharedRailMaterial()
@@ -16,7 +16,7 @@ export function disposeSharedMaterials() {
 	wireframeMaterial.dispose()
 
 	clearImpactMaterialCache(true)
-	clearStandardMaterialCache(true)
+	clearTubeMaterialCache(true)
 }
 
 export const defaultBloom = {

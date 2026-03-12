@@ -1,6 +1,9 @@
 import { MeshBasicNodeMaterial } from 'three/webgpu'
 import { luminance, mix, uniform, color as colorShader, Fn, vec3, vec4 } from 'three/tsl'
 import type { UniformNode, Color } from 'three/webgpu'
+import { debug } from 'debug'
+
+const log = debug('mat:tube')
 
 const tubeCache = new Map<
 	string,
@@ -17,13 +20,30 @@ export type TubeMat = {
 	activeUniform: UniformNode<'float', number>
 }
 
+export function clearTubeMaterialCache(all = false): void {
+	for (const [key, { mat }] of tubeCache.entries()) {
+		if (!mat.userData.refCount || all) {
+			log('disposing', key)
+			mat.dispose()
+			tubeCache.delete(key)
+		}
+	}
+	log('cached materials', tubeCache.size)
+}
+
 export function createTubeMaterialCached(id: string, color: string): TubeMat {
 	let material = tubeCache.get(id)
 
-	if (!material) {
-		material = createTubeMaterial(color)
-		tubeCache.set(id, material)
+	if (material) {
+		log('reusing', id)
+		material.mat.userData.refCount++
+		return material
 	}
+
+	log('creating', id)
+	material = createTubeMaterial(color)
+	material.mat.userData.refCount = 1
+	tubeCache.set(id, material)
 
 	return material
 }

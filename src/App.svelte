@@ -26,7 +26,6 @@
 	import { clearTubeTextCache } from './lib/video/geometry-text-tube'
 	import { clearMixedTextParsedCache } from './lib/video/geometry-text-mixed'
 	import { clearImpactMaterialCache } from './lib/video/material-impact'
-	import { clearStandardMaterialCache } from './lib/video/material-standard'
 	import Wrap from './components/Wrap.svelte'
 	import { createKeydownHandler } from './lib/helpers/keyboard'
 	import { onMount, tick, untrack } from 'svelte'
@@ -35,6 +34,7 @@
 	import { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 	import { globalState } from './components/global-state.svelte'
 	import GlobalState from './components/GlobalState.svelte'
+	import { clearTubeMaterialCache } from './lib/video/material-text-tube'
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
@@ -147,7 +147,7 @@
 		clearTubeTextCache()
 		clearMixedTextParsedCache()
 		clearImpactMaterialCache()
-		clearStandardMaterialCache()
+		clearTubeMaterialCache()
 	}
 
 	// eslint-disable-next-line svelte/prefer-writable-derived
