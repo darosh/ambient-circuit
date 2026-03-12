@@ -1020,16 +1020,12 @@
 
 <T.Group
 	position={[
-		$size.width / HUD_ZOOM / 2 - otherSpacing,
+		$size.width / HUD_ZOOM / 2 - otherSpacing - CHAR_WIDTH * title.length * sphereR * 1.8,
 		-$size.height / HUD_ZOOM / 2 + sphereR * 3 + otherSpacing,
 		0
 	]}
 >
-	{#key title}
-		<Align x={-1} y={1} z={false}>
-			<GeoText cache material={textMatLarge.mat} text={title.toUpperCase()} size={sphereR * 1.8} />
-		</Align>
-	{/key}
+	<GeoText cache material={textMatLarge.mat} text={title.toUpperCase()} size={sphereR * 1.8} />
 </T.Group>
 
 {#if showDescription && description}
