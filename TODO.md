@@ -1,20 +1,5 @@
 # TODO (no AI)
 
-- [ ] uniform onUpdate
-
-```
-  // Key: attach onUpdate to pull from the current object (mesh)
-  emissiveColor.onUpdate = (frame, object) => {  // object is the Mesh being rendered
-    if (object.userData?.instrumentData) {
-      emissiveColor.value.copy(object.userData.instrumentData.color);
-    }
-  };
-
-  impactIntensity.onUpdate = (frame, object) => {
-    impactIntensity.value = object.userData?.instrumentData?.intensity ?? 0;
-  };
-```
-
 - [ ] Dust?
 - [ ] CRT?
 - [ ] global peak meter, stereo?
@@ -43,6 +28,7 @@
   - [x] scroll presets
   - [x] scroll chains
   - [ ] remove limit, use available space
+- [x] uniform onUpdate
 - [x] wireframe
 - [x] heap check
 - [x] RNBO scene
