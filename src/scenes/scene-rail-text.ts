@@ -1,5 +1,5 @@
 import { SceneConfig } from '../lib/core/scene'
-import { getTextRailNodes } from '../lib/video/text-geometry'
+import { getTextRailNodes } from '../lib/video/geometry-text-tube'
 import { RailConfig } from '../lib/core/rail-config'
 import { triggerHandler } from '../lib/core/trigger-handler'
 import { createFloating } from './utils/floating'

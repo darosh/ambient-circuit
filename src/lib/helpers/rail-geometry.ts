@@ -1,7 +1,7 @@
 import type { ResolvedPoint, ResolvedSplit } from '../core/rail'
 import { type BufferGeometry, CurvePath, LineCurve3, Vector3 } from 'three/webgpu'
 import { buildSegmentCurve, toV3 } from '../core/rail-curve'
-import { buildTubeGeometry } from '../video/tube-geometry'
+import { buildTubeGeometry } from '../video/geometry-tube'
 import { debug } from 'debug'
 
 const log = debug('geo:rail')

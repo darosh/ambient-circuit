@@ -43,10 +43,10 @@
 	import { GridHelperIO } from '../lib/three/GridHelperIO'
 	import { debug } from 'debug'
 	import { disposeSharedMaterials, wireframeMaterial } from '../lib/components/config'
-	import { disposeMarbleGeometryCache } from '../lib/video/marble-geometry'
-	import { disposeInstrumentGeometryCache } from '../lib/video/instrument-geometry'
-	import { disposeGeoTextCache } from '../lib/video/geo-geometry'
-	import { disposeTubeTextCache } from '../lib/video/text-geometry'
+	import { disposeMarbleGeometryCache } from '../lib/video/geometry-marble'
+	import { disposeInstrumentGeometryCache } from '../lib/video/geometry-instrument'
+	import { disposeGeoTextCache } from '../lib/video/geometry-text'
+	import { disposeTubeTextCache } from '../lib/video/geometry-text-tube'
 
 	const log = debug('<Scene>')
 

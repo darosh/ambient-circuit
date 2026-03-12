@@ -10,7 +10,7 @@
 		createInstrumentGeometry,
 		createInstrumentFillGeometry,
 		type InstrumentType
-	} from '../lib/video/instrument-geometry'
+	} from '../lib/video/geometry-instrument'
 	import { onDestroy, untrack } from 'svelte'
 	import { type Mesh } from 'three/webgpu'
 

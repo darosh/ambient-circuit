@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildTubeGeometry } from '../src/lib/video/tube-geometry'
+import { buildTubeGeometry } from '../src/lib/video/geometry-tube'
 import { LineCurve3, Vector3 } from 'three/webgpu'
 
 // Simple square of 4 line segments forming a closed loop

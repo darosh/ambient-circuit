@@ -5,7 +5,7 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { expandPathString } from '../core/rail-path'
 import { Vec3 } from '../core/rail'
-import { buildTubeGeometry } from './tube-geometry'
+import { buildTubeGeometry } from './geometry-tube'
 import debug from 'debug'
 
 const log = debug('geo:tube')

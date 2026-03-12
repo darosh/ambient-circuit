@@ -2,8 +2,8 @@
 	import { T, useTask } from '@threlte/core'
 	import { SphereGeometry, Mesh, Group, BufferGeometry } from 'three/webgpu'
 	import { createImpactMaterialCached } from '../lib/video/material-impact'
-	import { getCachedMixedGeometry } from '../lib/video/geo-geometry'
-	import { parseMixedTextCached } from '../lib/video/mixed-text'
+	import { getCachedMixedGeometry } from '../lib/video/geometry-text'
+	import { parseMixedTextCached } from '../lib/video/geometry-text-mixed'
 	import { onDestroy } from 'svelte'
 
 	export type NoteEvent = {

@@ -1,5 +1,5 @@
-import { sharedInstrumentMaterial } from '../video/material-instrument-gen'
-import { sharedRailMaterial } from '../video/material-rail-gen'
+import { sharedInstrumentMaterial } from '../video/material-instrument'
+import { sharedRailMaterial } from '../video/material-rail'
 import { clearImpactMaterialCache } from '../video/material-impact'
 import { clearStandardMaterialCache } from '../video/material-standard'
 import { MeshStandardMaterial } from 'three/webgpu'

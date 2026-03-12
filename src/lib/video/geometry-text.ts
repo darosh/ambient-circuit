@@ -2,7 +2,7 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js'
 import { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js'
 import type { BufferGeometry } from 'three/webgpu'
-import { buildMixedGeometry, parseMixedTextCached } from './mixed-text'
+import { buildMixedGeometry, parseMixedTextCached } from './geometry-text-mixed'
 import { debug } from 'debug'
 
 const log = debug('geo:txt')

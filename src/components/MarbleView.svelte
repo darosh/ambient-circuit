@@ -7,7 +7,7 @@
 	import { easeOutQuart } from '../lib/helpers/easing'
 	import type { ResolvedRail } from '../lib/core/rail'
 	import type { RailRuntime } from '../lib/core/rail-config'
-	import { createMarbleGeometry, type MarbleType } from '../lib/video/marble-geometry'
+	import { createMarbleGeometry, type MarbleType } from '../lib/video/geometry-marble'
 
 	// Animation constants
 	const TANGENT_VERTICAL_THRESHOLD = 0.9

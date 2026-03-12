@@ -7,7 +7,7 @@ import {
 	Vector3,
 	type BufferGeometry
 } from 'three/webgpu'
-import { buildTubeGeometry } from './tube-geometry'
+import { buildTubeGeometry } from './geometry-tube'
 import { debug } from 'debug'
 
 const log = debug('geo:mar')

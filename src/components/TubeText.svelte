@@ -2,7 +2,7 @@
 	import { T } from '@threlte/core'
 	import type { Material } from 'three/webgpu'
 	import { createTubeMaterialCached } from '../lib/video/material-text-tube'
-	import { getCachedTubeGeometry } from '../lib/video/text-geometry'
+	import { getCachedTubeGeometry } from '../lib/video/geometry-text-tube'
 	import { untrack } from 'svelte'
 	import { wireframeMaterial } from '../lib/components/config'
 

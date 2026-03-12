@@ -4,7 +4,7 @@
 		fontCache,
 		getCachedTextGeometry,
 		getCachedMixedGeometry
-	} from '../lib/video/geo-geometry'
+	} from '../lib/video/geometry-text'
 	import { Text3DGeometry, Suspense } from '@threlte/extras'
 
 	let { text, size, material, cache = false, mixed = false } = $props()
