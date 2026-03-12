@@ -16,6 +16,7 @@
 		id,
 		fx = true,
 		active = true,
+		align = false,
 		...props
 	}: {
 		text: string
@@ -27,6 +28,7 @@
 		id: string
 		fx?: boolean
 		active?: boolean
+		align?: boolean
 	} = $props()
 
 	const material = createTubeMaterialCached(
@@ -54,12 +56,20 @@
 			}
 		}
 	})
+
+	const alignOffset = $derived.by((): [number, number, number] => {
+		if (!align || !geometry) return [0, 0, 0]
+		geometry.computeBoundingBox()
+		const bb = geometry.boundingBox!
+		return [-(bb.min.x + bb.max.x) / 2, -(bb.min.y + bb.max.y) / 2, -(bb.min.z + bb.max.z) / 2]
+	})
 </script>
 
 <T.Group {...props}>
 	<T.Group scale={size}>
 		{#if geometry}
 			<T.Mesh
+				position={alignOffset}
 				oncreate={() => () => material.mat.userData.refCount--}
 				{geometry}
 				material={propMaterial ?? (fx ? material?.mat : wireframeMaterial)}

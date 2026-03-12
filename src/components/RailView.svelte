@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { T, useThrelte, useTask } from '@threlte/core'
-	import { Align } from '@threlte/extras'
 	import type { RailConfig, RailRuntime } from '../lib/core/rail-config'
 	import { toRailShapeConfig } from '../lib/core/rail-config'
 	import type { SceneCtx } from '../lib/core/scene-ctx'
@@ -352,36 +351,34 @@
 {#if visible && showBeats}
 	{#each visibleBeats as bp, bpIndex (bpIndex)}
 		<T.Group bind:ref={beatGroups[bpIndex]} position={beatLabelPositions[bpIndex]}>
-			<Align>
-				<TubeText
-					fx={!wireframe}
-					{id}
-					text={bp.beat.toString()}
-					{color}
-					active={effectiveActive}
-					spacing={1}
-					size={BEAT_TEXT_SIZE}
-					width={BEAT_TEXT_WIDTH}
-				/>
-			</Align>
+			<TubeText
+				align
+				fx={!wireframe}
+				{id}
+				text={bp.beat.toString()}
+				{color}
+				active={effectiveActive}
+				spacing={1}
+				size={BEAT_TEXT_SIZE}
+				width={BEAT_TEXT_WIDTH}
+			/>
 		</T.Group>
 	{/each}
 {/if}
 
 {#if visible && showNameDeferred && nameLabelPosition}
 	<T.Group bind:ref={nameGroup} position={nameLabelPosition}>
-		<Align>
-			<TubeText
-				fx={!wireframe}
-				{id}
-				text={railData.id.toUpperCase()}
-				{color}
-				active={effectiveActive}
-				size={RAIL_TEXT_SIZE}
-				width={RAIL_TEXT_WIDTH}
-				spacing={2}
-			/>
-		</Align>
+		<TubeText
+			align
+			fx={!wireframe}
+			{id}
+			text={railData.id.toUpperCase()}
+			{color}
+			active={effectiveActive}
+			size={RAIL_TEXT_SIZE}
+			width={RAIL_TEXT_WIDTH}
+			spacing={2}
+		/>
 	</T.Group>
 {/if}
 

@@ -28,6 +28,7 @@
   - [x] scroll presets
   - [x] scroll chains
   - [ ] remove limit, use available space
+- [x] remove <Align>
 - [x] uniform onUpdate
 - [x] wireframe
 - [x] heap check
