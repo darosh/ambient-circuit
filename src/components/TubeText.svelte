@@ -59,7 +59,11 @@
 <T.Group {...props}>
 	<T.Group scale={size}>
 		{#if geometry}
-			<T.Mesh oncreate={() => () => material.mat.userData.refCount-- }  {geometry} material={propMaterial ?? (fx ? material?.mat : wireframeMaterial)} />
+			<T.Mesh
+				oncreate={() => () => material.mat.userData.refCount--}
+				{geometry}
+				material={propMaterial ?? (fx ? material?.mat : wireframeMaterial)}
+			/>
 		{/if}
 	</T.Group>
 </T.Group>
