@@ -6,7 +6,7 @@
 
 <script lang="ts">
 	import { extend, T, useTask, useThrelte } from '@threlte/core'
-	import { interactivity, Align } from '@threlte/extras'
+	import { interactivity } from '@threlte/extras'
 	import type { AudioEngine, AudioChain } from '../lib/audio'
 	import { resolveAnalyzerType, getChainLabel } from '../lib/audio/engine'
 	import { buildImpactMaterial, createImpactMaterialCached } from '../lib/video/material-impact'
