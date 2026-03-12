@@ -61,7 +61,7 @@
 		if (!align || !geometry) return [0, 0, 0]
 		geometry.computeBoundingBox()
 		const bb = geometry.boundingBox!
-		return [-(bb.min.x + bb.max.x) / 2, -(bb.min.y + bb.max.y) / 2, -(bb.min.z + bb.max.z) / 2]
+		return [-(bb.min.x + bb.max.x) / 2, -(bb.min.y + bb.max.y) / 2, 0]
 	})
 </script>
 
