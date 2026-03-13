@@ -29,12 +29,13 @@ import { scene as sceneMultiRows } from './scene-multi-rows'
 import { scene as sceneMultiColumns } from './scene-multi-columns'
 import { scene as sceneMultiTest, sceneMulti32 } from './scene-multi-test'
 import { scene as sceneRailText } from './scene-rail-text'
-import { scene as scene2 } from './scene-2'
 import { scene as sceneSampler } from './scene-sampler'
 import { scene as sceneSamplerPadDeeper } from './scene-sampler-pad-deeper'
 import { scene as sceneSamplerPadAwaits } from './scene-sampler-pad-awaits'
 import { scene as sceneSamplerPadAstrid } from './scene-sampler-pad-astrid'
+import { scene as sceneFormlines } from './scene-formlines'
 import { scene as scene1 } from './scene-1'
+import { scene as scene2 } from './scene-2'
 // import { scenes as scenesRnbo } from './scene-rnbo'
 
 export const scenes: SceneConfig[] = [
@@ -65,6 +66,7 @@ export const scenes: SceneConfig[] = [
 	sceneMultiTest,
 	sceneMulti32,
 	...sceneRailText,
+	sceneFormlines,
 	scene1,
 	scene2,
 	sceneCreateDestroy,
@@ -77,3 +79,17 @@ export const scenes: SceneConfig[] = [
 	sceneSamplerPadAstrid
 	// ...scenesRnbo
 ]
+
+export function onUpdate(cb: (scenes: SceneConfig[]) => void) {
+	if (import.meta.hot) {
+		import.meta.hot.data.cb = cb
+	}
+}
+
+if (import.meta.hot) {
+	import.meta.hot.accept((c) => {
+		if (import.meta.hot!.data.cb && c?.scenes) {
+			import.meta.hot!.data.cb(c.scenes)
+		}
+	})
+}

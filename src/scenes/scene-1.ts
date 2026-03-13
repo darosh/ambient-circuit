@@ -1,10 +1,11 @@
 import { SceneConfig } from '../lib/core/scene'
 import { RailConfig } from '../lib/core/rail-config'
 import { triggerHandler } from '../lib/core/trigger-handler'
-import { color3, colorFactory } from './utils/colors'
+import { color4, colorFactory } from './utils/colors'
 import { DRAWING_RAVEN } from './utils/svg-paths'
+import { Matrix4 } from 'three'
 
-const c = colorFactory(color3)
+const c = colorFactory(color4)
 
 /**
  const audio: AudioChainConfig[] = [
@@ -20,8 +21,8 @@ const c = colorFactory(color3)
 export const scene: SceneConfig = {
 	id: 'scene-one',
 	bpm: 60,
-	camera: [0, 21, 0],
-	target: [0, -0.5, 0],
+	camera: [0, 5, 32],
+	target: [0, 8, 0],
 	triggerHandler,
 	tint: [1, 1, 1.05],
 	// audio: {
@@ -44,15 +45,15 @@ export const scene: SceneConfig = {
 	rails: []
 }
 
-const svgs = [...DRAWING_RAVEN]
-
 scene.rails!.push(
-	...svgs.map(
-		(d, i) =>
+	...Object.entries(DRAWING_RAVEN).map(
+		([id, d]) =>
 			<RailConfig>{
+				offset: [0, 0, -10],
+				transform: new Matrix4().makeRotationX(Math.PI / 2),
 				color: c(),
-				id: `y${i + 1}`,
-				nodes: [d.replace(/(^[^ ]+ )/, '$1u.1') + 'd.1']
+				id,
+				nodes: [d]
 			}
 	)
 )
