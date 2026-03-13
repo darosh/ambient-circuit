@@ -14,7 +14,7 @@
 	import type { Theme } from 'svelte-tweakpane-ui'
 	import { createTempoState } from './lib/core/tempo'
 	import { easingNames } from './lib/helpers/easing'
-	import { scenes } from './scenes'
+	import { onUpdate, scenes } from './scenes'
 	import { initMidi, setMidiPort, type MidiState, setMidiState } from './lib/midi/midi'
 	import type { SelectedEntity } from './components/Scene.svelte'
 	import type { AudioChain, AudioEngine } from './lib/audio/types'
@@ -35,6 +35,7 @@
 	import { globalState } from './components/global-state.svelte'
 	import GlobalState from './components/GlobalState.svelte'
 	import { clearTubeMaterialCache } from './lib/video/material-text-tube'
+	import type { SceneConfig } from './lib/core/scene'
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
@@ -92,6 +93,18 @@
 		}, 0)
 	})
 
+	let reloadScene = $state<SceneConfig | undefined>()
+
+	onUpdate((s: SceneConfig[]) => {
+		if (s.length === 0) {
+			return
+		}
+
+		scenes.splice(0)
+		scenes.push(...s)
+		reloadScene = s.find((d) => d.id === sceneId)
+	})
+
 	// Shared analyzer: reconnect when selection changes
 	$effect(() => {
 		const engine = audioEngineRef
@@ -126,13 +139,20 @@
 	$effect(() => {
 		if (initialHash.params.has('play')) tempo.isPlaying = true
 	})
-	let activeScene = $derived(scenes.find((s) => s.id === sceneId) ?? scenes[0])
+
+	$effect(() => {
+		if (sceneId) {
+			reloadScene = undefined
+		}
+	})
+
+	let activeScene = $derived(reloadScene ?? scenes.find((s) => s.id === sceneId) ?? scenes[0])
 	let mountedScene = $state<typeof activeScene | null>(untrack(() => activeScene))
 
 	// Sequence scene switches: unmount old (onDestroy fires) before mounting new
 	$effect(() => {
 		const scene = activeScene
-		if (untrack(() => mountedScene)?.id === scene.id) return
+		if (!reloadScene && untrack(() => mountedScene)?.id === scene.id) return
 		mountedScene = null
 		tick().then(() => {
 			mountedScene = scene
@@ -222,6 +242,7 @@
 			action: () => (easing = easingNames[(easingNames.indexOf(easing) + 1) % easingNames.length])
 		},
 		{ code: 'KeyB', action: () => (showBeats = !showBeats) },
+		{ code: 'KeyP', action: () => (showPoints = !showPoints) },
 		{ code: 'KeyN', action: () => (showNames = !showNames) },
 		{ code: 'KeyG', action: () => (showGrid = !showGrid) },
 		{ code: 'KeyM', action: () => (midiEnabled = !midiEnabled) },
@@ -367,7 +388,7 @@
 		{mountedScene}
 		{limitFps}
 		{showGrid}
-		{showPoints}
+		showPoints={mountedScene?.points ?? showPoints}
 		{showBeats}
 		{showNames}
 		bind:wireframe
