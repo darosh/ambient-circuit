@@ -222,6 +222,49 @@ describe('svgRail', () => {
 		expect(pos[4][2]).toBeCloseTo(pos[0][2])
 	})
 
+	it('4-arc circle: Z does not add duplicate point when arc lands on start', () => {
+		// Each arc is a quarter-circle; the 4th arc lands back exactly on start
+		const path = 'm 30,27.5 a 5,5 0 0 1 -5,5 5,5 0 0 1 -5,-5 5,5 0 0 1 5,-5 5,5 0 0 1 5,5 z'
+		const nodes = svgRail(path, { pos: { x: 0, y: 0, z: 0 } })
+		expect(nodes).toHaveLength(5)
+		// closed loop: last point position equals first
+		const pos = getPositions(nodes)
+		expect(pos[4][0]).toBeCloseTo(pos[0][0])
+		expect(pos[4][2]).toBeCloseTo(pos[0][2])
+		// intermediate points have round:'both'
+		for (let i = 1; i <= 3; i++) {
+			expect((nodes[i] as RailPointFull).round).toBe('both')
+		}
+		// quarter-circle tangent ≈ 0.3906 (= 4/3*tan(π/8) / √2)
+		expect((nodes[1] as RailPointFull).tangent).toBeCloseTo(0.3906, 3)
+	})
+
+	it('near-straight C commands emit plain Vec3 (chevron path)', () => {
+		// The two C segments have cp1 and cp2 exactly on the chord → straight
+		const path =
+			'm 38.363281,121.67578 v 19.05664 c 3.833334,-3.83333 7.666667,-7.66667 11.5,-11.5 3.833334,3.83333 7.666667,7.66667 11.5,11.5 v -19.05664 z'
+		const nodes = svgRail(path, { pos: { x: 0, y: 0, z: 0 } })
+		// M + v + c-end1 + c-end2 + v + Z-close
+		expect(nodes).toHaveLength(6)
+		// All points should be plain Vec3 (no curve marks)
+		expect(isVec3(nodes[0])).toBe(true) // M
+		expect(isVec3(nodes[1])).toBe(true) // v
+		expect(isVec3(nodes[2])).toBe(true) // first C endpoint (straight)
+		expect(isVec3(nodes[3])).toBe(true) // second C endpoint (straight, S-like via repeated c)
+		expect(isVec3(nodes[4])).toBe(true) // v
+		// nodes[5] = Z close back to start
+		expect(isVec3(nodes[5])).toBe(true)
+	})
+
+	it('genuinely curved C is NOT flattened', () => {
+		// Quarter-circle-like curve: cp1 above start, cp2 left of end
+		const nodes = svgRail('M 0,0 C 0,50 50,50 50,0', { pos: { x: 0, y: 0, z: 0 } })
+		expect(nodes).toHaveLength(2) // M + C
+		// C endpoint must be RailPointFull (curved)
+		expect(isPointFull(nodes[1])).toBe(true)
+		expect((nodes[1] as RailPointFull).round).toBe('to')
+	})
+
 	it('coordinates match (XZ plane, scale 10)', () => {
 		const nodes = svgRail('M 25,70 V 20 H 67 C 80,20 80,40 67,40 H 35 v 30', {
 			pos: { x: 0, y: 0, z: 0 }
