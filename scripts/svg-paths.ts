@@ -3,7 +3,7 @@
 import { readdirSync, statSync, readFileSync, writeFileSync } from 'fs'
 import { join, basename, extname } from 'path'
 import { execSync } from 'child_process'
-import { svgRail } from '../src/lib/core/rail-primitives'
+import { svgRail } from '../src/lib/core/rail-svg'
 import { railToString } from '../src/lib/core/rail-path'
 import chokidar from 'chokidar'
 import PATHS from '../src/scenes/utils/svg-paths'
