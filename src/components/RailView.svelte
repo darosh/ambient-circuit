@@ -20,6 +20,7 @@
 		scaleSplits
 	} from '../lib/helpers/rail-geometry'
 	import { Color, type Mesh } from 'three/webgpu'
+	import { convertOklabToRgb, convertRgbToOklab, parseHex, type Rgb } from 'culori/fn'
 
 	type Props = {
 		railData: RailConfig
@@ -346,6 +347,19 @@
 	onDestroy(() => {
 		disposeRailGeometry(allMeshes)
 	})
+
+	const _color = new Color()
+
+	function bright(base: string = '#ffffff') {
+		_color.set(base)
+		const rgb = <Rgb>parseHex(_color.getHexString())
+		const oklab = convertRgbToOklab(rgb)
+		oklab.l = 0.5
+		const backRgb = convertOklabToRgb(oklab)
+		const l = Math.max(backRgb.r * 2, backRgb.g, backRgb.b)
+		const m = l * 10
+		return new Color(backRgb.r * m, backRgb.g * m, backRgb.b * m)
+	}
 </script>
 
 {#if visible && showBeats}
@@ -395,7 +409,7 @@
 		{#each displayPoints as pt, ptIndex (ptIndex)}
 			<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
 				<T.SphereGeometry args={[0.06, 8, 8]} />
-				<T.MeshBasicMaterial {color} />
+				<T.MeshBasicMaterial color={bright(color)} />
 			</T.Mesh>
 		{/each}
 		{#each displaySplits as split, splitIndex (splitIndex)}

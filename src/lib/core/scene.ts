@@ -107,6 +107,7 @@ export type SceneConfig = {
 	polar?: boolean
 	stars?: boolean
 	names?: boolean
+	points?: boolean
 	sequencerBeats?: number
 	sequencerMode?: 'time' | 'compact'
 	sequencerColors?: boolean
