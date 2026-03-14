@@ -79,7 +79,13 @@
 	)
 
 	// Per-instance data stored in plain object, written to shared material uniforms in onBeforeRender
-	const ud = { color: new Color(), initialIntensity: 0.51, intensity: 0, active: 1, uvFreq: 0.1 }
+	const ud = {
+		color: new Color(),
+		initialIntensity: 0.51,
+		intensity: 0,
+		active: 1,
+		uvFreq: 0.1
+	}
 
 	$effect(() => {
 		ud.color.set(effectiveColor)
@@ -91,17 +97,17 @@
 
 	$effect(() => {
 		const uvMax = geometry?.userData?.uvMax ?? 0
-		ud.uvFreq = instrumentMaterial.getUvMax(0.1, uvMax)
+		ud.uvFreq = instrumentMaterial.getUvMax(uvMax, 0.1)
 	})
 
 	let meshRef = $state.raw<Mesh | undefined>()
 	let innerMeshRef = $state.raw<Mesh | undefined>()
 
 	$effect(() => {
-		if (meshRef) meshRef.userData.instrumentData = ud
+		if (meshRef) meshRef.userData.material = ud
 	})
 	$effect(() => {
-		if (innerMeshRef) innerMeshRef.userData.instrumentData = ud
+		if (innerMeshRef) innerMeshRef.userData.material = ud
 	})
 
 	// Get points for the instrument's path

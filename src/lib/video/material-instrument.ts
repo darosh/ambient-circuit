@@ -33,23 +33,23 @@ export function sharedInstrumentMaterial() {
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	emissiveColor.onObjectUpdate((frame: any) => {
-		const d = frame.object?.userData?.instrumentData
+		const d = frame.object?.userData?.material
 		if (d) emissiveColor.value.copy(d.color)
 	})
 	impactIntensity.onObjectUpdate((frame: any) => {
-		const d = frame.object?.userData?.instrumentData
+		const d = frame.object?.userData?.material
 		if (d) impactIntensity.value = d.intensity
 	})
 	initialIntensity.onObjectUpdate((frame: any) => {
-		const d = frame.object?.userData?.instrumentData
+		const d = frame.object?.userData?.material
 		if (d) initialIntensity.value = d.initialIntensity
 	})
 	activeUniform.onObjectUpdate((frame: any) => {
-		const d = frame.object?.userData?.instrumentData
+		const d = frame.object?.userData?.material
 		if (d) activeUniform.value = d.active
 	})
 	uvFreqEffective.onObjectUpdate((frame: any) => {
-		const d = frame.object?.userData?.instrumentData
+		const d = frame.object?.userData?.material
 		if (d) uvFreqEffective.value = d.uvFreq
 	})
 	/* eslint-enable @typescript-eslint/no-explicit-any */

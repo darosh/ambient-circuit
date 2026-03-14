@@ -81,7 +81,13 @@
 
 	const resolved = $derived(resolveRail(toRailShapeConfig(railData)))
 
-	const ud = { color: new Color(), initialIntensity: 0.7, intensity: 0, active: 1 }
+	const ud = {
+		color: new Color(),
+		initialIntensity: 0.7,
+		intensity: 0,
+		active: 1,
+		uvFreq: 0.1
+	}
 
 	$effect(() => {
 		ud.color.set(color)
@@ -97,7 +103,7 @@
 
 	$effect(() => {
 		for (const mesh of meshRefs) {
-			if (mesh) mesh.userData.railData = ud
+			if (mesh) mesh.userData.material = ud
 		}
 	})
 

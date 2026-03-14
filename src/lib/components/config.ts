@@ -1,12 +1,11 @@
 import { sharedInstrumentMaterial } from '../video/material-instrument'
-import { sharedRailMaterial } from '../video/material-rail'
 import { clearImpactMaterialCache } from '../video/material-impact'
 import { MeshStandardMaterial } from 'three/webgpu'
 import { clearTubeMaterialCache } from '../video/material-text-tube'
 
 // Singleton material instances — needs to be disposed to complete RenderObjects teardown
-export const railMaterial = sharedRailMaterial()
 export const instrumentMaterial = sharedInstrumentMaterial()
+export const railMaterial = instrumentMaterial
 export const marbleMaterial = instrumentMaterial
 export const wireframeMaterial = new MeshStandardMaterial({ wireframe: true, color: 0x99_99_99 })
 
