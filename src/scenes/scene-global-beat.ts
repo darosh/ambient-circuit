@@ -47,10 +47,10 @@ export const scene: SceneConfig = {
 		},
 		{
 			id: 'short',
-			offset: [-.5, 0, -1],
+			offset: [-0.5, 0, -1],
 			nodes: [[0, 0, 0], 'r'],
 			color: c(),
-			marbles: false,
+			marbles: false
 		},
 		{
 			id: 'circle-start',

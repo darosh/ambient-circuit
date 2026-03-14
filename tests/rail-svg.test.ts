@@ -76,9 +76,11 @@ describe('round-trip close test', () => {
 	})
 
 	it('curves', () => {
-		const linesSvg = 'm 80.4,75.8 c -3.2,-0.1 -7.7,6 -9.2,3.1 -1.6,-2.8 5.9,-3.4 7.5,-6.2 1.7,-2.8 -1.3,-9.6 1.9,-9.6 3.3,0.1 0,6.8 1.6,9.6 1.6,2.8 9.1,3.5 7.3,6.4 -1.7,2.9 -6,-3.4 -9.1,-3.4 z'
+		const linesSvg =
+			'm 80.4,75.8 c -3.2,-0.1 -7.7,6 -9.2,3.1 -1.6,-2.8 5.9,-3.4 7.5,-6.2 1.7,-2.8 -1.3,-9.6 1.9,-9.6 3.3,0.1 0,6.8 1.6,9.6 1.6,2.8 9.1,3.5 7.3,6.4 -1.7,2.9 -6,-3.4 -9.1,-3.4 z'
 		const railString = railToString(svgRail(linesSvg))
-		const railStringExpected = 'r3.04o2.58b.32 l.92o.31b.33 r.75i.62b.33 r.19i.96b.33 r.16o.96b.33 r.73o.64b.35 l.91i.33t.32'
+		const railStringExpected =
+			'r3.04o2.58b.32 l.92o.31b.33 r.75i.62b.33 r.19i.96b.33 r.16o.96b.33 r.73o.64b.35 l.91i.33t.32'
 
 		expect(railString).toEqual(railStringExpected)
 

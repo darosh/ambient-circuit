@@ -50,12 +50,14 @@ export function disposeRailGeometry(allMeshes: RailMesh[]) {
 	}
 }
 
-export function isClosed (first: Vec3 | undefined, last: Vec3 | null) {
-	return !!first &&
+export function isClosed(first: Vec3 | undefined, last: Vec3 | null) {
+	return (
+		!!first &&
 		!!last &&
 		Math.abs(first[0] - last[0]) < 1e-6 &&
 		Math.abs(first[1] - last[1]) < 1e-6 &&
 		Math.abs(first[2] - last[2]) < 1e-6
+	)
 }
 
 export function buildRailGeometry(
