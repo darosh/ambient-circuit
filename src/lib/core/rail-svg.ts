@@ -193,13 +193,38 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 				continue
 			}
 			case 'Z': {
-				// Only add closing point if arc didn't already land on start (avoids zero-length dupe segment)
-				if (Math.hypot(cx - startX, cy - startY) > 1e-4) {
+				const closeDist = Math.hypot(cx - startX, cy - startY)
+				const wasCurve = 'CSQTA'.includes(prevLetter)
+				// Curves ending near start: skip tiny closing segment (0.2 SVG units)
+				// Non-curves: use tight threshold to avoid dupes
+				const threshold = wasCurve ? 0.2 : 1e-4
+
+				if (closeDist > threshold) {
 					result.push(toWorld(startX, startY))
 				}
+
+				// Closed curve loop: upgrade first point to 'both' for smooth closure
+				if (wasCurve && closeDist <= threshold && result.length > 1) {
+					// Reuse last curve endpoint's tangent as incoming tangent for first point
+					const lastPt = result[result.length - 1] // eslint-disable-line unicorn/prefer-at
+					const inTangent = Array.isArray(lastPt) ? 0 : ((lastPt as RailPointFull).tangent ?? 0)
+
+					const first = result[0]
+					if (Array.isArray(first)) {
+						result[0] = { p: first as Vec3, round: 'both' as const, tangent: inTangent }
+					} else {
+						const rf = first as RailPointFull
+						result[0] = {
+							p: rf.p,
+							round: 'both' as const,
+							tangent: rf.tangent === undefined ? inTangent : (rf.tangent + inTangent) / 2
+						}
+					}
+				}
+
 				cx = startX
 				cy = startY
-				curCmd = 'L' // reset — prevents infinite loop if stray tokens follow Z
+				curCmd = 'L'
 				continue
 			}
 			case 'L': {
