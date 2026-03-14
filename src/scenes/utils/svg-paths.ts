@@ -86,6 +86,7 @@ export const DRAWING_FORMLINES: Record<string, string> = {
 	'r20': 'l.05o4.14f.57 r.75i.47b.94 r.75o.47t.57',
 	'r21': 'l.05o4.14f.57 r.75o.47b.94 r.75i.47t.57',
 	'tri': 'r3.04o2.58b.32 l.92o.31b.33 r.75i.62b.33 r.19i.96b.33 r.16o.96b.33 r.73o.64b.35 l.91i.33t.32',
+	'r5': 'l4.75o4b.33 r.75i.25b.33 r.75o.25b.33 l.75o.25b.33 l.75i.25t.33',
 }
 
 export default { DRAWING_CIRCUIT, DRAWING_RAVEN, DRAWING_FORMLINES }
