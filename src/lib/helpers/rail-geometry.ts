@@ -1,4 +1,4 @@
-import type { ResolvedPoint, ResolvedSplit } from '../core/rail'
+import type { ResolvedPoint, ResolvedSplit, Vec3 } from '../core/rail'
 import { type BufferGeometry, CurvePath, LineCurve3, Vector3 } from 'three/webgpu'
 import { buildSegmentCurve, toV3 } from '../core/rail-curve'
 import { buildTubeGeometry } from '../video/geometry-tube'
@@ -50,6 +50,14 @@ export function disposeRailGeometry(allMeshes: RailMesh[]) {
 	}
 }
 
+export function isClosed (first: Vec3 | undefined, last: Vec3 | null) {
+	return !!first &&
+		!!last &&
+		Math.abs(first[0] - last[0]) < 1e-6 &&
+		Math.abs(first[1] - last[1]) < 1e-6 &&
+		Math.abs(first[2] - last[2]) < 1e-6
+}
+
 export function buildRailGeometry(
 	points: ResolvedPoint[],
 	splits: ResolvedSplit[],
@@ -61,12 +69,7 @@ export function buildRailGeometry(
 	// Main rail
 	const first = points[0]?.p
 	const last = points.at(-1)?.p ?? null
-	const closed =
-		!!first &&
-		!!last &&
-		Math.abs(first[0] - last[0]) < 1e-6 &&
-		Math.abs(first[1] - last[1]) < 1e-6 &&
-		Math.abs(first[2] - last[2]) < 1e-6
+	const closed = isClosed(first, last)
 	const mainMesh = makeTube(buildRailCurvePath(points), width, 0.9, closed)
 	if (mainMesh) {
 		mainMesh.geometry.name = name
