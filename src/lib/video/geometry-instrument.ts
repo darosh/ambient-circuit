@@ -5,7 +5,7 @@ import {
 	QuadraticBezierCurve3,
 	Vector3
 } from 'three/webgpu'
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
+import { mergeGeometries } from './merge-geometries'
 import { buildTubeGeometry } from './geometry-tube'
 import { lerp } from 'three/src/math/MathUtils.js'
 import type { ArrowInstrument } from '../core/instrument'
