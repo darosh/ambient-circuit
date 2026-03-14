@@ -46,7 +46,7 @@ function extractPaths(svgContent: string): { d: string; id?: string }[] {
 			const d = tag.match(/\bd="([^"]+)"/)?.[1]
 			let id = tag.match(/\bid="([^"]+)"/)?.[1] ?? i.toString()
 
-			id = id.replace('path', '')
+			id = id.replace('path', 'r')
 
 			if (ids.has(id)) {
 				let add = 0

@@ -220,6 +220,14 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 							tangent: rf.tangent === undefined ? inTangent : (rf.tangent + inTangent) / 2
 						}
 					}
+
+					// Snap last point position to start for clean closure (gap ≤ threshold is rounding artifact)
+					const startWorld = toWorld(startX, startY)
+					const lastIdx = result.length - 1
+					const last = result[lastIdx]
+					result[lastIdx] = Array.isArray(last)
+						? startWorld
+						: { ...(last as RailPointFull), p: startWorld }
 				}
 
 				cx = startX
