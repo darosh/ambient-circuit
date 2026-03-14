@@ -6,6 +6,5 @@ export function mergeGeometries(geometries: BufferGeometry[]): BufferGeometry {
 	const g = mg(geometries)
 	g.userData.uvMax = uvMax
 
-	console.log(uvMax)
 	return g
 }
