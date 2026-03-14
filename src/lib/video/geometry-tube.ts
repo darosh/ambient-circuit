@@ -39,38 +39,35 @@ export function buildTubeGeometry(
 	for (let ci = 0; ci < curves.length; ci++) {
 		const curve = curves[ci]
 		const n = Math.max(2, Math.ceil(curve.getLength() * density))
-		// When closed, skip the last endpoint of the final curve — it coincides with the start
+		// When closed, skip the last endpoint of the final curve — closing exit frame added below
 		const iMax = closed && ci === lastCi ? n - 1 : n
 
 		for (let i = ci === 0 ? 0 : 1; i <= iMax; i++) {
 			const u = i / n
 			const p = curve.getPointAt(u)
 
-			let t: Vector3
-			if (i === 0 && ci > 0) {
-				// Interior junction: blend end of previous + start of this
-				const t0 = curves[ci - 1].getTangentAt(1).normalize()
-				const t1 = curve.getTangentAt(0).normalize()
-				t = t0.add(t1).normalize()
-			} else if (i === 0 && ci === 0 && closed) {
-				// Closing junction (start): blend end of last curve + start of first
-				const t0 = curves[lastCi].getTangentAt(1).normalize()
-				const t1 = curve.getTangentAt(0).normalize()
-				t = t0.add(t1).normalize()
-			} else if (i === n && ci < lastCi) {
-				// Interior junction: blend end of this + start of next
+			// Interior junction: emit exit frame (t0) then entry frame (t1) at same position.
+			// This avoids the bisected-tangent artifact at sharp angles — each side of the bend
+			// gets its own correctly-oriented cross-section ring.
+			if (i === n && ci < lastCi) {
 				const t0 = curve.getTangentAt(1).normalize()
 				const t1 = curves[ci + 1].getTangentAt(0).normalize()
-				t = t0.add(t1).normalize()
-			} else if (i === iMax && ci === lastCi && closed) {
-				// Closing junction (end): blend end of last curve + start of first
-				const t0 = curve.getTangentAt(1).normalize()
-				const t1 = curves[0].getTangentAt(0).normalize()
-				t = t0.add(t1).normalize()
-			} else {
-				t = curve.getTangentAt(u).normalize()
+				frames.push(
+					{ p, t: t0, n: new Vector3(), b: new Vector3() },
+					{ p: p.clone(), t: t1, n: new Vector3(), b: new Vector3() }
+				)
+				continue
 			}
 
+			const t = curve.getTangentAt(u).normalize()
+			frames.push({ p, t, n: new Vector3(), b: new Vector3() })
+		}
+
+		// Closed: after last curve emit a clean exit frame so the closing stitch
+		// (last frame → UV-dup of frame 0) has correct orientation on both sides.
+		if (closed && ci === lastCi) {
+			const p = curve.getPointAt(1)
+			const t = curve.getTangentAt(1).normalize()
 			frames.push({ p, t, n: new Vector3(), b: new Vector3() })
 		}
 	}
