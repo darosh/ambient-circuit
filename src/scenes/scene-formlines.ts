@@ -10,7 +10,7 @@ export const scene: SceneConfig = {
 	bpm: 60,
 	// names: true,
 	// points: true,
-	camera: [0, 19, 0],
+	camera: [0, 24, 0],
 	rails: []
 }
 
