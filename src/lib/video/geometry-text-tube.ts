@@ -189,7 +189,7 @@ export function getTubeGeometry(text: string, spacing: number, width: number): B
 			for (let i = 0; i < path.length - 1; i++) {
 				curves[i] = new LineCurve3(path[i], path[i + 1])
 			}
-			return buildTubeGeometry(curves, width / 50, 3, 1, false)
+			return buildTubeGeometry(curves, width / 50, 3, 1, false, true, undefined, true, true)
 		})
 
 	return parts.length > 1 ? (mergeGeometries(parts) ?? parts[0]) : parts[0]

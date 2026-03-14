@@ -1,6 +1,86 @@
 import { BufferAttribute, BufferGeometry, type Curve, Vector3, LineCurve3 } from 'three/webgpu'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
+interface Frame {
+	p: Vector3
+	t: Vector3
+	n: Vector3
+	b: Vector3
+}
+
+function textStyle(
+	ci: number,
+	iMax: number,
+	n: number,
+	curve: Curve<Vector3>,
+	lastCi: number,
+	curves: Curve<Vector3>[],
+	frames: Frame[]
+) {
+	for (let i = ci === 0 ? 0 : 1; i <= iMax; i++) {
+		const u = i / n
+		const p = curve.getPointAt(u)
+
+		let t: Vector3
+		if (i === 0 && ci > 0) {
+			// Interior junction: blend end of previous + start of this
+			const t0 = curves[ci - 1].getTangentAt(1).normalize()
+			const t1 = curve.getTangentAt(0).normalize()
+			t = t0.add(t1).normalize()
+		} else if (i === 0 && ci === 0 && closed) {
+			// Closing junction (start): blend end of last curve + start of first
+			const t0 = curves[lastCi].getTangentAt(1).normalize()
+			const t1 = curve.getTangentAt(0).normalize()
+			t = t0.add(t1).normalize()
+		} else if (i === n && ci < lastCi) {
+			// Interior junction: blend end of this + start of next
+			const t0 = curve.getTangentAt(1).normalize()
+			const t1 = curves[ci + 1].getTangentAt(0).normalize()
+			t = t0.add(t1).normalize()
+		} else if (i === iMax && ci === lastCi && closed) {
+			// Closing junction (end): blend end of last curve + start of first
+			const t0 = curve.getTangentAt(1).normalize()
+			const t1 = curves[0].getTangentAt(0).normalize()
+			t = t0.add(t1).normalize()
+		} else {
+			t = curve.getTangentAt(u).normalize()
+		}
+
+		frames.push({ p, t, n: new Vector3(), b: new Vector3() })
+	}
+}
+
+function railStyle(
+	ci: number,
+	iMax: number,
+	n: number,
+	curve: Curve<Vector3>,
+	lastCi: number,
+	curves: Curve<Vector3>[],
+	frames: Frame[]
+) {
+	for (let i = ci === 0 ? 0 : 1; i <= iMax; i++) {
+		const u = i / n
+		const p = curve.getPointAt(u)
+
+		// Interior junction: emit exit frame (t0) then entry frame (t1) at same position.
+		// This avoids the bisected-tangent artifact at sharp angles — each side of the bend
+		// gets its own correctly-oriented cross-section ring.
+		if (i === n && ci < lastCi) {
+			const t0 = curve.getTangentAt(1).normalize()
+			const t1 = curves[ci + 1].getTangentAt(0).normalize()
+			frames.push(
+				{ p, t: t0, n: new Vector3(), b: new Vector3() },
+				{ p: p.clone(), t: t1, n: new Vector3(), b: new Vector3() }
+			)
+			continue
+		}
+
+		const t = curve.getTangentAt(u).normalize()
+		frames.push({ p, t, n: new Vector3(), b: new Vector3() })
+	}
+}
+
 /**
  * Build a tube geometry from sub-curves with junction-aware Frenet frames.
  * Unlike TubeGeometry, computes analytical tangents at each sub-curve's endpoints
@@ -15,6 +95,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
  * @param uvScale - UV.x = cumulativeArcLength * uvScale. Default 1/(2πr) makes
  *   checker squares physically square. Lower values = sparser / faster-animating noise.
  * @param snap
+ * @param useTextStyle
  */
 export function buildTubeGeometry(
 	curves: Curve<Vector3>[],
@@ -24,15 +105,10 @@ export function buildTubeGeometry(
 	closed: boolean,
 	cap = true,
 	uvScale = 1 / (2 * Math.PI * radius),
-	snap = true
+	snap = true,
+	useTextStyle = false
 ): BufferGeometry {
 	// --- 1. Sample positions and blended tangents ---
-	interface Frame {
-		p: Vector3
-		t: Vector3
-		n: Vector3
-		b: Vector3
-	}
 	const frames: Frame[] = []
 
 	const lastCi = curves.length - 1
@@ -42,25 +118,10 @@ export function buildTubeGeometry(
 		// When closed, skip the last endpoint of the final curve — closing exit frame added below
 		const iMax = closed && ci === lastCi ? n - 1 : n
 
-		for (let i = ci === 0 ? 0 : 1; i <= iMax; i++) {
-			const u = i / n
-			const p = curve.getPointAt(u)
-
-			// Interior junction: emit exit frame (t0) then entry frame (t1) at same position.
-			// This avoids the bisected-tangent artifact at sharp angles — each side of the bend
-			// gets its own correctly-oriented cross-section ring.
-			if (i === n && ci < lastCi) {
-				const t0 = curve.getTangentAt(1).normalize()
-				const t1 = curves[ci + 1].getTangentAt(0).normalize()
-				frames.push(
-					{ p, t: t0, n: new Vector3(), b: new Vector3() },
-					{ p: p.clone(), t: t1, n: new Vector3(), b: new Vector3() }
-				)
-				continue
-			}
-
-			const t = curve.getTangentAt(u).normalize()
-			frames.push({ p, t, n: new Vector3(), b: new Vector3() })
+		if (useTextStyle) {
+			textStyle(ci, iMax, n, curve, lastCi, curves, frames)
+		} else {
+			railStyle(ci, iMax, n, curve, lastCi, curves, frames)
 		}
 
 		// Closed: after last curve emit a clean exit frame so the closing stitch
