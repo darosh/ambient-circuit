@@ -46,6 +46,13 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
+			id: 'short',
+			offset: [-.5, 0, -1],
+			nodes: [[0, 0, 0], 'r'],
+			color: c(),
+			marbles: false,
+		},
+		{
 			id: 'circle-start',
 			offset: [-4, 0, -3],
 			nodes: [[0, 0, 0], 'ib rb ob lb'],
