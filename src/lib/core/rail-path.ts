@@ -80,9 +80,10 @@ export function expandPathString(
 			}
 		}
 
-		pos[0] += delta[0]
-		pos[1] += delta[1]
-		pos[2] += delta[2]
+		const r6 = (n: number) => Math.round(n * 1e6) / 1e6
+		pos[0] = r6(pos[0] + delta[0])
+		pos[1] = r6(pos[1] + delta[1])
+		pos[2] = r6(pos[2] + delta[2])
 
 		if (roundCh && ROUND_CHARS.has(roundCh)) {
 			const round = ROUND_MAP[roundCh]
