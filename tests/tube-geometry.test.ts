@@ -37,7 +37,7 @@ describe('buildTubeGeometry', () => {
 		expect(idx.count).toBe((N - 1) * R * 6)
 	})
 
-	it('closed: same ring count as open (skip-endpoint offsets extra UV ring)', () => {
+	it('closed: ring count = open rings + 1 (exit frame + UV-dup)', () => {
 		const curves = squareCurves()
 		const open = buildTubeGeometry(curves, radius, R, density, false, false)
 		const closed = buildTubeGeometry(curves, radius, R, density, true)
@@ -45,9 +45,9 @@ describe('buildTubeGeometry', () => {
 		const openRings = getAttr(open, 'position').count / (R + 1)
 		const closedRings = getAttr(closed, 'position').count / (R + 1)
 
-		// closed skips last endpoint of last curve (-1 frame) then adds one UV-duplicate
-		// closing ring (+1 ring) → net same total as open
-		expect(closedRings).toBe(openRings)
+		// closed skips last endpoint of last curve (-1 frame), adds a clean exit frame (+1),
+		// and adds one UV-duplicate closing ring (+1 ring) → net +1 vs open
+		expect(closedRings).toBe(openRings + 1)
 	})
 
 	it('closed: closing ring positions equal first ring positions', () => {
