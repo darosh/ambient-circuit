@@ -135,7 +135,7 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 			result[result.length - 1] = {
 				p: rf.p,
 				round: rf.round === 'to' ? ('both' as const) : rf.round,
-				tangent: rf.tangent ?? tangent
+				tangent: rf.tangent === undefined ? tangent : (rf.tangent + tangent) / 2
 			}
 		}
 	}
