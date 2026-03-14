@@ -25,8 +25,8 @@
      inkscape:document-units="px"
      showgrid="true"
      inkscape:zoom="22.042298"
-     inkscape:cx="79.052556"
-     inkscape:cy="45.616841"
+     inkscape:cx="18.214979"
+     inkscape:cy="60.542689"
      inkscape:current-layer="layer1">
     <inkscape:grid
        id="grid3"
@@ -104,7 +104,7 @@
        id="u"
        sodipodi:nodetypes="csssscssssc" />
     <path
-       id="o"
+       id="o-f"
        style="fill:none;stroke:#000000;stroke-width:1.00157;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
        d="m 15,70 c -5.384778,0 -9.500009,1.999945 -9.500009,-5 0,-6.999947 4.115231,-7.5 9.500009,-7.5 5.384778,0 10,0.500053 10,7.5 0,6.999945 -4.615222,5 -10,5 z"
        sodipodi:nodetypes="czszc" />
@@ -129,7 +129,7 @@
        id="path4"
        sodipodi:nodetypes="csscssc" />
     <path
-       id="path18"
+       id="cir-f"
        style="fill:none;stroke:#000000;stroke-width:1.00157;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none"
        d="m 74,85 a 5,5 0 0 1 -5,5 5,5 0 0 1 -5,-5 5,5 0 0 1 5,-5 5,5 0 0 1 5,5 z" />
     <path
@@ -197,7 +197,7 @@
     <path
        style="fill:none;stroke:#000000;stroke-width:1.00157;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:none;stroke-opacity:1"
        d="m 79.5,85 c 0,-2.63523 4.864769,-2.5 7.5,-2.5 2.635231,0 7.5,-0.13523 7.5,2.5 0,2.63523 -4.864769,2.5 -7.5,2.5 -2.635231,0 -7.5,0.13523 -7.5,-2.5 z"
-       id="path5"
+       id="eli-f"
        sodipodi:nodetypes="zzzzz" />
     <path
        id="path22"

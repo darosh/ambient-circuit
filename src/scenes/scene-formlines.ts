@@ -21,7 +21,8 @@ scene.rails!.push(
 				color: c(),
 				id,
 				nodes: [d],
-				marbles: false
+				marbles: false,
+				fill: id.endsWith('-f')
 			}
 	)
 )

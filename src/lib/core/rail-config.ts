@@ -84,6 +84,8 @@ export type RailConfig = {
 	running?: boolean
 	/** Runtime animation function: fills `out` matrix in-place (no allocation) */
 	render?: RailRender
+	/** Fill interior of closed rail with semi-transparent polygon */
+	fill?: boolean
 }
 
 /** Extract RailShapeConfig from flat RailConfig (for resolveRail compatibility) */

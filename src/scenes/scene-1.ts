@@ -53,6 +53,7 @@ scene.rails!.push(
 				transform: new Matrix4().makeRotationX(Math.PI / 2),
 				color: c(),
 				id,
+				fill: id.endsWith('-f'),
 				nodes: [d]
 			}
 	)

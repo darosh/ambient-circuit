@@ -67,7 +67,7 @@ export const scenes: SceneConfig[] = [
 	sceneMulti32,
 	...sceneRailText,
 	sceneFormlines,
-	scene1,
+	// scene1,
 	scene2,
 	sceneCreateDestroy,
 	sceneAudio,

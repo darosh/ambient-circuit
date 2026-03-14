@@ -6,13 +6,24 @@
 	import type { TempoState } from '../lib/core/tempo'
 	import { resolveRail } from '../lib/core/rail-resolve'
 	import { computeBeatPositions } from '../lib/core/rail-curve'
-	import { Euler, Group, Matrix4, Quaternion, Vector3 } from 'three/webgpu'
+	import {
+		DoubleSide,
+		Euler,
+		Group,
+		Matrix4,
+		MeshBasicNodeMaterial,
+		Quaternion,
+		Shape,
+		ShapeGeometry,
+		Vector3
+	} from 'three/webgpu'
 	import InstrumentView from './InstrumentView.svelte'
 	import type { Font } from 'three/examples/jsm/loaders/FontLoader.js'
 	import TubeText from './TubeText.svelte'
 	import { onDestroy } from 'svelte'
 	import { railMaterial, wireframeMaterial } from '../lib/components/config'
 	import {
+		buildRailCurvePath,
 		buildRailGeometry,
 		computeRailNamePosition,
 		disposeRailGeometry,
@@ -185,6 +196,69 @@
 		}
 	})
 
+	const fillGeometry = $derived.by(() => {
+		if (!railData.fill) return null
+		const path = buildRailCurvePath(displayPoints)
+		if (!path) return null
+		const pts = path.getSpacedPoints(64)
+
+		// Centroid
+		const centroid = new Vector3()
+		for (const p of pts) centroid.add(p)
+		centroid.divideScalar(pts.length)
+
+		// Newell's method: compute plane normal from polygon winding
+		const normal = new Vector3()
+		for (let i = 0; i < pts.length; i++) {
+			const cur = pts[i]
+			const nxt = pts[(i + 1) % pts.length]
+			normal.x += (cur.y - nxt.y) * (cur.z + nxt.z)
+			normal.y += (cur.z - nxt.z) * (cur.x + nxt.x)
+			normal.z += (cur.x - nxt.x) * (cur.y + nxt.y)
+		}
+		normal.normalize()
+
+		// Local 2D frame: pick reference vector to avoid degeneracy with normal
+		const worldRef = Math.abs(normal.y) < 0.99 ? new Vector3(0, 1, 0) : new Vector3(1, 0, 0)
+		const right = new Vector3().crossVectors(worldRef, normal).normalize()
+		const up = new Vector3().crossVectors(normal, right) // right-handed: normal × right
+
+		// Project onto local frame
+		const shape = new Shape()
+		for (let i = 0; i < pts.length; i++) {
+			const rel = pts[i].clone().sub(centroid)
+			const x = rel.dot(right)
+			const y = rel.dot(up)
+			if (i === 0) shape.moveTo(x, y)
+			else shape.lineTo(x, y)
+		}
+		shape.closePath()
+
+		const geo = new ShapeGeometry(shape)
+		// makeBasis maps shape X→right, shape Y→up, shape Z→normal (correct full-frame rotation)
+		geo.applyMatrix4(new Matrix4().makeBasis(right, up, normal))
+		geo.translate(centroid.x, centroid.y, centroid.z)
+		return geo
+	})
+
+	$effect(() => {
+		const geo = fillGeometry
+		return () => {
+			geo?.dispose()
+		}
+	})
+
+	const fillMat = new MeshBasicNodeMaterial({
+		transparent: true,
+		opacity: 0.25,
+		side: DoubleSide,
+		depthWrite: false
+	})
+	$effect(() => {
+		// const bc = bright(color)
+		fillMat.color.set(color)
+	})
+
 	// Unified group transform (identity when no renderTransform)
 	const _rtPos = new Vector3()
 	const _rtRot = new Euler()
@@ -352,6 +426,7 @@
 
 	onDestroy(() => {
 		disposeRailGeometry(allMeshes)
+		fillMat.dispose()
 	})
 
 	const _color = new Color()
@@ -403,6 +478,10 @@
 {/if}
 
 <T.Group position={groupPosition} rotation={groupRotation} {visible}>
+	{#if fillGeometry}
+		<T.Mesh geometry={fillGeometry} material={wireframe ? wireframeMaterial : fillMat} />
+	{/if}
+
 	{#each allMeshes as { geometry }, idx (idx)}
 		<T.Mesh
 			bind:ref={meshRefs[idx]}
