@@ -106,7 +106,7 @@ function convertDir(file?: string) {
 	writeFileSync(outFile, out)
 	console.log(`Wrote ${files.length} file(s) to ${outFile}`)
 
-	if (!file) {
+	if (!file || file === '--watch') {
 		// Format with prettier
 		execSync(`npx prettier --write "${outFile}"`, { stdio: 'inherit' })
 	}
