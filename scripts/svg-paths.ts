@@ -39,11 +39,24 @@ function extractPathsOld(svgContent: string): string[] {
 
 function extractPaths(svgContent: string): { d: string; id?: string }[] {
 	const pathTags = svgContent.match(/<path\b[^>]*>/gi) ?? []
+	const ids = new Set()
 
 	return <{ d: string; id?: string }[]>pathTags
-		.map((tag) => {
+		.map((tag, i) => {
 			const d = tag.match(/\bd="([^"]+)"/)?.[1]
-			const id = tag.match(/\bid="([^"]+)"/)?.[1]
+			let id = tag.match(/\bid="([^"]+)"/)?.[1] ?? i.toString()
+
+			id = id.replace('path', '')
+
+			if (ids.has(id)) {
+				let add = 0
+
+				while (ids.has(`${id}-${add}`)) {
+					add++
+				}
+
+				id = `${id}-${add}`
+			}
 
 			return d ? { d, id } : null
 		})
