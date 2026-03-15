@@ -50,7 +50,7 @@ export default defineConfig({
 	plugins: [bundleWorklets(), svelte()],
 	base: './',
 	build: {
-		chunkSizeWarningLimit: 900,
+		chunkSizeWarningLimit: 1000,
 		target: 'esnext',
 		outDir: './docs',
 		rollupOptions: {
