@@ -6,8 +6,8 @@
 	import { onUpdate, scenes } from './scenes'
 	import { initMidi, setMidiPort, type MidiState, setMidiState } from './lib/midi/midi'
 	import type { SelectedEntity } from './components/Scene.svelte'
-	import type { AudioChain, AudioEngine } from './lib/audio/types'
-	import { connectSharedAnalyzer } from './lib/audio/engine'
+	import type { AudioChain, AudioEngine } from './lib/audio'
+	import { connectSharedAnalyzer } from './lib/audio'
 	import { WebGPURenderer } from 'three/webgpu'
 	import { clearMarbleGeometryCache } from './lib/video/geometry-marble'
 	import { clearInstrumentGeometryCache } from './lib/video/geometry-instrument'
@@ -25,7 +25,6 @@
 	import GlobalState from './components/GlobalState.svelte'
 	import { clearTubeMaterialCache } from './lib/video/material-text-tube'
 	import type { SceneConfig } from './lib/core/scene'
-	import type { ParametersGroup } from 'three/examples/jsm/inspector/tabs/Parameters.js'
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
@@ -50,9 +49,6 @@
 	let midiEnabled = $state(false)
 	let debugEnabled = $state(false)
 	let midiState = $state<MidiState | null>(null)
-	let midiPortOptions = $derived(
-		midiState ? midiState.outputs.map((p) => ({ text: p.name, value: p.id })) : []
-	)
 	let selectedMidiPort = $state<string | null>(null)
 
 	let selectedEntity = $state<SelectedEntity>(null)
@@ -171,13 +167,15 @@
 
 	// Lazy init MIDI when enabled
 	$effect(() => {
-		if (midiEnabled && !midiState) {
+		if (midiEnabled) {
 			initMidi().then((state) => {
 				midiState = state
 				setMidiState(midiState)
 				selectedMidiPort = state.selectedPortId
+				updateMidiPortControl()
 			})
 		}
+		if (!midiEnabled) removeMidiPortControl()
 	})
 
 	// Update port when changed
@@ -272,6 +270,11 @@
 	let inspectorRef: Inspector | null = null
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let railsGuiRef: any = null
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let sceneGuiRef: any = null
+	// Inspector controller refs for external-state sync (updateDisplay instead of polling)
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const inspCtrl: Record<string, any> = {}
 
 	const beatProxy = { Beat: 0 }
 	$effect(() => {
@@ -291,11 +294,43 @@
 			const rc = activeScene.rails[i]
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const proxy: any = {
-				get [rc.id]() { return railVisibility[i] },
-				set [rc.id](v: boolean) { railVisibility[i] = v }
+				get [rc.id]() {
+					return railVisibility[i]
+				},
+				set [rc.id](v: boolean) {
+					railVisibility[i] = v
+				}
 			}
 			railsGui.add(proxy, rc.id)
 		}
+	}
+
+	function removeMidiPortControl() {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const gui = sceneGuiRef as any
+		if (!gui?.objects) return
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const idx = gui.objects.findIndex((e: any) => e.key === 'MIDI Port')
+		if (idx === -1) return
+		gui.objects[idx].subItem.domElement.remove()
+		gui.objects.splice(idx, 1)
+	}
+
+	function updateMidiPortControl() {
+		if (!sceneGuiRef) return
+		removeMidiPortControl()
+		if (!midiState || midiState.outputs.length === 0) return
+		const options = Object.fromEntries(midiState.outputs.map((p) => [p.name, p.id]))
+		const proxy = {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			get 'MIDI Port'(): any {
+				return selectedMidiPort ?? ''
+			},
+			set 'MIDI Port'(v: string) {
+				selectedMidiPort = v
+			}
+		}
+		sceneGuiRef.add(proxy, 'MIDI Port', options)
 	}
 
 	function buildInspector() {
@@ -304,39 +339,212 @@
 		rendererRef.inspector = inspector
 		document.querySelector('#ins')!.append(inspector.domElement)
 
-		const sceneGui = inspector.createParameters('Scene')
+		const sceneFolder = inspector.createParameters('Scene')
+		sceneGuiRef = sceneFolder
 		const sceneProps = {
-			get Scene() { return sceneId },
-			set Scene(v: string) { sceneId = v }
+			get Scene() {
+				return sceneId
+			},
+			set Scene(v: string) {
+				sceneId = v
+			}
 		}
 
-		sceneGui.add(sceneProps, 'Scene', Object.fromEntries(scenes.map((s) => [s.id.replaceAll('scene-', ''), s.id])))
-		sceneGui.add({ get Play() { return tempo.isPlaying }, set Play(v: boolean) { tempo.isPlaying = v } }, 'Play')
-		sceneGui.add(beatProxy, 'Beat').listen()
-		sceneGui.add({ get BPM() { return tempo.config.bpm }, set BPM(v: number) { tempo.config.bpm = v } }, 'BPM', 30, 300, 1)
-		sceneGui.add({ get Rotate() { return autoRotate }, set Rotate(v: boolean) { autoRotate = v } }, 'Rotate')
-		sceneGui.add({ get Easing() { return easing }, set Easing(v: string) { easing = v } }, 'Easing', Object.fromEntries(easingNames.map((n) => [n, n])))
-		sceneGui.add({ get MIDI() { return midiEnabled }, set MIDI(v: boolean) { midiEnabled = v } }, 'MIDI')
-		// sceneGui.add({ get 'MIDI Port'(): string { return selectedMidiPort }, set 'MIDI Port'(v: string) { selectedMidiPort = v } }, 'MIDI Port', midiPortOptions)
+		sceneFolder.add(
+			sceneProps,
+			'Scene',
+			Object.fromEntries(scenes.map((s) => [s.id.replaceAll('scene-', ''), s.id]))
+		)
+		inspCtrl.Play = sceneFolder.add(
+			{
+				get Play() {
+					return tempo.isPlaying
+				},
+				set Play(v: boolean) {
+					tempo.isPlaying = v
+				}
+			},
+			'Play'
+		)
+		sceneFolder.add(beatProxy, 'Beat').listen()
+		inspCtrl.BPM = sceneFolder.add(
+			{
+				get BPM() {
+					return tempo.config.bpm
+				},
+				set BPM(v: number) {
+					tempo.config.bpm = v
+				}
+			},
+			'BPM',
+			30,
+			300,
+			1
+		)
+		inspCtrl.Rotate = sceneFolder.add(
+			{
+				get Rotate() {
+					return autoRotate
+				},
+				set Rotate(v: boolean) {
+					autoRotate = v
+				}
+			},
+			'Rotate'
+		)
+		inspCtrl.Easing = sceneFolder.add(
+			{
+				get Easing() {
+					return easing
+				},
+				set Easing(v: string) {
+					easing = v
+				}
+			},
+			'Easing',
+			Object.fromEntries(easingNames.map((n) => [n, n]))
+		)
+		inspCtrl.MIDI = sceneFolder.add(
+			{
+				get MIDI() {
+					return midiEnabled
+				},
+				set MIDI(v: boolean) {
+					midiEnabled = v
+				}
+			},
+			'MIDI'
+		)
+		// MIDI port control added dynamically via updateMidiPortControl()
 
-		const dbg = inspector.createParameters('View')
-		;(dbg as ParametersGroup).close()
-		dbg.add({ get Grid() { return showGrid }, set Grid(v: boolean) { showGrid = v } }, 'Grid')
-		dbg.add({ get Points() { return showPoints }, set Points(v: boolean) { showPoints = v } }, 'Points')
-		dbg.add({ get Beats() { return showBeats }, set Beats(v: boolean) { showBeats = v } }, 'Beats')
-		dbg.add({ get Names() { return showNames }, set Names(v: boolean) { showNames = v } }, 'Names')
-		dbg.add({ get Wireframe() { return wireframe }, set Wireframe(v: boolean) { wireframe = v } }, 'Wireframe')
-		dbg.add({ get Audio() { return showAudio }, set Audio(v: boolean) { showAudio = v } }, 'Audio')
+		const viewFolder = inspector.createParameters('View')
+		;(<{ close: () => void }>(<unknown>viewFolder)).close()
+		inspCtrl.Audio = viewFolder.add(
+			{
+				get Audio() {
+					return showAudio
+				},
+				set Audio(v: boolean) {
+					showAudio = v
+				}
+			},
+			'Audio'
+		)
+		inspCtrl.Grid = viewFolder.add(
+			{
+				get Grid() {
+					return showGrid
+				},
+				set Grid(v: boolean) {
+					showGrid = v
+				}
+			},
+			'Grid'
+		)
+		inspCtrl.Names = viewFolder.add(
+			{
+				get Names() {
+					return showNames
+				},
+				set Names(v: boolean) {
+					showNames = v
+				}
+			},
+			'Names'
+		)
+		inspCtrl.Beats = viewFolder.add(
+			{
+				get Beats() {
+					return showBeats
+				},
+				set Beats(v: boolean) {
+					showBeats = v
+				}
+			},
+			'Beats'
+		)
+		inspCtrl.Points = viewFolder.add(
+			{
+				get Points() {
+					return showPoints
+				},
+				set Points(v: boolean) {
+					showPoints = v
+				}
+			},
+			'Points'
+		)
 
-		const ui = inspector.createParameters('Interface')
-		;(ui as ParametersGroup).close()
-		ui.add({ get HUD() { return showHud }, set HUD(v: boolean) { showHud = v } }, 'HUD')
-		ui.add({ get Stats() { return showStats }, set Stats(v: boolean) { showStats = v } }, 'Stats')
-		ui.add({ get 'Freeze sequencer'() { return useFreeze }, set 'Freeze sequencer'(v: boolean) { useFreeze = v } }, 'Freeze sequencer')
-		ui.add({ get 'Scene FX'() { return fxPost }, set 'Scene FX'(v: boolean) { fxPost = v } }, 'Scene FX')
-		ui.add({ get 'HUD FX'() { return fxHud }, set 'HUD FX'(v: boolean) { fxHud = v } }, 'HUD FX')
+		const interfaceFolder = inspector.createParameters('Interface')
+		;(<{ close: () => void }>(<unknown>interfaceFolder)).close()
+		inspCtrl.HUD = interfaceFolder.add(
+			{
+				get HUD() {
+					return showHud
+				},
+				set HUD(v: boolean) {
+					showHud = v
+				}
+			},
+			'HUD'
+		)
+		inspCtrl.Stats = interfaceFolder.add(
+			{
+				get Stats() {
+					return showStats
+				},
+				set Stats(v: boolean) {
+					showStats = v
+				}
+			},
+			'Stats'
+		)
+		inspCtrl.Freeze = interfaceFolder.add(
+			{
+				get 'Freeze sequencer'() {
+					return useFreeze
+				},
+				set 'Freeze sequencer'(v: boolean) {
+					useFreeze = v
+				}
+			},
+			'Freeze sequencer'
+		)
+		inspCtrl.SceneFX = interfaceFolder.add(
+			{
+				get 'Scene FX'() {
+					return fxPost
+				},
+				set 'Scene FX'(v: boolean) {
+					fxPost = v
+				}
+			},
+			'Scene FX'
+		)
+		inspCtrl.HudFX = interfaceFolder.add(
+			{
+				get 'HUD FX'() {
+					return fxHud
+				},
+				set 'HUD FX'(v: boolean) {
+					fxHud = v
+				}
+			},
+			'HUD FX'
+		)
+		inspCtrl.Wireframe = interfaceFolder.add(
+			{
+				get Wireframe() {
+					return wireframe
+				},
+				set Wireframe(v: boolean) {
+					wireframe = v
+				}
+			},
+			'Wireframe'
+		)
 
-		railsGuiRef = sceneGui.addFolder('Rails')
+		railsGuiRef = viewFolder.addFolder('Rails')
 		railsGuiRef.close()
 		populateRailsGui(railsGuiRef)
 
@@ -361,6 +569,64 @@
 	$effect(() => {
 		void activeScene // track dependency
 		if (inspectorRef && railsGuiRef) populateRailsGui(railsGuiRef)
+	})
+
+	// Sync inspector controls when state changes externally (spacebar, HUD transport, etc.)
+	// Direct DOM mutations avoid setValue() which dispatches change and re-fires the setter.
+	function syncBool(key: string, val: boolean) {
+		const c = inspCtrl[key]
+		if (c?.checkbox) c.checkbox.checked = val
+	}
+	function syncNum(key: string, val: number) {
+		const c = inspCtrl[key]
+		if (c?.slider) {
+			c.slider.value = val
+			c.numberInput.value = val
+		} else if (c?.input) c.input.value = val
+	}
+	function syncSel(key: string, val: string) {
+		const c = inspCtrl[key]
+		if (c?.select) c.select.value = val
+	}
+
+	$effect(() => {
+		syncBool('Play', tempo.isPlaying)
+	})
+	$effect(() => {
+		syncNum('BPM', tempo.config.bpm)
+	})
+	$effect(() => {
+		syncBool('Rotate', autoRotate)
+	})
+	$effect(() => {
+		syncBool('Grid', showGrid)
+	})
+	$effect(() => {
+		syncBool('Points', showPoints)
+	})
+	$effect(() => {
+		syncBool('Beats', showBeats)
+	})
+	$effect(() => {
+		syncBool('Names', showNames)
+	})
+	$effect(() => {
+		syncBool('Wireframe', wireframe)
+	})
+	$effect(() => {
+		syncBool('Audio', showAudio)
+	})
+	$effect(() => {
+		syncBool('HUD', showHud)
+	})
+	$effect(() => {
+		syncBool('Stats', showStats)
+	})
+	$effect(() => {
+		syncSel('Easing', easing)
+	})
+	$effect(() => {
+		syncBool('MIDI', midiEnabled)
 	})
 </script>
 
