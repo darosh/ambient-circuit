@@ -1,17 +1,6 @@
 <script lang="ts">
-	// import { Inspector } from 'three/addons/inspector/Inspector.js'
+	import { Inspector } from 'three/addons/inspector/Inspector.js'
 	import { Canvas } from '@threlte/core'
-	import {
-		ThemeUtils,
-		Pane,
-		Checkbox,
-		Slider,
-		Folder,
-		Monitor,
-		List,
-		Element
-	} from 'svelte-tweakpane-ui'
-	import type { Theme } from 'svelte-tweakpane-ui'
 	import { createTempoState } from './lib/core/tempo'
 	import { easingNames } from './lib/helpers/easing'
 	import { onUpdate, scenes } from './scenes'
@@ -36,25 +25,10 @@
 	import GlobalState from './components/GlobalState.svelte'
 	import { clearTubeMaterialCache } from './lib/video/material-text-tube'
 	import type { SceneConfig } from './lib/core/scene'
+	import type { ParametersGroup } from 'three/examples/jsm/inspector/tabs/Parameters.js'
 
 	// import * as THREE from 'three/webgpu'
 	// extend(THREE)
-
-	const buttonBackgroundColor = 'hsl(230, 7%, 16%)'
-	const inputBackgroundColor = 'hsl(230, 7%, 24%)'
-	const customizedTheme: Theme = {
-		...ThemeUtils.presets.translucent,
-		bladeValueWidth: '160px',
-		buttonBackgroundColor,
-		buttonBackgroundColorActive: buttonBackgroundColor,
-		buttonBackgroundColorFocus: buttonBackgroundColor,
-		buttonBackgroundColorHover: buttonBackgroundColor,
-		buttonForegroundColor: 'hsl(230, 7%, 70%)',
-		inputBackgroundColor,
-		inputBackgroundColorActive: inputBackgroundColor,
-		inputBackgroundColorFocus: inputBackgroundColor,
-		inputBackgroundColorHover: inputBackgroundColor
-	}
 
 	let showGrid = $state(true)
 	let showPoints = $state(false)
@@ -293,72 +267,105 @@
 			}
 		}
 	])
+
+	let rendererRef: WebGPURenderer | null = null
+	let inspectorRef: Inspector | null = null
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let railsGuiRef: any = null
+
+	const beatProxy = { Beat: 0 }
+	$effect(() => {
+		beatProxy.Beat = Math.floor(tempo.currentBeat)
+	})
+
+	function populateRailsGui(railsGui: ReturnType<Inspector['createParameters']>) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const gui = railsGui as any
+		// Remove existing items from DOM and clear registry
+		if (gui.objects) {
+			for (const entry of gui.objects) entry.subItem.domElement.remove()
+			gui.objects = []
+		}
+		for (let i = 0; i < activeScene.rails.length; i++) {
+			if (i >= railVisibility.length) break
+			const rc = activeScene.rails[i]
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const proxy: any = {
+				get [rc.id]() { return railVisibility[i] },
+				set [rc.id](v: boolean) { railVisibility[i] = v }
+			}
+			railsGui.add(proxy, rc.id)
+		}
+	}
+
+	function buildInspector() {
+		if (!rendererRef) return null
+		const inspector = new Inspector()
+		rendererRef.inspector = inspector
+		document.querySelector('#ins')!.append(inspector.domElement)
+
+		const sceneGui = inspector.createParameters('Scene')
+		const sceneProps = {
+			get Scene() { return sceneId },
+			set Scene(v: string) { sceneId = v }
+		}
+
+		sceneGui.add(sceneProps, 'Scene', Object.fromEntries(scenes.map((s) => [s.id.replaceAll('scene-', ''), s.id])))
+		sceneGui.add({ get Play() { return tempo.isPlaying }, set Play(v: boolean) { tempo.isPlaying = v } }, 'Play')
+		sceneGui.add(beatProxy, 'Beat').listen()
+		sceneGui.add({ get BPM() { return tempo.config.bpm }, set BPM(v: number) { tempo.config.bpm = v } }, 'BPM', 30, 300, 1)
+		sceneGui.add({ get Rotate() { return autoRotate }, set Rotate(v: boolean) { autoRotate = v } }, 'Rotate')
+		sceneGui.add({ get Easing() { return easing }, set Easing(v: string) { easing = v } }, 'Easing', Object.fromEntries(easingNames.map((n) => [n, n])))
+		sceneGui.add({ get MIDI() { return midiEnabled }, set MIDI(v: boolean) { midiEnabled = v } }, 'MIDI')
+		// sceneGui.add({ get 'MIDI Port'(): string { return selectedMidiPort }, set 'MIDI Port'(v: string) { selectedMidiPort = v } }, 'MIDI Port', midiPortOptions)
+
+		const dbg = inspector.createParameters('View')
+		;(dbg as ParametersGroup).close()
+		dbg.add({ get Grid() { return showGrid }, set Grid(v: boolean) { showGrid = v } }, 'Grid')
+		dbg.add({ get Points() { return showPoints }, set Points(v: boolean) { showPoints = v } }, 'Points')
+		dbg.add({ get Beats() { return showBeats }, set Beats(v: boolean) { showBeats = v } }, 'Beats')
+		dbg.add({ get Names() { return showNames }, set Names(v: boolean) { showNames = v } }, 'Names')
+		dbg.add({ get Wireframe() { return wireframe }, set Wireframe(v: boolean) { wireframe = v } }, 'Wireframe')
+		dbg.add({ get Audio() { return showAudio }, set Audio(v: boolean) { showAudio = v } }, 'Audio')
+
+		const ui = inspector.createParameters('Interface')
+		;(ui as ParametersGroup).close()
+		ui.add({ get HUD() { return showHud }, set HUD(v: boolean) { showHud = v } }, 'HUD')
+		ui.add({ get Stats() { return showStats }, set Stats(v: boolean) { showStats = v } }, 'Stats')
+		ui.add({ get 'Freeze sequencer'() { return useFreeze }, set 'Freeze sequencer'(v: boolean) { useFreeze = v } }, 'Freeze sequencer')
+		ui.add({ get 'Scene FX'() { return fxPost }, set 'Scene FX'(v: boolean) { fxPost = v } }, 'Scene FX')
+		ui.add({ get 'HUD FX'() { return fxHud }, set 'HUD FX'(v: boolean) { fxHud = v } }, 'HUD FX')
+
+		railsGuiRef = sceneGui.addFolder('Rails')
+		railsGuiRef.close()
+		populateRailsGui(railsGuiRef)
+
+		return inspector
+	}
+
+	// Lazy init: show on first D press, hide/show after
+	$effect(() => {
+		if (debugEnabled) {
+			if (!rendererRef) return
+			if (inspectorRef) {
+				inspectorRef.domElement.style.display = 'block'
+			} else {
+				inspectorRef = buildInspector()
+			}
+		} else if (inspectorRef) {
+			inspectorRef.domElement.style.display = 'none'
+		}
+	})
+
+	// Refresh Rails tab on scene change (keep inspector alive)
+	$effect(() => {
+		void activeScene // track dependency
+		if (inspectorRef && railsGuiRef) populateRailsGui(railsGuiRef)
+	})
 </script>
 
 <GlobalState engine={audioEngineRef}></GlobalState>
 <svelte:window onkeydown={handleKeydown} />
-
-{#if debugEnabled}
-	<Pane title={`Debug v${__APP_VERSION__}`} position="fixed" width={320} theme={customizedTheme}>
-		<List
-			label="Scene"
-			bind:value={sceneId}
-			options={scenes.map((s) => ({ text: s.id.replaceAll('scene-', ''), value: s.id }))}
-		/>
-		<Checkbox label="Play" bind:value={tempo.isPlaying} />
-		<Folder title="Tempo" expanded={false}>
-			<Slider label="BPM" bind:value={tempo.config.bpm} min={30} max={300} />
-			<Monitor label="Beat" value={Math.floor(tempo.currentBeat)} />
-		</Folder>
-		<Folder title="FX" expanded={false}>
-			<List label="Easing" bind:value={easing} options={easingNames} />
-			<Checkbox label="Post" bind:value={fxPost} />
-			<Checkbox label="Hud" bind:value={fxHud} />
-			<Checkbox label="Auto Rotate" bind:value={autoRotate} />
-		</Folder>
-		<Folder title="Debug" expanded={false}>
-			<Checkbox label="HUD" bind:value={showHud} />
-			<Checkbox label="Stats" bind:value={showStats} />
-			<Checkbox label="Grid" bind:value={showGrid} />
-			<Checkbox label="Points" bind:value={showPoints} />
-			<Checkbox label="Beats" bind:value={showBeats} />
-			<Checkbox label="Names" bind:value={showNames} />
-			<Checkbox label="Wireframe" bind:value={wireframe} />
-			<Checkbox label="Freeze" bind:value={useFreeze} />
-			<Checkbox label="Audio" bind:value={showAudio} />
-			<Checkbox label="MIDI" bind:value={midiEnabled} />
-			{#if midiEnabled && midiState && midiState.outputs.length > 0}
-				<List label="Port" bind:value={selectedMidiPort} options={midiPortOptions} />
-			{/if}
-		</Folder>
-		<Folder title="Rails" expanded={false}>
-			{#each activeScene.rails as rc, i (rc.id)}
-				{#if i < railVisibility.length}
-					<Checkbox label={rc.id} bind:value={railVisibility[i]} />
-				{/if}
-			{/each}
-		</Folder>
-		<Folder title="Hotkeys" expanded={false}>
-			<Element>
-				<div class="help">
-					Space: Play<br />
-					D: Debug<br />
-					F: FPS<br />
-					<br />
-					W: Wireframe<br />
-					R: Rotation<br />
-					E: Easing<br />
-					B: Beats<br />
-					N: Names<br />
-					G: Grid<br />
-					M: MIDI<br />
-					S: Next scene<br />
-					A: Previous scene<br />
-				</div>
-			</Element>
-		</Folder>
-	</Pane>
-{/if}
 
 <Canvas
 	renderMode={limitFps ? 'manual' : 'on-demand'}
@@ -375,7 +382,7 @@
 			// outputBufferType: UnsignedByteType
 		})
 
-		// renderer.inspector = new Inspector()
+		rendererRef = renderer
 		renderer.dispose = () => {}
 
 		return renderer
@@ -440,18 +447,13 @@
 	></Wrap>
 </Canvas>
 
-<style>
-	.help {
-		font-family: 'Roboto Mono', 'Source Code Pro', Menlo, Courier, monospace;
-		font-size: 12px;
-		font-weight: 500;
-		line-height: 18px;
-		color: #fff;
-		padding: 9px;
-	}
+<div id="ins"></div>
 
-	:global(.tp-dfwv) {
-		overflow-y: scroll;
-		max-height: calc(100vh - 16px);
+<style>
+	#ins {
+		position: fixed;
+		top: 0;
+		right: 0;
+		z-index: 100;
 	}
 </style>
