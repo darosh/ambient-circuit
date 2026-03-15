@@ -122,6 +122,8 @@ if (process.argv[2] === '--watch') {
 
 	watcher.on('change', (path) => {
 		console.log('change', path)
-		convertDir(path)
+		setTimeout(() => {
+			convertDir(path)
+		}, 1)
 	})
 }
