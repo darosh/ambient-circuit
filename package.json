@@ -2,12 +2,9 @@
 	"name": "ambient-circuit",
 	"version": "0.0.21",
 	"dependencies": {
-		"@dimforge/rapier3d-compat": "^0.19.3",
 		"@rnbo/js": "^1.4.2",
-		"@theatre/core": "^0.7.2",
 		"@threlte/core": "^8.4.1",
 		"@threlte/extras": "^9.7.1",
-		"@threlte/rapier": "^3.2.0",
 		"@threlte/theatre": "^3.1.2",
 		"@tonaljs/chord-detect": "^4.9.1",
 		"@tonaljs/scale": "^4.13.4",
@@ -17,14 +14,12 @@
 		"maath": "^0.10.8",
 		"pako": "^2.1.0",
 		"rambdax": "^11.3.1",
-		"svelte-tweakpane-ui": "^1.5.14",
 		"three": "^0.183.2",
 		"tone": "^15.1.22",
 		"tsl-textures": "^3.0.1"
 	},
 	"devDependencies": {
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
-		"@theatre/studio": "^0.7.2",
 		"@types/culori": "^4.0.1",
 		"@types/debug": "^4.1.12",
 		"@types/eslint": "^9.6.0",
