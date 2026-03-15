@@ -507,7 +507,7 @@
 		// Update easing based on prop (respect runtime overrides)
 		for (const marble of marbles) {
 			if (!marble.runtime.easing) {
-				marble.resolved.easing = marble.resolved.easing || easing || 'linear'
+				marble.resolved.easing = marble.resolved?.config?.easing || easing || 'linear'
 			}
 		}
 

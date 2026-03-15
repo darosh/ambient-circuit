@@ -64,6 +64,7 @@ export function createMarbleConfigs(
 				createMarbleInstance(
 					{
 						resolvedRail,
+						config: m,
 						startBeat: m.start ?? 0,
 						direction: m.direction ?? 'forward',
 						sequenceMode: m.mode ?? 'looping',

@@ -1,6 +1,7 @@
 import type { ResolvedRail } from './rail'
 import type { Vector3 } from 'three/webgpu'
 import { InstrumentSignal } from './instrument'
+import { MarbleConfig } from './rail-config'
 
 export type MarbleDirection = 'forward' | 'backward'
 export type MarbleSequenceMode = 'looping' | 'ping-pong'
@@ -19,6 +20,7 @@ export type EasingMode =
 export type MarbleType = 'ball' | 'poly' | 'coil' | 'eater'
 
 export interface ResolvedMarble {
+	config?: MarbleConfig
 	resolvedRail: ResolvedRail
 	startBeat: number
 	direction: MarbleDirection
