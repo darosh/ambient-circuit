@@ -34,7 +34,7 @@ import { scene as sceneSamplerPadDeeper } from './scene-sampler-pad-deeper'
 import { scene as sceneSamplerPadAwaits } from './scene-sampler-pad-awaits'
 import { scene as sceneSamplerPadAstrid } from './scene-sampler-pad-astrid'
 import { scene as sceneFormlines } from './scene-formlines'
-import { scene as scene1 } from './scene-1'
+// import { scene as scene1 } from './scene-1'
 import { scene as scene2 } from './scene-2'
 // import { scenes as scenesRnbo } from './scene-rnbo'
 
