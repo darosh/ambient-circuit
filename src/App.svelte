@@ -350,7 +350,7 @@
 			}
 		}
 
-		sceneFolder.add(
+		inspCtrl.Scene = sceneFolder.add(
 			sceneProps,
 			'Scene',
 			Object.fromEntries(scenes.map((s) => [s.id.replaceAll('scene-', ''), s.id]))
@@ -608,9 +608,12 @@
 	}
 	function syncSel(key: string, val: string) {
 		const c = inspCtrl[key]
-		if (c?.select) c.select.value = val
+		if (c?.select) c.select.value = val.replace('scene-', '')
 	}
 
+	$effect(() => {
+		syncSel('Scene', sceneId)
+	})
 	$effect(() => {
 		syncBool('Play', tempo.isPlaying)
 	})
