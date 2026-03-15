@@ -225,8 +225,8 @@
 
 		// Project onto local frame
 		const shape = new Shape()
-		for (let i = 0; i < pts.length; i++) {
-			const rel = pts[i].clone().sub(centroid)
+		for (const [i, pt] of pts.entries()) {
+			const rel = pt.clone().sub(centroid)
 			const x = rel.dot(right)
 			const y = rel.dot(up)
 			if (i === 0) shape.moveTo(x, y)
