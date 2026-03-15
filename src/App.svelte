@@ -367,6 +367,17 @@
 			'Play'
 		)
 		sceneFolder.add(beatProxy, 'Beat').listen()
+		inspCtrl.Mute = sceneFolder.add(
+			{
+				get Mute() {
+					return globalState.isMuted
+				},
+				set Mute(v: boolean) {
+					globalState.isMuted = v
+				}
+			},
+			'Mute'
+		)
 		inspCtrl.BPM = sceneFolder.add(
 			{
 				get BPM() {
@@ -543,6 +554,17 @@
 			},
 			'Wireframe'
 		)
+		inspCtrl.Limit = interfaceFolder.add(
+			{
+				get 'Limit FPS'() {
+					return limitFps
+				},
+				set 'Limit FPS'(v: boolean) {
+					limitFps = v
+				}
+			},
+			'Limit FPS'
+		)
 
 		railsGuiRef = viewFolder.addFolder('Rails')
 		railsGuiRef.close()
@@ -591,6 +613,12 @@
 
 	$effect(() => {
 		syncBool('Play', tempo.isPlaying)
+	})
+	$effect(() => {
+		syncBool('Mute', globalState.isMuted)
+	})
+	$effect(() => {
+		syncBool('Limit', limitFps)
 	})
 	$effect(() => {
 		syncNum('BPM', tempo.config.bpm)

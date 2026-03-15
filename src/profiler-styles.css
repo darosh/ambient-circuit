@@ -169,7 +169,7 @@
 	box-shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
 	font-family: var(--font-family);
 	font-size: 11px;
-	width: 350px;
+	width: 300px;
 	max-height: calc(100vh - 100px);
 	overflow-y: auto;
 	overflow-x: hidden;
@@ -375,7 +375,7 @@
 }
 
 .mini-panel-content .param-control input[type='number'] {
-	flex-basis: 60px !important;
+	flex-basis: 40px !important;
 }
 
 .mini-panel-content .param-control {
@@ -384,6 +384,7 @@
 
 .mini-panel-content .param-control select {
 	font-size: 13px;
+	text-transform: uppercase;
 }
 
 .mini-panel-content .list-item-wrapper {
@@ -1199,16 +1200,15 @@
 	border: 1px solid var(--profiler-border);
 	color: var(--text-primary);
 	border-radius: 4px;
-	padding: 4px 6px;
-	padding-bottom: 2px;
+	padding: 4px 6px 2px;
 	font-family: var(--font-mono);
 	width: 100%;
 	box-sizing: border-box;
 }
 
 .param-control select {
-	padding-top: 3px;
-	padding-bottom: 1px;
+	padding-top: 0;
+	padding-bottom: 2px;
 }
 
 .param-control input[type='number'] {
@@ -1337,8 +1337,7 @@
 }
 
 .mini-panel-content .param-control select {
-	padding: 2px 2px;
-	padding-top: 3px;
+	padding: 2px 2px 2px;
 }
 
 .mini-panel-content .param-control input[type='number']::-webkit-outer-spin-button,
