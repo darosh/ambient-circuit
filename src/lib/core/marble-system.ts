@@ -35,6 +35,15 @@ function getCurve(points: ResolvedPoint[], i: number): CubicBezierCurve3 | null 
 	return cache[i] ?? null
 }
 
+/** Compare two branch paths for equality. */
+function branchPathsEqual(a: number[], b: number[]): boolean {
+	if (a.length !== b.length) return false
+	for (const [i, element] of a.entries()) {
+		if (element !== b[i]) return false
+	}
+	return true
+}
+
 // Snake motion constants
 const SNAKE_AMPLITUDE_X = 0.09 // units perpendicular to rail
 const SNAKE_AMPLITUDE_Y = 0.15 // units perpendicular to rail
@@ -42,11 +51,16 @@ const SNAKE_FREQUENCY = 0.5 // cycles per beat (1.0 = crosses at whole beats)
 
 /**
  * Select branch for marble at split using weighted round-robin.
+ * Uses per-level routing counter so each split depth alternates independently.
  */
-function selectBranch(marble: MarbleInstance, split: ResolvedSplit): number {
+function selectBranch(marble: MarbleInstance, split: ResolvedSplit, level: number): number {
 	const weights = split.weights
 	const totalWeight = weights.reduce((sum: number, w: number) => sum + w, 0)
-	const position = marble.routingCounter % totalWeight
+
+	// Ensure counter array is long enough
+	while (marble.routingCounters.length <= level) marble.routingCounters.push(0)
+
+	const position = marble.routingCounters[level] % totalWeight
 
 	let cumulative = 0
 	for (const [i, weight] of weights.entries()) {
@@ -56,6 +70,47 @@ function selectBranch(marble: MarbleInstance, split: ResolvedSplit): number {
 		}
 	}
 	return 0
+}
+
+/**
+ * Walk the split tree and assign branch indices at each level where
+ * the marble's beat has passed the split beat.
+ * Returns true if any new level was assigned.
+ */
+function assignBranchPath(
+	marble: MarbleInstance,
+	rail: { points: ResolvedPoint[]; splits: ResolvedSplit[] },
+	rawBeat: number
+): boolean {
+	let seg: { points: ResolvedPoint[]; splits: ResolvedSplit[] } = rail
+	let assigned = false
+
+	// Walk existing path to find current segment
+	for (let level = 0; level < marble.branchPath.length; level++) {
+		if (seg.splits.length === 0) return assigned
+		const split = seg.splits[0]
+		const branch = split.branches[marble.branchPath[level]]
+		if (!branch) return assigned
+		seg = branch
+	}
+
+	// Try to assign next levels
+	let level = marble.branchPath.length
+	while (seg.splits.length > 0 && rawBeat >= seg.splits[0].beat) {
+		const split = seg.splits[0]
+		const branchIdx = selectBranch(marble, split, level)
+		marble.branchPath.push(branchIdx)
+		// Increment only this level's counter
+		while (marble.routingCounters.length <= level) marble.routingCounters.push(0)
+		marble.routingCounters[level]++
+		assigned = true
+		const branch = split.branches[branchIdx]
+		if (!branch) break
+		seg = branch
+		level++
+	}
+
+	return assigned
 }
 
 /**
@@ -158,26 +213,39 @@ export function fireGlobalBeatDestroy(
 
 /**
  * Get current path points based on marble's branch state.
+ * Walks the tree using branchPath: each entry selects a branch at successive split levels.
  */
 function getCurrentPathPoints(marble: MarbleInstance): ResolvedPoint[] {
 	const rail = marble.resolved.resolvedRail
+	const path = marble.branchPath
 
-	// If on a branch, return: main points up to split + split point + branch points
-	if (marble.branchIndex !== null && rail.splits.length > 0) {
-		const split = rail.splits[0] // TODO: handle multiple splits
-		const branch = split.branches[marble.branchIndex]
+	if (path.length === 0) return rail.points
 
-		// Find split point in main rail
-		const splitIdx = rail.points.findIndex((p: ResolvedPoint) => p.beat === split.beat)
+	// Walk the split tree, collecting points from trunk → each branch level
+	let seg: { points: ResolvedPoint[]; splits: ResolvedSplit[] } = rail
+	const result: ResolvedPoint[] = []
 
-		// Include point before split for proper tangent computation
-		const startIdx = Math.max(0, splitIdx - 1)
-		const mainUpToSplit = rail.points.slice(startIdx, splitIdx + 1)
+	for (const [level, branchIdx] of path.entries()) {
+		if (seg.splits.length === 0) break
+		const split = seg.splits[0]
+		const branch = split.branches[branchIdx]
+		if (!branch) break
 
-		return [...mainUpToSplit, ...branch.points]
+		if (level === 0) {
+			// First level: include prev point + points up to split for tangent
+			const splitIdx = seg.points.findIndex((p: ResolvedPoint) => p.beat === split.beat)
+			const startIdx = Math.max(0, splitIdx - 1)
+			result.push(...seg.points.slice(startIdx, splitIdx + 1))
+		}
+
+		// Always add this branch's points (intermediate AND final levels)
+		result.push(...branch.points)
+
+		// Descend into branch for next level
+		seg = branch
 	}
 
-	return rail.points
+	return result.length > 0 ? result : rail.points
 }
 
 /**
@@ -366,7 +434,7 @@ function checkMarbleCollisions(
 			if (m2Delta > wrapThreshold) continue
 
 			// Check if on same branch
-			if (m1.branchIndex !== m2.branchIndex) continue
+			if (!branchPathsEqual(m1.branchPath, m2.branchPath)) continue
 
 			// Beat-based collision: check if beat intervals overlap
 			const overlap = beatsOverlap(m1.previousBeat, m1.currentBeat, m2.previousBeat, m2.currentBeat)
@@ -508,7 +576,7 @@ function preventBouncerCrossovers(marbles: MarbleInstance[]): void {
 			const rail1 = m1.runtime.railId ?? m1.resolved.resolvedRail.id
 			const rail2 = m2.runtime.railId ?? m2.resolved.resolvedRail.id
 			if (rail1 !== rail2) continue
-			if (m1.branchIndex !== m2.branchIndex) continue
+			if (!branchPathsEqual(m1.branchPath, m2.branchPath)) continue
 
 			// Skip wrap-around cases (large beat delta = looping boundary)
 			if (Math.abs(m1.previousBeat - m2.previousBeat) > 5) continue
@@ -555,7 +623,7 @@ function checkInstrumentTriggers(
 	if (Math.abs(beatDelta) > 100) return
 
 	// Determine marble's current path
-	const marblePath: number[] = marble.branchIndex === null ? [] : [marble.branchIndex]
+	const marblePath: number[] = marble.branchPath
 
 	// Check for jump trigger first (from previous frame's jump)
 	if (marble.runtime.jumpedToBeat !== undefined) {
@@ -715,8 +783,8 @@ export function rewindMarble(marble: MarbleInstance, globalBeat: number): void {
 	marble.runtime.targetBeat = undefined
 	marble.runtime.targetRailId = undefined
 	marble.runtime.lastCollisionTime = undefined
-	marble.branchIndex = null
-	marble.routingCounter = 0
+	marble.branchPath = []
+	marble.routingCounters = []
 	marble.signal.intensity = 0
 
 	// Set previousBeat = currentBeat = rawBeat so hasMoved = false on this frame
@@ -735,8 +803,8 @@ export function resetMarbleToConfig(marble: MarbleInstance, config: ResolvedMarb
 	marble.currentBeat = config.startBeat
 	marble.previousBeat = config.startBeat
 	marble.direction = config.direction
-	marble.branchIndex = null
-	marble.routingCounter = 0
+	marble.branchPath = []
+	marble.routingCounters = []
 	marble.lastGlobalBeat = -1
 	marble.signal.intensity = 0
 	marble.midiSignal.intensity = 0
@@ -814,26 +882,20 @@ export function updateMarble(
 		return
 	}
 
-	// Reset branch when crossing split point backward
+	// Reset branch path when crossing split point backward
 	if (
-		marble.branchIndex !== null &&
+		marble.branchPath.length > 0 &&
 		resolvedRail.splits.length > 0 &&
 		marble.direction === 'backward' &&
 		rawBeat < resolvedRail.splits[0].beat
 	) {
-		marble.branchIndex = null
+		marble.branchPath = []
 	}
 
-	// Check if should assign branch (use unwrapped beat)
-	const shouldAssignBranch =
-		marble.branchIndex === null &&
-		resolvedRail.splits.length > 0 &&
-		rawBeat >= resolvedRail.splits[0].beat
+	// Assign branch at each split level the marble hasn't entered yet
+	const assigned = assignBranchPath(marble, resolvedRail, rawBeat)
 
-	if (shouldAssignBranch) {
-		marble.branchIndex = selectBranch(marble, resolvedRail.splits[0])
-		marble.routingCounter++
-
+	if (assigned) {
 		// Recalculate beat range with branch
 		const branchPoints = getCurrentPathPoints(marble)
 		if (branchPoints.length > 1) {
@@ -871,7 +933,7 @@ export function updateMarble(
 			if (rawBeat < minBeat) rawBeat += beatRange
 
 			// Reset branch and trigger state when looping back
-			marble.branchIndex = null
+			marble.branchPath = []
 			marble.runtime.lastTriggeredBeat = undefined
 			marble.runtime.lastTriggeredDirection = undefined
 
@@ -914,7 +976,7 @@ export function updateMarble(
 			if (rawBeat > maxBeat) rawBeat -= beatRange
 
 			// Reset branch and trigger state when looping back
-			marble.branchIndex = null
+			marble.branchPath = []
 			marble.runtime.lastTriggeredBeat = undefined
 			marble.runtime.lastTriggeredDirection = undefined
 
@@ -1021,8 +1083,8 @@ export function updateMarble(
 
 				marble.currentBeat = newMinBeat
 				marble.previousBeat = newMinBeat
-				marble.branchIndex = null
-				marble.routingCounter = 0
+				marble.branchPath = []
+				marble.routingCounters = []
 				marble.runtime.lastTriggeredBeat = undefined
 				marble.runtime.lastTriggeredDirection = undefined
 				marble.runtime.jumpedToBeat = undefined

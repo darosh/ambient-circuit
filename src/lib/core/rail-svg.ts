@@ -1,4 +1,4 @@
-import type { RailPointFull, Vec3 } from './rail'
+import type { RailPointFull, RailNode, RailDef, Vec3 } from './rail'
 import { offset, type Pos } from './rail-primitives'
 
 // ── SVG Cubic Bezier straight detection ─────────────────────
@@ -104,15 +104,15 @@ export type SvgRailOpts = {
 	pos?: Pos
 	/** SVG units per world unit. Default: 10 */
 	scale?: number
+	/** Endpoint matching tolerance in world units for svgRailMulti. Default: 2/scale */
+	tol?: number
 }
 
 /**
- * Convert an SVG path `d` string to rail points (XZ plane: svgX→x, svgY→z).
- * One point per SVG command endpoint.
- * Curve commands: previous point → `round:'from'`, endpoint → `round:'to'`.
- * Tangents derived from SVG control point distances: `|handle| / chord`.
+ * Parse a full SVG path `d` string, returning each M sub-path as a separate point array.
+ * Continuous cx/cy state is preserved across sub-paths so relative `m` coords are correct.
  */
-export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFull)[] {
+function parseSvgPathSegments(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFull)[][] {
 	const { pos = { x: -5, y: 0, z: -5 }, scale = 10 } = opts
 
 	function toWorld(x: number, y: number): Vec3 {
@@ -124,7 +124,6 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 		return Math.hypot(ax - bx, ay - by)
 	}
 
-	// Retroactively mark last result point as the 'from' entry of a curve
 	function markFrom(tangent: number) {
 		if (result.length === 0) return
 		const last = result.at(-1)
@@ -155,7 +154,8 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 		Z: 0
 	}
 
-	const result: (Vec3 | RailPointFull)[] = []
+	const segments: (Vec3 | RailPointFull)[][] = []
+	let result: (Vec3 | RailPointFull)[] = []
 	let cx = 0,
 		cy = 0
 	let startX = 0,
@@ -179,6 +179,11 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 
 		switch (letter) {
 			case 'M': {
+				// Start new sub-path segment (flush current if non-empty)
+				if (result.length > 0) {
+					segments.push(result)
+					result = []
+				}
 				cx = abs ? args[0] : cx + args[0]
 				cy = abs ? args[1] : cy + args[1]
 				result.push(toWorld(cx, cy))
@@ -195,17 +200,13 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 			case 'Z': {
 				const closeDist = Math.hypot(cx - startX, cy - startY)
 				const wasCurve = 'CSQTA'.includes(prevLetter)
-				// Curves ending near start: skip tiny closing segment (0.2 SVG units)
-				// Non-curves: use tight threshold to avoid dupes
 				const threshold = wasCurve ? 0.2 : 1e-4
 
 				if (closeDist > threshold) {
 					result.push(toWorld(startX, startY))
 				}
 
-				// Closed curve loop: upgrade first point to 'both' for smooth closure
 				if (wasCurve && closeDist <= threshold && result.length > 1) {
-					// Reuse last curve endpoint's tangent as incoming tangent for first point
 					const lastPt = result[result.length - 1] // eslint-disable-line unicorn/prefer-at
 					const inTangent = Array.isArray(lastPt) ? 0 : ((lastPt as RailPointFull).tangent ?? 0)
 
@@ -221,7 +222,6 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 						}
 					}
 
-					// Snap last point position to start for clean closure (gap ≤ threshold is rounding artifact)
 					const startWorld = toWorld(startX, startY)
 					const lastIdx = result.length - 1
 					const last = result[lastIdx]
@@ -368,5 +368,174 @@ export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFul
 		prevLetter = letter
 	}
 
-	return result
+	if (result.length > 0) segments.push(result)
+	return segments
+}
+
+/**
+ * Convert an SVG path `d` string to rail points (XZ plane: svgX→x, svgY→z).
+ * One point per SVG command endpoint.
+ * Curve commands: previous point → `round:'from'`, endpoint → `round:'to'`.
+ * Tangents derived from SVG control point distances: `|handle| / chord`.
+ */
+export function svgRail(d: string, opts: SvgRailOpts = {}): (Vec3 | RailPointFull)[] {
+	const segments = parseSvgPathSegments(d, opts)
+	if (segments.length === 0) return []
+	// Flatten all segments into one array (original behaviour for single-M paths)
+	const flat: (Vec3 | RailPointFull)[] = []
+	for (const seg of segments) flat.push(...seg)
+	return flat
+}
+
+// ── SVG Multi-Path Rail ──────────────────────────────────────
+
+type SubPathInfo = {
+	points: (Vec3 | RailPointFull)[]
+	startPt: Vec3
+	endPt: Vec3
+	startKey: string
+	endKey: string
+}
+
+type Conn = { idx: number; end: 'start' | 'end' }
+
+function getVec3(node: Vec3 | RailPointFull): Vec3 {
+	return Array.isArray(node) ? (node as Vec3) : (node as RailPointFull).p
+}
+
+function roundKey(p: Vec3, tol = 0.1): string {
+	const inv = 1 / tol
+	return `${Math.round(p[0] * inv) / inv},${Math.round(p[1] * inv) / inv},${Math.round(p[2] * inv) / inv}`
+}
+
+function reverseRounding(r: 'to' | 'from' | 'both'): 'to' | 'from' | 'both' {
+	if (r === 'to') return 'from'
+	if (r === 'from') return 'to'
+	return 'both'
+}
+
+function reversePoints(points: (Vec3 | RailPointFull)[]): (Vec3 | RailPointFull)[] {
+	// eslint-disable-next-line unicorn/no-array-reverse
+	return [...points].reverse().map((p) => {
+		if (Array.isArray(p)) return p
+		const full = p as RailPointFull
+		if (!full.round) return full
+		return { ...full, round: reverseRounding(full.round) }
+	})
+}
+
+function walkPath(
+	segIdx: number,
+	forward: boolean,
+	visited: Set<number>,
+	adj: Map<string, Conn[]>,
+	subPaths: SubPathInfo[],
+	includeFirst: boolean
+): RailNode[] {
+	if (visited.has(segIdx)) return []
+	visited.add(segIdx)
+
+	const seg = subPaths[segIdx]
+	const pts = forward ? seg.points : reversePoints(seg.points)
+	const result: RailNode[] = pts.slice(includeFirst ? 0 : 1)
+
+	const exitKey = forward ? seg.endKey : seg.startKey
+	const others = (adj.get(exitKey) ?? []).filter((c) => !visited.has(c.idx))
+
+	if (others.length === 0) return result
+
+	if (others.length === 1) {
+		const continuation = walkPath(
+			others[0].idx,
+			others[0].end === 'start',
+			visited,
+			adj,
+			subPaths,
+			false
+		)
+		return [...result, ...continuation]
+	}
+
+	// Split at exit point — pop the junction point and embed as split.p
+	const lastPt = result.at(-1)!
+	const splitPt = getVec3(lastPt as Vec3 | RailPointFull)
+	const beforeSplit = result.slice(0, -1)
+
+	const branches: RailDef[] = others.map((conn) =>
+		walkPath(conn.idx, conn.end === 'start', visited, adj, subPaths, false)
+	)
+
+	return [...beforeSplit, { split: { p: splitPt, weights: others.map(() => 1), branches } }]
+}
+
+/**
+ * Parse a multi-sub-path SVG `d` string into `RailNode[][]`.
+ * Detects shared endpoints, joins connected segments, emits `RailSplit` at degree-3+ junctions.
+ * Returns one `RailNode[]` per connected component.
+ */
+export function svgRailMulti(d: string, opts: SvgRailOpts = {}): RailNode[][] {
+	const rawSegments = parseSvgPathSegments(d, opts)
+
+	if (rawSegments.length <= 1) return [svgRail(d, opts)]
+
+	// Default tolerance: 2 SVG units in world space (handles typical Inkscape path gaps)
+	const tol = opts.tol ?? 2 / (opts.scale ?? 10)
+
+	const subPaths: SubPathInfo[] = rawSegments
+		.filter((pts) => pts.length > 0)
+		.map((points) => {
+			const startPt = getVec3(points[0] as Vec3 | RailPointFull)
+			const endPt = getVec3(points.at(-1)! as Vec3 | RailPointFull)
+			return {
+				points,
+				startPt,
+				endPt,
+				startKey: roundKey(startPt, tol),
+				endKey: roundKey(endPt, tol)
+			}
+		})
+
+	const adj = new Map<string, Conn[]>()
+	for (const [i, { startKey, endKey }] of subPaths.entries()) {
+		if (!adj.has(startKey)) adj.set(startKey, [])
+		adj.get(startKey)!.push({ idx: i, end: 'start' })
+		if (!adj.has(endKey)) adj.set(endKey, [])
+		adj.get(endKey)!.push({ idx: i, end: 'end' })
+	}
+
+	const visited = new Set<number>()
+	const rails: RailNode[][] = []
+
+	// Collect degree-1 nodes (dead ends) — these are candidate roots
+	const degree1: { key: string; conn: Conn }[] = []
+	for (const [key, conns] of adj) {
+		if (conns.length === 1) degree1.push({ key, conn: conns[0] })
+	}
+
+	// Pick root: degree-1 node adjacent to highest-degree junction (most "trunk-like")
+	if (degree1.length > 0) {
+		degree1.sort((a, b) => {
+			const exitA =
+				a.conn.end === 'start' ? subPaths[a.conn.idx].endKey : subPaths[a.conn.idx].startKey
+			const exitB =
+				b.conn.end === 'start' ? subPaths[b.conn.idx].endKey : subPaths[b.conn.idx].startKey
+			const degA = (adj.get(exitA) ?? []).length
+			const degB = (adj.get(exitB) ?? []).length
+			return degB - degA // highest-degree neighbor first
+		})
+		// Start from best root first, then remaining degree-1 nodes
+		for (const { conn } of degree1) {
+			if (visited.has(conn.idx)) continue
+			rails.push(walkPath(conn.idx, conn.end === 'start', visited, adj, subPaths, true))
+		}
+	}
+
+	// Handle remaining unvisited (closed loops / isolated segments)
+	for (let i = 0; i < subPaths.length; i++) {
+		if (!visited.has(i)) {
+			rails.push(walkPath(i, true, visited, adj, subPaths, true))
+		}
+	}
+
+	return rails
 }

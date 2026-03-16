@@ -37,7 +37,7 @@ describe('marble routing through splits', () => {
 		updateMarble(marble, tempo)
 
 		expect(marble.currentBeat).toBe(0)
-		expect(marble.branchIndex).toBe(null)
+		expect(marble.branchPath).toEqual([])
 		expect(marble.position.x).toBeCloseTo(-2, 1)
 	})
 
@@ -56,7 +56,7 @@ describe('marble routing through splits', () => {
 		updateMarble(marble, tempo)
 
 		expect(marble.currentBeat).toBeCloseTo(0.5, 5)
-		expect(marble.branchIndex).toBe(null)
+		expect(marble.branchPath).toEqual([])
 		expect(marble.position.x).toBeCloseTo(-1, 1) // halfway between -2 and 0
 	})
 
@@ -75,7 +75,7 @@ describe('marble routing through splits', () => {
 		updateMarble(marble, tempo)
 
 		expect(marble.currentBeat).toBeCloseTo(1, 5)
-		expect(marble.branchIndex).toBe(0) // first branch (routingCounter starts at 0)
+		expect(marble.branchPath).toEqual([0]) // first branch (routingCounter starts at 0)
 		expect(marble.position.x).toBeCloseTo(0, 1) // at split point
 	})
 
@@ -94,7 +94,7 @@ describe('marble routing through splits', () => {
 		updateMarble(marble, tempo)
 
 		expect(marble.currentBeat).toBeCloseTo(1.5, 5)
-		expect(marble.branchIndex).toBe(0)
+		expect(marble.branchPath).toEqual([0])
 		// Position should be between [0,0,0] and [1,1,0]
 		expect(marble.position.x).toBeGreaterThan(0)
 		expect(marble.position.x).toBeLessThan(1)
@@ -116,7 +116,7 @@ describe('marble routing through splits', () => {
 		updateMarble(marble, tempo)
 
 		expect(marble.currentBeat).toBeCloseTo(2, 5)
-		expect(marble.branchIndex).toBe(0)
+		expect(marble.branchPath).toEqual([0])
 		expect(marble.position.x).toBeCloseTo(1, 1)
 		expect(marble.position.y).toBeCloseTo(1, 1) // upper branch endpoint
 	})
@@ -135,7 +135,7 @@ describe('marble routing through splits', () => {
 		tempo.currentBeat = 1
 		tempo.beatProgress = 0
 		updateMarble(marble, tempo)
-		expect(marble.branchIndex).toBe(0)
+		expect(marble.branchPath).toEqual([0])
 
 		// Then progress to beat 2.5 which should loop back
 		tempo.currentBeat = 2
@@ -144,7 +144,7 @@ describe('marble routing through splits', () => {
 
 		// Should wrap: beat 2.5 → 0.5, branch reset
 		expect(marble.currentBeat).toBeCloseTo(0.5, 5)
-		expect(marble.branchIndex).toBe(null)
+		expect(marble.branchPath).toEqual([])
 		expect(marble.position.x).toBeCloseTo(-1, 1) // back on main rail
 		expect(marble.position.y).toBeCloseTo(0, 1) // back to y=0
 	})
@@ -163,20 +163,20 @@ describe('marble routing through splits', () => {
 		tempo.currentBeat = 1
 		tempo.beatProgress = 0
 		updateMarble(marble, tempo)
-		expect(marble.branchIndex).toBe(0)
-		expect(marble.routingCounter).toBe(1)
+		expect(marble.branchPath).toEqual([0])
+		expect(marble.routingCounters[0]).toBe(1)
 
 		// Continue to beat 2
 		tempo.currentBeat = 2
 		tempo.beatProgress = 0
 		updateMarble(marble, tempo)
-		expect(marble.branchIndex).toBe(0)
+		expect(marble.branchPath).toEqual([0])
 
 		// Loop back (beat 2.5 → 0.5)
 		tempo.currentBeat = 2
 		tempo.beatProgress = 0.5
 		updateMarble(marble, tempo)
-		expect(marble.branchIndex).toBe(null)
+		expect(marble.branchPath).toEqual([])
 		expect(marble.currentBeat).toBeCloseTo(0.5, 5)
 
 		// Reach split again on second loop
@@ -184,8 +184,8 @@ describe('marble routing through splits', () => {
 		tempo.beatProgress = 0 // globalBeat = 3, wraps to beat 1
 		updateMarble(marble, tempo)
 
-		expect(marble.branchIndex).toBe(1) // second branch
-		expect(marble.routingCounter).toBe(2)
+		expect(marble.branchPath).toEqual([1]) // second branch
+		expect(marble.routingCounters[0]).toBe(2)
 		expect(marble.currentBeat).toBeCloseTo(1, 5) // at split
 		expect(marble.position.x).toBeCloseTo(0, 1) // at split point (x=0)
 		expect(marble.position.y).toBeCloseTo(0, 1) // at split point (y=0)

@@ -111,8 +111,8 @@ describe('Rail Switching API', () => {
 		expect(marble.resolved.resolvedRail.id).toBe('rail-2')
 		expect(marble.runtime.railId).toBe('rail-2')
 		expect(marble.currentBeat).toBe(0) // reset to minBeat of rail2
-		expect(marble.branchIndex).toBeNull() // branch reset
-		expect(marble.routingCounter).toBe(0)
+		expect(marble.branchPath).toEqual([]) // branch reset
+		expect(marble.routingCounters).toEqual([])
 		expect(marble.runtime.lastTriggeredBeat).toBeUndefined()
 		expect(marble.runtime.targetRailId).toBeUndefined() // cleared
 	})
@@ -215,7 +215,7 @@ describe('Rail Switching API', () => {
 
 		// Verify rail-specific state reset
 		expect(marble.currentBeat).toBe(0)
-		expect(marble.branchIndex).toBeNull()
+		expect(marble.branchPath).toEqual([])
 	})
 
 	it('same rail no-op - early return, no state change', () => {

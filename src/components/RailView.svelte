@@ -172,16 +172,52 @@
 		}
 	})
 
+	function collectAllPoints(seg: {
+		points: import('../lib/core/rail').ResolvedPoint[]
+		splits: import('../lib/core/rail').ResolvedSplit[]
+	}): import('../lib/core/rail').ResolvedPoint[] {
+		const result = [...seg.points]
+		for (const s of seg.splits) {
+			for (const b of s.branches) {
+				for (const pt of collectAllPoints(b)) result.push(pt)
+			}
+		}
+		return result
+	}
+
+	function collectAllBeatPositions(seg: {
+		points: import('../lib/core/rail').ResolvedPoint[]
+		splits: import('../lib/core/rail').ResolvedSplit[]
+	}): import('../lib/core/rail-curve').BeatPosition[] {
+		const result = computeBeatPositions(seg.points)
+		for (const s of seg.splits) {
+			for (const b of s.branches) {
+				result.push(...collectAllBeatPositions(b))
+			}
+		}
+		return result
+	}
+
 	const beatPositions = $derived.by(() => {
 		if (!showBeats) return []
 		const result = computeBeatPositions(displayPoints)
 		for (const s of displaySplits) {
 			for (const b of s.branches) {
-				const branchBeats = computeBeatPositions(b.points)
-				result.push(...branchBeats)
+				result.push(...collectAllBeatPositions(b))
 			}
 		}
 		return result
+	})
+
+	const allDisplayPoints = $derived.by(() => {
+		if (!showPoints) return []
+		const pts = [...displayPoints]
+		for (const s of displaySplits) {
+			for (const b of s.branches) {
+				for (const pt of collectAllPoints(b)) pts.push(pt)
+			}
+		}
+		return pts
 	})
 
 	const allMeshes = $derived(buildRailGeometry(displayPoints, displaySplits, width, name))
@@ -491,21 +527,11 @@
 	{/each}
 
 	{#if showPoints}
-		{#each displayPoints as pt, ptIndex (ptIndex)}
+		{#each allDisplayPoints as pt, ptIndex (ptIndex)}
 			<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
 				<T.SphereGeometry args={[0.06, 8, 8]} />
 				<T.MeshBasicMaterial color={bright(color)} />
 			</T.Mesh>
-		{/each}
-		{#each displaySplits as split, splitIndex (splitIndex)}
-			{#each split.branches as branch, branchIndex (branchIndex)}
-				{#each branch.points as pt, ptIndex (ptIndex)}
-					<T.Mesh position={[pt.p[0], pt.p[1], pt.p[2]]}>
-						<T.SphereGeometry args={[0.06, 8, 8]} />
-						<T.MeshBasicMaterial {color} />
-					</T.Mesh>
-				{/each}
-			{/each}
 		{/each}
 	{/if}
 

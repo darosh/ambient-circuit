@@ -34,6 +34,7 @@ import { scene as sceneSamplerPadDeeper } from './scene-sampler-pad-deeper'
 import { scene as sceneSamplerPadAwaits } from './scene-sampler-pad-awaits'
 import { scene as sceneSamplerPadAstrid } from './scene-sampler-pad-astrid'
 import { scene as sceneFormlines } from './scene-formlines'
+import { scene as sceneBranching } from './scene-branching'
 // import { scene as scene1 } from './scene-1'
 import { scene as scene2 } from './scene-2'
 // import { scenes as scenesRnbo } from './scene-rnbo'
@@ -67,6 +68,7 @@ export const scenes: SceneConfig[] = [
 	sceneMulti32,
 	...sceneRailText,
 	sceneFormlines,
+	sceneBranching,
 	// scene1,
 	scene2,
 	sceneCreateDestroy,

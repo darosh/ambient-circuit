@@ -1,4 +1,4 @@
-import type { ResolvedPoint, ResolvedSplit, Vec3 } from '../core/rail'
+import type { ResolvedPoint, ResolvedSegment, ResolvedSplit, Vec3 } from '../core/rail'
 import { type BufferGeometry, CurvePath, LineCurve3, Vector3 } from 'three/webgpu'
 import { buildSegmentCurve, toV3 } from '../core/rail-curve'
 import { buildTubeGeometry } from '../video/geometry-tube'
@@ -60,6 +60,35 @@ export function isClosed(first: Vec3 | undefined, last: Vec3 | null) {
 	)
 }
 
+/** Recursively collect branch geometry from a segment and its nested splits. */
+function collectBranchMeshes(
+	seg: ResolvedSegment,
+	splitPt: ResolvedPoint,
+	prevPt: ResolvedPoint | null,
+	width: number,
+	namePrefix: string,
+	meshes: RailMesh[]
+): void {
+	// Geometry from split point through this branch's main points
+	const pts: ResolvedPoint[] = prevPt ? [prevPt, splitPt, ...seg.points] : [splitPt, ...seg.points]
+	const mesh = makeTube(buildRailCurvePath(pts, prevPt ? 1 : 0), width, 0.7)
+	if (mesh) {
+		mesh.geometry.name = namePrefix
+		log('creating', namePrefix)
+		meshes.push(mesh)
+	}
+
+	// Recurse into nested splits within this branch
+	for (const [si, s] of seg.splits.entries()) {
+		const splitIdx = seg.points.findIndex((p) => p.beat === s.beat)
+		const prev = splitIdx > 0 ? seg.points[splitIdx - 1] : (seg.points.at(-1) ?? null)
+		const nestedSplitPt: ResolvedPoint = { p: s.p, beat: s.beat, round: null, tangent: 0.39 }
+		for (const [bi, b] of s.branches.entries()) {
+			collectBranchMeshes(b, nestedSplitPt, prev, width, `${namePrefix}-s${si}-b${bi}`, meshes)
+		}
+	}
+}
+
 export function buildRailGeometry(
 	points: ResolvedPoint[],
 	splits: ResolvedSplit[],
@@ -68,7 +97,7 @@ export function buildRailGeometry(
 ): RailMesh[] {
 	const meshes: RailMesh[] = []
 
-	// Main rail
+	// Main rail (pre-split backbone)
 	const first = points[0]?.p
 	const last = points.at(-1)?.p ?? null
 	const closed = isClosed(first, last)
@@ -79,20 +108,13 @@ export function buildRailGeometry(
 		meshes.push(mainMesh)
 	}
 
-	// Branch rails
+	// Branch rails (recursive)
 	for (const [si, s] of splits.entries()) {
 		const splitIdx = points.findIndex((p) => p.beat === s.beat)
 		const prev = splitIdx > 0 ? points[splitIdx - 1] : null
+		const splitPt: ResolvedPoint = { p: s.p, beat: s.beat, round: null, tangent: 0.39 }
 		for (const [bi, b] of s.branches.entries()) {
-			const pts: ResolvedPoint[] = prev
-				? [prev, { p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
-				: [{ p: s.p, beat: s.beat, round: null, tangent: 0.39 }, ...b.points]
-			const branchMesh = makeTube(buildRailCurvePath(pts, prev ? 1 : 0), width, 0.7)
-			if (branchMesh) {
-				branchMesh.geometry.name = `${name}-branch-${si}-${bi}`
-				log('creating', branchMesh.geometry.name)
-				meshes.push(branchMesh)
-			}
+			collectBranchMeshes(b, splitPt, prev, width, `${name}-branch-${si}-${bi}`, meshes)
 		}
 	}
 

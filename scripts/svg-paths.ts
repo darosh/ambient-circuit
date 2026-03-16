@@ -3,7 +3,7 @@
 import { readdirSync, statSync, readFileSync, writeFileSync } from 'fs'
 import { join, basename, extname } from 'path'
 import { execSync } from 'child_process'
-import { svgRail } from '../src/lib/core/rail-svg'
+import { svgRail, svgRailMulti } from '../src/lib/core/rail-svg'
 import { railToString } from '../src/lib/core/rail-path'
 import chokidar from 'chokidar'
 import PATHS from '../src/scenes/utils/svg-paths'
@@ -83,11 +83,21 @@ function convertDir(file?: string) {
 		console.log(`Found ${paths.length} paths`)
 
 		vars[constName] = Object.fromEntries(
-			paths.map(({ d, id }, i) => {
-				// console.log(`Converting path ${d}`)
+			paths.flatMap(({ d, id }, i) => {
+				const baseId = id ?? `id${i}`
+				const hasMultiM = (d.match(/[Mm]/g) ?? []).length > 1
+				if (hasMultiM) {
+					const railNodes = svgRailMulti(d)
+					if (railNodes.length === 1) {
+						return [[baseId, railToString(railNodes[0] as Parameters<typeof railToString>[0])]]
+					}
+					return railNodes.map((nodes, j) => [
+						`${baseId}_${j}`,
+						railToString(nodes as Parameters<typeof railToString>[0])
+					])
+				}
 				const points = svgRail(d)
-				// console.log(`Stringifying points ${points}`)
-				return [id ?? `id${i}`, railToString(points)]
+				return [[baseId, railToString(points)]]
 			})
 		)
 	}

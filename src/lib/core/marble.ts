@@ -84,8 +84,8 @@ export interface MarbleInstance {
 	position: Vector3 // computed 3D position
 	tangent: Vector3 // tangent direction at current position
 	up: Vector3 // up vector for orientation (parallel transport)
-	branchIndex: number | null // null = main rail, number = branch index
-	routingCounter: number // for weighted branch selection
+	branchPath: number[] // empty = main rail, [i] = branch i at first split, [i,j] = nested
+	routingCounters: number[] // per-split-level weighted branch selection
 	lastGlobalBeat: number // last processed global beat to prevent re-processing
 	signal: { intensity: number } // impact signal, set to 1 on beat crossing
 	/** MIDI signal for MidiSignalView — parallel to signal, consumed independently */
@@ -112,8 +112,8 @@ export function createMarbleInstance(config: ResolvedMarble, index = 0): MarbleI
 		position: { x: 0, y: 0, z: 0 } as Vector3,
 		tangent: { x: 1, y: 0, z: 0 } as Vector3,
 		up: { x: 0, y: 1, z: 0 } as Vector3, // initial up vector
-		branchIndex: null, // starts on main rail
-		routingCounter: 0, // for weighted routing
+		branchPath: [], // starts on main rail
+		routingCounters: [], // per-split-level weighted routing
 		lastGlobalBeat: -1, // no beat processed yet
 		signal: { intensity: 0 },
 		midiSignal: { intensity: 0 }

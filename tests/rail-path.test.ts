@@ -2,7 +2,16 @@ import { describe, it, expect } from 'vitest'
 import { expandPathString, railToString } from '../src/lib/core/rail-path'
 import { resolveRail } from '../src/lib/core/rail-resolve'
 import { roundedRect } from '../src/lib/core/rail-primitives'
-import { RailShapeConfig } from '../src/lib/core/rail'
+import {
+	type RailPointFull,
+	RailShapeConfig,
+	type RailSplit,
+	type Vec3
+} from '../src/lib/core/rail'
+import { svgRailMulti } from '../src/lib/core/rail-svg'
+import { createMarbleInstance } from '../src/lib/core/marble'
+import { updateMarble } from '../src/lib/core/marble-system'
+import { createTempoState } from '../src/lib/core/tempo'
 
 describe('expandPathString', () => {
 	it('space-delimited tokens emit points', () => {
@@ -251,6 +260,316 @@ describe('railToString', () => {
 		const points = expandPathString('r 8c u')
 		const str = railToString(points)
 		expect(str).toBe('r 8c u')
+	})
+})
+
+describe('SPLIT nodes', () => {
+	it('expandPathString: inline SPLIT at current position', () => {
+		const nodes = expandPathString('r d2SPLIT(1,1)(r | l)')
+		expect(nodes.length).toBe(2)
+		expect(Array.isArray(nodes[0])).toBe(true)
+		expect(nodes[0]).toEqual([1, 0, 0])
+		const s = nodes[1] as { split: { p: number[]; weights: number[]; branches: unknown[][] } }
+		expect(s.split.p).toEqual([1, -2, 0])
+		expect(s.split.weights).toEqual([1, 1])
+		expect(s.split.branches).toHaveLength(2)
+		expect(s.split.branches[0]).toEqual([[2, -2, 0]])
+		expect(s.split.branches[1]).toEqual([[0, -2, 0]])
+	})
+
+	it('expandPathString: SPLIT at same position (no direction prefix)', () => {
+		const nodes = expandPathString('r2 SPLIT(1,1)(u | d)')
+		expect(nodes.length).toBe(2)
+		expect(nodes[0]).toEqual([2, 0, 0])
+		const s = nodes[1] as { split: { p: number[] } }
+		expect(s.split.p).toEqual([2, 0, 0])
+	})
+
+	it('railToString: RailSplit node produces SPLIT token', () => {
+		const nodes = expandPathString('r d2SPLIT(1,1)(r | l)')
+		const str = railToString(nodes)
+		expect(str).toContain('SPLIT(1,1)')
+		expect(str).toContain(' | ')
+	})
+
+	it('round-trip: SPLIT serializes and re-parses correctly', () => {
+		const original = 'r d2SPLIT(1,1)(r | l d)'
+		const nodes = expandPathString(original)
+		const serialized = railToString(nodes)
+		const nodes2 = expandPathString(serialized)
+		expect(nodes2).toEqual(nodes)
+	})
+
+	it('round-trip: nested SPLIT', () => {
+		const original = 'r2SPLIT(1,1)(d2SPLIT(2,1)(r | l) | u2)'
+		const nodes = expandPathString(original)
+		const serialized = railToString(nodes)
+		const nodes2 = expandPathString(serialized)
+		expect(nodes2).toEqual(nodes)
+	})
+
+	it('round-trip: SPLIT with empty branches preserves branch count', () => {
+		const original = 'rSPLIT(1,1,1)(u |  | d)'
+		const nodes = expandPathString(original)
+		const serialized = railToString(nodes)
+		const nodes2 = expandPathString(serialized)
+		const s = nodes2.at(-1) as { split: { weights: number[]; branches: unknown[] } }
+		expect(s.split.branches).toHaveLength(3)
+		expect(s.split.weights).toHaveLength(3)
+	})
+
+	it('round-trip: svg', () => {
+		const original =
+			'M 57.5,10 V 30 M 50,10 v 40 m -7.5,-40 5e-6,59.49382 M 80,10 72.5,20 M 65,10 72.5,20 m 0,0 v 10 m 0,0 L 65,40 M 57.5,30 65,40 m 0,0 v 10 m 0,0 -7.5,10 M 50,50 57.5,60 m 0,0 v 10 m 0,0 L 50,80 M 42.5,70 50,80 m 0,0 v 10'
+		const nodes = svgRailMulti(original)[0]
+		const serialized = railToString(<Array<Vec3 | RailPointFull | RailSplit>>nodes)
+		const resolved = expandPathString(serialized)
+		expect(nodes).toEqual(resolved)
+	})
+})
+
+describe('nested SPLIT resolution', () => {
+	it('resolves nested splits with correct beat numbering', () => {
+		// r d2 = two points (beat 0, beat 1), then SPLIT at beat 2
+		const nodes = expandPathString('r d2 d2SPLIT(1,1)(d2SPLIT(2,1)(r | l) | u2)')
+		const rail = <RailShapeConfig>{ id: 'nested', nodes }
+		const res = resolveRail(rail)
+
+		expect(res.splits.length).toBe(1)
+		expect(res.splits[0].beat).toBe(2)
+		expect(res.splits[0].branches.length).toBe(2)
+
+		// First branch has a nested split
+		const branch0 = res.splits[0].branches[0]
+		expect(branch0.splits.length).toBe(1)
+		expect(branch0.splits[0].branches.length).toBe(2)
+
+		// Second branch has no nested splits
+		const branch1 = res.splits[0].branches[1]
+		expect(branch1.splits.length).toBe(0)
+		expect(branch1.points.length).toBeGreaterThan(0)
+	})
+
+	// Structure:
+	//   beat 0 → beat 1 → SPLIT(beat 2)
+	//                        ├─ branch0: d2(beat 3) → SPLIT(beat 4)
+	//                        │                          ├─ r2 (beat 5)
+	//                        │                          └─ l2 (beat 5)
+	//                        └─ branch1: u2(beat 3)
+	const nestedRailDef = () => {
+		const nodes = expandPathString('r d2 d2SPLIT(1,1)(d2SPLIT(1,1)(r2 | l2) | u2)')
+		return resolveRail(<RailShapeConfig>{ id: 'nested', nodes })
+	}
+
+	it('resolved structure has expected beats', () => {
+		const res = nestedRailDef()
+		// Main trunk: 3 points (beat 0, 1, 2) — split point included
+		const mainBeats = res.points.map((p) => p.beat)
+		expect(mainBeats).toEqual([0, 1, 2])
+
+		// Top split at beat 2
+		expect(res.splits[0].beat).toBe(2)
+
+		// Branch 0: has points and a nested split
+		const b0 = res.splits[0].branches[0]
+		const b0Beats = b0.points.map((p) => p.beat)
+		// branch0: d2 point at beat 3, nested split at beat 3 (same pos)
+		expect(b0Beats).toEqual([3])
+		expect(b0.splits.length).toBe(1)
+		expect(b0.splits[0].beat).toBe(3)
+
+		// Nested branch leaves at beat 4
+		const leaf0 = b0.splits[0].branches[0]
+		const leaf1 = b0.splits[0].branches[1]
+		expect(leaf0.points.map((p) => p.beat)).toEqual([4])
+		expect(leaf1.points.map((p) => p.beat)).toEqual([4])
+
+		// Branch 1: u2, no nested splits
+		const b1 = res.splits[0].branches[1]
+		expect(b1.points.map((p) => p.beat)).toEqual([3])
+		expect(b1.splits.length).toBe(0)
+	})
+
+	it('marble on trunk returns main points only', () => {
+		const res = nestedRailDef()
+		const marble = createMarbleInstance({
+			resolvedRail: res,
+			startBeat: 0,
+			direction: 'forward' as const,
+			sequenceMode: 'looping' as const,
+			easing: 'linear'
+		})
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
+
+		// At beat 0.5 — on trunk before split
+		tempo.currentBeat = 0
+		tempo.beatProgress = 0.5
+		updateMarble(marble, tempo)
+		expect(marble.branchPath).toEqual([])
+	})
+
+	it('marble enters first branch and has correct position', () => {
+		const res = nestedRailDef()
+		const marble = createMarbleInstance({
+			resolvedRail: res,
+			startBeat: 0,
+			direction: 'forward' as const,
+			sequenceMode: 'looping' as const,
+			easing: 'linear'
+		})
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
+
+		// Step to beat 1 first (stay on trunk)
+		tempo.currentBeat = 1
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+		expect(marble.branchPath).toEqual([])
+
+		// Step to beat 2.5 — past first split at beat 2, on branch0
+		tempo.currentBeat = 2
+		tempo.beatProgress = 0.5
+		updateMarble(marble, tempo)
+		expect(marble.branchPath[0]).toBe(0)
+		// Branch0 goes d2 — marble should be moving downward
+		expect(marble.position.y).toBeLessThan(0)
+	})
+
+	it('marble enters nested split and position stays on geometry', () => {
+		const res = nestedRailDef()
+		const marble = createMarbleInstance({
+			resolvedRail: res,
+			startBeat: 0,
+			direction: 'forward' as const,
+			sequenceMode: 'looping' as const,
+			easing: 'linear'
+		})
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
+
+		// Step incrementally
+		tempo.currentBeat = 1
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+
+		tempo.currentBeat = 2
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+
+		// At beat 2, marble enters branch0 (past split at beat 2)
+		expect(marble.branchPath.length).toBeGreaterThanOrEqual(1)
+
+		tempo.currentBeat = 3
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+
+		// At beat 3, marble is at branch0's point AND nested split (beat 3)
+		// Should have entered nested split too
+		expect(marble.branchPath.length).toBe(2)
+		const posAtBeat3 = { x: marble.position.x, y: marble.position.y, z: marble.position.z }
+
+		// Step to beat 3.5 — midway through leaf branch
+		tempo.currentBeat = 3
+		tempo.beatProgress = 0.5
+		updateMarble(marble, tempo)
+
+		const posAtBeat3_5 = { x: marble.position.x, y: marble.position.y, z: marble.position.z }
+
+		// Position should be nearby (on the leaf branch, not empty space)
+		const dx = posAtBeat3_5.x - posAtBeat3.x
+		const dy = posAtBeat3_5.y - posAtBeat3.y
+		const dz = posAtBeat3_5.z - posAtBeat3.z
+		const dist = Math.hypot(dx, dy, dz)
+		expect(dist).toBeLessThan(5) // should be nearby, not jumping to empty space
+
+		// Coordinates should be valid numbers
+		expect(posAtBeat3_5.x).not.toBeNaN()
+		expect(posAtBeat3_5.y).not.toBeNaN()
+		expect(posAtBeat3_5.z).not.toBeNaN()
+	})
+
+	it('routing alternates independently at each split level', () => {
+		const res = nestedRailDef()
+		const marble = createMarbleInstance({
+			resolvedRail: res,
+			startBeat: 0,
+			direction: 'forward' as const,
+			sequenceMode: 'looping' as const,
+			easing: 'linear'
+		})
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
+
+		// First loop: enter splits
+		tempo.currentBeat = 1
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+		tempo.currentBeat = 2
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+		tempo.currentBeat = 3
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+		const firstPath = [...marble.branchPath]
+		expect(firstPath).toEqual([0, 0]) // first branch at both levels
+
+		// Loop back (past maxBeat=4)
+		tempo.currentBeat = 4
+		tempo.beatProgress = 0.5
+		updateMarble(marble, tempo)
+		expect(marble.branchPath).toEqual([])
+
+		// Second loop: should alternate at level 0
+		tempo.currentBeat = 5
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+		tempo.currentBeat = 6
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+		const secondPath = [...marble.branchPath]
+		expect(secondPath[0]).toBe(1) // level 0 alternated
+
+		// Third loop: alternate again at level 0
+		tempo.currentBeat = 7
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo) // loop
+		tempo.currentBeat = 8
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+		tempo.currentBeat = 9
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+		expect(marble.branchPath[0]).toBe(0) // level 0 back to branch 0
+		// level 1 should also alternate from first time
+		expect(marble.branchPath[1]).toBe(1) // level 1 alternated
+	})
+
+	it('marble loops back and resets branchPath', () => {
+		const res = nestedRailDef()
+		const marble = createMarbleInstance({
+			resolvedRail: res,
+			startBeat: 0,
+			direction: 'forward' as const,
+			sequenceMode: 'looping' as const,
+			easing: 'linear'
+		})
+		const tempo = createTempoState({ bpm: 120, beatsPerBar: 4 })
+
+		// Progress through both splits
+		tempo.currentBeat = 1
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+		tempo.currentBeat = 2
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+		tempo.currentBeat = 3
+		tempo.beatProgress = 0
+		updateMarble(marble, tempo)
+		expect(marble.branchPath.length).toBe(2)
+
+		// Past maxBeat (4) → should loop, reset branchPath
+		tempo.currentBeat = 4
+		tempo.beatProgress = 0.5
+		updateMarble(marble, tempo)
+		expect(marble.branchPath).toEqual([])
+		expect(marble.currentBeat).toBeLessThan(2) // wrapped back to trunk
 	})
 })
 
