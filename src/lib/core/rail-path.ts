@@ -103,8 +103,8 @@ export function expandPathString(str: string, startPos: Vec3 = [0, 0, 0]): Expan
 	for (const token of tokenizeRailStr(str)) {
 		if (!token) continue
 
-		// SPLIT token: optional_dir SPLIT(weights)(branches)
-		const splitMatch = token.match(/^(.*?)SPLIT\(([^)]+)\)\((.+)\)$/)
+		// SPLIT token: optional_dir [weights](branches)
+		const splitMatch = token.match(/^(.*?)\[([^\]]+)\]\((.+)\)$/)
 		if (splitMatch) {
 			const [, dirPart, weightsStr, branchesStr] = splitMatch
 			if (dirPart) parseDirDelta(dirPart, pos)
@@ -239,7 +239,7 @@ export function railToString(
 			const branchStrs = s.branches.map((b) =>
 				railToString(b as Array<Vec3 | RailPointFull | RailSplit>, [...s.p] as Vec3)
 			)
-			tokens.push(`${dirStr}SPLIT(${s.weights.join(',')})(${branchStrs.join(' | ')})`)
+			tokens.push(`${dirStr}[${s.weights.join(',')}](${branchStrs.join(' | ')})`)
 			continue
 		}
 

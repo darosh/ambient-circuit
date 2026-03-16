@@ -93,7 +93,7 @@ export const DRAWING_FORMLINES: Record<string, string> = {
 }
 
 export const DRAWING_BRANCHING: Record<string, string> = {
-	r26: 'r3i4 l.75oSPLIT(1,1)(l.75i | o l.75oSPLIT(1,1)(l.75i i2 | o l.75oSPLIT(1,1)(l.75i i4 | o l.75oSPLIT(1,1)(l.75i i6 | o))))'
+	r26: 'r3i4 l.75o[1,1](l.75i | o l.75o[1,1](l.75i i2 | o l.75o[1,1](l.75i i4 | o l.75o[1,1](l.75i i6 | o))))'
 }
 
 export default { DRAWING_CIRCUIT, DRAWING_RAVEN, DRAWING_FORMLINES, DRAWING_BRANCHING }

@@ -265,7 +265,7 @@ describe('railToString', () => {
 
 describe('SPLIT nodes', () => {
 	it('expandPathString: inline SPLIT at current position', () => {
-		const nodes = expandPathString('r d2SPLIT(1,1)(r | l)')
+		const nodes = expandPathString('r d2[\1](r | l)')
 		expect(nodes.length).toBe(2)
 		expect(Array.isArray(nodes[0])).toBe(true)
 		expect(nodes[0]).toEqual([1, 0, 0])
@@ -278,7 +278,7 @@ describe('SPLIT nodes', () => {
 	})
 
 	it('expandPathString: SPLIT at same position (no direction prefix)', () => {
-		const nodes = expandPathString('r2 SPLIT(1,1)(u | d)')
+		const nodes = expandPathString('r2 [\1](u | d)')
 		expect(nodes.length).toBe(2)
 		expect(nodes[0]).toEqual([2, 0, 0])
 		const s = nodes[1] as { split: { p: number[] } }
@@ -286,14 +286,14 @@ describe('SPLIT nodes', () => {
 	})
 
 	it('railToString: RailSplit node produces SPLIT token', () => {
-		const nodes = expandPathString('r d2SPLIT(1,1)(r | l)')
+		const nodes = expandPathString('r d2[\1](r | l)')
 		const str = railToString(nodes)
-		expect(str).toContain('SPLIT(1,1)')
+		expect(str).toContain('[\1]')
 		expect(str).toContain(' | ')
 	})
 
 	it('round-trip: SPLIT serializes and re-parses correctly', () => {
-		const original = 'r d2SPLIT(1,1)(r | l d)'
+		const original = 'r d2[\1](r | l d)'
 		const nodes = expandPathString(original)
 		const serialized = railToString(nodes)
 		const nodes2 = expandPathString(serialized)
@@ -301,7 +301,7 @@ describe('SPLIT nodes', () => {
 	})
 
 	it('round-trip: nested SPLIT', () => {
-		const original = 'r2SPLIT(1,1)(d2SPLIT(2,1)(r | l) | u2)'
+		const original = 'r2[\1](d2[\1](r | l) | u2)'
 		const nodes = expandPathString(original)
 		const serialized = railToString(nodes)
 		const nodes2 = expandPathString(serialized)
@@ -309,7 +309,7 @@ describe('SPLIT nodes', () => {
 	})
 
 	it('round-trip: SPLIT with empty branches preserves branch count', () => {
-		const original = 'rSPLIT(1,1,1)(u |  | d)'
+		const original = 'r[\1](u |  | d)'
 		const nodes = expandPathString(original)
 		const serialized = railToString(nodes)
 		const nodes2 = expandPathString(serialized)
@@ -331,7 +331,7 @@ describe('SPLIT nodes', () => {
 describe('nested SPLIT resolution', () => {
 	it('resolves nested splits with correct beat numbering', () => {
 		// r d2 = two points (beat 0, beat 1), then SPLIT at beat 2
-		const nodes = expandPathString('r d2 d2SPLIT(1,1)(d2SPLIT(2,1)(r | l) | u2)')
+		const nodes = expandPathString('r d2 d2[\1](d2[\1](r | l) | u2)')
 		const rail = <RailShapeConfig>{ id: 'nested', nodes }
 		const res = resolveRail(rail)
 
@@ -351,13 +351,13 @@ describe('nested SPLIT resolution', () => {
 	})
 
 	// Structure:
-	//   beat 0 → beat 1 → SPLIT(beat 2)
-	//                        ├─ branch0: d2(beat 3) → SPLIT(beat 4)
+	//   beat 0 → beat 1 → [\1]
+	//                        ├─ branch0: d2(beat 3) → [\1]
 	//                        │                          ├─ r2 (beat 5)
 	//                        │                          └─ l2 (beat 5)
 	//                        └─ branch1: u2(beat 3)
 	const nestedRailDef = () => {
-		const nodes = expandPathString('r d2 d2SPLIT(1,1)(d2SPLIT(1,1)(r2 | l2) | u2)')
+		const nodes = expandPathString('r d2 d2[\1](d2[\1](r2 | l2) | u2)')
 		return resolveRail(<RailShapeConfig>{ id: 'nested', nodes })
 	}
 
