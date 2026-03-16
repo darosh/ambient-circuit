@@ -781,6 +781,7 @@
 		width: 60px;
 		height: 60px;
 		cursor: pointer;
+		user-select: none;
 	}
 
 	#ins:focus {
