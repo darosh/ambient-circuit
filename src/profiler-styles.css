@@ -23,6 +23,14 @@
 	--font-mono: 'Nanum Gothic Coding', sans-serif;
 }
 
+#close-icon {
+	width: 40px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+#profiler-toggle:focus,
 #profiler-toggle button:focus,
 #profiler-mini-panel select:focus,
 #profiler-mini-panel input:focus,

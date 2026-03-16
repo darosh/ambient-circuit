@@ -581,6 +581,14 @@
 				inspectorRef.domElement.style.display = 'block'
 			} else {
 				inspectorRef = buildInspector()
+				const el = document.createElement('span')
+				el.textContent = '-'
+				el.id = 'close-icon'
+				el.addEventListener('click', (event) => {
+					debugEnabled = false
+					event.stopPropagation()
+				})
+				document.querySelector('#profiler-toggle')?.append(el)
 			}
 		} else if (inspectorRef) {
 			inspectorRef.domElement.style.display = 'none'
@@ -744,13 +752,20 @@
 	></Wrap>
 </Canvas>
 
-<div id="ins"></div>
+<div id="ins" onkeydown={() => {}} onclick={() => (debugEnabled = true)} aria-roledescription="Show debug" role="switch" aria-checked={debugEnabled} tabindex="0"></div>
 
 <style>
 	#ins {
 		position: fixed;
 		top: 0;
-		right: 0;
+		left: 0;
 		z-index: 100;
+		width: 60px;
+		height: 60px;
+		cursor: pointer;
+	}
+
+	#ins:focus {
+		outline: none;
 	}
 </style>
