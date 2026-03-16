@@ -1,6 +1,6 @@
 {
 	"name": "ambient-circuit",
-	"version": "0.0.30",
+	"version": "0.0.31",
 	"dependencies": {
 		"@rnbo/js": "^1.4.2",
 		"@threlte/core": "^8.4.1",
