@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Inspector } from 'three/addons/inspector/Inspector.js'
+	import profilerOverride from './profiler-styles.css?raw'
 	import { Canvas } from '@threlte/core'
 	import { createTempoState } from './lib/core/tempo'
 	import { easingNames } from './lib/helpers/easing'
@@ -337,6 +338,12 @@
 		if (!rendererRef) return null
 		const inspector = new Inspector()
 		rendererRef.inspector = inspector
+		if (!document.querySelector('#profiler-styles-override')) {
+			const overrideStyle = document.createElement('style')
+			overrideStyle.id = 'profiler-styles-override'
+			overrideStyle.textContent = profilerOverride
+			document.head.append(overrideStyle)
+		}
 		document.querySelector('#ins')!.append(inspector.domElement)
 
 		const sceneFolder = inspector.createParameters('Scene')
@@ -752,7 +759,15 @@
 	></Wrap>
 </Canvas>
 
-<div id="ins" onkeydown={() => {}} onclick={() => (debugEnabled = true)} aria-roledescription="Show debug" role="switch" aria-checked={debugEnabled} tabindex="0"></div>
+<div
+	id="ins"
+	onkeydown={() => {}}
+	onclick={() => (debugEnabled = true)}
+	aria-roledescription="Show debug"
+	role="switch"
+	aria-checked={debugEnabled}
+	tabindex="0"
+></div>
 
 <style>
 	#ins {
