@@ -114,6 +114,8 @@
 	$effect(() => {
 		if (sceneId) {
 			reloadScene = undefined
+			showNames = mountedScene?.names ?? false
+			showPoints = mountedScene?.points ?? false
 		}
 	})
 
@@ -708,7 +710,7 @@
 		{mountedScene}
 		{limitFps}
 		{showGrid}
-		showPoints={mountedScene?.points ?? showPoints}
+		{showPoints}
 		{showBeats}
 		{showNames}
 		bind:wireframe

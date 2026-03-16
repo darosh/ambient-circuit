@@ -99,7 +99,7 @@
 		{showGrid}
 		{showPoints}
 		{showBeats}
-		showNames={mountedScene.names ?? showNames}
+		{showNames}
 		{wireframe}
 		{showStats}
 		{showAnalyzers}
