@@ -293,16 +293,17 @@
 		for (let i = 0; i < activeScene.rails.length; i++) {
 			if (i >= railVisibility.length) break
 			const rc = activeScene.rails[i]
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const proxy: any = {
-				get [rc.id]() {
+			const upperId = rc.id.toUpperCase()
+
+			const proxy = {
+				get [upperId]() {
 					return railVisibility[i]
 				},
-				set [rc.id](v: boolean) {
+				set [upperId](v: boolean) {
 					railVisibility[i] = v
 				}
 			}
-			railsGui.add(proxy, rc.id)
+			railsGui.add(proxy, upperId)
 		}
 	}
 
