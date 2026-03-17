@@ -674,6 +674,32 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 
 			break
 		}
+		case 'full': {
+			// Expand icon: two diagonal arrows at opposite corners (top-right + bottom-left)
+			const arm = length * 0.55
+			const bar = length * 0.35
+			const s = 1 / Math.sqrt(2) // diagonal unit
+
+			// Top-right arrow pointing outward (tip at +y,+z; barbs inward)
+			const tr = new Vector3(0, arm * s, arm * s)
+			const trB1 = new Vector3(0, (arm - bar) * s, arm * s) // barb along z
+			const trB2 = new Vector3(0, arm * s, (arm - bar) * s) // barb along y
+			path.add(new LineCurve3(trB1, tr))
+			path.add(new LineCurve3(tr, trB2))
+
+			// Bottom-left arrow pointing outward (tip at -y,-z; barbs inward)
+			const bl = new Vector3(0, -arm * s, -arm * s)
+			const blB1 = new Vector3(0, -(arm - bar) * s, -arm * s)
+			const blB2 = new Vector3(0, -arm * s, -(arm - bar) * s)
+			secondaryPath = new CurvePath<Vector3>()
+			secondaryPath.add(new LineCurve3(blB1, bl))
+			secondaryPath.add(new LineCurve3(bl, blB2))
+
+			tertiaryPath = new CurvePath<Vector3>()
+			tertiaryPath.add(new LineCurve3(tr, bl))
+
+			break
+		}
 		// No default
 	}
 
@@ -688,7 +714,7 @@ function buildArrowGeometry(params: InstrumentGeometryParams): BufferGeometry {
 		secondaryPath.add(new LineCurve3(origin1, origin2))
 	}
 
-	const closed = !['plain', 'step', 'pause'].includes(kind)
+	const closed = !['plain', 'step', 'pause', 'full'].includes(kind)
 	const tubularSegments =
 		kind === 'rec'
 			? TUBULAR_SEGMENTS_ARROW_CIRCLE
