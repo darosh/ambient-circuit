@@ -96,8 +96,15 @@ for (const v of [3, 12, 15, 22, 32, 36, 40, 45]) {
 	})
 }
 
-const r = randomizer()
-const svgs = Object.values(DRAWING_CIRCUIT).toSorted(() => r() - 0.5)
+const r = randomizer(4)
+const svgsArr = Object.values(DRAWING_CIRCUIT)
+for (let i = svgsArr.length - 1; i > 0; i--) {
+	const j = Math.floor(r() * (i + 1))
+	const tmp = svgsArr[i]
+	svgsArr[i] = svgsArr[j]
+	svgsArr[j] = tmp
+}
+const svgs = svgsArr
 const last = 10
 const m = randomizer(100)
 const q = randomizer()

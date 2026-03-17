@@ -104,13 +104,13 @@ BIRDS: {"volume":-23.634375000000002,"detune":0,"portamento":0,"envelope.attack"
   - ok
 - Mac FF
   - User requested a WebGPU adapter with `featureLevel: "compatibility"`, which is not yet supported; returning a "core"-defaulting adapter for now. Subscribe to <https://bugzilla.mozilla.org/show_bug.cgi?id=1905951> for updates on its development in Firefox.
-  - scene-two wrong colors
+  - [x] scene-two wrong colors
   - [x] scene-sampler-pad-astrid wrong poly sound, console errors
 - iOS Chrome
   - low FPS
   - no FPS in inspector
   - slow panel additional style load
-- iOS Safari 
+- iOS Safari
   - low FPS
   - no FPS in inspector
 - iOS Brave
