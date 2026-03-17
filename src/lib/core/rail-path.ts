@@ -104,6 +104,8 @@ export function expandPathString(str: string, startPos: Vec3 = [0, 0, 0]): Expan
 		if (!token) continue
 
 		// SPLIT token: optional_dir [weights](branches)
+		// probably safe?
+		// eslint-disable-next-line sonarjs/slow-regex
 		const splitMatch = token.match(/^(.*?)\[([^\]]+)\]\((.+)\)$/)
 		if (splitMatch) {
 			const [, dirPart, weightsStr, branchesStr] = splitMatch
