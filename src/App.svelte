@@ -808,11 +808,11 @@
 <style>
 	#ins {
 		position: fixed;
-		top: 0;
-		left: 0;
+		top: 12px;
+		left: 12px;
 		z-index: 100;
-		width: 60px;
-		height: 60px;
+		width: 211px;
+		height: 38px;
 		cursor: pointer;
 		user-select: none;
 	}
