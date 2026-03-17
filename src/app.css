@@ -15,8 +15,9 @@ body {
 	margin: 0;
 	overflow: hidden;
 	width: 100vw;
-	height: 100vh;
+	height: 100dvh;
 	background: black;
+	touch-action: none;
 }
 
 #app {
