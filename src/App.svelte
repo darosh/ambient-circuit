@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Inspector } from 'three/addons/inspector/Inspector.js'
-	import profilerOverride from './profiler-styles.css?raw'
+	// import profilerOverride from './profiler-styles.css?raw'
 	import { Canvas } from '@threlte/core'
 	import { createTempoState } from './lib/core/tempo'
 	import { easingNames } from './lib/helpers/easing'
@@ -361,10 +361,10 @@
 		const inspector = new Inspector()
 		rendererRef.inspector = inspector
 		if (!document.querySelector('#profiler-styles-override')) {
-			const overrideStyle = document.createElement('style')
-			overrideStyle.id = 'profiler-styles-override'
-			overrideStyle.textContent = profilerOverride
-			document.head.append(overrideStyle)
+			// const overrideStyle = document.createElement('style')
+			// overrideStyle.id = 'profiler-styles-override'
+			// overrideStyle.textContent = profilerOverride
+			// document.head.append(overrideStyle)
 		}
 		document.querySelector('#ins')!.append(inspector.domElement)
 
