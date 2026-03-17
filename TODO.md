@@ -92,3 +92,33 @@ MeshBasicMaterial per mesh): 48 × N_rows SequencerView + 16 × N_rows AnalyserV
 task could share a single dummy material or pass pool materials at construction time.
 
 BIRDS: {"volume":-23.634375000000002,"detune":0,"portamento":0,"envelope.attack":0.04300781249999999,"envelope.decay":0.763203125,"envelope.release":2.41630859375,"envelope.sustain":0.3384765625,"filter.Q":668.3828125,"filter.detune":0.328125,"filter.gain":8.969531250000001,"filterEnvelope.attack":0.08597656249999996,"filterEnvelope.decay":1.1663671875,"filterEnvelope.release":1.80380859375,"filterEnvelope.sustain":0.5,"filterEnvelope.baseFrequency":1156.89453125,"filterEnvelope.exponent":3.44609375,"filterEnvelope.octaves":0.40593749999999984,"oscillator.detune":-2.071875}
+
+## Testings
+
+- Mac Chrome
+  - ok
+- Mac Safari
+  - WebGL2 only
+  - slow panel additional style load
+- Mac Brave
+  - ok
+- Mac FF
+  - User requested a WebGPU adapter with `featureLevel: "compatibility"`, which is not yet supported; returning a "core"-defaulting adapter for now. Subscribe to <https://bugzilla.mozilla.org/show_bug.cgi?id=1905951> for updates on its development in Firefox.
+  - scene-two wrong colors
+  - [x] scene-sampler-pad-astrid wrong poly sound, console errors
+- iOS Chrome
+  - low FPS
+  - no FPS in inspector
+  - slow panel additional style load
+- iOS Safari 
+  - low FPS
+  - no FPS in inspector
+- iOS Brave
+  - low FPS
+  - no FPS in inspector
+  - slow panel additional style load
+  - broken additional style load
+- Slow Win Chrome
+  - low FPS
+  - bad audio
+- Win Chrome

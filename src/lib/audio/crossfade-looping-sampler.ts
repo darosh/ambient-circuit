@@ -220,13 +220,11 @@ export class CrossfadeLoopingSampler extends Sampler {
 			const stopTime = startTime + durSec
 			loopSource.stop(stopTime)
 
-			// Cleanup
-			this.context.transport.scheduleOnce(
-				() => {
-					introSource.dispose()
-				},
-				introStopTime + crossDuration / playbackRate + 0.02
-			)
+			// Cleanup — use setTimeout to avoid Tone transport init (Firefox AudioParam crash)
+			const cleanupMs = (introStopTime + crossDuration / playbackRate + 0.02 - nowSec) * 1000
+			setTimeout(() => {
+				introSource.dispose()
+			}, Math.max(0, cleanupMs))
 		}
 
 		return this
