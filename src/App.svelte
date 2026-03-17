@@ -41,7 +41,9 @@
 	let useFreeze = $state(false)
 	let fxPost = $state(true)
 	let fxHud = $state(true)
-	let limitFps = $state(import.meta.env.DEV)
+	let limitFps = $state(
+		import.meta.env.DEV || /Mobi|iPad|Android|Tablet/i.test(navigator.userAgent)
+	)
 	let autoRotate = $state(false)
 	let showAudio = $state(true)
 	let fps = $state(0)
@@ -62,6 +64,23 @@
 		setTimeout(() => {
 			showHud = true
 		}, 0)
+
+		document.addEventListener('fullscreenchange', () => {
+			globalState.isFull = !!document.fullscreenElement
+		})
+
+		// does not work with Mac notch?
+		// window.addEventListener('resize', () => {
+		// 	globalState.isFull = (window.innerHeight === screen.height) && (window.innerWidth === screen.width);
+		// });
+	})
+
+	$effect(() => {
+		if (globalState.isFull) {
+			document.documentElement.requestFullscreen?.().catch(() => {})
+		} else if (document.fullscreenElement) {
+			document.exitFullscreen?.().catch(() => {})
+		}
 	})
 
 	let reloadScene = $state<SceneConfig | undefined>()
@@ -575,6 +594,17 @@
 			},
 			'Limit FPS'
 		)
+		inspCtrl.Full = interfaceFolder.add(
+			{
+				get Full() {
+					return globalState.isFull
+				},
+				set Full(v: boolean) {
+					globalState.isFull = v
+				}
+			},
+			'Full'
+		)
 
 		railsGuiRef = viewFolder.addFolder('Rails')
 		railsGuiRef.close()
@@ -640,6 +670,9 @@
 	})
 	$effect(() => {
 		syncBool('Limit', limitFps)
+	})
+	$effect(() => {
+		syncBool('Full', globalState.isFull)
 	})
 	$effect(() => {
 		syncNum('BPM', tempo.config.bpm)

@@ -478,7 +478,7 @@
 			return
 		}
 
-		btnFlash(sceneIndex > prevSceneIndex ? 1 : 0)
+		btnFlash(sceneIndex > prevSceneIndex ? NEXT_INDEX : PREV_INDEX)
 		prevSceneIndex = sceneIndex
 
 		if (tempo.isPlaying && isPlaying) {
@@ -496,9 +496,18 @@
 		isPlaying = tempo.isPlaying
 
 		if (isPlaying) {
-			btnFlash(5)
+			btnFlash(PLAY_INDEX)
 		} else {
-			btnFlash(4)
+			btnFlash(STOP_INDEX)
+		}
+	})
+
+	let isFullPrev = $state(globalState.isFull)
+
+	$effect(() => {
+		if (globalState.isFull !== isFullPrev) {
+			isFullPrev = globalState.isFull
+			btnFlash(FULL_INDEX)
 		}
 	})
 
@@ -513,7 +522,7 @@
 
 		prevIsMuted = globalState.isMuted
 
-		btnFlash(2)
+		btnFlash(REPRO_INDEX)
 	})
 
 	type BtnDef = { kind: ArrowKind; action: (e: unknown) => void; rotY?: number; rotX?: number }
@@ -532,6 +541,12 @@
 		{
 			kind: 'plain',
 			action: () => setTimeout(onNextScene, THROTTLE_DURATION * 1000)
+		},
+		{
+			kind: 'full',
+			action: () => {
+				globalState.isFull = !globalState.isFull
+			}
 		},
 		{
 			kind: 'repro',
@@ -561,6 +576,7 @@
 	const STOP_INDEX = btnDefs.findIndex(({ kind }) => kind === 'stop')
 	const FWD_INDEX = btnDefs.findIndex(({ kind }) => kind === 'fwd')
 	const REPRO_INDEX = btnDefs.findIndex(({ kind }) => kind === 'repro')
+	const FULL_INDEX = btnDefs.findIndex(({ kind }) => kind === 'full')
 	const PREV_INDEX = btnDefs.findIndex(({ kind }) => kind === 'plain')
 	const NEXT_INDEX = btnDefs.findLastIndex(({ kind }) => kind === 'plain')
 
@@ -594,7 +610,7 @@
 			return
 		}
 
-		if ([REPRO_INDEX, FWD_INDEX, STOP_INDEX, PLAY_INDEX].includes(i)) {
+		if ([REPRO_INDEX, FWD_INDEX, STOP_INDEX, PLAY_INDEX, FULL_INDEX].includes(i)) {
 			return
 		}
 
@@ -964,6 +980,7 @@
 	scale.y={$size.height / HUD_ZOOM}
 	onpointerenter={onMouseEnter}
 	onpointerleave={onMouseLeave}
+	onpointerdown={onMouseEnter}
 >
 	<T.PlaneGeometry args={[1, 1]} />
 	<T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
@@ -1128,7 +1145,15 @@
 			position.x={overlayX}
 			position.y={sphereR * 0.4}
 			onclick={() => toggleMenuItem(i)}
+			onpointerdown={(e: PointerEvent) => {
+				if (e.pointerType === 'touch') {
+					e.stopPropagation()
+					toggleMenuItem(i)
+				}
+			}}
 			onpointerenter={() => {
+				idleTimer = 0
+				targetOpacity = 1
 				menuItemDic[item.label].hovered = true
 			}}
 			onpointerleave={() => {
@@ -1144,7 +1169,7 @@
 
 <!-- Transport controls (bottom-right) -->
 {#each btnDefs as btn, i (i)}
-	{#if i !== 5 || !tempo.isPlaying}
+	{#if i !== PLAY_INDEX || !tempo.isPlaying}
 		{@const btnSize = sphereR * 3}
 		{@const btnMargin = sphereR * 0.5}
 		{@const bx = $size.width / HUD_ZOOM / 2 - otherSpacing - sphereR * 0.9}
@@ -1174,6 +1199,12 @@
 			<!-- Invisible hitbox -->
 			<T.Mesh
 				onclick={(event: MouseEvent) => onBtnClick(event, i)}
+				onpointerdown={(event: PointerEvent) => {
+					if (event.pointerType === 'touch') {
+						event.stopPropagation()
+						onBtnClick(event, i)
+					}
+				}}
 				onpointerenter={() => onBtnEnter(i)}
 				onpointerleave={() => onBtnLeave(i)}
 			>

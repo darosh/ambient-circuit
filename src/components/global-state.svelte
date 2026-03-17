@@ -2,9 +2,11 @@
 	export const globalState = $state<{
 		engine: import('../lib/audio').AudioEngine | null
 		isMuted: boolean
+		isFull: boolean
 	}>({
 		engine: null,
-		isMuted: readLS('ac-muted', false)
+		isMuted: readLS('ac-muted', false),
+		isFull: false
 	})
 
 	function readLS(key: string, def: boolean): boolean {
