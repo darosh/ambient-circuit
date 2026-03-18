@@ -29,7 +29,152 @@
 			name="twitter:image"
 			content="https://darosh.github.io/ambient-circuit/media/ambient-circuit-logotype.gif"
 		/>
-		<script type="module" crossorigin src="./assets/index-BjEmf_d2.js"></script>
+		<style>@import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700');
+
+#ins {
+	--profiler-bg: rgba(36, 36, 36, 0.96);
+	--profiler-header-bg: rgba(51, 51, 51, 0.67);
+	--profiler-header: #333333;
+	--profiler-border: #595959;
+	--text-secondary: #ababab;
+	--accent-color: #e0e0e0;
+	--profiler-hover: #ffffff;
+	--font-family: 'Nanum Gothic Coding', sans-serif;
+	--font-mono: 'Nanum Gothic Coding', sans-serif;
+
+	/* Fix hardcoded accent blue → neutral white */
+
+	.builtin-tab-btn.active {
+		background-color: rgba(255, 255, 255, 0.2);
+	}
+
+	.builtin-tab-btn.active:hover {
+		background-color: rgba(255, 255, 255, 0.25);
+	}
+
+	.list-item-wrapper.header-wrapper > .list-item-row {
+		background-color: rgba(255, 255, 255, 0.05);
+	}
+
+	.list-item-row.collapsible {
+		background-color: rgba(255, 255, 255, 0.15) !important;
+	}
+
+	@media (hover: hover) {
+		.list-item-row.collapsible:hover {
+			background-color: rgba(255, 255, 255, 0.25) !important;
+		}
+	}
+
+	.drag-preview-indicator {
+		background-color: rgba(255, 255, 255, 0.2);
+	}
+
+	.detached-reattach-btn:hover {
+		background: rgba(255, 255, 255, 0.2);
+	}
+
+	/* New rules */
+
+	#close-icon {
+		width: 40px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	#profiler-toggle:focus,
+	#profiler-toggle button:focus,
+	#profiler-mini-panel select:focus,
+	#profiler-mini-panel input:focus,
+	#profiler-panel select:focus,
+	#profiler-panel input:focus {
+		outline: none !important;
+	}
+
+	#profiler-toggle:hover {
+		border-color: var(--profiler-header);
+	}
+
+	#profiler-mini-panel input,
+	#profiler-panel input {
+		text-align: right;
+	}
+
+	/* Position overrides */
+
+	#profiler-toggle {
+		top: 12px;
+		left: 12px;
+		right: initial;
+		border-radius: 4px;
+	}
+
+	#profiler-mini-panel {
+		top: 58px;
+		left: 12px;
+		width: 300px;
+		background-color: rgba(36, 36, 36, 0.85);
+		border: 1px solid rgba(89, 89, 89, 0.33);
+	}
+
+	.mini-panel-content {
+		padding: 0;
+		font-size: 13px;
+		line-height: 16px;
+		font-family: var(--font-mono);
+		letter-spacing: 0.5px;
+		user-select: none;
+		-webkit-user-select: none;
+	}
+
+	/* Param control size adjustments */
+
+	.mini-panel-content .param-control input[type='number'] {
+		flex-basis: 40px !important;
+		letter-spacing: 0.5px;
+		padding: 0 4px !important;
+	}
+
+	.mini-panel-content .param-control select {
+		letter-spacing: 0.5px;
+		font-size: 13px;
+		padding: 0 1px !important;
+		text-transform: uppercase;
+	}
+
+	/* Bottom margin rules */
+
+	#profiler-mini-panel .list-children-container .list-item-row.collapsible {
+		margin-top: 4px !important;
+	}
+
+	#profiler-mini-panel .list-children-container .list-item-row.collapsible,
+	#profiler-mini-panel .list-children-container .list-children-container {
+		margin-left: 6px !important;
+	}
+
+	.list-item-wrapper:not(.header-wrapper):nth-child(odd) > .list-item-row {
+		background-color: rgba(0, 0, 0, 0);
+	}
+
+	#toggle-text {
+		display: flex;
+		align-items: center;
+		padding: 0 14px;
+		min-width: 80px;
+		justify-content: right;
+		font-size: 13px;
+	}
+
+	#toggle-text .fps-label {
+		font-size: 13px;
+		margin-left: 6px;
+		color: var(--text-primary);
+	}
+}
+		</style>
+		<script type="module" crossorigin src="./assets/index-CrJM-DtD.js"></script>
 		<link rel="modulepreload" crossorigin href="./assets/three-webgpu-B0wl2QeA.js">
 		<link rel="modulepreload" crossorigin href="./assets/three-BO0ZQUzT.js">
 		<link rel="modulepreload" crossorigin href="./assets/rnbo-D82RO6qr.js">
