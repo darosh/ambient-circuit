@@ -136,6 +136,25 @@
 		padding: 0 4px !important;
 	}
 
+	.mini-panel-content .param-control input[type='range']::-moz-range-track {
+		height: 12px;
+		border-radius: 5px;
+		background: var(--profiler-header);
+		border: 1px solid var(--profiler-border);
+	}
+
+	/* Firefox-only: remove webkit padding-top trick, reset thumb size */
+	@supports (-moz-appearance: none) {
+		.mini-panel-content .param-control input[type='range'] {
+			padding-top: 0;
+			height: 14px;
+		}
+
+		.mini-panel-content .param-control select {
+			padding-left: 6px !important;
+		}
+	}
+
 	.mini-panel-content .param-control select {
 		letter-spacing: 0.5px;
 		font-size: 13px;
@@ -174,7 +193,7 @@
 	}
 }
 		</style>
-		<script type="module" crossorigin src="./assets/index-CrJM-DtD.js"></script>
+		<script type="module" crossorigin src="./assets/index-1DGHuQ7K.js"></script>
 		<link rel="modulepreload" crossorigin href="./assets/three-webgpu-B0wl2QeA.js">
 		<link rel="modulepreload" crossorigin href="./assets/three-BO0ZQUzT.js">
 		<link rel="modulepreload" crossorigin href="./assets/rnbo-D82RO6qr.js">
