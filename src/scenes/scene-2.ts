@@ -1,159 +1,82 @@
 import { SceneConfig } from '../lib/core/scene'
-import { getTextRailNodes } from '../lib/video/geometry-text-tube'
 import { RailConfig } from '../lib/core/rail-config'
 import { triggerHandler } from '../lib/core/trigger-handler'
 import { createFloating } from './utils/floating'
-import { color3, color4, colorFactory } from './utils/colors'
+import { color3 } from './utils/colors'
 import { DRAWING_CIRCUIT } from './utils/svg-paths'
 import { expandPathString } from '../lib/core/rail-path'
-import { randomizer } from './utils/randomizer'
 
-const c = colorFactory(color3)
-
-/**
- const audio: AudioChainConfig[] = [
- 	{
- 		analyzer: true,
- 		generator: { sample: 'flute' },
- 		fx: [{ tone: 'Volume', params: { volume: -12 } }]
- 	},
- 	{ analyzer: true, generator: { sample: 'guitar-electric' } }
- ]
-*/
+const OUTER = 'r14'
+const COILED = 'r20'
 
 export const scene: SceneConfig = {
 	id: 'scene-two',
 	bpm: 60,
 	camera: [-3, 12, 17],
 	target: [0, -0.5, 0],
+	tint: [1, 1, 1.05],
 	rotatePlay: true,
 	triggerHandler,
-	tint: [1, 1, 1.05],
-	// audio: {
-	// 	chains: {
-	// 		a: audio[0],
-	// 		b: audio[1]
-	// 	},
-	// 	master: {
-	// 		analyzer: true,
-	// 		fx: [{ rnbo: 'rotavibe' }, { rnbo: 'gigaverb', params: { dry: 0 } }]
-	// 	}
-	// },
-	audioView: {
-		offset: [0, -0.5, -1],
-		color: '#eeddff',
-		all: true,
-		defaultAnalyser: 'fft'
-	},
-	sequencerMode: 'time',
-	rails: getTextRailNodes('AMBIENT CIRCUIT', 1.8, true).map(
-		(nodes, i): RailConfig => ({
-			color: c(),
-			offset: [-4.75, 1.5, 0],
-			id: `t${i + 1}`,
-			nodes,
-			marbles: [[20.91], [11.91]][i].map((start) => ({
-				type: 'ball',
-				mode: 'ping-pong',
-				duration: 1000,
-				bouncer: true,
-				speed: 2.5,
-				start
-			})),
-			instruments: [{ type: 'cone', beat: [0, 40][i] }]
-		})
-	)
+	renderFactory: (_, seed) =>
+		createFloating({
+			seed,
+			floatIntensity: _.id === OUTER ? 0 : [-0.05, 0.1, 0.1]
+		}),
+	rails: []
 }
 
-// scene[1].rails[1].rail.offset[0] -= 5.5
-// scene[1].rails[1].rail.offset[1] -= 1.2
+const z = [
+	'r3',
+	'r4',
+	'r5',
+	'r7',
+	'r2',
+	'r1',
+	'r9',
+	'r6',
+	'r10',
+	'r20',
+	'r8',
+	'r11',
+	'r21',
+	'r12',
+	'r15',
+	'r13',
+	'r17',
+	'r16',
+	'r14',
+	'r19',
+	'r18'
+]
 
-scene.renderFactory = (_, seed) =>
-	createFloating({
-		seed,
-		floatIntensity: _.id[0] === 'y' ? [-0.05, 0.1, 0.1] : _.id[0] === 'z' ? 0 : undefined
-	})
-
-for (const v of [3, 8, 10, 13, 21, 27, 28, 33, 35, 40]) {
-	scene.rails[0].instruments!.push({
-		type: 'cross',
-		note: 50 + v,
-		visible: false,
-		sides: 3,
-		beat: v,
-		audio: { id: 'a' }
-	})
-}
-
-for (const v of [3, 12, 15, 22, 32, 36, 40, 45]) {
-	scene.rails[1].instruments!.push({
-		type: 'cross',
-		note: 80 - v,
-		visible: false,
-		sides: 3,
-		beat: v,
-		audio: { id: 'b' }
-	})
-}
-
-const r = randomizer(4)
-const svgsArr = Object.values(DRAWING_CIRCUIT)
-for (let i = svgsArr.length - 1; i > 0; i--) {
-	const j = Math.floor(r() * (i + 1))
-	const tmp = svgsArr[i]
-	svgsArr[i] = svgsArr[j]
-	svgsArr[j] = tmp
-}
-const svgs = svgsArr
-const last = 10
-const m = randomizer(100)
-const q = randomizer()
-
-const order = [20, 17, 15, 2, 7, 6, 14, 19, 18, 13, 5, 1, 16, 10, 21, 4, 12, 3, 9, 8]
-
-scene.rails = []
-const first = scene.rails.length
 scene.rails!.push(
-	...svgs.map(
-		(d, i) =>
+	...z.map(
+		(id, i) =>
 			<RailConfig>{
-				color: color3[order.indexOf(i + 1) % 2],
-				offset: i === last ? [0, -0.2, 0] : undefined,
-				id: i === last ? 'z' : `y${i + 1}`,
-				nodes: [d.replace(/(^[^ ]+ )/, '$1u.1') + 'd.1'],
+				color: color3[i % 2],
+				offset: id === OUTER ? [0, -0.2, 0] : undefined,
+				id,
+				nodes: [
+					DRAWING_CIRCUIT[id].replace(/(^[^ ]+ )/, '$1u.1') + 'd.1' + (id === OUTER ? ' 12c' : '')
+				],
 				marbles: [
 					{
-						type: i === 19 ? 'coil' : undefined,
-						mode: i === 19 ? 'ping-pong' : undefined,
-						start: Math.floor(m() * (expandPathString(d).length - 1)),
-						easing: q() < 0.25 ? 'easeOutQuad' : undefined
+						type: id === 'r20' ? 'coil' : undefined,
+						mode: id === 'r20' ? 'ping-pong' : undefined,
+						start: Math.floor(((i % 5) / 4) * (expandPathString(DRAWING_CIRCUIT[id]).length - 1)),
+						easing: i % 4 ? undefined : 'easeOutQuad'
 					}
 				],
 				instruments: [
 					{ type: 'arrow', kind: 'tri', beat: 0, align: 'back' },
 					{
 						type: 'arrow',
-						point: i === 19 ? 'backward' : 0,
-						kind: i === 19 ? 'tri' : 'ring',
-						beat: i === last ? 12 : expandPathString(d).length - 1,
-						align: i === 19 ? 'back' : 'tip'
+						point: id === COILED ? 'backward' : 0,
+						kind: id === COILED ? 'tri' : 'ring',
+						beat: id === OUTER ? 12 : expandPathString(DRAWING_CIRCUIT[id]).length - 1,
+						align: id === COILED ? 'back' : 'tip'
 					}
 				]
 			}
 	)
 )
-
-scene.rails[last + first]!.color = color4[1] // '#111111'
-scene.rails[last + first]!.nodes[0] += ' 12c'
-
-// scene.rails.push(<RailData>{
-// 	color: c(),
-// // 		id: `o`,
-// 		nodes: ['r0.5 i5.2 r4.7 o10.4 l5.2 i10.4']
-//,
-// 	marbles: [{ start: 5 }],
-// 	instruments: [
-// 		{ type: 'arrow', kind: 'tri', beat: 0, align: 'back' },
-// 		// { type: 'arrow', kind: 'point', beat: 2 }
-// 	]
-// })
