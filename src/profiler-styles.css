@@ -105,6 +105,25 @@
 		padding: 0 4px !important;
 	}
 
+	.mini-panel-content .param-control input[type='range']::-moz-range-track {
+		height: 12px;
+		border-radius: 5px;
+		background: var(--profiler-header);
+		border: 1px solid var(--profiler-border);
+	}
+
+	/* Firefox-only: remove webkit padding-top trick, reset thumb size */
+	@supports (-moz-appearance: none) {
+		.mini-panel-content .param-control input[type='range'] {
+			padding-top: 0;
+			height: 14px;
+		}
+
+		.mini-panel-content .param-control select {
+			padding-left: 6px !important;
+		}
+	}
+
 	.mini-panel-content .param-control select {
 		letter-spacing: 0.5px;
 		font-size: 13px;
