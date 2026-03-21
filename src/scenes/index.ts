@@ -37,6 +37,7 @@ import { scene as sceneFormlines } from './scene-formlines'
 import { scene as sceneBranching } from './scene-branching'
 // import { scene as scene1 } from './scene-1'
 import { scene as scene2 } from './scene-2'
+import { scene as scenePcb } from './scene-pcb'
 // import { scenes as scenesRnbo } from './scene-rnbo'
 
 export const scenes: SceneConfig[] = [
@@ -71,6 +72,7 @@ export const scenes: SceneConfig[] = [
 	sceneBranching,
 	// scene1,
 	scene2,
+	scenePcb,
 	sceneCreateDestroy,
 	sceneAudio,
 	sceneCollisions,

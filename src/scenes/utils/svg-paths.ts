@@ -96,4 +96,18 @@ export const DRAWING_BRANCHING: Record<string, string> = {
 	r26: 'o4 i[1,1](r.75i i[1,1](r.75i i[1,1](r.75i i[1,1](r.75i | l.75i) | l.75i i2) | l.75i i4) | l.75i i6)'
 }
 
-export default { DRAWING_CIRCUIT, DRAWING_RAVEN, DRAWING_FORMLINES, DRAWING_BRANCHING }
+export const DRAWING_PCB: Record<string, string> = {
+	r26: 'l4i4.5 o9',
+	r1: 'l4.5i3 r9',
+	r2: 'l3i4.5 o3.5 r2 o2 l2 o3.5',
+	r3: 'l2i4.5 o9',
+	r4: 'r3i4.5 o2.5 l2 o6.5',
+	r5: 'r4i4.5 o9',
+	r6: 'l4.5 r9',
+	r7: 'ri4.5 o2.5 l2 o6.5',
+	r8: 'l4.5o3 r4.5 i7.5',
+	r9: 'r2i4.5 o2.5 l2 o6.5',
+	r10: 'l4.5o2 r9'
+}
+
+export default { DRAWING_CIRCUIT, DRAWING_RAVEN, DRAWING_FORMLINES, DRAWING_BRANCHING, DRAWING_PCB }
