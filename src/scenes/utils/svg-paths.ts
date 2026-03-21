@@ -99,15 +99,18 @@ export const DRAWING_BRANCHING: Record<string, string> = {
 export const DRAWING_PCB: Record<string, string> = {
 	r26: 'l4i4.5 o9',
 	r1: 'l4.5i3 r9',
-	r2: 'l3i4.5 o3.5 r2 o2 l2 o3.5',
+	r2: 'l3i4.5 o2.5 ro ro lo l o3.5',
 	r3: 'l2i4.5 o9',
 	r4: 'r3i4.5 o2.5 l2 o6.5',
 	r5: 'r4i4.5 o9',
 	r6: 'l4.5 r9',
 	r7: 'ri4.5 o2.5 l2 o6.5',
-	r8: 'l4.5o3 r4.5 i7.5',
+	r8: 'l4.5o3 r3.5 ri i6.5',
 	r9: 'r2i4.5 o2.5 l2 o6.5',
-	r10: 'l4.5o2 r9'
+	r10: 'l4.5o2 r8.5 o r.5',
+	r11: 'r3o2.5 l.25o.25 l.25i.25 r.5i.5 r.5o.5 l.75o.75 l.75i.75 ri ro l1.25o1.25 l1.25i1.25 r1.5i1.5 r1.5o1.5 l1.5o1.5 o.5',
+	r12: 'r4.5o l1.5 i2 l o5.5',
+	r13: 'l.99i4.5 o2.5 l3.5 o r5.99 i.5 r2 o r'
 }
 
 export default { DRAWING_CIRCUIT, DRAWING_RAVEN, DRAWING_FORMLINES, DRAWING_BRANCHING, DRAWING_PCB }
