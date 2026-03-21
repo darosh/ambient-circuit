@@ -28,6 +28,7 @@ const HEART_CLOSED_SEGMENTS = 12
 
 export type InstrumentType =
 	| 'poly'
+	| 'fill'
 	| 'star'
 	| 'whirl'
 	| 'cross'
@@ -158,6 +159,14 @@ function buildInstrumentGeometry(params: InstrumentGeometryParams): BufferGeomet
 	const { type, size, width } = params
 
 	switch (type) {
+		case 'fill': {
+			return createInstrumentFillGeometry(
+				params.sides ?? 3,
+				params.size,
+				params.width,
+				params.cornerRadius
+			)!
+		}
 		case 'poly':
 		case 'star': {
 			return buildPolyStarGeometry(params)

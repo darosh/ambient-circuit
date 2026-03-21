@@ -75,6 +75,12 @@ export type PolyInstrument = InstrumentConfigBase & {
 	fill?: boolean
 }
 
+export type FillInstrument = InstrumentConfigBase & {
+	type?: 'fill'
+	/** Number of polygon sides (3=triangle, 4=square, 5=pentagon, etc.) */
+	sides: number
+}
+
 type StarInstrument = InstrumentConfigBase & {
 	type: 'star'
 	/** Number of star points */
@@ -165,6 +171,7 @@ type EaterInstrument = InstrumentConfigBase & {
 
 export type InstrumentConfig =
 	| PolyInstrument
+	| FillInstrument
 	| StarInstrument
 	| WhirlInstrument
 	| CrossInstrument
