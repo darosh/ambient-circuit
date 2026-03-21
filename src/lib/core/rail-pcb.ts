@@ -9,16 +9,18 @@ export interface PcbLayoutOptions {
 	detourTangent?: number
 	beatMapping?: boolean
 	cellSize?: number
+	cornerOffset?: number
 }
 
 export function toPcbLayout(defs: RailDef[], opts?: PcbLayoutOptions): RailDef[] {
 	const height = opts?.height ?? 0.25
 	const layerHeight = opts?.layerHeight ?? 0.25
-	const cornerTangent = opts?.cornerTangent ?? 0
+	const cornerTangent = opts?.cornerTangent ?? 0.39
 	const detourHalfWidth = opts?.detourHalfWidth ?? 0.75 / 2
 	const detourTangent = opts?.detourTangent ?? 0.39
 	const beatMapping = opts?.beatMapping ?? true
 	const cellSz = opts?.cellSize ?? 0.5
+	const cornerOffset = opts?.cornerOffset ?? 0.125
 
 	// Step 1 — resolve all rails
 	const resolved = defs.map((d) => resolveNodes(d, 0))
@@ -160,10 +162,35 @@ export function toPcbLayout(defs: RailDef[], opts?: PcbLayoutOptions): RailDef[]
 		const p0 = pts[0].p
 		const pN = pts.at(-1)!.p
 
-		out.push(
-			{ p: [p0[0], 0, p0[2]] as Vec3 },
-			{ p: [p0[0], bh, p0[2]] as Vec3, round: 'to', tangent: cornerTangent }
-		)
+		if (cornerOffset > 0 && pts.length >= 2) {
+			const p1 = pts[1].p
+			const dx = p1[0] - p0[0],
+				dz = p1[2] - p0[2]
+			const segLen = Math.hypot(dx, dz) || 1
+			if (segLen > cornerOffset * 2) {
+				const ux = dx / segLen,
+					uz = dz / segLen
+				out.push(
+					{ p: [p0[0] - ux * cornerOffset, 0, p0[2] - uz * cornerOffset] as Vec3 },
+					{
+						p: [p0[0] - ux * cornerOffset, bh - cornerOffset, p0[2] - uz * cornerOffset] as Vec3,
+						round: 'from',
+						tangent: cornerTangent
+					},
+					{ p: [p0[0], bh, p0[2]] as Vec3 }
+				)
+			} else {
+				out.push(
+					{ p: [p0[0], 0, p0[2]] as Vec3 },
+					{ p: [p0[0], bh, p0[2]] as Vec3, round: 'to', tangent: cornerTangent }
+				)
+			}
+		} else {
+			out.push(
+				{ p: [p0[0], 0, p0[2]] as Vec3 },
+				{ p: [p0[0], bh, p0[2]] as Vec3, round: 'to', tangent: cornerTangent }
+			)
+		}
 
 		const archBySeg = new Map<number, ArchInfo[]>()
 		for (const a of railArches) {
@@ -196,20 +223,20 @@ export function toPcbLayout(defs: RailDef[], opts?: PcbLayoutOptions): RailDef[]
 					{
 						p: [cx - ux * detourHalfWidth, bh, cz - uz * detourHalfWidth] as Vec3,
 						round: 'from',
-						tangent: detourTangent,
-						...(beatMapping ? { beat: crossBeat - halfBeatW } : {})
+						tangent: detourTangent
+						// ...(beatMapping ? { beat: crossBeat - halfBeatW } : {})
 					},
 					{
 						p: [cx, a.archHeight, cz] as Vec3,
 						round: 'both',
-						tangent: detourTangent,
-						...(beatMapping ? { beat: crossBeat } : {})
+						tangent: detourTangent
+						// ...(beatMapping ? { beat: crossBeat } : {})
 					},
 					{
 						p: [cx + ux * detourHalfWidth, bh, cz + uz * detourHalfWidth] as Vec3,
 						round: 'to',
-						tangent: detourTangent,
-						...(beatMapping ? { beat: crossBeat + halfBeatW } : {})
+						tangent: detourTangent
+						// ...(beatMapping ? { beat: crossBeat + halfBeatW } : {})
 					}
 				)
 
@@ -221,16 +248,48 @@ export function toPcbLayout(defs: RailDef[], opts?: PcbLayoutOptions): RailDef[]
 				out.push({
 					p: [pt.p[0], bh, pt.p[2]] as Vec3,
 					...(pt.round ? { round: pt.round } : {}),
-					...(pt.tangent === 0.39 ? {} : { tangent: pt.tangent }),
-					...(beatMapping && !Number.isNaN(pt.beat) ? { beat: pt.beat } : {})
+					...(pt.tangent === 0.39 ? {} : { tangent: pt.tangent })
+					// ...(beatMapping && !Number.isNaN(pt.beat) ? { beat: pt.beat } : {
+					// 	mode: beatMapping ? 'curve' : undefined
+					// })
+					// ...(beatMapping ? {
+					// 	beat: 1,
+					// 	mode: beatMapping ? 'curve' : undefined
+					// } : {})
 				})
 			}
 		}
 
-		out.push(
-			{ p: [pN[0], bh, pN[2]] as Vec3, round: 'from', tangent: cornerTangent },
-			{ p: [pN[0], 0, pN[2]] as Vec3 }
-		)
+		if (cornerOffset > 0 && pts.length >= 2) {
+			const pNm1 = pts.at(-2)!.p
+			const dx = pN[0] - pNm1[0],
+				dz = pN[2] - pNm1[2]
+			const segLen = Math.hypot(dx, dz) || 1
+			if (segLen > cornerOffset * 2) {
+				const ux = dx / segLen,
+					uz = dz / segLen
+				out.push(
+					{ p: [pN[0], bh, pN[2]] as Vec3, round: 'from', tangent: cornerTangent },
+					{ p: [pN[0] + ux * cornerOffset, bh - cornerOffset, pN[2] + uz * cornerOffset] as Vec3 },
+					{ p: [pN[0] + ux * cornerOffset, 0, pN[2] + uz * cornerOffset] as Vec3 }
+				)
+			} else {
+				out.push(
+					{ p: [pN[0], bh, pN[2]] as Vec3, round: 'from', tangent: cornerTangent },
+					{ p: [pN[0], 0, pN[2]] as Vec3 }
+				)
+			}
+		} else {
+			out.push(
+				{ p: [pN[0], bh, pN[2]] as Vec3, round: 'from', tangent: cornerTangent },
+				{ p: [pN[0], 0, pN[2]] as Vec3 }
+			)
+		}
+
+		if (beatMapping) {
+			out.at(-1)!.beat = 1
+			out.at(-1)!.mode = 'curve'
+		}
 
 		result.push(out)
 	}

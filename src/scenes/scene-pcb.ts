@@ -28,7 +28,22 @@ scene.rails!.push(
 				color: c(),
 				id,
 				fill: id.endsWith('-f'),
-				nodes: pcbDefs[idx]
+				nodes: pcbDefs[idx],
+				instruments: [
+					{
+						beat: 0,
+						type: idx % 2 ? 'fill' : 'poly',
+						fill: !(idx % 3),
+						sides: 12
+					},
+					{
+						beat: 1,
+						type: idx % 3 ? 'poly' : 'fill',
+						fill: !(idx % 4),
+						sides: 12
+					}
+				]
 			}
 	)
 )
+console.log(scene.rails)
