@@ -9,12 +9,36 @@ const c = colorFactory(color4)
 
 export const scene: SceneConfig = {
 	id: 'scene-pcb',
-	bpm: 60,
+	bpm: 20,
 	camera: [0, 24, 0],
 	target: [0, 0, 0],
+	tint: [1, 1, 1.6],
 	triggerHandler,
-	tint: [1, 1, 1.05],
-	rails: []
+	view: {
+		layout: 'horizontal',
+		splits: [
+			{
+				camera: 0,
+				target: [0, -1, 0]
+			}
+		]
+	},
+	rails: [
+		{
+			id: 'cam',
+			color: color4[0],
+			visible: false,
+			offset: [1, 10, 10],
+			nodes: [
+				'llllllllb uuuuuuuub rrrrrrrrrrrrrb iiiiiiiiiib lllllllllllb oooooooooooooob ddddddddb llb iiiib 12c'
+			],
+			marbles: [
+				{
+					speed: 0.5
+				}
+			]
+		}
+	]
 }
 
 const entries = Object.entries(DRAWING_PCB)
@@ -46,4 +70,3 @@ scene.rails!.push(
 			}
 	)
 )
-console.log(scene.rails)
