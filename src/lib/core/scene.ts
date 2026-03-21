@@ -115,6 +115,7 @@ export type SceneConfig = {
 				tint?: [number, number, number]
 				reflectivity?: number
 				opacity?: number
+				edgeGlow?: number
 		  }
 	names?: boolean
 	points?: boolean

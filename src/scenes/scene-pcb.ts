@@ -12,14 +12,18 @@ export const scene: SceneConfig = {
 	bpm: 20,
 	camera: [0, 24, 0],
 	target: [0, 0, 0],
-	tint: [1, 1, 1.6],
+	tint: [1, 1, 1.2],
+	audioView: {
+		color: '#aaaaff'
+	},
 	floor: {
-		blur: 12,
-		opacity: 0.2,
-		tint: [0, 0, 1],
-		reflectivity: 0.5,
-		resolution: 1,
-		size: 10.125
+		blur: 10,
+		opacity: 0.15,
+		tint: [.01, 0, .1],
+		reflectivity: .7,
+		resolution: .5,
+		size: 10,
+		edgeGlow: .015
 	},
 	triggerHandler,
 	view: {
