@@ -37,6 +37,7 @@
 	import MidiSignalView from './MidiSignalView.svelte'
 	import { getMarbleSignalLinks, getMidiSignalLinks } from '../lib/helpers/links'
 	import Stars from './Stars.svelte'
+	import Floor from './Floor.svelte'
 	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import { toggleMute } from '../lib/audio/engine'
 	import { convertOklabToRgb, convertRgbToOklab, formatHex, parseHex, type Rgb } from 'culori/fn'
@@ -602,6 +603,11 @@
 			<!--		<T.PolarGridHelper position.y={-0.01} args={[5, 24, 10, 64, gridColor, gridColor]} />-->
 			<T is={GridHelperIO} position.y={-0.01} args={[5, 0.5, 24, 10, 64, gridColor]} />
 		{/if}
+	{/if}
+
+	{#if scene.floor}
+		{@const fc = typeof scene.floor === 'object' ? scene.floor : {}}
+		<Floor {...fc} />
 	{/if}
 
 	{#each rails as railData, railIndex (railIndex)}

@@ -13,6 +13,14 @@ export const scene: SceneConfig = {
 	camera: [0, 24, 0],
 	target: [0, 0, 0],
 	tint: [1, 1, 1.6],
+	floor: {
+		blur: 12,
+		opacity: 0.2,
+		tint: [0, 0, 1],
+		reflectivity: 0.5,
+		resolution: 1,
+		size: 10.125
+	},
 	triggerHandler,
 	view: {
 		layout: 'horizontal',

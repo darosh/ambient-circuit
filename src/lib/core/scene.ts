@@ -106,6 +106,16 @@ export type SceneConfig = {
 	tint?: Vector3Tuple
 	polar?: boolean
 	stars?: boolean
+	floor?:
+		| boolean
+		| {
+				size?: number
+				resolution?: number
+				blur?: number
+				tint?: [number, number, number]
+				reflectivity?: number
+				opacity?: number
+		  }
 	names?: boolean
 	points?: boolean
 	sequencerBeats?: number
