@@ -33,7 +33,7 @@
 
 	const size = untrack(() => p.size ?? 10)
 	const resolution = untrack(() => p.resolution ?? 0.5)
-	const blur = untrack(() => p.blur ?? 10)
+	const blur = untrack(() => p.blur ?? 8)
 	const tint = untrack(() => p.tint ?? ([0.1, 0.1, 0.1] as [number, number, number]))
 	const reflectivity = untrack(() => p.reflectivity ?? 0.75)
 	const opacity = untrack(() => p.opacity ?? 0.1)
