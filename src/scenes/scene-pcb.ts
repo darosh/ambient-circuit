@@ -54,6 +54,13 @@ scene.rails!.push(
 				id,
 				fill: id.endsWith('-f'),
 				nodes: pcbDefs[idx],
+				marbles: [
+					{
+						start: idx % 2,
+						speed: idx % 3 ? 1 : 0.5,
+						direction: idx % 5 > 1 ? 'backward' : 'forward'
+					}
+				],
 				instruments: [
 					{
 						beat: 0,
@@ -65,6 +72,11 @@ scene.rails!.push(
 						beat: 1,
 						type: idx % 3 ? 'poly' : 'fill',
 						fill: !(idx % 4),
+						sides: 12
+					},
+					{
+						beat: idx % 2 ? 0.8 : 0.2,
+						type: 'fill',
 						sides: 12
 					}
 				]
