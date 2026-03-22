@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T } from '@threlte/core'
-	import { BoxGeometry, Mesh } from 'three/webgpu'
+	import { BoxGeometry, CylinderGeometry, Mesh } from 'three/webgpu'
 	import { MeshBasicNodeMaterial } from 'three/webgpu'
 	import {
 		reflector,
@@ -29,6 +29,7 @@
 		opacity?: number
 		height?: number
 		edgeGlow?: number
+		polar?: boolean
 	}
 
 	const p: Props = $props()
@@ -41,6 +42,7 @@
 	const opacity = untrack(() => p.opacity ?? 0.1)
 	const edgeGlow = untrack(() => p.edgeGlow ?? 0.01)
 	const height = untrack(() => p.height ?? 0.5)
+	const polar = untrack(() => p.polar ?? false)
 
 	// bounces:false → NodeUpdateType.FRAME avoids renderId corruption
 	const reflectionNode = reflector({ resolutionScale: resolution, bounces: false })
@@ -101,9 +103,12 @@
 		float(opacity * 0.52).add(fresnel.mul(0.62))
 	)
 
-	const geo = new BoxGeometry(size, height, size)
 	// BoxGeometry material groups: 0=+x, 1=-x, 2=+y(top), 3=-y, 4=+z, 5=-z
-	const mesh = new Mesh(geo, [sideMat, sideMat, topMat, sideMat, sideMat, sideMat])
+	// CylinderGeometry material groups: 0=side, 1=top, 2=bottom
+	const geo = polar ? new CylinderGeometry(5, 5, height, 64) : new BoxGeometry(size, height, size)
+	const mesh = polar
+		? new Mesh(geo, [sideMat, topMat, sideMat])
+		: new Mesh(geo, [sideMat, sideMat, topMat, sideMat, sideMat, sideMat])
 
 	// Reflector target setup (top surface mirror)
 	reflectionNode.target.rotation.x = -Math.PI / 2

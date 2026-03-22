@@ -607,7 +607,7 @@
 
 	{#if scene.floor}
 		{@const fc = typeof scene.floor === 'object' ? scene.floor : {}}
-		<Floor {...fc} />
+		<Floor polar={scene.polar} {...fc} />
 	{/if}
 
 	{#each rails as railData, railIndex (railIndex)}
