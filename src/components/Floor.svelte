@@ -13,7 +13,9 @@
 		dot,
 		pow,
 		clamp,
-		oneMinus
+		oneMinus,
+		time,
+		sin
 	} from 'three/tsl'
 	import { gaussianBlur } from 'three/addons/tsl/display/GaussianBlurNode.js'
 	import { onDestroy, untrack } from 'svelte'
@@ -40,39 +42,70 @@
 	const edgeGlow = untrack(() => p.edgeGlow ?? 0.01)
 	const height = untrack(() => p.height ?? 0.5)
 
-	// bounces:false → NodeUpdateType.FRAME avoids renderId corruption from the
-	// nested renderer.render() call inside updateBefore incrementing renderId.
+	// bounces:false → NodeUpdateType.FRAME avoids renderId corruption
 	const reflectionNode = reflector({ resolutionScale: resolution, bounces: false })
 	const reflectionColor = blur > 0 ? gaussianBlur(reflectionNode, null, blur) : reflectionNode
 
-	// Fresnel edge glow (shared by both materials)
+	// Shared Fresnel (strong at edges/grazing angles)
 	const fresnel = pow(oneMinus(clamp(dot(normalWorld, positionViewDirection).abs(), 0, 1)), 3)
 
+	// ── FAKE REFRACTION TRICKS (both chromatic dispersion + animated noise) ──
+	const chromaticStrength = -0.085
+
+	const dispR = fresnel.mul(chromaticStrength * 1.15)
+	const dispG = fresnel.mul(0)
+	const dispB = fresnel.mul(-chromaticStrength * 0.85)
+
+	// Animated normal-based perturbation (cheap "swimming" refraction look)
+	const perturb = vec3(
+		sin(normalWorld.x.mul(11).add(time.mul(0.65))).mul(0.013),
+		sin(normalWorld.y.mul(14.5).add(time.mul(0.9))).mul(0.009),
+		sin(normalWorld.z.mul(12.5).add(time.mul(0.75))).mul(0.011)
+	)
+
 	// ── Top face material (group 2 = +y) ─────────────────────────────────────
-	// Only this material contains reflectionNode. During the reflection render,
-	// THREE sets topMat.visible=false — the 5 side materials have no reflectionNode
-	// reference so they don't trigger a read+write conflict on the same texture.
+	// Keeps clean reflection on top + light chromatic hint
+	const topBase = mix(vec3(tint[0], tint[1], tint[2]), reflectionColor.rgb, reflectivity)
+
+	const topColor = vec3(
+		topBase.r.add(dispR.mul(0.55)),
+		topBase.g.add(dispG.mul(0.55)),
+		topBase.b.add(dispB.mul(0.55))
+	)
+
 	const topMat = new MeshBasicNodeMaterial({ transparent: true })
 	topMat.colorNode = vec4(
-		mix(vec3(tint[0], tint[1], tint[2]), reflectionColor.rgb, reflectivity).add(
-			vec3(fresnel.mul(edgeGlow))
-		),
+		topColor.add(vec3(fresnel.mul(edgeGlow))),
 		float(opacity).add(fresnel.mul(0.35 as number))
 	)
 
 	// ── Side / bottom face material (groups 0,1,3,4,5) ───────────────────────
+	// Combines:
+	// 1. Very subtle distorted reflection sampling (re-uses same reflectionColor)
+	// 2. Fake normal perturbation (animated refraction swimming)
+	// 3. Chromatic dispersion offset
+	const sideBase = vec3(tint[0], tint[1], tint[2])
+	const sideReflectionMix = mix(sideBase, reflectionColor.rgb, reflectivity * 0.19) // low strength on sides
+
+	const sideDistorted = sideReflectionMix.add(perturb.mul(0.42)) // fake refraction distortion
+
+	const finalSideColor = vec3(
+		sideDistorted.r.add(dispR),
+		sideDistorted.g.add(dispG),
+		sideDistorted.b.add(dispB)
+	)
+
 	const sideMat = new MeshBasicNodeMaterial({ transparent: true, side: 2 /* DoubleSide */ })
 	sideMat.colorNode = vec4(
-		vec3(tint[0], tint[1], tint[2]).add(vec3(fresnel.mul(edgeGlow))),
-		float(opacity * 0.4).add(fresnel.mul(0.5 as number))
+		finalSideColor.add(vec3(fresnel.mul(edgeGlow * 1.35))),
+		float(opacity * 0.52).add(fresnel.mul(0.62))
 	)
 
 	const geo = new BoxGeometry(size, height, size)
 	// BoxGeometry material groups: 0=+x, 1=-x, 2=+y(top), 3=-y, 4=+z, 5=-z
 	const mesh = new Mesh(geo, [sideMat, sideMat, topMat, sideMat, sideMat, sideMat])
 
-	// Reflector target at local y=+0.125 → world y=0 (top surface).
-	// rotation.x=-π/2 → local +Z aligns to world +Y (mirror normal points up).
+	// Reflector target setup (top surface mirror)
 	reflectionNode.target.rotation.x = -Math.PI / 2
 	reflectionNode.target.position.y = height / 2
 	mesh.add(reflectionNode.target)
