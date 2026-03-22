@@ -1,11 +1,11 @@
 import { SceneConfig } from '../lib/core/scene'
 import { RailConfig } from '../lib/core/rail-config'
 import { triggerHandler } from '../lib/core/trigger-handler'
-import { color4, colorFactory } from './utils/colors'
+import { color6, colorFactory } from './utils/colors'
 import { DRAWING_PCB } from './utils/svg-paths'
 import { toPcbLayout } from '../lib/core/rail-pcb'
 
-const c = colorFactory(color4)
+const c = colorFactory(color6)
 
 export const scene: SceneConfig = {
 	id: 'scene-pcb',
@@ -27,7 +27,7 @@ export const scene: SceneConfig = {
 	rails: [
 		{
 			id: 'cam',
-			color: color4[0],
+			color: '#ffffff',
 			visible: false,
 			offset: [1, 10, 10],
 			nodes: [
@@ -75,7 +75,12 @@ scene.rails!.push(
 						sides: 12
 					},
 					{
-						beat: idx % 2 ? 0.8 : 0.2,
+						beat: idx % 3 ? 0.8 : 0.2,
+						type: 'fill',
+						sides: 12
+					},
+					{
+						beat: idx % 3 ? 0.4 : 0.5,
 						type: 'fill',
 						sides: 12
 					}
