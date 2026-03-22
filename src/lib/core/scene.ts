@@ -10,7 +10,7 @@ export type BloomConfig = {
 	threshold?: number
 }
 
-export type ViewSplitConfig = {
+export type AutoCameraConfig = {
 	/** Marble index or static [x,y,z] pos for camera; undefined = free orbit */
 	camera?: number | Vector3Tuple
 	/** Marble index or static [x,y,z] pos for look-at target; undefined = scene default */
@@ -28,6 +28,9 @@ export type ViewSplitConfig = {
 	maxAngleSpeed?: number
 	autoRotate?: boolean | number
 	fov?: number
+}
+
+export type ViewSplitConfig = AutoCameraConfig & {
 	/** Per-split bloom — true uses defaults, object overrides params, false/absent = no bloom */
 	bloom?: boolean | BloomConfig
 	/** Column span (default 1). Horizontal: extra width units; Grid: colspan */
@@ -140,6 +143,8 @@ export type SceneConfig = {
 	/** Fixed world-space direction text labels face (e.g. [0,0,1] = face +Z).
 	 *  When absent, defaults to billboard (tracks main camera). */
 	textOrientation?: Vector3Tuple
+	/** Single-view camera automation (marble follow, tangent offset, smoothness) */
+	autoCamera?: AutoCameraConfig
 	/** Multi-view split-screen config */
 	view?: ViewConfig
 	audioView?:

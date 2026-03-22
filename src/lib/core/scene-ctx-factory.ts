@@ -8,6 +8,7 @@ import { InstrumentState } from './instrument-state'
 import { RailState } from './rail-state'
 import { resolveRail } from './rail-resolve'
 import { SceneConfig } from './scene'
+import { initSplitStates } from '../components/multi-view/multi-view'
 
 /**
  * Create SceneCtx from scene data (called once at mount)
@@ -142,7 +143,8 @@ export function createSceneCtx(
 			scale: { name: '', notes: [] }
 		},
 		pendingCreations,
-		initialSnapshot
+		initialSnapshot,
+		autoCamera: scene.autoCamera ? initSplitStates([scene.autoCamera])[0] : undefined
 	}
 
 	// Wire up sceneCtx back-reference for RailState.marbles

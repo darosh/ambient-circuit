@@ -13,7 +13,7 @@
 		dot,
 		pow,
 		clamp,
-		oneMinus,
+		oneMinus
 	} from 'three/tsl'
 	import { gaussianBlur } from 'three/addons/tsl/display/GaussianBlurNode.js'
 	import { onDestroy, untrack } from 'svelte'

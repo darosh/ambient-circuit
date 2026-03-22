@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { T } from '@threlte/core'
+	import { T, useTask, useThrelte } from '@threlte/core'
 	import { OrbitControls } from '@threlte/extras'
 	import Scene from './Scene.svelte'
 	import Bloom from './Bloom.svelte'
@@ -8,6 +8,14 @@
 	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import type { AudioChain } from '../lib/audio'
 	import { panelState } from '../lib/components/hud/panel-state.svelte'
+	import { Vector3 } from 'three/webgpu'
+	import {
+		resolveMarbleOrVec,
+		updateCameraForSplit,
+		updateTargetLerp,
+		type SplitCamState,
+		type ResolvedTarget
+	} from '../lib/components/multi-view/multi-view'
 
 	let {
 		sceneId,
@@ -45,6 +53,119 @@
 	} = $props()
 
 	let sceneCtx = $state<SceneCtx | undefined>()
+
+	const DRAGGING_COOLDOWN = 1.6 // seconds
+	const DRAGGING_DELAY = 800 // milliseconds
+
+	// Single-view auto-camera state
+	const _camState: SplitCamState = {
+		radius: Math.hypot(5, 7, 9),
+		yaw: 0,
+		pitch: 0,
+		inited: false,
+		isDragging: false,
+		isDraggingEnd: 0
+	}
+	const _lerpTargetPos = new Vector3(0, 1, 0)
+	const _resolvedCam: ResolvedTarget = {
+		pos: new Vector3(),
+		tangent: new Vector3(),
+		hasTangent: false
+	}
+	const _resolvedTarget: ResolvedTarget = {
+		pos: new Vector3(),
+		tangent: new Vector3(),
+		hasTangent: false
+	}
+	const _desired = new Vector3()
+
+	const { camera: threlteCamera } = useThrelte()
+
+	useTask(
+		(delta) => {
+			const autoCfg = activeScene?.autoCamera
+			if (!autoCfg || !sceneCtx?.autoCamera) return
+			const state = sceneCtx.autoCamera
+			if (state.camera == null) return
+
+			const cam = threlteCamera.current
+			if (!cam) return
+
+			if (_camState.isDraggingEnd > 0) _camState.isDraggingEnd -= delta
+
+			// Resolve target
+			const targetVal = state.target
+			const defaultTarget = activeScene.target ?? ([0, 1, 0] as [number, number, number])
+			const tgt =
+				targetVal == null
+					? null
+					: resolveMarbleOrVec(
+							targetVal as Parameters<typeof resolveMarbleOrVec>[0],
+							sceneCtx,
+							_resolvedTarget
+						)
+			const targetPos = tgt
+				? tgt.pos
+				: _resolvedTarget.pos.set(defaultTarget[0], defaultTarget[1], defaultTarget[2])
+
+			const alphaTarget = 1 - Math.exp(-state.smoothnessTarget * delta * 60)
+			updateTargetLerp(_lerpTargetPos, targetPos, alphaTarget, _camState.inited)
+
+			// Resolve camera position
+			const camResolved = resolveMarbleOrVec(
+				state.camera as Parameters<typeof resolveMarbleOrVec>[0],
+				sceneCtx,
+				_resolvedCam
+			)
+			if (!camResolved) return
+
+			_desired.copy(camResolved.pos)
+			if (autoCfg.tangentOffset && camResolved.hasTangent) {
+				_desired.addScaledVector(camResolved.tangent, -autoCfg.tangentOffset)
+			}
+
+			const camPos = cam.position
+			updateCameraForSplit(camPos, _camState, state, _lerpTargetPos, _desired, delta)
+			cam.lookAt(_lerpTargetPos)
+		},
+		{ autoInvalidate: false }
+	)
+
+	let _orbitControls = $state<
+		import('three/addons/controls/OrbitControls.js').OrbitControls | undefined
+	>()
+	let _dragTimeout: ReturnType<typeof setTimeout> | undefined
+
+	$effect(() => {
+		const oc = _orbitControls
+		if (!oc || !activeScene?.autoCamera) return
+		const onStart = () => {
+			_camState.isDragging = true
+			clearTimeout(_dragTimeout)
+		}
+		const onEnd = () => {
+			clearTimeout(_dragTimeout)
+			_dragTimeout = setTimeout(() => {
+				_camState.isDraggingEnd = DRAGGING_COOLDOWN
+				_camState.isDragging = false
+			}, DRAGGING_DELAY)
+		}
+		oc.addEventListener('start', onStart)
+		oc.addEventListener('end', onEnd)
+		return () => {
+			oc.removeEventListener('start', onStart)
+			oc.removeEventListener('end', onEnd)
+			clearTimeout(_dragTimeout)
+		}
+	})
+
+	// Reset cam state on scene change
+	$effect(() => {
+		if (activeScene) {
+			_camState.inited = false
+			_lerpTargetPos.set(0, 1, 0)
+		}
+	})
 
 	function onAudioTargetChange(target: string) {
 		if (!audioEngineRef) return
@@ -119,8 +240,13 @@
 {/if}
 
 {#if !activeScene.view}
-	<T.PerspectiveCamera makeDefault position={activeScene.camera ?? [5, 7, 9]} fov={30}>
+	<T.PerspectiveCamera
+		makeDefault
+		position={activeScene.camera ?? [5, 7, 9]}
+		fov={activeScene.autoCamera?.fov ?? 30}
+	>
 		<OrbitControls
+			bind:ref={_orbitControls}
 			enableDamping
 			enabled={!panelState.pointerLock}
 			target={activeScene.target ?? [0, 1, 0]}

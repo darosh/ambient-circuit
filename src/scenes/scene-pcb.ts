@@ -19,21 +19,16 @@ export const scene: SceneConfig = {
 	floor: {
 		blur: 10,
 		opacity: 0.15,
-		tint: [.01, 0, .1],
-		reflectivity: .7,
-		resolution: .5,
+		tint: [0.01, 0, 0.1],
+		reflectivity: 0.7,
+		resolution: 0.5,
 		size: 10,
-		edgeGlow: .015
+		edgeGlow: 0.015
 	},
 	triggerHandler,
-	view: {
-		layout: 'horizontal',
-		splits: [
-			{
-				camera: 0,
-				target: [0, -1, 0]
-			}
-		]
+	autoCamera: {
+		camera: 0,
+		target: [0, -1, 0]
 	},
 	rails: [
 		{

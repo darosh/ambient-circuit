@@ -84,6 +84,8 @@ export type SceneCtx = {
 
 	/** Multi-view state (written by MultiView on mount) */
 	view?: ViewState
+	/** Single-view auto-camera state (writable by trigger handlers) */
+	autoCamera?: ViewSplitState
 
 	// Deferred marble mutations
 	pendingCreations: { railId: string; data: MarbleConfig }[]
