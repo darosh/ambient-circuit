@@ -33,11 +33,11 @@
 
 	const size = untrack(() => p.size ?? 10)
 	const resolution = untrack(() => p.resolution ?? 0.5)
-	const blur = untrack(() => p.blur ?? 0)
-	const tint = untrack(() => p.tint ?? ([0, 0, 0] as [number, number, number]))
-	const reflectivity = untrack(() => p.reflectivity ?? 0.88)
-	const opacity = untrack(() => p.opacity ?? 0.65)
-	const edgeGlow = untrack(() => p.edgeGlow ?? 0.2)
+	const blur = untrack(() => p.blur ?? 10)
+	const tint = untrack(() => p.tint ?? ([0.1, 0.1, 0.1] as [number, number, number]))
+	const reflectivity = untrack(() => p.reflectivity ?? 0.75)
+	const opacity = untrack(() => p.opacity ?? 0.1)
+	const edgeGlow = untrack(() => p.edgeGlow ?? 0.01)
 	const height = untrack(() => p.height ?? 0.5)
 
 	// bounces:false → NodeUpdateType.FRAME avoids renderId corruption from the

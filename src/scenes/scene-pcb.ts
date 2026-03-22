@@ -17,13 +17,7 @@ export const scene: SceneConfig = {
 		color: '#aaaaff'
 	},
 	floor: {
-		blur: 10,
-		opacity: 0.15,
-		tint: [0.01, 0, 0.1],
-		reflectivity: 0.7,
-		resolution: 0.5,
-		size: 10,
-		edgeGlow: 0.015
+		tint: [0.01, 0.01, 0.1]
 	},
 	triggerHandler,
 	autoCamera: {
