@@ -171,13 +171,13 @@ export function toPcbLayout(defs: RailDef[], opts?: PcbLayoutOptions): RailDef[]
 				const ux = dx / segLen,
 					uz = dz / segLen
 				out.push(
-					{ p: [p0[0] - ux * cornerOffset, 0, p0[2] - uz * cornerOffset] as Vec3 },
+					{ p: [p0[0], 0, p0[2]] as Vec3 },
 					{
-						p: [p0[0] - ux * cornerOffset, bh - cornerOffset, p0[2] - uz * cornerOffset] as Vec3,
+						p: [p0[0], bh - cornerOffset, p0[2]] as Vec3,
 						round: 'from',
 						tangent: cornerTangent
 					},
-					{ p: [p0[0], bh, p0[2]] as Vec3 }
+					{ p: [p0[0] + ux * cornerOffset, bh, p0[2] + uz * cornerOffset] as Vec3 }
 				)
 			} else {
 				out.push(
@@ -269,9 +269,13 @@ export function toPcbLayout(defs: RailDef[], opts?: PcbLayoutOptions): RailDef[]
 				const ux = dx / segLen,
 					uz = dz / segLen
 				out.push(
-					{ p: [pN[0], bh, pN[2]] as Vec3, round: 'from', tangent: cornerTangent },
-					{ p: [pN[0] + ux * cornerOffset, bh - cornerOffset, pN[2] + uz * cornerOffset] as Vec3 },
-					{ p: [pN[0] + ux * cornerOffset, 0, pN[2] + uz * cornerOffset] as Vec3 }
+					{
+						p: [pN[0] - ux * cornerOffset, bh, pN[2] - uz * cornerOffset] as Vec3,
+						round: 'from',
+						tangent: cornerTangent
+					},
+					{ p: [pN[0], bh - cornerOffset, pN[2]] as Vec3 },
+					{ p: [pN[0], 0, pN[2]] as Vec3 }
 				)
 			} else {
 				out.push(
