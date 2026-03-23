@@ -19,6 +19,7 @@
 	} from 'three/tsl'
 	import { gaussianBlur } from 'three/addons/tsl/display/GaussianBlurNode.js'
 	import { onDestroy, untrack } from 'svelte'
+	import { BackSide, DoubleSide } from 'three/webgpu'
 
 	interface Props {
 		size?: number
@@ -97,7 +98,14 @@
 		sideDistorted.b.add(dispB)
 	)
 
-	const sideMat = new MeshBasicNodeMaterial({ transparent: true, side: 2 /* DoubleSide */ })
+	const bottomMat = new MeshBasicNodeMaterial({
+		transparent: true,
+		side: BackSide,
+		color: 0x00_00_00,
+		opacity: 0.15
+	})
+
+	const sideMat = new MeshBasicNodeMaterial({ transparent: true, side: DoubleSide })
 	sideMat.colorNode = vec4(
 		finalSideColor.add(vec3(fresnel.mul(edgeGlow * 1.35))),
 		float(opacity * 0.52).add(fresnel.mul(0.62))
@@ -108,7 +116,7 @@
 	const geo = polar ? new CylinderGeometry(5, 5, height, 64) : new BoxGeometry(size, height, size)
 	const mesh = polar
 		? new Mesh(geo, [sideMat, topMat, sideMat])
-		: new Mesh(geo, [sideMat, sideMat, topMat, sideMat, sideMat, sideMat])
+		: new Mesh(geo, [sideMat, sideMat, topMat, bottomMat, sideMat, sideMat])
 
 	// Reflector target setup (top surface mirror)
 	reflectionNode.target.rotation.x = -Math.PI / 2
@@ -119,8 +127,11 @@
 		reflectionNode.dispose()
 		topMat.dispose()
 		sideMat.dispose()
+		bottomMat.dispose()
 		geo.dispose()
 	})
+
+	const WIDTH = 0.06
 </script>
 
-<T is={mesh} position.y={-height / 2} />
+<T is={mesh} position.y={-height / 2 - WIDTH / 2} />
