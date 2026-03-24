@@ -140,6 +140,7 @@
 	// Adaptive layout
 	const rowCount = $derived(rows.length)
 	const availHeight = $derived($size.height / HUD_ZOOM - 1)
+	const vpHeight = $derived($size.height / HUD_ZOOM)
 	const vpWidth = $derived($size.width / HUD_ZOOM)
 	const sphereR = $derived(Math.max(MIN_SPHERE_R, Math.min(BASE_SPHERE_R, availHeight / rowCount)))
 	const rowSpacing = $derived(sphereR * 3)
@@ -871,6 +872,10 @@
 
 	const anal = $derived(rows?.[0]?.chain?.analyzer)
 	const x = $derived(-$size.width / HUD_ZOOM / 2 + sphereR * 2)
+	const masterAnalyzer = $derived(engine?.masterChain?.analyzer ?? null)
+	const masterAnalyzerType = $derived(
+		resolveAnalyzerType(engine?.masterChain?.config?.analyzer, defaultAnalyser)
+	)
 	const analyserEndX = $derived(
 		anal
 			? x + sphereR * 4 + (sequencerMode === 'time' ? 2 : 5) * sphereR
@@ -1034,6 +1039,20 @@
 		</T.Group>
 	{/if}
 {/each}
+
+{#if showAnalyzers && masterAnalyzer && masterAnalyzerType === 'meter'}
+	<T.Group
+		position={[(sphereR * 8) / 2 - vpWidth / 2 + sphereR / 2, -vpHeight / 2 + sphereR * 1.5, 0]}
+	>
+		<AnalyserView
+			material={textMat.mat}
+			analyzer={masterAnalyzer}
+			type={masterAnalyzerType}
+			width={sphereR * 8}
+			height={vpHeight - sphereR * 4}
+		/>
+	</T.Group>
+{/if}
 
 <T.Group
 	position={[

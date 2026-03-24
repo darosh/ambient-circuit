@@ -44,7 +44,7 @@ export const scene: SceneConfig = {
 			}
 		},
 		master: {
-			// 	analyzer: true,
+			analyzer: 'meter',
 			fx: [
 				{
 					rnbo: 'gigaverb',

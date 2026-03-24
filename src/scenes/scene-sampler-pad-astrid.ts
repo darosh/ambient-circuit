@@ -16,6 +16,11 @@ export const scene: SceneConfig = {
 	audioView: {
 		analyzers: true
 	},
+	audio: {
+		master: {
+			analyzer: 'meter'
+		}
+	},
 	sequencerMode: 'time',
 	rails: [
 		{

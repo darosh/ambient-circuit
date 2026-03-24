@@ -437,7 +437,7 @@ async function buildAnalyzer(
 			return new Tone.Analyser('waveform', 256) as unknown as ToneAudioNode
 		}
 		case 'meter': {
-			return new Tone.Meter({ channelCount: 2, smoothing: 0.8 }) as unknown as ToneAudioNode
+			return new Tone.Meter({ channelCount: 2, smoothing: 0.99 }) as unknown as ToneAudioNode
 		}
 		// No default
 	}
