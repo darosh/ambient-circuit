@@ -29,10 +29,11 @@ export const scene: SceneConfig = {
 	camera: [0, 11, 8],
 	target: [0, 1, 0],
 	audioView: {
-		analyzers: false,
+		all: true,
+		analyzers: true,
 		color: '#555599',
 		marbleLinks: true,
-		module: 0.25
+		module: 0.125
 	},
 	audio: {
 		chains: {
@@ -69,6 +70,7 @@ export const scene: SceneConfig = {
 			}
 		},
 		master: {
+			analyzer: 'meter',
 			fx: [
 				{
 					rnbo: 'platereverb',
