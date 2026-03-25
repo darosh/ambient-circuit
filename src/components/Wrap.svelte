@@ -24,6 +24,7 @@
 		mountedScene,
 		limitFps,
 		showGrid,
+		showParticles,
 		showPoints,
 		showBeats,
 		showNames,
@@ -218,6 +219,7 @@
 		scene={mountedScene}
 		{limitFps}
 		{showGrid}
+		{showParticles}
 		{showPoints}
 		{showBeats}
 		{showNames}

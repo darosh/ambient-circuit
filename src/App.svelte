@@ -31,6 +31,7 @@
 	// extend(THREE)
 
 	let showGrid = $state(true)
+	let showParticles = $state(true)
 	let showPoints = $state(false)
 	let showBeats = $state(false)
 	let showNames = $state(false)
@@ -239,6 +240,7 @@
 		{ code: 'KeyP', action: () => (showPoints = !showPoints) },
 		{ code: 'KeyN', action: () => (showNames = !showNames) },
 		{ code: 'KeyG', action: () => (showGrid = !showGrid) },
+		{ code: 'KeyI', action: () => (showParticles = !showParticles) },
 		{ code: 'KeyM', action: () => (midiEnabled = !midiEnabled) },
 		{ code: 'KeyD', action: () => (debugEnabled = !debugEnabled) },
 		{ code: 'KeyF', action: () => (showStats = !showStats) },
@@ -481,6 +483,17 @@
 			},
 			'Grid'
 		)
+		inspCtrl.Particles = viewFolder.add(
+			{
+				get Particles() {
+					return showParticles
+				},
+				set Particles(v: boolean) {
+					showParticles = v
+				}
+			},
+			'Particles'
+		)
 		inspCtrl.Names = viewFolder.add(
 			{
 				get Names() {
@@ -684,6 +697,9 @@
 		syncBool('Grid', showGrid)
 	})
 	$effect(() => {
+		syncBool('Particles', showParticles)
+	})
+	$effect(() => {
 		syncBool('Points', showPoints)
 	})
 	$effect(() => {
@@ -743,6 +759,7 @@
 		{mountedScene}
 		{limitFps}
 		{showGrid}
+		{showParticles}
 		{showPoints}
 		{showBeats}
 		{showNames}

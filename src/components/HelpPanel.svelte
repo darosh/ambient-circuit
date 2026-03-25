@@ -91,6 +91,7 @@
 		{ text: 'W              WIREFRAME' },
 		{ text: 'R              AUTO-ROTATE' },
 		{ text: 'G              GRID' },
+		{ text: 'I              PARTICLES' },
 		{ text: 'E              EASING' },
 		{ text: 'L              LIMIT FPS' },
 		{ text: 'F              FPS' },

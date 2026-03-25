@@ -63,6 +63,7 @@
 	let {
 		scene,
 		showGrid = false,
+		showParticles = true,
 		showPoints = false,
 		showBeats = false,
 		showNames = false,
@@ -84,6 +85,7 @@
 	}: {
 		scene: SceneConfig
 		showGrid?: boolean
+		showParticles?: boolean
 		showPoints?: boolean
 		showBeats?: boolean
 		showNames?: boolean
@@ -654,7 +656,7 @@
 		{/if}
 	{/each}
 
-	{#if scene.particles}
+	{#if scene.particles && showParticles}
 		<ImpactParticles {sceneCtx} config={scene.particles} />
 	{/if}
 
