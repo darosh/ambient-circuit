@@ -1,6 +1,6 @@
 import { Matrix4, Quaternion, Vector3, Color } from 'three/webgpu'
 
-const MAX_PARTICLES = 256
+const MAX_PARTICLES = 2048
 
 // Module-level scratch objects (zero per-frame allocation)
 const _mat = new Matrix4()
@@ -141,7 +141,13 @@ export function spawnBurst(
 	}
 }
 
-export function updatePool(pool: ParticlePool, delta: number) {
+export function updatePool(
+	pool: ParticlePool,
+	delta: number,
+	gx: number = 0,
+	gy: number = 0,
+	gz: number = 0
+) {
 	const drag = 1 - 3 * delta
 	let i = 0
 	while (i < pool.count) {
@@ -205,6 +211,11 @@ export function updatePool(pool: ParticlePool, delta: number) {
 				pool.vz[i] = rz * ns
 			}
 		}
+
+		// Gravity
+		pool.vx[i] += gx * delta
+		pool.vy[i] += gy * delta
+		pool.vz[i] += gz * delta
 
 		// Drag
 		pool.vx[i] *= drag

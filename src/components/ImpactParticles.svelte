@@ -31,6 +31,8 @@
 	const burstRotation = o?.rotation ?? 0
 	const burstRange = o?.range ?? 1
 	const burstSpread = o?.spread ?? 0.3
+	const gravity = o?.gravity ?? [0, 0, 0]
+	const opacity = o?.opacity ?? 1
 	const MAX = burstCount * 12
 
 	const pool = createPool(MAX)
@@ -42,7 +44,8 @@
 		transparent: true,
 		blending: AdditiveBlending,
 		depthWrite: false,
-		side: DoubleSide
+		side: DoubleSide,
+		opacity
 	})
 
 	const mesh = new InstancedMesh(geo, mat, MAX)
@@ -89,7 +92,7 @@
 		}
 		bursts.length = 0
 
-		updatePool(pool, delta)
+		updatePool(pool, delta, gravity[0], gravity[1], gravity[2])
 
 		const matArr = mesh.instanceMatrix.array as Float32Array
 		const colArr = mesh.instanceColor!.array as Float32Array

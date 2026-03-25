@@ -159,6 +159,8 @@ export type SceneConfig = {
 				rotation?: number
 				range?: number
 				spread?: number
+				gravity?: [number, number, number]
+				opacity?: number
 		  }
 	audioView?:
 		| {

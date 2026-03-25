@@ -15,13 +15,15 @@ export const scene: SceneConfig = {
 	tint: [1, 1, 1.2],
 	particles: {
 		count: 256,
-		speed: 0.5,
-		radius: 2,
+		speed: 0.8,
+		opacity: 0.5,
+		radius: 1.6,
 		duration: 2,
-		rotation: 0.125,
-		range: 6,
+		// rotation: 0.125,
+		range: 3,
 		spin: 1.4,
-		spread: Math.PI / 3
+		spread: Math.PI,
+		gravity: [0, 9, 0]
 	},
 	audioView: {
 		color: '#aaaaff'

@@ -19,6 +19,16 @@ export const scene: SceneConfig = {
 	rotatePlay: 0.125,
 	sequencerMode: 'time',
 	stars: true,
+	// particles: {
+	// 	count: 256,
+	// 	spread: Math.PI / 12,
+	// 	duration: 12,
+	// 	speed: 4,
+	// 	range: .3,
+	// 	radius: .4,
+	// 	opacity: .7,
+	// 	gravity: [0,2,0]
+	// },
 	audioView: {
 		analyzers: false,
 		offset: [0, -0.5, 0],

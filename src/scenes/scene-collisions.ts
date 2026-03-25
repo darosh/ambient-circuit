@@ -11,7 +11,16 @@ export const scene: SceneConfig = {
 	bpm: 160,
 	sequencerBeats: 12,
 	sequencerMode: 'time',
-	particles: { count: 256, speed: 6 },
+	particles: {
+		count: 240,
+		range: 0.5,
+		radius: 1.3,
+		speed: 5,
+		opacity: .2,
+		duration: 3,
+		spread: Math.PI,
+		gravity: [0, -12, 0]
+	},
 	triggerHandler,
 	bounceHandler: (ctx) => {
 		bouncerHandler(ctx)
