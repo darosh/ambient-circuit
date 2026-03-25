@@ -1,0 +1,103 @@
+<script lang="ts">
+	import { T, useTask } from '@threlte/core'
+	import { onDestroy, untrack } from 'svelte'
+	import {
+		InstancedMesh,
+		SphereGeometry,
+		MeshBasicNodeMaterial,
+		AdditiveBlending,
+		DoubleSide,
+		Matrix4,
+		Color
+	} from 'three/webgpu'
+	import { createPool, updatePool, spawnBurst, writeInstances } from '../lib/core/impact-particles'
+	import type { SceneCtx } from '../lib/core/scene-ctx'
+
+	type Props = {
+		sceneCtx: SceneCtx
+		config?: boolean | { count?: number; speed?: number }
+	}
+
+	let { sceneCtx, config }: Props = $props()
+
+	const cfg = untrack(() => config)
+	const burstCount = typeof cfg === 'object' && cfg !== null ? (cfg.count ?? 24) : 24
+	const burstSpeed = typeof cfg === 'object' && cfg !== null ? (cfg.speed ?? 3) : 3
+	const MAX = burstCount * 12
+
+	const pool = createPool(MAX)
+	const geo = new SphereGeometry(1, 3, 3)
+
+	// Material: additive blending, vertexColors for per-instance color
+	// Life baked into color intensity: dead → black → invisible with additive blending
+	const mat = new MeshBasicNodeMaterial({
+		transparent: true,
+		blending: AdditiveBlending,
+		depthWrite: false,
+		side: DoubleSide
+	})
+
+	const mesh = new InstancedMesh(geo, mat, MAX)
+	mesh.frustumCulled = false
+
+	// Enable built-in instanceColor (managed atomically with instanceMatrix by Three.js)
+	const black = new Color(0, 0, 0)
+	for (let i = 0; i < MAX; i++) {
+		mesh.setColorAt(i, black)
+	}
+
+	// Init all matrices to zero-scale
+	const zeroMat = new Matrix4().makeScale(0, 0, 0)
+	for (let i = 0; i < MAX; i++) {
+		mesh.setMatrixAt(i, zeroMat)
+	}
+	mesh.instanceMatrix.needsUpdate = true
+	mesh.instanceColor!.needsUpdate = true
+	mesh.count = MAX
+
+	let highWater = 0
+
+	useTask((delta) => {
+		const bursts = sceneCtx.particleBursts
+		for (const b of bursts) {
+			spawnBurst(pool, b.x, b.y, b.z, b.tx, b.ty, b.tz, b.color, burstCount, burstSpeed)
+		}
+		bursts.length = 0
+
+		updatePool(pool, delta)
+
+		const matArr = mesh.instanceMatrix.array as Float32Array
+		const colArr = mesh.instanceColor!.array as Float32Array
+
+		// Write live particles (matrix + color with life baked in)
+		if (pool.count > 0) {
+			writeInstances(pool, matArr, colArr)
+		}
+
+		// Zero out dead slots (black color + zero-scale matrix)
+		const newHigh = pool.count
+		for (let i = newHigh; i < highWater; i++) {
+			const o = i * 16
+			matArr[o] = 0
+			matArr[o + 5] = 0
+			matArr[o + 10] = 0
+			colArr[i * 3] = 0
+			colArr[i * 3 + 1] = 0
+			colArr[i * 3 + 2] = 0
+		}
+
+		if (newHigh > 0 || highWater > 0) {
+			mesh.instanceMatrix.needsUpdate = true
+			mesh.instanceColor!.needsUpdate = true
+		}
+
+		highWater = newHigh === 0 ? 0 : Math.max(newHigh, highWater)
+	})
+
+	onDestroy(() => {
+		geo.dispose()
+		mat.dispose()
+	})
+</script>
+
+<T is={mesh} />

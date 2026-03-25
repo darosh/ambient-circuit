@@ -91,6 +91,19 @@ export type SceneCtx = {
 	pendingCreations: { railId: string; data: MarbleConfig }[]
 	// Snapshot for rewind (restore initial state)
 	initialSnapshot: { configs: ResolvedMarble[]; railIndices: number[]; originalIds: number[] }
+
+	/** Particle burst queue — trigger handler pushes, ImpactParticles consumes */
+	particleBursts: ParticleBurst[]
+}
+
+export type ParticleBurst = {
+	x: number
+	y: number
+	z: number
+	tx: number
+	ty: number
+	tz: number
+	color: string
 }
 
 /**

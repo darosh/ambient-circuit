@@ -147,6 +147,8 @@ export type SceneConfig = {
 	autoCamera?: AutoCameraConfig
 	/** Multi-view split-screen config */
 	view?: ViewConfig
+	/** Impact particle sparks on instrument/bouncer triggers (default true) */
+	particles?: boolean | { count?: number; speed?: number }
 	audioView?:
 		| {
 				offset?: Vector3Tuple

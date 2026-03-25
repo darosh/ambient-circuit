@@ -9,6 +9,7 @@ export const scene: SceneConfig = {
 	id: 'scene-instruments',
 	description: 'Various instrument types',
 	bpm: 120,
+	particles: { count: 256, speed: 8 },
 	triggerHandler,
 	camera: [3, 16, 7],
 	names: true,

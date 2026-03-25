@@ -20,6 +20,18 @@ export function triggerHandler(ctx: TriggerContext) {
 	ctx.instrument.instrument.midiSignal!.intensity = 1
 	ctx.marble.marble.signal.intensity = 1
 
+	// Queue particle burst
+	const m = ctx.marble.marble
+	ctx.scene.particleBursts.push({
+		x: m.position.x,
+		y: m.position.y,
+		z: m.position.z,
+		tx: m.tangent.x,
+		ty: m.tangent.y,
+		tz: m.tangent.z,
+		color: ctx.instrument.instrument.color ?? ctx.rail.railData.color ?? '#ffffff'
+	})
+
 	const midiState = getMidiState()
 
 	// Execute instrument action if present
@@ -77,6 +89,21 @@ export function bouncerHandler(ctx: BounceContext) {
 	// Signal visual feedback on both marbles
 	ctx.marble1.marble.signal.intensity = 1
 	ctx.marble2.marble.signal.intensity = 1
+
+	// Queue particle burst at collision midpoint
+	const m1 = ctx.marble1.marble
+	const m2 = ctx.marble2.marble
+	const clr =
+		m1.runtime.color ?? m1.resolved.color ?? m2.runtime.color ?? ctx.rail.railData.color ?? '#fff'
+	ctx.scene.particleBursts.push({
+		x: (m1.position.x + m2.position.x) / 2,
+		y: (m1.position.y + m2.position.y) / 2,
+		z: (m1.position.z + m2.position.z) / 2,
+		tx: m1.tangent.x,
+		ty: m1.tangent.y,
+		tz: m1.tangent.z,
+		color: clr
+	})
 
 	// Trigger marble1 audio chain
 	const chain1 = ctx.marble1.audio

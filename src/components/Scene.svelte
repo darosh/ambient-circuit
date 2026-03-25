@@ -37,6 +37,7 @@
 	import MidiSignalView from './MidiSignalView.svelte'
 	import { getMarbleSignalLinks, getMidiSignalLinks } from '../lib/helpers/links'
 	import Stars from './Stars.svelte'
+	import ImpactParticles from './ImpactParticles.svelte'
 	import Floor from './Floor.svelte'
 	import type { SceneCtx } from '../lib/core/scene-ctx'
 	import { toggleMute } from '../lib/audio/engine'
@@ -652,6 +653,10 @@
 			/>
 		{/if}
 	{/each}
+
+	{#if scene.particles}
+		<ImpactParticles {sceneCtx} config={scene.particles} />
+	{/if}
 
 	{#if scene.view}
 		<MultiView config={sceneView} {sceneCtx}

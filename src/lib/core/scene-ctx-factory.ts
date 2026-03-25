@@ -143,6 +143,7 @@ export function createSceneCtx(
 			scale: { name: '', notes: [] }
 		},
 		pendingCreations,
+		particleBursts: [],
 		initialSnapshot,
 		autoCamera: scene.autoCamera ? initSplitStates([scene.autoCamera])[0] : undefined
 	}
