@@ -46,7 +46,7 @@
 		barMeshes = meshes
 
 		const barWidth = (width - barGap * (BAR_COUNT - 1)) / BAR_COUNT
-		const tickGeom = new BoxGeometry(barWidth * 2 + barGap, barGap / 10, barGap / 10)
+		const tickGeom = new BoxGeometry(barWidth * 2 + barGap, barGap / 5, barGap / 5)
 		const ticks: Mesh[] = []
 
 		for (const element of TICK_DB) {

@@ -958,6 +958,9 @@
 			globalThis.document.querySelector('canvas')!.style.cursor = cursor ? 'default' : 'none'
 		}
 	})
+
+	let showMeter = $derived(showAnalyzers && masterAnalyzer && masterAnalyzerType === 'meter')
+	let shiftMeter = $derived(showMeter ? CHAR_WIDTH : 0)
 </script>
 
 <svelte:window {onkeydown} />
@@ -1041,15 +1044,22 @@
 {/each}
 
 {#if showAnalyzers && masterAnalyzer && masterAnalyzerType === 'meter'}
+	{@const A_WIDTH = 7}
+	{@const A_HEIGHT = sphereR * 3 + otherSpacing}
+	{@const BASE = -0.06}
 	<T.Group
-		position={[(sphereR * 8) / 2 - vpWidth / 2 + sphereR / 2, -vpHeight / 2 + sphereR * 1.5, 0]}
+		position={[
+			sphereR * (A_WIDTH / 2) - vpWidth / 2 + sphereR / 2,
+			-vpHeight / 2 + sphereR * (1.5 + BASE),
+			0
+		]}
 	>
 		<AnalyserView
 			material={textMat.mat}
 			analyzer={masterAnalyzer}
 			type={masterAnalyzerType}
-			width={sphereR * 8}
-			height={vpHeight - sphereR * 4}
+			width={sphereR * A_WIDTH}
+			height={A_HEIGHT}
 		/>
 	</T.Group>
 {/if}
@@ -1106,7 +1116,7 @@
 	{@const beatText = chord.toUpperCase()}
 	<T.Group
 		position={[
-			-$size.width / HUD_ZOOM / 2 + sphereR * (posChord + 2),
+			-$size.width / HUD_ZOOM / 2 + sphereR * (posChord + 2 + shiftMeter),
 			-$size.height / HUD_ZOOM / 2 + sphereR * 1.5,
 			0
 		]}
@@ -1121,7 +1131,7 @@
 		scale.toUpperCase() + (scaleNotes?.length ? ` (${scaleNotes?.join(', ')})` : '')}
 	<T.Group
 		position={[
-			-$size.width / HUD_ZOOM / 2 + sphereR * (posScale + 2),
+			-$size.width / HUD_ZOOM / 2 + sphereR * (posScale + 2 + shiftMeter),
 			-$size.height / HUD_ZOOM / 2 + sphereR * 1.5,
 			0
 		]}
@@ -1135,7 +1145,7 @@
 	{@const beatText = `${fps} FPS`.toString()}
 	<T.Group
 		position={[
-			-$size.width / HUD_ZOOM / 2 + sphereR * 2,
+			-$size.width / HUD_ZOOM / 2 + sphereR * (2 + shiftMeter),
 			-$size.height / HUD_ZOOM / 2 + sphereR * 1.5,
 			0
 		]}
