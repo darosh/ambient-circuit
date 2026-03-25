@@ -2,6 +2,11 @@ import { sendMidiNote, getMidiState } from '../midi/midi'
 import { triggerChain, updateGlobalChord } from '../audio'
 import type { BounceContext, GlobalBeatContext, TriggerContext } from './scene'
 import { notes } from '../midi/notes'
+import { Vector3, Matrix4 } from 'three/webgpu'
+
+const _pos1 = new Vector3()
+const _pos2 = new Vector3()
+const _tan1 = new Vector3()
 
 const VELOCITY = 100
 const DURATION = 200
@@ -22,13 +27,20 @@ export function triggerHandler(ctx: TriggerContext) {
 
 	// Queue particle burst
 	const m = ctx.marble.marble
+	const _mat = ctx.rail.runtime.renderMatrix as Matrix4 | undefined
+	_pos1.set(m.position.x, m.position.y, m.position.z)
+	_tan1.set(m.tangent.x, m.tangent.y, m.tangent.z)
+	if (_mat) {
+		_pos1.applyMatrix4(_mat)
+		_tan1.transformDirection(_mat)
+	}
 	ctx.scene.particleBursts.push({
-		x: m.position.x,
-		y: m.position.y,
-		z: m.position.z,
-		tx: m.tangent.x,
-		ty: m.tangent.y,
-		tz: m.tangent.z,
+		x: _pos1.x,
+		y: _pos1.y,
+		z: _pos1.z,
+		tx: _tan1.x,
+		ty: _tan1.y,
+		tz: _tan1.z,
 		color: ctx.instrument.instrument.color ?? ctx.rail.railData.color ?? '#ffffff'
 	})
 
@@ -95,13 +107,24 @@ export function bouncerHandler(ctx: BounceContext) {
 	const m2 = ctx.marble2.marble
 	const clr =
 		m1.runtime.color ?? m1.resolved.color ?? m2.runtime.color ?? ctx.rail.railData.color ?? '#fff'
+	const _bmat = ctx.rail.runtime.renderMatrix as Matrix4 | undefined
+	_pos1.set(
+		(m1.position.x + m2.position.x) / 2,
+		(m1.position.y + m2.position.y) / 2,
+		(m1.position.z + m2.position.z) / 2
+	)
+	_tan1.set(m1.tangent.x, m1.tangent.y, m1.tangent.z)
+	if (_bmat) {
+		_pos1.applyMatrix4(_bmat)
+		_tan1.transformDirection(_bmat)
+	}
 	ctx.scene.particleBursts.push({
-		x: (m1.position.x + m2.position.x) / 2,
-		y: (m1.position.y + m2.position.y) / 2,
-		z: (m1.position.z + m2.position.z) / 2,
-		tx: m1.tangent.x,
-		ty: m1.tangent.y,
-		tz: m1.tangent.z,
+		x: _pos1.x,
+		y: _pos1.y,
+		z: _pos1.z,
+		tx: _tan1.x,
+		ty: _tan1.y,
+		tz: _tan1.z,
 		color: clr
 	})
 

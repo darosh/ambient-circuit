@@ -22,12 +22,12 @@ export const scene: SceneConfig = {
 	// particles: {
 	// 	count: 256,
 	// 	spread: Math.PI / 12,
-	// 	duration: 12,
+	// 	duration: 2,
 	// 	speed: 4,
-	// 	range: .3,
-	// 	radius: .4,
+	// 	range: .2,
+	// 	radius: 2.9,
 	// 	opacity: .7,
-	// 	gravity: [0,2,0]
+	// 	gravity: [0,-14,0]
 	// },
 	audioView: {
 		analyzers: false,

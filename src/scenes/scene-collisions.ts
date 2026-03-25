@@ -16,7 +16,7 @@ export const scene: SceneConfig = {
 		range: 0.5,
 		radius: 1.3,
 		speed: 5,
-		opacity: .2,
+		opacity: 0.2,
 		duration: 3,
 		spread: Math.PI,
 		gravity: [0, -12, 0]
