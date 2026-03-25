@@ -13,7 +13,16 @@ export const scene: SceneConfig = {
 	camera: [0, 24, 0],
 	target: [0, 0, 0],
 	tint: [1, 1, 1.2],
-	particles: { count: 256, speed: 6 },
+	particles: {
+		count: 256,
+		speed: 0.5,
+		radius: 2,
+		duration: 2,
+		rotation: 0.125,
+		range: 6,
+		spin: 1.4,
+		spread: Math.PI / 3
+	},
 	audioView: {
 		color: '#aaaaff'
 	},

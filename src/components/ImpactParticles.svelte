@@ -12,17 +12,25 @@
 	} from 'three/webgpu'
 	import { createPool, updatePool, spawnBurst, writeInstances } from '../lib/core/impact-particles'
 	import type { SceneCtx } from '../lib/core/scene-ctx'
+	import type { SceneConfig } from '../lib/core/scene'
 
 	type Props = {
 		sceneCtx: SceneCtx
-		config?: boolean | { count?: number; speed?: number }
+		config?: SceneConfig['particles']
 	}
 
 	let { sceneCtx, config }: Props = $props()
 
 	const cfg = untrack(() => config)
-	const burstCount = typeof cfg === 'object' && cfg !== null ? (cfg.count ?? 24) : 24
-	const burstSpeed = typeof cfg === 'object' && cfg !== null ? (cfg.speed ?? 3) : 3
+	const o = typeof cfg === 'object' && cfg !== null ? cfg : null
+	const burstCount = o?.count ?? 24
+	const burstSpeed = o?.speed ?? 3
+	const burstDuration = o?.duration ?? 1
+	const burstRadius = o?.radius ?? 1
+	const burstSpin = o?.spin ?? 1
+	const burstRotation = o?.rotation ?? 0
+	const burstRange = o?.range ?? 1
+	const burstSpread = o?.spread ?? 0.3
 	const MAX = burstCount * 12
 
 	const pool = createPool(MAX)
@@ -60,7 +68,24 @@
 	useTask((delta) => {
 		const bursts = sceneCtx.particleBursts
 		for (const b of bursts) {
-			spawnBurst(pool, b.x, b.y, b.z, b.tx, b.ty, b.tz, b.color, burstCount, burstSpeed)
+			spawnBurst(
+				pool,
+				b.x,
+				b.y,
+				b.z,
+				b.tx,
+				b.ty,
+				b.tz,
+				b.color,
+				burstCount,
+				burstSpeed,
+				burstDuration,
+				burstRadius,
+				burstSpin,
+				burstRotation,
+				burstRange,
+				burstSpread
+			)
 		}
 		bursts.length = 0
 

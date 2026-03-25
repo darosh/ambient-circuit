@@ -31,6 +31,11 @@ export type ParticlePool = {
 	scale0: Float32Array // initial scale (for expansion calc)
 	rotation: Float32Array
 	rotSpeed: Float32Array
+	// orbit (spiral trajectory around burst tangent)
+	otx: Float32Array
+	oty: Float32Array
+	otz: Float32Array
+	orbitSpeed: Float32Array
 	// color
 	cr: Float32Array
 	cg: Float32Array
@@ -53,6 +58,10 @@ export function createPool(max: number = MAX_PARTICLES): ParticlePool {
 		scale0: new Float32Array(max),
 		rotation: new Float32Array(max),
 		rotSpeed: new Float32Array(max),
+		otx: new Float32Array(max),
+		oty: new Float32Array(max),
+		otz: new Float32Array(max),
+		orbitSpeed: new Float32Array(max),
 		cr: new Float32Array(max),
 		cg: new Float32Array(max),
 		cb: new Float32Array(max)
@@ -71,7 +80,13 @@ export function spawnBurst(
 	tz: number,
 	colorHex: string,
 	count: number = 24,
-	speed: number = 3
+	speed: number = 3,
+	duration: number = 1,
+	radius: number = 1,
+	spin: number = 1,
+	rotation: number = 0,
+	range: number = 1,
+	spread: number = 0.3
 ) {
 	_color.set(colorHex)
 
@@ -87,29 +102,38 @@ export function spawnBurst(
 		const idx = pool.count++
 
 		const theta = Math.random() * Math.PI * 2
-		const s = speed * (0.3 + Math.random() * 0.7)
-		const cosT = Math.cos(theta)
-		const sinT = Math.sin(theta)
-		const tangentComponent = (Math.random() - 0.5) * 0.6 * s
+		const s = speed * (0.3 + Math.random() * 0.7) * range
+		// Cone sampling: phi = angle from disc plane, spread = half-angle
+		const phi = (Math.random() - 0.5) * 2 * spread
+		const cosPhi = Math.cos(phi)
+		const sinPhi = Math.sin(phi)
+		const cosT = Math.cos(theta) * cosPhi
+		const sinT = Math.sin(theta) * cosPhi
 
 		pool.px[idx] = x + (Math.random() - 0.5) * 0.05
 		pool.py[idx] = y + (Math.random() - 0.5) * 0.05
 		pool.pz[idx] = z + (Math.random() - 0.5) * 0.05
 
-		pool.vx[idx] = _right.x * cosT * s + _up.x * sinT * s + _tangent.x * tangentComponent
-		pool.vy[idx] = _right.y * cosT * s + _up.y * sinT * s + _tangent.y * tangentComponent
-		pool.vz[idx] = _right.z * cosT * s + _up.z * sinT * s + _tangent.z * tangentComponent
+		pool.vx[idx] = (_right.x * cosT + _up.x * sinT + _tangent.x * sinPhi) * s
+		pool.vy[idx] = (_right.y * cosT + _up.y * sinT + _tangent.y * sinPhi) * s
+		pool.vz[idx] = (_right.z * cosT + _up.z * sinT + _tangent.z * sinPhi) * s
 
-		const lifetime = 0.25 + Math.random() * 0.35
+		const lifetime = (0.25 + Math.random() * 0.35) * duration
 		pool.life[idx] = 1
 		pool.maxLife[idx] = lifetime
 
-		const sc = 0.015 + Math.random() * 0.025
+		const sc = (0.015 + Math.random() * 0.025) * radius
 		pool.scale[idx] = sc
 		pool.scale0[idx] = sc
 
 		pool.rotation[idx] = Math.random() * Math.PI * 2
-		pool.rotSpeed[idx] = (Math.random() - 0.5) * 16
+		pool.rotSpeed[idx] = (Math.random() - 0.5) * 16 * spin
+
+		// Orbit axis = burst tangent, speed proportional to rotation param
+		pool.otx[idx] = _tangent.x
+		pool.oty[idx] = _tangent.y
+		pool.otz[idx] = _tangent.z
+		pool.orbitSpeed[idx] = rotation * (4 + Math.random() * 4) * (Math.random() < 0.5 ? -1 : 1)
 
 		pool.cr[idx] = _color.r
 		pool.cg[idx] = _color.g
@@ -138,12 +162,48 @@ export function updatePool(pool: ParticlePool, delta: number) {
 				pool.scale0[i] = pool.scale0[last]
 				pool.rotation[i] = pool.rotation[last]
 				pool.rotSpeed[i] = pool.rotSpeed[last]
+				pool.otx[i] = pool.otx[last]
+				pool.oty[i] = pool.oty[last]
+				pool.otz[i] = pool.otz[last]
+				pool.orbitSpeed[i] = pool.orbitSpeed[last]
 				pool.cr[i] = pool.cr[last]
 				pool.cg[i] = pool.cg[last]
 				pool.cb[i] = pool.cb[last]
 			}
 			pool.count--
 			continue
+		}
+
+		// Orbit: rotate velocity direction around burst tangent axis (preserve magnitude)
+		const os = pool.orbitSpeed[i]
+		if (os !== 0) {
+			const angle = os * delta
+			const ca = Math.cos(angle)
+			const sa = Math.sin(angle)
+			const ax = pool.otx[i],
+				ay = pool.oty[i],
+				az = pool.otz[i]
+			const vx0 = pool.vx[i],
+				vy0 = pool.vy[i],
+				vz0 = pool.vz[i]
+			const mag = Math.hypot(vx0, vy0, vz0)
+			if (mag > 1e-6) {
+				// Rodrigues' rotation: v' = v*cos + (k×v)*sin + k*(k·v)*(1-cos)
+				const dot = ax * vx0 + ay * vy0 + az * vz0
+				const cx = ay * vz0 - az * vy0
+				const cy = az * vx0 - ax * vz0
+				const cz = ax * vy0 - ay * vx0
+				const omc = 1 - ca
+				const rx = vx0 * ca + cx * sa + ax * dot * omc
+				const ry = vy0 * ca + cy * sa + ay * dot * omc
+				const rz = vz0 * ca + cz * sa + az * dot * omc
+				// Re-normalize to original magnitude so rotation doesn't shrink range
+				const rmag = Math.hypot(rx, ry, rz)
+				const ns = mag / rmag
+				pool.vx[i] = rx * ns
+				pool.vy[i] = ry * ns
+				pool.vz[i] = rz * ns
+			}
 		}
 
 		// Drag

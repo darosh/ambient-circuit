@@ -148,7 +148,18 @@ export type SceneConfig = {
 	/** Multi-view split-screen config */
 	view?: ViewConfig
 	/** Impact particle sparks on instrument/bouncer triggers (default true) */
-	particles?: boolean | { count?: number; speed?: number }
+	particles?:
+		| boolean
+		| {
+				count?: number
+				speed?: number
+				duration?: number
+				radius?: number
+				spin?: number
+				rotation?: number
+				range?: number
+				spread?: number
+		  }
 	audioView?:
 		| {
 				offset?: Vector3Tuple
