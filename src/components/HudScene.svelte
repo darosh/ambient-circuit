@@ -1049,7 +1049,7 @@
 	{@const BASE = -0.06}
 	<T.Group
 		position={[
-			sphereR * (A_WIDTH / 2) - vpWidth / 2 + sphereR / 2,
+			sphereR * (A_WIDTH / 2) - vpWidth / 2 + sphereR * 1.15,
 			-vpHeight / 2 + sphereR * (1.5 + BASE),
 			0
 		]}
