@@ -643,6 +643,8 @@
 				})
 				document.querySelector('#profiler-toggle')?.append(el)
 			}
+
+			updateMidiPortControl()
 		} else if (inspectorRef) {
 			inspectorRef.domElement.style.display = 'none'
 		}
