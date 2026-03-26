@@ -1,5 +1,6 @@
 import type { MarbleDirection } from './marble'
 import type { AudioChainConfig } from '../audio/types'
+import type { CtrlConfig } from './ctrl'
 import { TriggerHandler } from './scene'
 
 export type InstrumentSignal = { intensity: number }
@@ -63,6 +64,8 @@ type InstrumentConfigBase = {
 	actionHandler?: TriggerHandler
 	/** Audio chain config (triggers sound automatically like MIDI) */
 	audio?: AudioChainConfig
+	/** CC/CV automation controllers */
+	ctrl?: CtrlConfig[]
 	/** Runtime state for visual overrides */
 	runtime?: InstrumentRuntime
 }

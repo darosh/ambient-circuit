@@ -8,6 +8,8 @@ import { InstrumentState } from './instrument-state'
 import { RailState } from './rail-state'
 import { resolveRail } from './rail-resolve'
 import { SceneConfig } from './scene'
+import { createCtrlBus } from './ctrl-bus'
+import { createCtrlInstance } from './ctrl'
 import { initSplitStates } from '../components/multi-view/multi-view'
 
 /**
@@ -105,6 +107,19 @@ export function createSceneCtx(
 		}
 	})
 
+	// Create ctrl bus
+	const ctrlBus = createCtrlBus()
+
+	// Initialize ctrl instances on instruments
+	for (const ie of instrumentEntities) {
+		const ctrl = ie.instrument.ctrl
+		if (ctrl && ctrl.length > 0) {
+			const instances = ctrl.map(createCtrlInstance)
+			ie.ctrlInstances = instances
+			ie.state._ctrlInstances = instances
+		}
+	}
+
 	// O(1) lookup maps
 	const railById = new Map<string, RailEntity>()
 	for (const re of railEntities) railById.set(re.id, re)
@@ -142,6 +157,7 @@ export function createSceneCtx(
 			history: [],
 			scale: { name: '', notes: [] }
 		},
+		ctrlBus,
 		pendingCreations,
 		particleBursts: [],
 		initialSnapshot,

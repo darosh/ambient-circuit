@@ -1,10 +1,14 @@
 import type { InstrumentConfig } from './instrument'
+import type { CtrlInstance } from './ctrl'
 
 /**
  * Safe API for modifying instrument state from trigger handlers.
  * Handles runtime overrides automatically.
  */
 export class InstrumentState {
+	/** Set externally by scene-ctx-factory */
+	_ctrlInstances?: CtrlInstance[]
+
 	constructor(
 		private instrument: InstrumentConfig,
 		private visibility?: { value: boolean },
@@ -168,5 +172,15 @@ export class InstrumentState {
 	set active(v: boolean) {
 		if (this.activity) this.activity.value = v
 		this.instrument.runtime!.active = v
+	}
+
+	/** Access ctrl instances array */
+	get ctrl(): CtrlInstance[] | undefined {
+		return this._ctrlInstances
+	}
+
+	/** Lookup ctrl instance by CC number */
+	cc(ccNum: number): CtrlInstance | undefined {
+		return this._ctrlInstances?.find((ci) => ci.config.cc === ccNum)
 	}
 }

@@ -26,16 +26,43 @@ export type AudioChainConfig = {
 	analyzer?: AnalyzerType
 	/** Route to named bus instead of master */
 	bus?: string
+	/** CC→param routing: maps incoming CC signals to audio params */
+	ctrl?: {
+		cc: number
+		channel: number
+		param: string
+		range: [number, number]
+		/** Target node: undefined = generator, number = fx[n] */
+		fxIndex?: number
+	}[]
 }
 
 export type BusConfig = {
 	fx?: FxConfig[]
 	analyzer?: AnalyzerType
+	/** CC→param routing: maps incoming CC signals to bus fx params */
+	ctrl?: {
+		cc: number
+		channel: number
+		param: string
+		range: [number, number]
+		/** Target fx node index (required — buses have no generator) */
+		fxIndex?: number
+	}[]
 }
 
 export type MasterConfig = {
 	fx?: FxConfig[]
 	analyzer?: AnalyzerType
+	/** CC→param routing: maps incoming CC signals to master fx params */
+	ctrl?: {
+		cc: number
+		channel: number
+		param: string
+		range: [number, number]
+		/** Target fx node index (required — master has no generator) */
+		fxIndex?: number
+	}[]
 }
 
 export type ChordInfo = {
@@ -64,6 +91,8 @@ export type AudioChain = {
 	voices: VoiceTracker
 	/** Set param on generator by dot-path */
 	setParam(path: string, value: ParamValue): void
+	/** Ramp param on generator to target value over duration (seconds) */
+	rampParam(path: string, value: number, duration: number, curve?: 'linear' | 'exponential'): void
 	/** Set param on fx node by index + dot-path */
 	setFxParam(index: number, path: string, value: ParamValue): void
 	/** Get param from generator by dot-path */

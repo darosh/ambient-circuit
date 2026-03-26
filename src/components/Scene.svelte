@@ -25,6 +25,7 @@
 	import { createMarbleInstance, type MarbleInstance } from '../lib/core/marble'
 	import type { InstrumentConfig } from '../lib/core/instrument'
 	import { createAudioEngine, disposeScene } from '../lib/audio'
+	import { startCtrlTimer } from '../lib/core/ctrl'
 	import type { AudioEngine, AudioChain } from '../lib/audio'
 	import { hasAudioConfig, buildSceneAudio } from '../lib/audio/scene-audio'
 	import {
@@ -112,6 +113,8 @@
 
 	// Init tempo state
 	if (!tempo) tempo = createTempoState()
+
+	let ctrlTimer: import('../lib/core/ctrl').CtrlTimer | undefined
 
 	// Capture scene at mount — prop may become null before onDestroy fires
 	const sceneRef = untrack(() => scene)
@@ -310,11 +313,22 @@
 		if (scene.globalBeatHandler) {
 			fireGlobalBeatInit(tempo, sceneCtx, scene.globalBeatHandler)
 		}
+
+		// Start ctrl timer if any instruments have ctrl config
+		if (sceneCtx.instruments.some((ie) => ie.ctrlInstances)) {
+			ctrlTimer = startCtrlTimer(
+				sceneCtx,
+				() => tempo.config.bpm,
+				() => tempo.isPlaying
+			)
+		}
 	})
 
 	// Fire destroy handler on unmount
 	onDestroy(() => {
 		log('destroyed', sceneRef?.id)
+
+		if (ctrlTimer) ctrlTimer.stop()
 
 		// audioEngineRef = null
 		// Release $state proxy refs from module-level scene config
@@ -507,6 +521,9 @@
 				onSceneCtx(sceneCtx)
 			}
 		}
+
+		// Pet ctrl watchdog (pauses timer when tab hidden)
+		if (ctrlTimer) ctrlTimer.pet()
 
 		// Update easing based on prop (respect runtime overrides)
 		for (const marble of marbles) {

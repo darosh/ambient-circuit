@@ -86,3 +86,21 @@ export function sendMidiNote(
 	output.send(noteOn)
 	setTimeout(() => output.send(noteOff), lengthMs)
 }
+
+export function sendMidiCC(
+	state: MidiState,
+	channel: number,
+	cc: number,
+	value: number // 0-1 normalized, scaled to 0-127
+) {
+	if (!state.access || !state.selectedPortId) return
+
+	const output = (<Map<string, MIDIOutput>>(<unknown>state.access.outputs)).get(
+		state.selectedPortId
+	)
+	if (!output) return
+
+	const ch = Math.max(0, Math.min(15, channel - 1))
+	const val = Math.max(0, Math.min(127, Math.round(value * 127)))
+	output.send([0xb0 | ch, cc & 0x7f, val])
+}

@@ -35,6 +35,7 @@ import { scene as sceneSamplerPadAwaits } from './scene-sampler-pad-awaits'
 import { scene as sceneSamplerPadAstrid } from './scene-sampler-pad-astrid'
 import { scene as sceneFormlines } from './scene-formlines'
 import { scene as sceneBranching } from './scene-branching'
+import { scene as sceneCtrl } from './scene-ctrl'
 // import { scene as scene1 } from './scene-1'
 import { scene as scene2 } from './scene-2'
 import { scene as scenePcb } from './scene-pcb'
@@ -73,6 +74,7 @@ export const scenes: SceneConfig[] = [
 	// scene1,
 	scene2,
 	scenePcb,
+	sceneCtrl,
 	sceneCreateDestroy,
 	sceneAudio,
 	sceneCollisions,

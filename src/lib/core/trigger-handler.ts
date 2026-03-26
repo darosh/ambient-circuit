@@ -1,4 +1,5 @@
-import { sendMidiNote, getMidiState } from '../midi/midi'
+import { sendMidiNote, sendMidiCC, getMidiState } from '../midi/midi'
+import { triggerCtrl } from './ctrl'
 import { triggerChain, updateGlobalChord } from '../audio'
 import type { BounceContext, GlobalBeatContext, TriggerContext } from './scene'
 import { notes } from '../midi/notes'
@@ -79,6 +80,21 @@ export function triggerHandler(ctx: TriggerContext) {
 			for (const n of note) sendMidiNote(midiState, channel, n, velocity, duration)
 		} else {
 			sendMidiNote(midiState, channel, note, velocity, duration)
+		}
+	}
+
+	// Fire ctrl entries (CC automation)
+	const ctrlInstances = ctx.instrument.ctrlInstances
+	if (ctrlInstances) {
+		for (const ci of ctrlInstances) {
+			const value = triggerCtrl(ci)
+			if (value < 0) continue // LFO: skip, per-frame tick handles it
+			// MIDI CC output
+			if (midiState?.enabled) {
+				sendMidiCC(midiState, ci.config.channel, ci.config.cc, value)
+			}
+			// Dispatch to audio param bus
+			ctx.scene.ctrlBus.emit(ci.config.channel, ci.config.cc, value)
 		}
 	}
 
@@ -255,9 +271,6 @@ export function globalHandlerFactory(onTick?: BeatHandler) {
 				break
 			}
 			case 'tick': {
-				// Log every tick
-				// console.log('[GLOBAL] beat:', ctx.beat.toFixed(3))
-
 				if (onTick) {
 					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 					// @ts-expect-error

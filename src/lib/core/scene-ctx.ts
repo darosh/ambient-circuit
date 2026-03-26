@@ -7,6 +7,8 @@ import type { MarbleState } from './marble-state'
 import type { InstrumentState } from './instrument-state'
 import type { RailState } from './rail-state'
 import type { AudioChain, ChordInfo } from '../audio'
+import type { CtrlInstance } from './ctrl'
+import type { CtrlBus } from './ctrl-bus'
 import { SceneConfig } from './scene'
 
 /**
@@ -32,6 +34,8 @@ export type InstrumentEntity = {
 	visibility: { value: boolean }
 	activity: { value: boolean }
 	audio?: AudioChain // live audio chain instance
+	/** Live ctrl instances (from instrument.ctrl config) */
+	ctrlInstances?: CtrlInstance[]
 }
 
 /**
@@ -91,6 +95,9 @@ export type SceneCtx = {
 	pendingCreations: { railId: string; data: MarbleConfig }[]
 	// Snapshot for rewind (restore initial state)
 	initialSnapshot: { configs: ResolvedMarble[]; railIndices: number[]; originalIds: number[] }
+
+	/** CC/CV dispatcher (connects instrument ctrl → audio chain params) */
+	ctrlBus: CtrlBus
 
 	/** Particle burst queue — trigger handler pushes, ImpactParticles consumes */
 	particleBursts: ParticleBurst[]

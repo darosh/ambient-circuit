@@ -368,6 +368,9 @@ export async function buildChain(
 		setParam(path, value) {
 			if (chain.generator) setNodeParam(chain.generator, path, value)
 		},
+		rampParam(path, value, duration, curve) {
+			if (chain.generator) rampNodeParam(chain.generator, path, value, duration, curve)
+		},
 		setFxParam(index, path, value) {
 			if (chain.fx[index]) setNodeParam(chain.fx[index], path, value)
 		},
@@ -747,6 +750,57 @@ export function setNodeParam(node: ToneAudioNode | Device, path: string, value: 
 			} else {
 				cur[parts.at(-1)!].value = value
 			}
+		}
+	}
+}
+
+/**
+ * Ramp param to target value over duration (seconds).
+ * Uses AudioParam.linearRampToValueAtTime / exponentialRamp for Tone.js,
+ * falls back to immediate set for RNBO.
+ */
+export function rampNodeParam(
+	node: ToneAudioNode | Device,
+	path: string,
+	value: number,
+	duration: number,
+	curve?: 'linear' | 'exponential'
+): void {
+	if (isDevice(node)) {
+		// RNBO: no native ramp, just set immediately
+		const p = findRnboParam(node, path)
+		if (p) p.value = value
+		return
+	}
+
+	// Tone.js: walk dot-path to find AudioParam
+	const parts = path.split('.')
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	let cur: any = isPolySynth(node) ? (node as any).options : node
+	for (let i = 0; i < parts.length - 1; i++) {
+		if (cur == undefined) return
+		cur = cur[parts[i]]
+	}
+	if (cur == undefined) return
+
+	const leaf = cur[parts.at(-1)!]
+	if (leaf?.rampTo) {
+		// Tone.js Signal/Param — has rampTo method
+		leaf.rampTo(value, duration)
+	} else if (leaf instanceof AudioParam) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const now = (leaf as any).context?.currentTime ?? 0
+		if (curve === 'exponential' && value > 0) {
+			leaf.exponentialRampToValueAtTime(value, now + duration)
+		} else {
+			leaf.linearRampToValueAtTime(value, now + duration)
+		}
+	} else {
+		// Fallback: immediate set
+		if (leaf?.value === undefined) {
+			cur[parts.at(-1)!] = value
+		} else {
+			leaf.value = value
 		}
 	}
 }
