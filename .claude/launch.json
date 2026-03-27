@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "/Users/jan/.nvm/versions/node/v22.22.1/bin/node",
+      "runtimeArgs": ["/Users/jan/Documents/GitHub/ambient-circuit/node_modules/.bin/vite", "dev", "--host", "0.0.0.0"],
+      "port": 5173
+    },
+    {
+      "name": "preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "preview"],
+      "port": 4173
+    }
+  ]
+}
