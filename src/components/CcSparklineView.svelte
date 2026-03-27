@@ -80,7 +80,7 @@
 			curRowX += colW
 
 			// Label
-			const labelGeom = getCachedTextGeometry(col.label, height)
+			const labelGeom = getCachedTextGeometry(col.label.toUpperCase(), height)
 			if (labelGeom) {
 				labelGeom.userData.refCount = (labelGeom.userData.refCount ?? 0) + 1
 				const labelMesh = new Mesh(labelGeom, material)

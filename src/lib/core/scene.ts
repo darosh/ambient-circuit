@@ -175,4 +175,6 @@ export type SceneConfig = {
 				marbleLinks?: boolean
 		  }
 		| false
+	/** Friendly name aliases for CC sparkline labels, keyed by `${channel}:${cc}` */
+	aliasCc?: Record<string, string>
 }

@@ -747,7 +747,7 @@
 				_prevCtrlKeys = keys
 				const bus = sceneCtx.ctrlBus
 				ccCols = keys.map((key) => ({
-					label: key,
+					label: sceneCtx?.config?.aliasCc?.[key] ?? key,
 					getValue: () => bus.lastValues.get(key) ?? 0
 				}))
 			}

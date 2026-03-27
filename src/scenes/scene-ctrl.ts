@@ -1,6 +1,8 @@
 import type { SceneConfig } from '../lib/core/scene'
 import { globalHandlerFactory, triggerHandler } from '../lib/core/trigger-handler'
+import { colorFactory } from './utils/colors'
 
+const c = colorFactory()
 const duration = 500
 
 export const scene: SceneConfig = {
@@ -44,11 +46,22 @@ export const scene: SceneConfig = {
 			}
 		}
 	},
+	aliasCc: {
+		'1:16': 'set',
+		'2:15': 'env',
+		'2:16': 'envr',
+		'3:15': 'seq',
+		'3:16': 'seqr',
+		'4:13': 'sin',
+		'4:14': 'tri',
+		'4:15': 'saw',
+		'4:16': 'rnd'
+	},
 	rails: [
 		{
-			id: 'ctrl-set',
+			id: 'set',
 			nodes: [[-4, 0, -3], 'r r r r r r r r'],
-			color: '#00ffcc',
+			color: c(),
 			marbles: [{ speed: 1 }],
 			instruments: [
 				{
@@ -57,7 +70,7 @@ export const scene: SceneConfig = {
 					beat: 0,
 					note: 60,
 					channel: 2,
-					ctrl: [{ cc: 16, channel: 1, type: 'set', value: 0.3 }]
+					ctrl: [{ cc: 16, channel: 1, type: 'set', value: 0.1 }]
 				},
 				{
 					type: 'arrow',
@@ -65,7 +78,7 @@ export const scene: SceneConfig = {
 					beat: 2,
 					note: 64,
 					channel: 2,
-					ctrl: [{ cc: 16, channel: 1, type: 'set', value: 0.6 }]
+					ctrl: [{ cc: 16, channel: 1, type: 'set', value: 0.3 }]
 				},
 				{
 					type: 'arrow',
@@ -73,7 +86,7 @@ export const scene: SceneConfig = {
 					beat: 4,
 					note: 67,
 					channel: 2,
-					ctrl: [{ cc: 16, channel: 1, type: 'set', value: 0.9 }]
+					ctrl: [{ cc: 16, channel: 1, type: 'set', value: 0.6 }]
 				},
 				{
 					type: 'arrow',
@@ -81,25 +94,27 @@ export const scene: SceneConfig = {
 					beat: 6,
 					note: 72,
 					channel: 2,
-					ctrl: [{ cc: 16, channel: 1, type: 'set', value: 0.1 }]
+					ctrl: [{ cc: 16, channel: 1, type: 'set', value: 0.9 }]
 				}
 			]
 		},
 		{
-			id: 'ctrl-envelope',
+			id: 'env',
 			nodes: [[-4, 0, -1], 'r r r r r r r r'],
-			color: '#ff6644',
-			marbles: [{ speed: 1 }],
+			color: c(),
+			marbles: [{ speed: 2 }],
 			instruments: [
 				{
-					type: 'sun',
+					type: 'arrow',
+					kind: 'stop',
 					beat: 0,
 					note: 48,
 					channel: 2,
-					ctrl: [{ cc: 16, channel: 2, type: 'envelope', attack: 0.2, decay: 0.8 }]
+					ctrl: [{ cc: 15, channel: 2, type: 'envelope', attack: 0.2, decay: 0.8 }]
 				},
 				{
-					type: 'sun',
+					type: 'arrow',
+					kind: 'stop',
 					beat: 4,
 					note: 55,
 					channel: 2,
@@ -118,14 +133,14 @@ export const scene: SceneConfig = {
 			]
 		},
 		{
-			id: 'ctrl-lfo',
+			id: 'seq',
 			nodes: [[-4, 0, 1], 'r r r r r r r r'],
-			color: '#aa66ff',
-			marbles: [{ speed: 0.5 }],
+			color: c(),
+			marbles: [{ speed: 2 }],
 			instruments: [
 				{
-					// triangle shape, auto-start, impact: on-off toggle
-					type: 'spiral',
+					type: 'arrow',
+					kind: 'step',
 					beat: 0,
 					note: 60,
 					channel: 3,
@@ -133,17 +148,14 @@ export const scene: SceneConfig = {
 						{
 							cc: 15,
 							channel: 3,
-							type: 'lfo',
-							shape: 'triangle',
-							rate: '1/2',
-							active: true,
-							impact: 'on-off'
+							type: 'sequence',
+							values: [1, 0]
 						}
 					]
 				},
 				{
-					// sine with jitter + smooth, impact: on
-					type: 'spiral',
+					type: 'arrow',
+					kind: 'step',
 					beat: 4,
 					note: 67,
 					channel: 3,
@@ -151,64 +163,70 @@ export const scene: SceneConfig = {
 						{
 							cc: 16,
 							channel: 3,
-							type: 'lfo',
-							shape: 'sine',
-							rate: 6,
-							freerun: false,
-							jitter: 0.1,
-							smooth: 0.3,
-							impact: 'on'
+							type: 'sequence',
+							ramp: 1000,
+							values: [1, 0]
 						}
 					]
 				}
 			]
 		},
 		{
-			id: 'ctrl-sequence',
+			id: 'lfo',
 			nodes: [[-4, 0, 3], 'r r r r r r r r'],
-			color: '#ffcc00',
+			color: c(),
 			marbles: [{ speed: 1 }],
 			instruments: [
 				{
-					type: 'poly',
-					sides: 4,
+					type: 'arrow',
+					kind: 'rec',
 					beat: 0,
 					note: 60,
 					duration,
 					channel: 4,
 					audio: { id: 'synth' },
 					// sequence with ramp
-					ctrl: [{ cc: 13, channel: 4, type: 'sequence', values: [0.1, 0.4, 0.7, 1], ramp: 300 }]
+					ctrl: [{ cc: 13, channel: 4, type: 'lfo', shape: 'sine', rate: 1 }]
 				},
 				{
-					type: 'poly',
-					sides: 4,
+					type: 'arrow',
+					kind: 'rec',
 					beat: 2,
 					note: 64,
 					duration,
 					channel: 4,
 					audio: { id: 'synth' },
-					ctrl: [{ cc: 14, channel: 4, type: 'sequence', values: [1, 0.7, 0.4, 0.1] }]
+					ctrl: [{ cc: 14, channel: 4, type: 'lfo', shape: 'triangle', rate: 2 }]
 				},
 				{
-					type: 'poly',
-					sides: 4,
+					type: 'arrow',
+					kind: 'rec',
 					beat: 4,
 					note: 67,
 					duration,
 					channel: 4,
 					audio: { id: 'synth' },
-					ctrl: [{ cc: 15, channel: 4, type: 'lfo', rate: 3, shape: 'saw' }]
+					ctrl: [{ cc: 15, channel: 4, type: 'lfo', shape: 'saw', rate: 3, active: true }]
 				},
 				{
-					type: 'poly',
-					sides: 4,
+					type: 'arrow',
+					kind: 'rec',
 					beat: 6,
 					note: 72,
 					duration,
 					channel: 4,
 					audio: { id: 'synth' },
-					ctrl: [{ cc: 16, channel: 4, type: 'lfo', rate: 10, shape: 'random' }]
+					ctrl: [
+						{
+							cc: 16,
+							channel: 4,
+							type: 'lfo',
+							shape: 'random',
+							rate: 10,
+							smooth: 0.5,
+							impact: 'on-off'
+						}
+					]
 				}
 			]
 		}
