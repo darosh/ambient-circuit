@@ -14,6 +14,8 @@ export type CtrlEnvelope = {
 	attack: number
 	/** Decay time in seconds */
 	decay: number
+	/** Pre-attack ramp from current value to 0 in ms (default 0) */
+	ramp?: number
 	/** Curve type (default 'linear') */
 	curve?: 'linear' | 'exponential'
 }
@@ -21,17 +23,29 @@ export type CtrlEnvelope = {
 export type CtrlLfo = {
 	type: 'lfo'
 	/** Waveform shape */
-	shape: 'sine' | 'saw' | 'square' | 'random'
+	shape: 'sine' | 'saw' | 'square' | 'triangle' | 'random'
 	/** Rate: number = Hz, string = beat division e.g. '1/4' */
 	rate: number | string
 	/** If true, phase continues across triggers (default false = reset on trigger) */
 	freerun?: boolean
+	/** Random deviation per sample, 0-1 (default 0) */
+	jitter?: number
+	/** First-order lag smoothing, 0=none 1=frozen (default 0) */
+	smooth?: number
+	/** How impact (marble trigger) controls LFO active state (default 'none') */
+	impact?: 'on' | 'off' | 'on-off' | 'none'
+	/** Start LFO immediately when playback begins (default false) */
+	active?: boolean
 }
 
 export type CtrlSequence = {
 	type: 'sequence'
 	/** Normalized values (0-1), cycles through per trigger */
 	values: number[]
+	/** Ramp time from current to next value in ms (default 0) */
+	ramp?: number
+	/** Curve for ramp (default 'linear') */
+	curve?: 'linear' | 'exponential'
 }
 
 export type CtrlSource = CtrlSet | CtrlEnvelope | CtrlLfo | CtrlSequence
@@ -49,12 +63,22 @@ export type CtrlInstance = {
 	config: CtrlConfig
 	/** Current normalized value (0-1) */
 	value: number
-	/** Envelope/LFO phase (seconds elapsed) */
+	/** Envelope/LFO phase (seconds elapsed); negative = pre-attack ramp phase */
 	phase: number
 	/** Sequence cursor */
 	seqIndex: number
 	/** Whether actively outputting (envelope finished = false) */
 	active: boolean
+	/** Start value for envelope ramp or sequence ramp */
+	rampFrom: number
+	/** Target value for sequence ramp */
+	rampTarget: number
+	/** Elapsed time in sequence ramp (seconds) */
+	rampElapsed: number
+	/** Last smoothed LFO value (for smooth filter state) */
+	smoothValue: number
+	/** Toggle state for 'on-off' impact mode */
+	impactToggle: boolean
 }
 
 export function createCtrlInstance(config: CtrlConfig): CtrlInstance {
@@ -63,7 +87,12 @@ export function createCtrlInstance(config: CtrlConfig): CtrlInstance {
 		value: config.type === 'set' ? config.value : 0,
 		phase: 0,
 		seqIndex: 0,
-		active: false
+		active: config.type === 'lfo' ? (config.active ?? false) : false,
+		rampFrom: 0,
+		rampTarget: 0,
+		rampElapsed: 0,
+		smoothValue: 0,
+		impactToggle: false
 	}
 }
 
@@ -80,23 +109,48 @@ export function triggerCtrl(inst: CtrlInstance): number {
 		}
 
 		case 'envelope': {
-			inst.phase = 0
+			const rampSec = (c.ramp ?? 0) / 1000
+			inst.rampFrom = inst.value
+			inst.phase = -rampSec
 			inst.active = true
-			inst.value = 0 // starts at 0, ramps up during attack
 			return inst.value
 		}
 
 		case 'lfo': {
-			if (!c.freerun) inst.phase = 0
-			inst.active = true
+			switch (c.impact ?? 'none') {
+				case 'none':
+				case 'on': {
+					if (!c.freerun) inst.phase = 0
+					inst.active = true
+					break
+				}
+				case 'off': {
+					inst.active = false
+					break
+				}
+				case 'on-off': {
+					inst.impactToggle = !inst.impactToggle
+					inst.active = inst.impactToggle
+					if (inst.active && !c.freerun) inst.phase = 0
+					break
+				}
+			}
 			return -1 // skip emit on trigger; per-frame tick handles LFO output
 		}
 
 		case 'sequence': {
-			if (c.values.length > 0) {
-				inst.value = c.values[inst.seqIndex % c.values.length]
-				inst.seqIndex = (inst.seqIndex + 1) % c.values.length
+			if (c.values.length === 0) return inst.value
+			const next = c.values[inst.seqIndex % c.values.length]
+			inst.seqIndex = (inst.seqIndex + 1) % c.values.length
+			const rampSec = (c.ramp ?? 0) / 1000
+			if (rampSec > 0) {
+				inst.rampFrom = inst.value
+				inst.rampTarget = next
+				inst.rampElapsed = 0
+				inst.active = true
+				return -1 // ramp tick handles output
 			}
+			inst.value = next
 			inst.active = false
 			return inst.value
 		}
@@ -118,6 +172,20 @@ export function tickCtrl(inst: CtrlInstance, dt: number, bpm: number): number {
 
 	switch (c.type) {
 		case 'envelope': {
+			const rampSec = (c.ramp ?? 0) / 1000
+
+			// Pre-attack ramp: phase is negative while ramping from rampFrom → 0
+			if (inst.phase < 0) {
+				if (rampSec <= 0) {
+					inst.value = 0
+				} else {
+					const t = (rampSec + inst.phase) / rampSec // 0→1 over ramp
+					const tc = c.curve === 'exponential' ? t * t : t
+					inst.value = inst.rampFrom * (1 - tc)
+				}
+				return inst.value
+			}
+
 			const { attack, decay } = c
 			const total = attack + decay
 			if (inst.phase >= total) {
@@ -151,17 +219,23 @@ export function tickCtrl(inst: CtrlInstance, dt: number, bpm: number): number {
 			}
 
 			const phase = inst.phase * hz
+			let v: number
 			switch (c.shape) {
 				case 'sine': {
-					inst.value = (Math.sin(phase * Math.PI * 2) + 1) / 2
+					v = (Math.sin(phase * Math.PI * 2) + 1) / 2
 					break
 				}
 				case 'saw': {
-					inst.value = phase % 1
+					v = phase % 1
 					break
 				}
 				case 'square': {
-					inst.value = phase % 1 < 0.5 ? 1 : 0
+					v = phase % 1 < 0.5 ? 1 : 0
+					break
+				}
+				case 'triangle': {
+					const p = phase % 1
+					v = p < 0.5 ? p * 2 : 2 - p * 2
 					break
 				}
 				case 'random': {
@@ -169,9 +243,46 @@ export function tickCtrl(inst: CtrlInstance, dt: number, bpm: number): number {
 					if (Math.floor(phase) !== Math.floor(phase - dt * hz)) {
 						inst.value = Math.random()
 					}
+					v = inst.value
 					break
 				}
 			}
+
+			// Jitter
+			const jitter = c.jitter ?? 0
+			if (jitter > 0) {
+				v += (Math.random() - 0.5) * 2 * jitter
+				if (v < 0) v = 0
+				if (v > 1) v = 1
+			}
+
+			// Smooth (first-order lag)
+			const smooth = c.smooth ?? 0
+			if (smooth > 0) {
+				inst.smoothValue += (v - inst.smoothValue) * (1 - smooth)
+				v = inst.smoothValue
+			}
+
+			inst.value = v
+			return inst.value
+		}
+
+		case 'sequence': {
+			// Sequence ramp tick
+			const rampSec = (c.ramp ?? 0) / 1000
+			if (rampSec <= 0) {
+				inst.active = false
+				return -1
+			}
+			inst.rampElapsed += dt
+			const t = inst.rampElapsed / rampSec
+			if (t >= 1) {
+				inst.value = inst.rampTarget
+				inst.active = false
+				return inst.value
+			}
+			const tc = c.curve === 'exponential' ? t * t : t
+			inst.value = inst.rampFrom + (inst.rampTarget - inst.rampFrom) * tc
 			return inst.value
 		}
 
