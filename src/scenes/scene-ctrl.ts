@@ -110,6 +110,7 @@ export const scene: SceneConfig = {
 							type: 'envelope',
 							attack: 0.05,
 							decay: 1.5,
+							ramp: 200,
 							curve: 'exponential'
 						}
 					]
@@ -123,18 +124,42 @@ export const scene: SceneConfig = {
 			marbles: [{ speed: 0.5 }],
 			instruments: [
 				{
+					// triangle shape, auto-start, impact: on-off toggle
 					type: 'spiral',
 					beat: 0,
 					note: 60,
 					channel: 3,
-					ctrl: [{ cc: 15, channel: 3, type: 'lfo', shape: 'square', rate: '1/2' }]
+					ctrl: [
+						{
+							cc: 15,
+							channel: 3,
+							type: 'lfo',
+							shape: 'triangle',
+							rate: '1/2',
+							active: true,
+							impact: 'on-off'
+						}
+					]
 				},
 				{
+					// sine with jitter + smooth, impact: on
 					type: 'spiral',
 					beat: 4,
 					note: 67,
 					channel: 3,
-					ctrl: [{ cc: 16, channel: 3, type: 'lfo', shape: 'sine', rate: 6, freerun: false }]
+					ctrl: [
+						{
+							cc: 16,
+							channel: 3,
+							type: 'lfo',
+							shape: 'sine',
+							rate: 6,
+							freerun: false,
+							jitter: 0.1,
+							smooth: 0.3,
+							impact: 'on'
+						}
+					]
 				}
 			]
 		},
@@ -152,7 +177,8 @@ export const scene: SceneConfig = {
 					duration,
 					channel: 4,
 					audio: { id: 'synth' },
-					ctrl: [{ cc: 13, channel: 4, type: 'sequence', values: [0.1, 0.4, 0.7, 1] }]
+					// sequence with ramp
+					ctrl: [{ cc: 13, channel: 4, type: 'sequence', values: [0.1, 0.4, 0.7, 1], ramp: 300 }]
 				},
 				{
 					type: 'poly',
