@@ -13,6 +13,7 @@
 	import { createInstrumentGeometry, type ArrowKind } from '../lib/video/geometry-instrument'
 	import AnalyserView from './AnalyserView.svelte'
 	import SequencerView, { type NoteEvent } from './SequencerView.svelte'
+	import CcSparklineView, { type CcCol } from './CcSparklineView.svelte'
 	import ParamPanel from './ParamPanel.svelte'
 	import HelpPanel from './HelpPanel.svelte'
 	import { MeshStandardNodeMaterial, MeshStandardMaterial, MeshBasicMaterial } from 'three/webgpu'
@@ -77,6 +78,7 @@
 		wireframe = $bindable(false),
 		showAnalyzers = $bindable(true),
 		showAudio = $bindable(true),
+		showCC = true,
 		selectedAudioChain,
 		onAudioTargetChange
 	}: {
@@ -104,6 +106,7 @@
 		wireframe?: boolean
 		showAnalyzers?: boolean
 		showAudio?: boolean
+		showCC?: boolean
 		selectedAudioChain?: AudioChain
 		onAudioTargetChange?: (target: string) => void
 	} = $props()
@@ -136,6 +139,11 @@
 	let seqEvents = $state<NoteEvent[][]>([])
 	// Non-reactive lastSeen per chain for sequencer (separate from rowStates.lastSeen)
 	let seqLastSeen: number[] = []
+
+	// CC sparkline state — ccCols is reactive (template), hists/histHeads are non-reactive (useTask)
+	let ccCols = $state.raw<CcCol[]>([])
+	let ccRowCount = $state(0)
+	let _prevCtrlKeys: string[] = []
 
 	// Adaptive layout
 	const rowCount = $derived(rows.length)
@@ -717,6 +725,37 @@
 				_aAnimT[i] = ANIM_DUR
 			}
 		}
+
+		// CC sparkline: rebuild cols when ctrl keys change
+		if (sceneCtx) {
+			const keys: string[] = []
+			// Collect unique channel:cc keys from instrument ctrl instances
+			for (const ie of sceneCtx.instruments) {
+				if (!ie.ctrlInstances) continue
+				for (const ci of ie.ctrlInstances) {
+					const key = `${ci.config.channel}:${ci.config.cc}`
+					if (!keys.includes(key)) keys.push(key)
+				}
+			}
+			// Also collect from ctrlBus.lastValues (bus/chain/master subscriptions)
+			for (const k of sceneCtx.ctrlBus.lastValues.keys()) {
+				if (!keys.includes(k)) keys.push(k)
+			}
+			const changed =
+				keys.length !== _prevCtrlKeys.length || keys.some((k, i) => k !== _prevCtrlKeys[i])
+			if (changed) {
+				_prevCtrlKeys = keys
+				const bus = sceneCtx.ctrlBus
+				ccCols = keys.map((key) => ({
+					label: key,
+					getValue: () => bus.lastValues.get(key) ?? 0
+				}))
+			}
+		} else if (ccCols.length > 0) {
+			ccCols = []
+			ccRowCount = 0
+			_prevCtrlKeys = []
+		}
 	})
 
 	const SEQ_MAX = 16 // keep only enough for SequencerView to detect; ring buffer handles history
@@ -885,6 +924,8 @@
 	const seqX = $derived(analyserEndX + sphereR)
 	const seqWidth = $derived($size.width / HUD_ZOOM / 2 - otherSpacing - seqX)
 
+	const ccRowShift = $derived(ccRowCount > 0 && showCC ? ccRowCount * rowSpacing : 0)
+
 	const lines = $derived(description?.split('\n') || [])
 	const descWidth = $derived(
 		showDescription ? Math.max(0, ...lines.map((l) => l.length)) * sphereR * 1.2 * CHAR_WIDTH : 0
@@ -994,9 +1035,27 @@
 	<T.MeshBasicMaterial transparent opacity={0} depthWrite={false} />
 </T.Mesh>
 
+{#if showCC && ccCols.length > 0}
+	{@const ccY = $size.height / HUD_ZOOM / 2 - sphereR / 2 - otherSpacing}
+	<T.Group position={[x, ccY - sphereR / 2 + sphereR * 0.075, 0]}>
+		<CcSparklineView
+			cols={ccCols}
+			height={sphereR}
+			charWidth={CHAR_WIDTH}
+			material={textMat.mat}
+			maxWidth={$size.width / HUD_ZOOM - sphereR * 4}
+			onRowCount={(n) => {
+				ccRowCount = n
+			}}
+			{freeze}
+		/>
+	</T.Group>
+{/if}
+
 {#each rows as row, i (i)}
 	{@const analyzerType = resolveAnalyzerType(row.chain.config.analyzer, defaultAnalyser)}
-	{@const y = $size.height / HUD_ZOOM / 2 - sphereR / 2 - i * rowSpacing - otherSpacing}
+	{@const y =
+		$size.height / HUD_ZOOM / 2 - sphereR / 2 - i * rowSpacing - otherSpacing - ccRowShift}
 	{@const label = labels[i] ?? ''}
 
 	<!-- Note/chord label -->
@@ -1085,7 +1144,8 @@
 				$size.height / HUD_ZOOM / 2 -
 					marginY -
 					(1 + 1.5 * CHAR_WIDTH) * textSize * idx +
-					sphereR * 0.08,
+					sphereR * 0.08 -
+					ccRowShift,
 				0
 			]}
 		>

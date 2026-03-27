@@ -25,6 +25,8 @@ export type CtrlBus = {
 	emit(channel: number, cc: number, value: number): void
 	/** Subscribe to a channel:cc pair */
 	subscribe(channel: number, cc: number, entry: CcMapEntry, subscriber: CcSubscriber): void
+	/** Last emitted normalized value per channel:cc (for visualization) */
+	lastValues: Map<string, number>
 	/** Remove all subscriptions (cleanup on scene change) */
 	clear(): void
 }
@@ -32,13 +34,17 @@ export type CtrlBus = {
 export function createCtrlBus(): CtrlBus {
 	// key: "channel:cc"
 	const subs = new Map<string, Subscription[]>()
+	const lastValues = new Map<string, number>()
 
 	function key(channel: number, cc: number): string {
 		return channel + ':' + cc
 	}
 
 	return {
+		lastValues,
+
 		emit(channel: number, cc: number, value: number) {
+			lastValues.set(key(channel, cc), value)
 			const list = subs.get(key(channel, cc))
 			if (!list) return
 			for (const s of list) {
@@ -59,6 +65,7 @@ export function createCtrlBus(): CtrlBus {
 
 		clear() {
 			subs.clear()
+			lastValues.clear()
 		}
 	}
 }

@@ -32,6 +32,7 @@
 		showStats = $bindable(false),
 		showAnalyzers = $bindable(true),
 		showAudio = $bindable(true),
+		showCC = true,
 		showHud,
 		fxHud,
 		fxPost,
@@ -207,6 +208,7 @@
 			bind:wireframe
 			bind:showAnalyzers
 			bind:showAudio
+			{showCC}
 			{selectedAudioChain}
 			{onAudioTargetChange}
 		/>

@@ -5,7 +5,7 @@ const duration = 500
 
 export const scene: SceneConfig = {
 	id: 'scene-ctrl',
-	description: 'CC/CV ctrl types',
+	description: 'CC/CV control types',
 	bpm: 120,
 	names: true,
 	camera: [0, 17, 12],
@@ -34,6 +34,7 @@ export const scene: SceneConfig = {
 			}
 		},
 		master: {
+			analyzer: 'meter',
 			fx: [{ tone: 'Compressor', params: { threshold: -24 } }]
 		},
 		buses: {
@@ -126,7 +127,7 @@ export const scene: SceneConfig = {
 					beat: 0,
 					note: 60,
 					channel: 3,
-					ctrl: [{ cc: 15, channel: 3, type: 'lfo', shape: 'sine', rate: '1/4' }]
+					ctrl: [{ cc: 15, channel: 3, type: 'lfo', shape: 'square', rate: '1/2' }]
 				},
 				{
 					type: 'spiral',
@@ -150,8 +151,8 @@ export const scene: SceneConfig = {
 					note: 60,
 					duration,
 					channel: 4,
-					audio: { id: 'synth' }
-					// ctrl: [{ cc: 16, channel: 4, type: 'sequence', values: [0.1, 0.4, 0.7, 1] }]
+					audio: { id: 'synth' },
+					ctrl: [{ cc: 13, channel: 4, type: 'sequence', values: [0.1, 0.4, 0.7, 1] }]
 				},
 				{
 					type: 'poly',
@@ -160,8 +161,8 @@ export const scene: SceneConfig = {
 					note: 64,
 					duration,
 					channel: 4,
-					audio: { id: 'synth' }
-					// ctrl: [{ cc: 16, channel: 4, type: 'sequence', values: [1, 0.7, 0.4, 0.1] }]
+					audio: { id: 'synth' },
+					ctrl: [{ cc: 14, channel: 4, type: 'sequence', values: [1, 0.7, 0.4, 0.1] }]
 				},
 				{
 					type: 'poly',
@@ -170,8 +171,8 @@ export const scene: SceneConfig = {
 					note: 67,
 					duration,
 					channel: 4,
-					audio: { id: 'synth' }
-					// ctrl: [{ cc: 16, channel: 4, type: 'sequence', values: [0, 1] }]
+					audio: { id: 'synth' },
+					ctrl: [{ cc: 15, channel: 4, type: 'lfo', rate: 3, shape: 'saw' }]
 				},
 				{
 					type: 'poly',
@@ -181,7 +182,7 @@ export const scene: SceneConfig = {
 					duration,
 					channel: 4,
 					audio: { id: 'synth' },
-					ctrl: [{ cc: 16, channel: 4, type: 'sequence', values: [0.2, 0.4, 0.6, 0.8, 1] }]
+					ctrl: [{ cc: 16, channel: 4, type: 'lfo', rate: 10, shape: 'random' }]
 				}
 			]
 		}

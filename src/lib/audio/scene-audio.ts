@@ -91,14 +91,14 @@ export async function buildSceneAudio(
 			if (!bus || !busConfig.ctrl) continue
 			for (const entry of busConfig.ctrl) {
 				const { cc, channel, param, range, fxIndex = 0 } = entry
-				console.log(
-					'[ctrl] subscribe bus',
-					busName,
-					'to',
-					channel + ':' + cc,
-					'→ fx.' + fxIndex + '.' + param,
-					range
-				)
+				// console.log(
+				// 	'[ctrl] subscribe bus',
+				// 	busName,
+				// 	'to',
+				// 	channel + ':' + cc,
+				// 	'→ fx.' + fxIndex + '.' + param,
+				// 	range
+				// )
 				sceneCtx.ctrlBus.subscribe(
 					channel,
 					cc,
@@ -118,12 +118,12 @@ export async function buildSceneAudio(
 		const master = engine.masterChain
 		for (const entry of scene.audio.master.ctrl) {
 			const { cc, channel, param, range, fxIndex = 0 } = entry
-			console.log(
-				'[ctrl] subscribe master to',
-				channel + ':' + cc,
-				'→ fx.' + fxIndex + '.' + param,
-				range
-			)
+			// console.log(
+			// 	'[ctrl] subscribe master to',
+			// 	channel + ':' + cc,
+			// 	'→ fx.' + fxIndex + '.' + param,
+			// 	range
+			// )
 			sceneCtx.ctrlBus.subscribe(
 				channel,
 				cc,
@@ -143,30 +143,30 @@ export async function buildSceneAudio(
 		if (!ctrlEntries) continue
 		for (const entry of ctrlEntries) {
 			const { cc, channel, param, range, fxIndex } = entry
-			const target = fxIndex === undefined ? 'gen' : 'fx.' + fxIndex
-			console.log(
-				'[ctrl] subscribe chain',
-				chain.config.id,
-				'to',
-				channel + ':' + cc,
-				'→',
-				target + '.' + param,
-				range
-			)
+			// const target = fxIndex === undefined ? 'gen' : 'fx.' + fxIndex
+			// console.log(
+			// 	'[ctrl] subscribe chain',
+			// 	chain.config.id,
+			// 	'to',
+			// 	channel + ':' + cc,
+			// 	'→',
+			// 	target + '.' + param,
+			// 	range
+			// )
 			sceneCtx.ctrlBus.subscribe(
 				channel,
 				cc,
 				{ param, range },
 				{
 					onCC(p, value) {
-						console.log(
-							'[ctrl] cc',
-							channel + ':' + cc,
-							'→',
-							target + '.' + p,
-							'=',
-							value.toFixed(1)
-						)
+						// console.log(
+						// 	'[ctrl] cc',
+						// 	channel + ':' + cc,
+						// 	'→',
+						// 	target + '.' + p,
+						// 	'=',
+						// 	value.toFixed(1)
+						// )
 						if (fxIndex === undefined) {
 							if (chain.generator) setNodeParam(chain.generator, p, value)
 						} else {
