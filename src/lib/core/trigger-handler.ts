@@ -87,7 +87,7 @@ export function triggerHandler(ctx: TriggerContext) {
 	const ctrlInstances = ctx.instrument.ctrlInstances
 	if (ctrlInstances) {
 		for (const ci of ctrlInstances) {
-			const value = triggerCtrl(ci)
+			const value = triggerCtrl(ci, ctx.scene.ctrlBus.lastValues)
 			if (value < 0) continue // LFO: skip, per-frame tick handles it
 			// MIDI CC output
 			if (midiState?.enabled) {

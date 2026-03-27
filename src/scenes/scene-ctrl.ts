@@ -70,7 +70,7 @@ export const scene: SceneConfig = {
 					beat: 0,
 					note: 60,
 					channel: 2,
-					ctrl: [{ cc: 16, channel: 1, type: 'set', value: 0.1 }]
+					ctrl: [{ cc: 16, channel: 1, type: 'set', value: 0.1, ramp: 750 }]
 				},
 				{
 					type: 'arrow',

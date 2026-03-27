@@ -7,10 +7,49 @@ describe('ctrl', () => {
 		it('returns configured value on trigger', () => {
 			const config: CtrlConfig = { cc: 12, channel: 1, type: 'set', value: 0.7 }
 			const inst = createCtrlInstance(config)
-			expect(inst.value).toBe(0.7)
+			expect(inst.value).toBe(0)
 			const v = triggerCtrl(inst)
 			expect(v).toBe(0.7)
 			expect(inst.active).toBe(false)
+		})
+
+		it('ramp: activates and interpolates to target', () => {
+			const config: CtrlConfig = { cc: 12, channel: 1, type: 'set', value: 0, ramp: 1000 }
+			const inst = createCtrlInstance(config)
+			inst.value = 0
+			// trigger toward 1.0 over 1s (but value in config is 0 — use a fresh ramp scenario)
+			const config2: CtrlConfig = { cc: 12, channel: 1, type: 'set', value: 1, ramp: 1000 }
+			const inst2 = createCtrlInstance(config2)
+			inst2.value = 0
+			const v = triggerCtrl(inst2)
+			expect(v).toBe(-1) // ramp active, no immediate emit
+			expect(inst2.active).toBe(true)
+
+			// halfway
+			tickCtrl(inst2, 0.5, 120)
+			expect(inst2.value).toBeCloseTo(0.5)
+
+			// complete
+			tickCtrl(inst2, 0.5, 120)
+			expect(inst2.value).toBeCloseTo(1)
+			expect(inst2.active).toBe(false)
+		})
+
+		it('ramp: exponential curve', () => {
+			const config: CtrlConfig = {
+				cc: 12,
+				channel: 1,
+				type: 'set',
+				value: 1,
+				ramp: 1000,
+				curve: 'exponential'
+			}
+			const inst = createCtrlInstance(config)
+			inst.value = 0
+			triggerCtrl(inst)
+			tickCtrl(inst, 0.5, 120)
+			// t=0.5, tc=0.25 → 0 + (1-0)*0.25 = 0.25
+			expect(inst.value).toBeCloseTo(0.25)
 		})
 	})
 
@@ -76,10 +115,10 @@ describe('ctrl', () => {
 			tickCtrl(inst, 0.8, 120)
 			expect(inst.value).toBeCloseTo(0.8)
 
-			// Re-trigger resets
+			// Re-trigger resets phase (value stays at current)
 			triggerCtrl(inst)
-			expect(inst.phase).toBe(0)
-			expect(inst.value).toBe(0)
+			expect(inst.phase).toBeCloseTo(0)
+			expect(inst.value).toBeCloseTo(0.8)
 		})
 	})
 

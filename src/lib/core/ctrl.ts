@@ -6,6 +6,10 @@ import { sendMidiCC, getMidiState } from '../midi/midi'
 export type CtrlSet = {
 	type: 'set'
 	value: number // 0-1 normalized
+	/** Ramp time from current to target value in ms (default 0) */
+	ramp?: number
+	/** Curve for ramp (default 'linear') */
+	curve?: 'linear' | 'exponential'
 }
 
 export type CtrlEnvelope = {
@@ -84,7 +88,7 @@ export type CtrlInstance = {
 export function createCtrlInstance(config: CtrlConfig): CtrlInstance {
 	return {
 		config,
-		value: config.type === 'set' ? config.value : 0,
+		value: 0,
 		phase: 0,
 		seqIndex: 0,
 		active: config.type === 'lfo' ? (config.active ?? false) : false,
@@ -98,11 +102,23 @@ export function createCtrlInstance(config: CtrlConfig): CtrlInstance {
 
 /**
  * Fire a ctrl on trigger (marble hit). Returns new value.
+ * @param lastValues optional ctrlBus lastValues map — used by 'set' ramp to read cross-instrument current value
  */
-export function triggerCtrl(inst: CtrlInstance): number {
+export function triggerCtrl(inst: CtrlInstance, lastValues?: Map<string, number>): number {
 	const c = inst.config
 	switch (c.type) {
 		case 'set': {
+			const rampSec = (c.ramp ?? 0) / 1000
+			if (rampSec > 0) {
+				// Use last emitted value for this channel:cc as rampFrom (cross-instrument aware)
+				const busKey = c.channel + ':' + c.cc
+				const currentBusValue = lastValues?.get(busKey) ?? inst.value
+				inst.rampFrom = currentBusValue
+				inst.rampTarget = c.value
+				inst.rampElapsed = 0
+				inst.active = true
+				return -1
+			}
 			inst.value = c.value
 			inst.active = false
 			return inst.value
@@ -267,8 +283,9 @@ export function tickCtrl(inst: CtrlInstance, dt: number, bpm: number): number {
 			return inst.value
 		}
 
+		case 'set':
 		case 'sequence': {
-			// Sequence ramp tick
+			// Ramp tick (shared by set + sequence)
 			const rampSec = (c.ramp ?? 0) / 1000
 			if (rampSec <= 0) {
 				inst.active = false
