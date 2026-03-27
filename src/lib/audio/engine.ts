@@ -165,7 +165,7 @@ export async function buildBuses(
  */
 async function buildBus(
 	engine: AudioEngine,
-	config: BusConfig,
+	config: BusConfig | MasterConfig,
 	destination: GainNode | AudioNode,
 	def?: string
 ): Promise<AudioBus> {
@@ -185,10 +185,15 @@ async function buildBus(
 		}
 	}
 
-	let analyzer: ToneAudioNode | null = null
+	const analyzers: ToneAudioNode[] = []
 	if (config.analyzer) {
-		analyzer = await buildAnalyzer(engine, config.analyzer, def)
+		const analyzerConfigs = Array.isArray(config.analyzer) ? config.analyzer : [config.analyzer]
+		for (const ac of analyzerConfigs) {
+			const a = await buildAnalyzer(engine, ac, def)
+			if (a) analyzers.push(a)
+		}
 	}
+	const analyzer = analyzers[0] ?? null
 
 	// Connect: input → fx[0] → ... → output (analyzer as side-tap, not in series)
 	const nodes: Array<ToneAudioNode | Device | GainNode> = [input]
@@ -199,10 +204,10 @@ async function buildBus(
 		connectNodes(nodes[i], nodes[i + 1], engine)
 	}
 
-	// Side-tap: analyzer branches off last node before output (preserves stereo)
-	if (analyzer) {
-		const tapSource = nodes.at(-2)!
-		connectNodes(tapSource, analyzer, engine)
+	// Side-tap: all analyzers branch off last node before output (preserves stereo)
+	const tapSource = nodes.at(-2)!
+	for (const a of analyzers) {
+		connectNodes(tapSource, a, engine)
 	}
 
 	const nodePresets = new Map<number, NodePresetInfo>()
@@ -223,7 +228,16 @@ async function buildBus(
 		}
 	}
 
-	const bus: AudioBus = { config, fx, analyzer, input, output, nodePresets, onParamChange: null }
+	const bus: AudioBus = {
+		config: config as BusConfig,
+		fx,
+		analyzer,
+		analyzers,
+		input,
+		output,
+		nodePresets,
+		onParamChange: null
+	}
 
 	// Subscribe RNBO fx to param changes
 	for (const f of fx) {
@@ -622,13 +636,14 @@ function disposeBus(bus: AudioBus): void {
 	for (const f of bus.fx) {
 		disposeNode(f)
 	}
-	if (bus.analyzer) {
-		disposeNode(bus.analyzer)
+	for (const a of bus.analyzers) {
+		disposeNode(a)
 	}
 	bus.input.disconnect()
 	bus.output.disconnect()
 	bus.fx = []
 	bus.analyzer = null
+	bus.analyzers = []
 	bus.nodePresets.clear()
 	bus.onParamChange = null
 }

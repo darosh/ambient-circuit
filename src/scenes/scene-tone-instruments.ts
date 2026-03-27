@@ -31,7 +31,7 @@ export const scene: SceneConfig = {
 			}
 		},
 		master: {
-			analyzer: true,
+			analyzer: 'waveform',
 			fx: [
 				{ tone: 'Freeverb', params: { wet: 0.3 } },
 				{ tone: 'Compressor', params: { threshold: -32 } },

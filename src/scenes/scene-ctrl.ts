@@ -13,6 +13,7 @@ export const scene: SceneConfig = {
 	camera: [0, 17, 12],
 	triggerHandler,
 	globalBeatHandler: globalHandlerFactory(),
+	sequencerMode: 'time',
 	audioView: {
 		all: true
 	},
@@ -36,7 +37,7 @@ export const scene: SceneConfig = {
 			}
 		},
 		master: {
-			analyzer: 'meter',
+			analyzer: ['meter', 'waveform'],
 			fx: [{ tone: 'Compressor', params: { threshold: -24 } }]
 		},
 		buses: {

@@ -53,7 +53,7 @@ export type BusConfig = {
 
 export type MasterConfig = {
 	fx?: FxConfig[]
-	analyzer?: AnalyzerType
+	analyzer?: AnalyzerType | AnalyzerType[]
 	/** CC→param routing: maps incoming CC signals to master fx params */
 	ctrl?: {
 		cc: number
@@ -133,6 +133,8 @@ export type AudioBus = {
 	config: BusConfig
 	fx: (ToneAudioNode | Device)[]
 	analyzer: ToneAudioNode | null
+	/** All analyzers (single or multi); includes primary analyzer */
+	analyzers: ToneAudioNode[]
 	input: GainNode
 	output: GainNode
 	/** Per-fx-node preset info by fx index */

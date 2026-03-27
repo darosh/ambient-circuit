@@ -12,6 +12,7 @@
 	import { buildImpactMaterial, createImpactMaterialCached } from '../lib/video/material-impact'
 	import { createInstrumentGeometry, type ArrowKind } from '../lib/video/geometry-instrument'
 	import AnalyserView from './AnalyserView.svelte'
+	import AnalyserWaveformView from './AnalyserWaveformView.svelte'
 	import SequencerView, { type NoteEvent } from './SequencerView.svelte'
 	import CcSparklineView, { type CcCol } from './CcSparklineView.svelte'
 	import ParamPanel from './ParamPanel.svelte'
@@ -419,6 +420,16 @@
 		untrack(() => baseColor),
 		untrack(() => baseColor),
 		0.5,
+		true,
+		0.9,
+		0.2,
+		2
+	)
+	const waveMat = createImpactMaterialCached(
+		'hud-wave',
+		untrack(() => baseColor),
+		untrack(() => baseColor),
+		0.333,
 		true,
 		0.9,
 		0.2,
@@ -897,6 +908,8 @@
 		textMat.emissiveColor.value.set(baseColor)
 		textMatLarge.impactColor.value.set(baseColor)
 		textMatLarge.emissiveColor.value.set(baseColor)
+		waveMat.impactColor.value.set(baseColor)
+		waveMat.emissiveColor.value.set(baseColor)
 	})
 
 	onDestroy(() => {
@@ -912,8 +925,17 @@
 	const anal = $derived(rows?.[0]?.chain?.analyzer)
 	const x = $derived(-$size.width / HUD_ZOOM / 2 + sphereR * 2)
 	const masterAnalyzer = $derived(engine?.masterChain?.analyzer ?? null)
+	const masterAnalyzers = $derived(engine?.masterChain?.analyzers ?? [])
 	const masterAnalyzerType = $derived(
 		resolveAnalyzerType(engine?.masterChain?.config?.analyzer, defaultAnalyser)
+	)
+	// Per-analyzer types for multi-analyzer master config
+	const masterAnalyzerTypes = $derived(
+		engine?.masterChain?.config?.analyzer
+			? Array.isArray(engine.masterChain.config.analyzer)
+				? engine.masterChain.config.analyzer.map((a) => resolveAnalyzerType(a, defaultAnalyser))
+				: [resolveAnalyzerType(engine.masterChain.config.analyzer, defaultAnalyser)]
+			: []
 	)
 	const analyserEndX = $derived(
 		anal
@@ -1001,6 +1023,11 @@
 	})
 
 	let showMeter = $derived(showAnalyzers && masterAnalyzer && masterAnalyzerType === 'meter')
+	let masterWaveformAnalyzer = $derived(
+		showAnalyzers
+			? (masterAnalyzers.find((_, i) => masterAnalyzerTypes[i] === 'waveform') ?? null)
+			: null
+	)
 	let shiftMeter = $derived(showMeter ? CHAR_WIDTH : 0)
 </script>
 
@@ -1119,6 +1146,21 @@
 			type={masterAnalyzerType}
 			width={sphereR * A_WIDTH}
 			height={A_HEIGHT}
+		/>
+	</T.Group>
+{/if}
+
+{#if masterWaveformAnalyzer}
+	{@const W_WIDTH = vpWidth}
+	{@const W_HEIGHT = sphereR * 4.4}
+	<T.Group position={[-vpWidth / 2 + W_WIDTH / 2, -vpHeight / 2 + W_HEIGHT / 2 + sphereR * 2, 0]}>
+		<AnalyserWaveformView
+			segments={2048}
+			thickness={sphereR / 25}
+			material={waveMat.mat}
+			analyzer={masterWaveformAnalyzer}
+			width={W_WIDTH}
+			height={W_HEIGHT}
 		/>
 	</T.Group>
 {/if}
