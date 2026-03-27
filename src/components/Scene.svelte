@@ -330,7 +330,7 @@
 
 		if (ctrlTimer) ctrlTimer.stop()
 
-		// audioEngineRef = null
+		audioEngineRef = null
 		// Release $state proxy refs from module-level scene config
 		for (const railData of rails) {
 			if (railData.instruments) {

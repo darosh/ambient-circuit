@@ -687,6 +687,11 @@
 				seqEvents = []
 				seqLastSeen = []
 			}
+			if (ccCols.length > 0) {
+				ccCols = []
+				ccRowCount = 0
+				_prevCtrlKeys = []
+			}
 			return
 		}
 		const chains = engine.instanceChains.filter((c) => c.generator)
@@ -761,6 +766,7 @@
 					label: sceneCtx?.config?.aliasCc?.[key] ?? key,
 					getValue: () => bus.lastValues.get(key) ?? 0
 				}))
+				if (keys.length === 0) ccRowCount = 0
 			}
 		} else if (ccCols.length > 0) {
 			ccCols = []
