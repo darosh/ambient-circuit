@@ -144,6 +144,7 @@
 	// CC sparkline state — ccCols is reactive (template), hists/histHeads are non-reactive (useTask)
 	let ccCols = $state.raw<CcCol[]>([])
 	let ccRowCount = $state(0)
+	let ccLastRowWidth = $state(0)
 	let _prevCtrlKeys: string[] = []
 
 	// Adaptive layout
@@ -959,6 +960,17 @@
 	const ccRowShift = $derived(ccRowCount > 0 && showCC ? ccRowCount * rowSpacing : 0)
 
 	const lines = $derived(description?.split('\n') || [])
+	const ccDescFit = $derived(
+		ccRowCount > 0 &&
+			showCC &&
+			showDescription &&
+			lines.length > 0 &&
+			ccLastRowWidth + sphereR * 1.5 <=
+				$size.width / HUD_ZOOM -
+					2 * sphereR -
+					2.5 * sphereR -
+					(lines[0]?.length ?? 0) * sphereR * 1.2 * CHAR_WIDTH
+	)
 	const descWidth = $derived(
 		showDescription ? Math.max(0, ...lines.map((l) => l.length)) * sphereR * 1.2 * CHAR_WIDTH : 0
 	)
@@ -1084,6 +1096,9 @@
 			onRowCount={(n) => {
 				ccRowCount = n
 			}}
+			onLastRowWidth={(w) => {
+				ccLastRowWidth = w
+			}}
 			{freeze}
 		/>
 	</T.Group>
@@ -1198,7 +1213,7 @@
 					marginY -
 					(1 + 1.5 * CHAR_WIDTH) * textSize * idx +
 					sphereR * 0.08 -
-					ccRowShift,
+					(ccDescFit ? ccRowShift - rowSpacing : ccRowShift),
 				0
 			]}
 		>

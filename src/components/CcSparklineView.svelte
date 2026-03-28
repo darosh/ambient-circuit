@@ -25,7 +25,8 @@
 		material,
 		freeze = false,
 		maxWidth = Infinity,
-		onRowCount
+		onRowCount,
+		onLastRowWidth
 	}: {
 		cols: CcCol[]
 		height?: number
@@ -34,6 +35,7 @@
 		freeze?: boolean
 		maxWidth?: number
 		onRowCount?: (count: number) => void
+		onLastRowWidth?: (width: number) => void
 	} = $props()
 
 	let outerRef = $state.raw<Group | undefined>()
@@ -105,6 +107,7 @@
 		}
 
 		onRowCount?.(curRow + 1)
+		onLastRowWidth?.(curRowX)
 
 		return () => {
 			for (const g of colGroups) {
