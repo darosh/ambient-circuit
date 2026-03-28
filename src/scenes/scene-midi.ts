@@ -51,7 +51,7 @@ export const scene: SceneConfig = {
 						'envelope.decay': 0.12,
 						'envelope.sustain': 0.5,
 						'envelope.release': 0.1,
-						volume: -6,
+						volume: 0,
 						'oscillator.type': 'sawtooth'
 					}
 				},

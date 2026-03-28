@@ -11,6 +11,8 @@
 		height = 1,
 		width = 1,
 		segments = 64,
+		filled = true,
+		reverse = false,
 		thickness = 0.01,
 		/** New samples pushed into the ring per frame (controls scroll speed).
 		 *  Defaults to 4. Higher = faster scroll. */
@@ -24,6 +26,8 @@
 		segments?: number
 		thickness?: number
 		stride?: number
+		filled?: boolean
+		reverse?: boolean
 		position?: Vector3Tuple
 	} = $props()
 
@@ -61,7 +65,7 @@
 
 		ring = new Float32Array(nSlots)
 		ringHead = 0
-		ringFill = 0
+		ringFill = filled ? segments : 0
 
 		return () => {
 			group.remove(mesh)
@@ -165,6 +169,7 @@
 
 <T.Group
 	bind:ref={groupRef}
+	scale.x={reverse ? -1 : 1}
 	position.x={position[0]}
 	position.y={position[1]}
 	position.z={position[2]}

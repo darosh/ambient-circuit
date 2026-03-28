@@ -1,5 +1,8 @@
 # TODO (no AI)
 
+- [x] pre-fill waveform
+- [x] reverse waveform
+- [ ] desc vs cc shift 
 - [ ] Dust?
 - [ ] CRT?
 - [ ] global peak meter, stereo?
