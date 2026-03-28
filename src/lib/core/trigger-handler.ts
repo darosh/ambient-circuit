@@ -24,7 +24,6 @@ export function triggerHandler(ctx: TriggerContext) {
 
 	// Signal visual feedback
 	ctx.instrument.instrument.signal!.intensity = 1
-	ctx.instrument.instrument.midiSignal!.intensity = 1
 	ctx.marble.marble.signal.intensity = 1
 
 	// Queue particle burst
@@ -102,6 +101,8 @@ export function triggerHandler(ctx: TriggerContext) {
 			})
 		}
 	}
+
+	ctx.instrument.instrument.midiSignal!.intensity = 1
 
 	const channel = ctx.instrument.instrument.channel ?? 1
 

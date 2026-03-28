@@ -7,7 +7,7 @@ import { InstrumentConfig } from '../lib/core/instrument'
 
 const midi = MIDI['test-1']
 const midiBpm = 170 // midi.bpm
-const totalBeats = 4 * 8
+const totalBeats = 4 * 4
 const track = midi.tracks[0]
 
 // 16th note resolution: 4 subdivisions per beat
