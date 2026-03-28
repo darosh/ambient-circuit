@@ -415,7 +415,17 @@
 				railIds[i] = rails[ri].id
 			}
 
-			// 6. Sync sceneCtx.marbles order (reuse existing entities, just reorder)
+			// 6. Reset noteSeq cursors on all instruments
+		for (const instruments of instrumentsPerRail) {
+			for (const ins of instruments) {
+				if (ins.runtime?.noteSeqInstance) {
+					ins.runtime.noteSeqInstance.cursor = 0
+					ins.runtime.noteSeqInstance.triggerCount = 0
+				}
+			}
+		}
+
+		// 7. Sync sceneCtx.marbles order (reuse existing entities, just reorder)
 			const entityById: Record<number, import('../lib/core/scene-ctx').MarbleEntity> = {}
 			for (const e of sceneCtx.marbles) entityById[e.id] = e
 			sceneCtx.marbles.length = 0
