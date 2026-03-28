@@ -3,6 +3,7 @@ import { triggerCtrl } from './ctrl'
 import { triggerChain, updateGlobalChord } from '../audio'
 import type { BounceContext, GlobalBeatContext, TriggerContext } from './scene'
 import { notes } from '../midi/notes'
+import { nextNoteEvent, parseBeatDuration } from './note-seq'
 import { Vector3, Matrix4 } from 'three/webgpu'
 
 const _pos1 = new Vector3()
@@ -58,29 +59,65 @@ export function triggerHandler(ctx: TriggerContext) {
 		ctx.instrument.instrument.note ??
 		NOTE
 	const pitch = ctx.scene.config.pitch ?? 0
-	const note = applyPitch(rawNote, pitch)
+	let note = applyPitch(rawNote, pitch)
 
-	const velocity =
+	let velocity =
 		ctx.marble.marble.runtime.velocity ??
 		ctx.marble.marble.resolved.velocity ??
 		ctx.instrument.instrument.velocity ??
 		ctx.scene.config.velocity ??
 		VELOCITY
 
-	const duration =
+	let duration =
 		ctx.marble.marble.runtime.duration ??
 		ctx.marble.marble.resolved.duration ??
 		ctx.instrument.instrument.duration ??
 		ctx.scene.config.duration ??
 		DURATION
 
-	if (midiState?.enabled) {
-		const channel = ctx.instrument.instrument.channel ?? 1
+	// NoteSequence override: cycles through note/velocity/duration per trigger
+	let offsetMs = 0
+	const noteSeqInst = ctx.instrument.instrument.runtime?.noteSeqInstance
+	let restNotes:
+		| { note: number | number[]; velocity: number; duration: number; offsetMs: number }[]
+		| undefined
+	if (noteSeqInst) {
+		const event = nextNoteEvent(noteSeqInst)
+		if (event === null) return // non-looping sequence exhausted
+		if (event === false) return // pause — cursor advanced, skip trigger
+		const bpm = ctx.scene.config.bpm
+		const events = Array.isArray(event) ? event : [event]
+		const first = events[0]
+		if (first.note !== undefined) note = applyPitch(first.note, pitch)
+		if (first.velocity !== undefined) velocity = first.velocity
+		if (first.duration !== undefined) duration = parseBeatDuration(first.duration, bpm)
+		if (first.offset) offsetMs = parseBeatDuration(first.offset, bpm)
+		if (events.length > 1) {
+			restNotes = events.slice(1).map((sub) => {
+				const subNote = sub.note === undefined ? note : applyPitch(sub.note, pitch)
+				const subVel = sub.velocity ?? velocity
+				const subDur = sub.duration == null ? duration : parseBeatDuration(sub.duration, bpm)
+				const subOffsetMs = offsetMs + (sub.offset == null ? 0 : parseBeatDuration(sub.offset, bpm))
+				return { note: subNote, velocity: subVel, duration: subDur, offsetMs: subOffsetMs }
+			})
+		}
+	}
+
+	const channel = ctx.instrument.instrument.channel ?? 1
+
+	const sendMidi = () => {
+		if (!midiState?.enabled) return
 		if (Array.isArray(note)) {
 			for (const n of note) sendMidiNote(midiState, channel, n, velocity, duration)
 		} else {
 			sendMidiNote(midiState, channel, note, velocity, duration)
 		}
+	}
+
+	if (offsetMs <= 0) {
+		sendMidi()
+	} else {
+		setTimeout(sendMidi, offsetMs)
 	}
 
 	// Fire ctrl entries (CC automation)
@@ -108,8 +145,28 @@ export function triggerHandler(ctx: TriggerContext) {
 	}
 
 	if (chain?.generator) {
-		triggerChain(chain, note, velocity, duration)
+		const offsetSec = offsetMs / 1000
+		triggerChain(chain, note, velocity, duration, offsetSec)
 		updateGlobalChord(ctx.scene, chain.output.context)
+	}
+
+	// Fire rest[] sub-notes at their own offsets (after chain is known)
+	if (restNotes) {
+		for (const sub of restNotes) {
+			const subSend = () => {
+				if (midiState?.enabled) {
+					if (Array.isArray(sub.note)) {
+						for (const n of sub.note)
+							sendMidiNote(midiState, channel, n, sub.velocity, sub.duration)
+					} else {
+						sendMidiNote(midiState, channel, sub.note, sub.velocity, sub.duration)
+					}
+				}
+				if (chain?.generator) triggerChain(chain, sub.note, sub.velocity, sub.duration, 0)
+			}
+			if (sub.offsetMs <= 0) subSend()
+			else setTimeout(subSend, sub.offsetMs)
+		}
 	}
 }
 

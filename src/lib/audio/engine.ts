@@ -527,12 +527,14 @@ function toNoteArray(note: number | number[]): number[] {
 
 /**
  * Trigger a note (or chord) on a chain. Returns false if no voice was available.
+ * offsetSec: groove offset in seconds (positive = late, negative = early)
  */
 export function triggerChain(
 	chain: AudioChain,
 	note: number | number[],
 	velocity: number,
-	durationMs: number
+	durationMs: number,
+	offsetSec = 0
 ): boolean {
 	if (!chain.generator) return false
 	if (!getVoice(chain, durationMs)) return false
@@ -562,7 +564,7 @@ export function triggerChain(
 		const device = chain.generator
 		const midiChannel = 0
 		const vel = Math.min(127, Math.max(0, velocity))
-		const nowMs = device.context.currentTime * 1000
+		const nowMs = device.context.currentTime * 1000 + offsetSec * 1000
 		for (const n of noteArr) {
 			const noteOn: [MIDIByte, MIDIByte, MIDIByte] = [
 				(144 + midiChannel) as MIDIByte,
@@ -583,21 +585,16 @@ export function triggerChain(
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const s = synth as any
 		if (typeof s.triggerAttackRelease === 'function') {
+			const timeArg = offsetSec === 0 ? undefined : `+${offsetSec}`
 			if (isPerc(firstNote)) {
 				// Percussion path: use first note only
-				log(
-					'trigger-perc',
-					genName(chain),
-					firstNote || durationMs / 1000,
-					undefined,
-					velocity / 127
-				)
-				s.triggerAttackRelease(firstNote || durationMs / 1000, undefined, velocity / 127)
+				log('trigger-perc', genName(chain), firstNote || durationMs / 1000, timeArg, velocity / 127)
+				s.triggerAttackRelease(firstNote || durationMs / 1000, timeArg, velocity / 127)
 			} else {
 				const freqs = noteArr.map(midiToFreq)
 				const freq = freqs.length === 1 ? freqs[0] : freqs
-				log('trigger', genName(chain), freq, durationMs / 1000, undefined, velocity / 127)
-				s.triggerAttackRelease(freq, durationMs / 1000, undefined, velocity / 127)
+				log('trigger', genName(chain), freq, durationMs / 1000, timeArg, velocity / 127)
+				s.triggerAttackRelease(freq, durationMs / 1000, timeArg, velocity / 127)
 			}
 		}
 	}

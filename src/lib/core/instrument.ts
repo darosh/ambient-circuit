@@ -1,6 +1,7 @@
 import type { MarbleDirection } from './marble'
 import type { AudioChainConfig } from '../audio/types'
 import type { CtrlConfig } from './ctrl'
+import type { NoteSequence, NoteSeqInstance } from './note-seq'
 import { TriggerHandler } from './scene'
 
 export type InstrumentSignal = { intensity: number }
@@ -22,6 +23,7 @@ export interface InstrumentRuntime {
 	spinning?: boolean
 	rays?: number
 	visible?: boolean
+	noteSeqInstance?: NoteSeqInstance
 }
 
 export type InstrumentTriggerContext = {
@@ -66,6 +68,8 @@ type InstrumentConfigBase = {
 	audio?: AudioChainConfig
 	/** CC/CV automation controllers */
 	ctrl?: CtrlConfig[]
+	/** Note sequence: cycles through notes per trigger, overrides instrument note/velocity/duration */
+	noteSeq?: NoteSequence
 	/** Runtime state for visual overrides */
 	runtime?: InstrumentRuntime
 }

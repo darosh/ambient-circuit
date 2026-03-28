@@ -8,6 +8,7 @@
 		"@threlte/theatre": "^3.1.2",
 		"@tonaljs/chord-detect": "^4.9.1",
 		"@tonaljs/scale": "^4.13.4",
+		"@tonejs/midi": "^2.0.28",
 		"buffer": "^6.0.3",
 		"culori": "^4.0.2",
 		"debug": "^4.4.3",
@@ -63,6 +64,7 @@
 		"gen:sample": "tsx scripts/sample-meta.ts && tsx scripts/samples.ts && prettier --write ./src/lib/audio/samples.ts",
 		"gen:svg-paths": "tsx scripts/svg-paths.ts",
 		"gen:svg-paths:watch": "tsx scripts/svg-paths.ts --watch",
+		"gen:midi": "tsx scripts/midi-notes.ts && prettier --write ./src/scenes/utils/midi-notes.ts",
 		"postinstall": "node -e \"const fs=require('fs'),f='node_modules/@types/three/src/cameras/Camera.d.ts',c=fs.readFileSync(f,'utf8');fs.writeFileSync(f,c.replace('readonly isCamera: boolean','readonly isCamera: true'))\"",
 		"preview": "vite preview",
 		"test": "vitest"

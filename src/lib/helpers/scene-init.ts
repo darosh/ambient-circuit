@@ -3,6 +3,7 @@ import { toRailShapeConfig } from '../core/rail-config'
 import type { MarbleInstance } from '../core/marble'
 import { createMarbleInstance } from '../core/marble'
 import { resolveRail } from '../core/rail-resolve'
+import { createNoteSeqInstance } from '../core/note-seq'
 
 export function createInstrumentSignals(rails: RailConfig[]): {
 	signals: Array<{ intensity: number }>
@@ -42,6 +43,7 @@ export function assignInstrumentSignals(
 				ins.signal = signals[idx]
 				ins.midiSignal = midiSignals[idx]
 				ins.runtime = runtimes[idx]
+				if (ins.noteSeq) ins.runtime.noteSeqInstance = createNoteSeqInstance(ins.noteSeq)
 				idx++
 			}
 	}
