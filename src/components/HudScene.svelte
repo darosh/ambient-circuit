@@ -877,6 +877,10 @@
 
 		textMat.alpha.value = controlsOpacity
 		textMatLarge.alpha.value = controlsOpacity
+		for (const row of rows) {
+			row.fx.alpha.value = controlsOpacity
+		}
+		waveMat.alpha.value = controlsOpacity
 
 		// Transport button animation
 		for (const [i, b] of btnStates.entries()) {
@@ -1130,6 +1134,7 @@
 				{bpm}
 				{baseColor}
 				{freeze}
+				alpha={controlsOpacity}
 			/>
 		</T.Group>
 	{/if}

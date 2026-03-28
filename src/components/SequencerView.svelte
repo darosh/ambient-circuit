@@ -28,7 +28,8 @@
 		bpm = 120,
 		baseColor,
 		colors = false,
-		freeze = false
+		freeze = false,
+		alpha = 1
 	}: {
 		id?: string
 		events: NoteEvent[]
@@ -42,6 +43,7 @@
 		baseColor: string
 		colors?: boolean
 		freeze?: boolean
+		alpha?: number
 	} = $props()
 
 	function labelWidth(label: string, isTime: boolean) {
@@ -168,13 +170,13 @@
 					mesh.visible = false
 					continue
 				}
-				const alpha = getAlpha(x) * ringFadeIns[idx]
-				if (alpha <= 0.01) {
+				const slotAlpha = getAlpha(x) * ringFadeIns[idx] * alpha
+				if (slotAlpha <= 0.01) {
 					pool[idx].alpha.value = 0
 					mesh.visible = false
 					continue
 				}
-				pool[idx].alpha.value = alpha
+				pool[idx].alpha.value = slotAlpha
 
 				const noteW = ringWidths[idx]
 				const collapsed = x < rightEdge
@@ -217,14 +219,14 @@
 					}
 					break
 				}
-				const alpha = getAlpha(x + slide) * ringFadeIns[idx]
-				pool[idx].alpha.value = alpha
+				const slotAlpha = getAlpha(x + slide) * ringFadeIns[idx] * alpha
+				pool[idx].alpha.value = slotAlpha
 
 				if (colors) {
 					pool[idx].emissiveColor.value.set(ring[idx].color)
 				}
 
-				if (alpha <= 0.01) {
+				if (slotAlpha <= 0.01) {
 					mesh.visible = false
 					x += noteW
 					continue
