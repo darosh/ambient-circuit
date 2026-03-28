@@ -108,6 +108,7 @@ export type SceneConfig = {
 	target?: Vector3Tuple
 	tint?: Vector3Tuple
 	polar?: boolean
+	grid?: [number, number]
 	stars?: boolean
 	floor?:
 		| boolean
@@ -122,6 +123,7 @@ export type SceneConfig = {
 		  }
 	names?: boolean
 	points?: boolean
+	beats?: boolean
 	sequencerBeats?: number
 	sequencerMode?: 'time' | 'compact'
 	sequencerColors?: boolean

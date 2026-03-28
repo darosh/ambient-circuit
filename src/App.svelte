@@ -137,6 +137,7 @@
 			reloadScene = undefined
 			showNames = mountedScene?.names ?? false
 			showPoints = mountedScene?.points ?? false
+			showBeats = mountedScene?.beats ?? false
 		}
 	})
 
