@@ -10,7 +10,7 @@ const totalBeats = 3 * 4
 const track = midi.tracks[0]
 
 // 16th note resolution: 4 subdivisions per beat
-const granularity = 8
+const granularity = 4
 const beatPositions = getBeatPattern(track, totalBeats, midi.bpm, granularity)
 
 const instruments = beatPositions.map((beat) => ({
@@ -40,7 +40,7 @@ export const scene: SceneConfig = {
 			pluck: {
 				generator: {
 					tone: 'Synth',
-					poly: 8,
+					poly: 16,
 					params: {
 						'envelope.attack': 0.005,
 						'envelope.decay': 0.12,
