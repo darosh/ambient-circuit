@@ -5,19 +5,23 @@
 	import { pass, uniform, vec3 } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 	import { defaultBloom } from '../lib/components/config'
+	import { applyFx } from '../lib/components/post-fx'
+	import type { FxFn } from '../lib/core/scene'
 
 	type Props = {
 		strength?: number
 		radius?: number
 		threshold?: number
 		tint?: [number, number, number]
+		postFx?: FxFn[]
 	}
 
 	let {
 		strength = defaultBloom.strength,
 		radius = defaultBloom.radius,
 		threshold = defaultBloom.threshold,
-		tint = [1, 1, 1]
+		tint = [1, 1, 1],
+		postFx
 	}: Props = $props()
 
 	const { renderer, scene, camera, renderStage, autoRender } = useThrelte()
@@ -28,8 +32,15 @@
 	$effect(() => {
 		const scenePass = pass(scene, camera.current)
 		const scenePassColor = scenePass.getTextureNode('output')
-		const bloomPass = bloom(scenePassColor, strength, radius, threshold)
-		postProcessing.outputNode = scenePassColor.add(bloomPass).mul(tintUniform)
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		let out: any
+		if (postFx?.length) {
+			out = applyFx(scenePassColor, postFx)
+		} else {
+			const bloomPass = bloom(scenePassColor, strength, radius, threshold)
+			out = scenePassColor.add(bloomPass).mul(tintUniform)
+		}
+		postProcessing.outputNode = out
 		return () => scenePass.dispose()
 	})
 

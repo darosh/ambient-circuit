@@ -29,6 +29,7 @@
 	} from '../lib/components/multi-view/multi-view'
 	import { resolveBloom } from '../lib/components/multi-view/tsl'
 	import { hudBloom } from '../lib/components/config'
+	import { applyFx } from '../lib/components/post-fx'
 
 	type OC = import('three/addons/controls/OrbitControls.js').OrbitControls
 	type MarbleOrVec = number | [number, number, number] | null
@@ -141,9 +142,14 @@
 			)
 		}
 
+		if (config.postFx?.length) composed = applyFx(composed, config.postFx)
+
 		if (children && hudCamera.current) {
 			const hudPass = pass(hudScene, hudCamera.current)
-			const hudColor = hudPass.getTextureNode('output')
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			let hudColor: any = hudPass.getTextureNode('output')
+			// Same RenderPipeline scheduling quirk as BloomHud — route through a math node
+			hudColor = config.postFxHud?.length ? applyFx(hudColor, config.postFxHud) : hudColor.add(0)
 			const hudMask = max(hudColor.r, hudColor.g, hudColor.b, hudColor.a)
 			const doHudBloom = config.hudBloom ?? true
 			if (doHudBloom) {
@@ -155,7 +161,6 @@
 				composed = mix(composed, hudColor, hudMask)
 			}
 		}
-
 		postProcessing.outputNode = composed
 		postProcessing.needsUpdate = true
 

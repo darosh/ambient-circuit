@@ -97,6 +97,8 @@ export function triggerHandler(ctx: TriggerContext) {
 		} else {
 			setTimeout(sendMidi, offsetMs)
 		}
+	} else if (note) {
+		didAct = true
 	}
 
 	// Fire ctrl entries (CC automation)

@@ -2,7 +2,10 @@ import type { InstrumentTriggerContext } from './instrument'
 import type { RailConfig } from './rail-config'
 import type { AudioChainConfig } from '../audio/types'
 import type { SceneCtx, MarbleEntity, InstrumentEntity, RailEntity } from './scene-ctx'
+import type { FxFn } from '../components/post-fx'
 import { Vector3Tuple } from 'three/webgpu'
+
+export type { FxFn } from '../components/post-fx'
 
 export type BloomConfig = {
 	strength?: number
@@ -46,6 +49,10 @@ export type ViewConfig = {
 	bloomDefaults?: BloomConfig
 	/** Bloom the HUD overlay too (composites before bloom instead of after) */
 	hudBloom?: boolean
+	/** Screen-space effects on scene layer (before HUD composite) */
+	postFx?: FxFn[]
+	/** Screen-space effects on HUD layer (before compositing over scene) */
+	postFxHud?: FxFn[]
 }
 
 export type TriggerContext = InstrumentTriggerContext & {
@@ -107,8 +114,12 @@ export type SceneConfig = {
 	camera?: Vector3Tuple
 	target?: Vector3Tuple
 	tint?: Vector3Tuple
+	/** Screen-space effects on scene layer (before HUD composite) */
+	postFx?: FxFn[]
+	/** Screen-space effects on HUD layer (before compositing over scene) */
+	postFxHud?: FxFn[]
 	polar?: boolean
-	grid?: [number, number]
+	grid?: [number, number] | false
 	stars?: boolean
 	floor?:
 		| boolean

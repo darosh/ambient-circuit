@@ -626,18 +626,16 @@
 	{/if}
 
 	{#if showGrid}
+		{@const g = Array.isArray(scene.grid) ? scene.grid : undefined}
 		{#if !scene.polar}
-			<T.GridHelper
-				position.y={-0.01}
-				args={[scene.grid?.[0] ?? 10, scene.grid?.[1] ?? 10, gridColor, gridColor]}
-			/>
+			<T.GridHelper position.y={-0.01} args={[g?.[0] ?? 10, g?.[1] ?? 10, gridColor, gridColor]} />
 		{/if}
 		{#if scene.polar}
 			<!--		<T.PolarGridHelper position.y={-0.01} args={[5, 24, 10, 64, gridColor, gridColor]} />-->
 			<T
 				is={GridHelperIO}
 				position.y={-0.01}
-				args={[5, 0.5, scene.grid?.[0] ?? 24, scene.grid?.[1] ?? 10, 64, gridColor]}
+				args={[5, 0.5, g?.[0] ?? 24, g?.[1] ?? 10, 64, gridColor]}
 			/>
 		{/if}
 	{/if}

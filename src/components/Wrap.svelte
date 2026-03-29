@@ -220,7 +220,7 @@
 		onSceneCtx={(ctx) => (sceneCtx = ctx)}
 		scene={mountedScene}
 		{limitFps}
-		{showGrid}
+		showGrid={mountedScene?.grid === false ? false : showGrid}
 		{showParticles}
 		{showPoints}
 		{showBeats}
@@ -261,9 +261,15 @@
 
 	<!-- Example: <BloomHud hudFx={fxPost ? (color) => gaussianBlur(color, null, 2) : undefined} -->
 	{#if fxPost && !(showHud && activeScene && tempo)}
-		<Bloom tint={activeScene.tint} />
+		<Bloom tint={activeScene.tint} postFx={activeScene.postFx} />
 	{:else}
-		<BloomHud enabled={fxPost} hudBloom={fxPost && fxHud} tint={activeScene.tint}>
+		<BloomHud
+			enabled={fxPost}
+			hudBloom={fxPost && fxHud}
+			tint={activeScene.tint}
+			postFx={activeScene.postFx}
+			postFxHud={activeScene.postFxHud}
+		>
 			{#snippet children(_arg)}
 				<!-- eslint-disable-next-line sonarjs/no-use-of-empty-return-value -->
 				{@render hudContent(_arg)}

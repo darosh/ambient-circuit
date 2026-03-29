@@ -1,4 +1,5 @@
 import type { SceneConfig } from '../lib/core/scene'
+import { curve, jitter, chromatic, bloom, crt, vignette, tint } from '../lib/components/post-fx'
 import { triggerHandler } from '../lib/core/trigger-handler'
 import { circle } from '../lib/core/rail-primitives'
 import { MIDI } from './utils/midi-notes'
@@ -28,11 +29,29 @@ export const scene: SceneConfig = {
 	camera: [0, 10, 17],
 	target: [0, -0.5, 0],
 	polar: true,
+	grid: false,
 	rotatePlay: true,
 	sequencerMode: 'compact',
 	sequencerColors: true,
 	beats: true,
-	tint: [1.5, 1.2, 1],
+	postFx: [
+		jitter(),
+		curve({ curvature: 0.1 }),
+		chromatic({ amount: 0.003 }),
+		crt({ scanlines: 320, strength: 1.7 }),
+		bloom({ strength: 1, radius: 1.5 }),
+		vignette({ intensity: 1.5, smoothness: 0.2 }),
+		tint([1.5, 1.2, 1])
+	],
+	postFxHud: [
+		jitter(),
+		curve({ curvature: 0.03 }),
+		chromatic({ amount: 0.0005 }),
+		crt({ scanlines: 320, strength: 1.7 }),
+		bloom(),
+		vignette({ intensity: 0.6, smoothness: 0.2 }),
+		tint([2, 1.2, 1])
+	],
 	particles: true,
 	triggerHandler,
 	audio: {

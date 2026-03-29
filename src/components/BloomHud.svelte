@@ -6,6 +6,8 @@
 	import { pass, mix, max, vec3, uniform } from 'three/tsl'
 	import { bloom } from 'three/addons/tsl/display/BloomNode.js'
 	import { defaultBloom } from '../lib/components/config'
+	import { applyFx } from '../lib/components/post-fx'
+	import type { FxFn } from '../lib/core/scene'
 
 	type TslNode = Node<'vec4'>
 
@@ -19,6 +21,8 @@
 		/** Transform HUD color node with TSL effects (e.g. blur) */
 		tint?: [number, number, number]
 		hudFx?: (color: TslNode) => TslNode
+		postFx?: FxFn[]
+		postFxHud?: FxFn[]
 		children?: Snippet<[{ ref: Scene }]>
 	}
 
@@ -30,6 +34,8 @@
 		hudBloom = false,
 		tint = [1, 1, 1],
 		hudFx,
+		postFx,
+		postFxHud,
 		children
 	}: Props = $props()
 
@@ -55,21 +61,36 @@
 		const th = untrack(() => threshold)
 		const scenePass = pass(scene, camera.current)
 		const scenePassColor = scenePass.getTextureNode('output')
-		bloomNode = bloom(scenePassColor, s, r, th)
+		// Only create legacy bloomNode when not using postFx array (avoids competing bloom passes)
+		bloomNode = postFx?.length ? null : bloom(scenePassColor, s, r, th)
 
-		let output: TslNode
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		let output: any
 		let hudPass: ReturnType<typeof pass> | null = null
+
+		// New path: postFx array drives scene layer
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const sceneOut: any = postFx?.length ? applyFx(scenePassColor, postFx) : null // null = use legacy bloom+tint below
 
 		if (hudCamera.current) {
 			hudPass = pass(hudScene, hudCamera.current)
 			let hudColor: TslNode = hudPass.getTextureNode('output')
 
-			// Apply HUD effects (blur, etc.)
+			// Apply HUD effects (legacy hudFx or new postFxHud array)
 			if (hudFx) hudColor = hudFx(hudColor)
+			// THREE.js RenderPipeline scheduling quirk: getTextureNode('output') used directly
+			// in mix() may not register the HUD pass as a dependency — any math node fixes it.
+			hudColor = postFxHud?.length ? applyFx(hudColor, postFxHud).add(0) : hudColor.add(hudColor)
 
 			const hudMask = max(hudColor.r, hudColor.g, hudColor.b, hudColor.a)
 
-			if (hudBloom) {
+			if (sceneOut) {
+				// New path: postFx handled scene layer; hudBloom selects composite mask style
+				const mask = hudBloom
+					? hudColor.a.smoothstep(1, 2.5).sub(0.01).mul(1.02).clamp(0, 1)
+					: hudMask
+				output = mix(sceneOut, hudColor, mask)
+			} else if (hudBloom) {
 				const scpC = scenePassColor.add(bloom(scenePassColor, s, r, th))
 				const hudC = hudColor.add(bloom(hudColor, s, r, th))
 				const hudMaskBloom = hudC.a.smoothstep(1, 2.5).sub(0.01).mul(1.02).clamp(0, 1)
@@ -77,10 +98,14 @@
 				output = mixed.mul(tintUniform)
 			} else {
 				// Composite HUD after bloom — HUD stays crisp
-				output = mix(scenePassColor.add(bloomNode), hudColor, hudMask).mul(tintUniform)
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+				const sceneBloom: any = bloomNode ? scenePassColor.add(bloomNode) : scenePassColor
+				output = mix(sceneBloom, hudColor, hudMask).mul(tintUniform)
 			}
 		} else {
-			output = scenePassColor.add(bloomNode)
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const sceneBloom: any = bloomNode ? scenePassColor.add(bloomNode) : scenePassColor
+			output = sceneOut ?? sceneBloom
 		}
 
 		postProcessing.outputNode = output
