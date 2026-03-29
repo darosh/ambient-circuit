@@ -845,8 +845,8 @@
 <style>
 	#ins {
 		position: fixed;
-		top: 12px;
-		left: 12px;
+		top: 24px;
+		left: 24px;
 		z-index: 100;
 		width: 211px;
 		height: 38px;

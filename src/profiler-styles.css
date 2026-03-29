@@ -73,15 +73,15 @@
 	/* Position overrides */
 
 	#profiler-toggle {
-		top: 12px;
-		left: 12px;
+		top: 24px;
+		left: 24px;
 		right: initial;
 		border-radius: 4px;
 	}
 
 	#profiler-mini-panel {
-		top: 58px;
-		left: 12px;
+		top: 72px;
+		left: 24px;
 		width: 300px;
 		background-color: rgba(36, 36, 36, 0.85);
 		border: 1px solid rgba(89, 89, 89, 0.33);

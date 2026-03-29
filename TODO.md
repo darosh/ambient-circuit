@@ -1,8 +1,5 @@
 # TODO (no AI)
 
-- [x] pre-fill waveform
-- [x] reverse waveform
-- [x] desc vs cc shift
 - [ ] Dust?
 - [ ] CRT?
 - [ ] global peak meter, stereo?
@@ -31,6 +28,10 @@
   - [x] scroll presets
   - [x] scroll chains
   - [ ] remove limit, use available space
+- [x] debug panel shift
+- [x] pre-fill waveform
+- [x] reverse waveform
+- [x] desc vs cc shift
 - [x] remove <Align>
 - [x] uniform onUpdate
 - [x] wireframe
