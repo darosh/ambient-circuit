@@ -22,31 +22,6 @@ function applyPitch(note: number | number[], pitch: number): number | number[] {
 export function triggerHandler(ctx: TriggerContext) {
 	// console.log('TRIGGER', ctx.railId, ctx.beat)
 
-	// Signal visual feedback
-	ctx.instrument.instrument.signal!.intensity = 1
-	ctx.marble.marble.signal.intensity = 1
-
-	// Queue particle burst
-	const m = ctx.marble.marble
-	const _mat = ctx.rail.runtime.renderMatrix as Matrix4 | undefined
-	_pos1.set(m.position.x, m.position.y, m.position.z)
-	_tan1.set(m.tangent.x, m.tangent.y, m.tangent.z)
-	if (_mat) {
-		_pos1.applyMatrix4(_mat)
-		_tan1.transformDirection(_mat)
-	}
-	ctx.scene.particleBursts.push({
-		x: _pos1.x,
-		y: _pos1.y,
-		z: _pos1.z,
-		tx: _tan1.x,
-		ty: _tan1.y,
-		tz: _tan1.z,
-		color: ctx.instrument.instrument.color ?? ctx.rail.railData.color ?? '#ffffff'
-	})
-
-	const midiState = getMidiState()
-
 	// Execute instrument action if present
 	if (ctx.instrument.instrument.actionHandler) {
 		ctx.instrument.instrument.actionHandler(ctx)
@@ -102,9 +77,9 @@ export function triggerHandler(ctx: TriggerContext) {
 		}
 	}
 
-	ctx.instrument.instrument.midiSignal!.intensity = 1
-
+	const midiState = getMidiState()
 	const channel = ctx.instrument.instrument.channel ?? 1
+	let didAct = false
 
 	const sendMidi = () => {
 		if (!midiState?.enabled) return
@@ -115,10 +90,13 @@ export function triggerHandler(ctx: TriggerContext) {
 		}
 	}
 
-	if (offsetMs <= 0) {
-		sendMidi()
-	} else {
-		setTimeout(sendMidi, offsetMs)
+	if (midiState?.enabled) {
+		didAct = true
+		if (offsetMs <= 0) {
+			sendMidi()
+		} else {
+			setTimeout(sendMidi, offsetMs)
+		}
 	}
 
 	// Fire ctrl entries (CC automation)
@@ -127,6 +105,7 @@ export function triggerHandler(ctx: TriggerContext) {
 		for (const ci of ctrlInstances) {
 			const value = triggerCtrl(ci, ctx.scene.ctrlBus.lastValues)
 			if (value < 0) continue // LFO: skip, per-frame tick handles it
+			didAct = true
 			// MIDI CC output
 			if (midiState?.enabled) {
 				sendMidiCC(midiState, ci.config.channel, ci.config.cc, value)
@@ -146,9 +125,35 @@ export function triggerHandler(ctx: TriggerContext) {
 	}
 
 	if (chain?.generator) {
+		didAct = true
 		const offsetSec = offsetMs / 1000
 		triggerChain(chain, note, velocity, duration, offsetSec)
 		updateGlobalChord(ctx.scene, chain.output.context)
+	}
+
+	// Signal visual feedback + particle burst only when something actually fired
+	if (didAct) {
+		ctx.instrument.instrument.signal!.intensity = 1
+		ctx.instrument.instrument.midiSignal!.intensity = 1
+		ctx.marble.marble.signal.intensity = 1
+
+		const m = ctx.marble.marble
+		const _mat = ctx.rail.runtime.renderMatrix as Matrix4 | undefined
+		_pos1.set(m.position.x, m.position.y, m.position.z)
+		_tan1.set(m.tangent.x, m.tangent.y, m.tangent.z)
+		if (_mat) {
+			_pos1.applyMatrix4(_mat)
+			_tan1.transformDirection(_mat)
+		}
+		ctx.scene.particleBursts.push({
+			x: _pos1.x,
+			y: _pos1.y,
+			z: _pos1.z,
+			tx: _tan1.x,
+			ty: _tan1.y,
+			tz: _tan1.z,
+			color: ctx.instrument.instrument.color ?? ctx.rail.railData.color ?? '#ffffff'
+		})
 	}
 
 	// Fire rest[] sub-notes at their own offsets (after chain is known)
